@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Globe2,
   ArrowLeft,
@@ -26,20 +26,22 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import countriesData from "@/lib/data/countries.json";
 import { CountryWithData } from "@/types";
 import { getScoreColor, getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
 
-const allCountries = countriesData as CountryWithData[];
+// ← removed: import countriesData from "@/lib/data/countries.json";
+// ← removed: const allCountries = countriesData as CountryWithData[];
 
 function CountrySelector({
   selected,
   onChange,
   excludeSlug,
+  allCountries,
 }: {
   selected: string | null;
   onChange: (slug: string) => void;
   excludeSlug: string | null;
+  allCountries: CountryWithData[];
 }) {
   const [open, setOpen] = useState(false);
   const selectedCountry = allCountries.find((c) => c.slug === selected);
@@ -159,8 +161,16 @@ function ScoreCard({ label, valueA, valueB, icon: Icon }: { label: string; value
 }
 
 export default function ComparePageClient() {
+  const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [slugA, setSlugA] = useState<string | null>("canada");
   const [slugB, setSlugB] = useState<string | null>("germany");
+
+  useEffect(() => {
+    fetch('/api/countries')
+      .then((res) => res.json())
+      .then((data) => setAllCountries(data))
+      .catch((err) => console.error('Failed to fetch countries:', err))
+  }, [])
 
   const countryA = allCountries.find((c) => c.slug === slugA) || null;
   const countryB = allCountries.find((c) => c.slug === slugB) || null;
@@ -204,24 +214,22 @@ export default function ComparePageClient() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Selectors */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
           <div className="flex-1">
             <label className="text-xs text-text-muted uppercase tracking-wider mb-2 block">Country A</label>
-            <CountrySelector selected={slugA} onChange={setSlugA} excludeSlug={slugB} />
+            <CountrySelector selected={slugA} onChange={setSlugA} excludeSlug={slugB} allCountries={allCountries} />
           </div>
           <button onClick={handleSwap} className="self-center p-3 rounded-xl border border-border hover:border-accent/30 transition-colors">
             <ArrowRightLeft className="w-5 h-5 text-text-muted" />
           </button>
           <div className="flex-1">
             <label className="text-xs text-text-muted uppercase tracking-wider mb-2 block">Country B</label>
-            <CountrySelector selected={slugB} onChange={setSlugB} excludeSlug={slugA} />
+            <CountrySelector selected={slugB} onChange={setSlugB} excludeSlug={slugA} allCountries={allCountries} />
           </div>
         </div>
 
         {bothSelected && (
           <div className="space-y-10">
-            {/* Move Score comparison */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Move Score</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -247,7 +255,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* Quality scores */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Quality Scores</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -258,7 +265,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* Salary comparison */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Salary Comparison</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border">
@@ -291,7 +297,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* Cost comparison */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Cost of Living</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border space-y-5">
@@ -303,7 +308,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* Tax comparison */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Tax</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border space-y-5">
@@ -312,7 +316,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* Visa comparison */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Visa</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -341,7 +344,6 @@ export default function ComparePageClient() {
               </div>
             </section>
 
-            {/* View full pages */}
             <section className="flex flex-col sm:flex-row gap-4">
               <a href={"/country/" + countryA.slug} className="flex-1 text-center py-3 rounded-2xl border border-border hover:border-accent/30 transition-colors text-sm text-text-muted hover:text-text-primary">
                 {"View full " + countryA.name + " page"}
