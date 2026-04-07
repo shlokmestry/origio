@@ -60,10 +60,10 @@ export default function Globe({
         .pointsData(countries)
         .pointLat((d: any) => d.lat)
         .pointLng((d: any) => d.lng)
-        .pointAltitude(() => 0.04)
-        .pointRadius(() => 0.4)
+       .pointAltitude(() => 0.06)
+        .pointRadius(() => 0.8)
         .pointColor((d: any) => getScoreColor(d.moveScore))
-        .pointResolution(12)
+        .pointResolution(24)
         .onPointClick((point: any) => {
           onCountrySelectRef.current(point.slug);
         })
@@ -71,10 +71,10 @@ export default function Globe({
           setHoveredSlug(point?.slug || null);
           globeContainer.style.cursor = point ? "pointer" : "default";
         })
-        .labelsData(countries)
+       .labelsData(countries)
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
-        .labelText((d: any) => d.flagEmoji + " " + d.name)
+        .labelText((d: any) => d.name)
         .labelSize(1.2)
         .labelDotRadius(0.4)
         .labelColor(() => "rgba(240, 240, 245, 0.7)")
