@@ -117,23 +117,16 @@ export default function Globe({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync countries data once it arrives from Supabase
+  // Sync countries data — only runs when both globe is ready AND data has arrived
   useEffect(() => {
-    if (!globeRef.current || countries.length === 0) return;
-
-    const timer = setTimeout(() => {
-      if (globeRef.current) {
-        globeRef.current
-          .pointsData(countries)
-          .labelsData(countries);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [countries]);
+    if (!globeRef.current || !isLoaded || countries.length === 0) return;
+    globeRef.current
+      .pointsData(countries)
+      .labelsData(countries);
+  }, [countries, isLoaded]);
 
   useEffect(() => {
-    if (!globeRef.current) return;
+    if (!globeRef.current || !isLoaded) return;
 
     globeRef.current
       .pointAltitude((d: any) => {
@@ -181,7 +174,7 @@ export default function Globe({
     } else {
       globeRef.current.arcsData([]);
     }
-  }, [selectedSlug, hoveredSlug, countries]);
+  }, [selectedSlug, hoveredSlug, countries, isLoaded]);
 
   return (
     <div className="globe-container">
