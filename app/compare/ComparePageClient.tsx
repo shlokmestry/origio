@@ -1,20 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Globe2,
   ArrowLeft,
   ArrowRightLeft,
   ChevronDown,
-  DollarSign,
-  Home,
   Heart,
   Shield,
   Wifi,
   TrendingUp,
-  Receipt,
-  Plane,
-  ExternalLink,
 } from "lucide-react";
 import {
   BarChart,
@@ -23,14 +18,10 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-  Legend,
 } from "recharts";
 import { CountryWithData } from "@/types";
-import { getScoreColor, getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
-
-// ← removed: import countriesData from "@/lib/data/countries.json";
-// ← removed: const allCountries = countriesData as CountryWithData[];
+import { getScoreColor, getVisaLabel, getVisaColor } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 function CountrySelector({
   selected,
@@ -161,16 +152,29 @@ function ScoreCard({ label, valueA, valueB, icon: Icon }: { label: string; value
 }
 
 export default function ComparePageClient() {
+  const searchParams = useSearchParams();
+  const fetchedRef = useRef(false);
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
-  const [slugA, setSlugA] = useState<string | null>("canada");
-  const [slugB, setSlugB] = useState<string | null>("germany");
+  const [slugA, setSlugA] = useState<string | null>(null);
+  const [slugB, setSlugB] = useState<string | null>(null);
 
+  // Fetch countries once
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     fetch('/api/countries')
       .then((res) => res.json())
-      .then((data) => setAllCountries(data))
+      .then((data: CountryWithData[]) => {
+        setAllCountries(data);
+        // Read query params after data loads
+        const paramA = searchParams.get('a');
+        const paramB = searchParams.get('b');
+        const validSlugs = data.map((c) => c.slug);
+        setSlugA(paramA && validSlugs.includes(paramA) ? paramA : 'canada');
+        setSlugB(paramB && validSlugs.includes(paramB) ? paramB : 'germany');
+      })
       .catch((err) => console.error('Failed to fetch countries:', err))
-  }, [])
+  }, [searchParams])
 
   const countryA = allCountries.find((c) => c.slug === slugA) || null;
   const countryB = allCountries.find((c) => c.slug === slugB) || null;
@@ -233,7 +237,7 @@ export default function ComparePageClient() {
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Move Score</h2>
               <div className="grid grid-cols-2 gap-4">
-                {[countryA, countryB].map((c, i) => {
+                {[countryA, countryB].map((c) => {
                   const color = getScoreColor(c.data.moveScore);
                   return (
                     <div key={c.slug} className="p-6 rounded-2xl bg-bg-surface border border-border text-center">
@@ -282,8 +286,8 @@ export default function ComparePageClient() {
                           return (
                             <div className="glass-panel rounded-lg px-3 py-2">
                               <p className="text-sm font-medium text-text-primary mb-1">{label}</p>
-                              <p className="text-xs text-accent">{countryA.name + ": €" + Number(payload[0].value).toLocaleString()}</p>
-                              <p className="text-xs text-[#a78bfa]">{countryB.name + ": €" + Number(payload[1].value).toLocaleString()}</p>
+                              <p className="text-xs text-accent">{countryA.name + ": " + Number(payload[0].value).toLocaleString()}</p>
+                              <p className="text-xs text-[#a78bfa]">{countryB.name + ": " + Number(payload[1].value).toLocaleString()}</p>
                             </div>
                           );
                         }
