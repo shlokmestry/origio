@@ -120,9 +120,16 @@ export default function Globe({
   // Sync countries data once it arrives from Supabase
   useEffect(() => {
     if (!globeRef.current || countries.length === 0) return;
-    globeRef.current
-      .pointsData(countries)
-      .labelsData(countries);
+
+    const timer = setTimeout(() => {
+      if (globeRef.current) {
+        globeRef.current
+          .pointsData(countries)
+          .labelsData(countries);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [countries]);
 
   useEffect(() => {

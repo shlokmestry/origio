@@ -1,8 +1,12 @@
+// components/Nav.tsx
 "use client";
 
-import { useState } from "react";
-import { Search, Globe2, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Globe2, Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { GlobeCountry } from "@/types";
+import { supabase } from "@/lib/supabase";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import React from "react";
 
 interface NavProps {
   countries: GlobeCountry[];
@@ -13,6 +17,23 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   const filteredCountries = countries.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -22,6 +43,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Globe2 className="w-6 h-6 text-accent" />
@@ -31,7 +53,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
           </div>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="flex items-center gap-2 px-4 py-2 rounded-full border border-border hover:border-border-hover transition-colors text-sm text-text-muted hover:text-text-primary"
@@ -42,6 +64,34 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 ⌘K
               </kbd>
             </button>
+
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border">
+                  <User className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-xs text-text-muted truncate max-w-[120px]">
+                    {user.user_metadata?.full_name || user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              React.createElement(
+                'a',
+                {
+                  href: "/auth",
+                  className: "flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium"
+                },
+                React.createElement(LogIn, { className: "w-4 h-4" }),
+                "Sign In"
+              )
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -49,11 +99,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-bg-elevated transition-colors"
           >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -76,9 +122,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             {searchQuery.length > 0 && (
               <div className="mt-3 max-h-64 overflow-y-auto">
                 {filteredCountries.length === 0 ? (
-                  <p className="text-text-muted text-sm py-4 text-center">
-                    No countries found
-                  </p>
+                  <p className="text-text-muted text-sm py-4 text-center">No countries found</p>
                 ) : (
                   <div className="space-y-1">
                     {filteredCountries.map((country) => (
@@ -93,12 +137,8 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                       >
                         <span className="text-2xl">{country.flagEmoji}</span>
                         <div>
-                          <p className="text-sm font-medium text-text-primary">
-                            {country.name}
-                          </p>
-                          <p className="text-xs text-text-muted">
-                            Move Score: {country.moveScore}
-                          </p>
+                          <p className="text-sm font-medium text-text-primary">{country.name}</p>
+                          <p className="text-xs text-text-muted">Move Score: {country.moveScore}</p>
                         </div>
                       </button>
                     ))}
@@ -113,8 +153,8 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden glass-panel-strong border-t border-border">
-          <div className="p-4">
-            <div className="relative mb-4">
+          <div className="p-4 space-y-4">
+            <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
                 type="text"
@@ -142,6 +182,34 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 ))}
               </div>
             )}
+
+            {/* Mobile auth */}
+            <div className="pt-2 border-t border-border">
+              {user ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-text-muted px-1">
+                    {user.user_metadata?.full_name || user.email}
+                  </p>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                React.createElement(
+                  'a',
+                  {
+                    href: "/auth",
+                    className: "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
+                  },
+                  React.createElement(LogIn, { className: "w-4 h-4" }),
+                  "Sign In"
+                )
+              )}
+            </div>
           </div>
         </div>
       )}
