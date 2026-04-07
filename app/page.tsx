@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
@@ -24,7 +24,7 @@ export default function Home() {
       .catch((err) => console.error('Failed to fetch countries:', err))
   }, [])
 
-  const globeCountries: GlobeCountry[] = allCountries.map((c) => ({
+  const globeCountries = useMemo<GlobeCountry[]>(() => allCountries.map((c) => ({
     slug: c.slug,
     name: c.name,
     flagEmoji: c.flagEmoji,
@@ -35,7 +35,7 @@ export default function Home() {
     costRentCityCentre: c.data.costRentCityCentre,
     scoreQualityOfLife: c.data.scoreQualityOfLife,
     visaDifficulty: c.data.visaDifficulty,
-  }));
+  })), [allCountries]);
 
   const handleCountrySelect = useCallback(
     (slug: string) => {
