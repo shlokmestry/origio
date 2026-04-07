@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
@@ -13,9 +13,11 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<CountryWithData | null>(null);
   const [showHero, setShowHero] = useState(true);
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
+  const fetchedRef = useRef(false);
 
-  // Fetch from Supabase API on mount
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     fetch('/api/countries')
       .then((res) => res.json())
       .then((data) => setAllCountries(data))

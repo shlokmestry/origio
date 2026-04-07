@@ -21,13 +21,33 @@ import { CountryWithData } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
 import ScoreCard from "./ScoreCard";
 import SalaryChart from "./SalaryChart";
+import { useRouter } from "next/navigation";
 
 interface CountryPanelProps {
   country: CountryWithData | null;
   onClose: () => void;
 }
 
+// Currency symbol map
+function getCurrencySymbol(currency: string): string {
+  const symbols: Record<string, string> = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    AUD: "A$",
+    CAD: "C$",
+    NZD: "NZ$",
+    CHF: "CHF ",
+    SGD: "S$",
+    AED: "AED ",
+    NOK: "kr ",
+    SEK: "kr ",
+  };
+  return symbols[currency] ?? currency + " ";
+}
+
 export default function CountryPanel({ country, onClose }: CountryPanelProps) {
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [costsExpanded, setCostsExpanded] = useState(false);
 
@@ -42,11 +62,20 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
   if (!country) return null;
 
   const { data } = country;
+  const currencySymbol = getCurrencySymbol(country.currency);
   const scoreBreakdown = getScoreBreakdown(data);
 
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 400);
+  };
+
+  const handleCompare = () => {
+    router.push("/compare?a=" + country.slug);
+  };
+
+  const handleFullReport = () => {
+    router.push("/country/" + country.slug);
   };
 
   const panelClasses = [
@@ -112,19 +141,20 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
             </div>
           </div>
         </div>
+
         <div className="p-5 space-y-6">
           <div className="grid grid-cols-2 gap-3">
             <ScoreCard
               icon={DollarSign}
               label="Avg Dev Salary"
-              value={"€" + Math.round(data.salarySoftwareEngineer / 1000) + "k"}
+              value={currencySymbol + Math.round(data.salarySoftwareEngineer / 1000) + "k"}
               sublabel="per year"
               accentBorder
             />
             <ScoreCard
               icon={Home}
               label="Rent (City)"
-              value={"€" + data.costRentCityCentre.toLocaleString()}
+              value={currencySymbol + data.costRentCityCentre.toLocaleString()}
               sublabel="per month"
               scoreValue={10 - ((data.costRentCityCentre - 400) / (4000 - 400)) * 10}
             />
@@ -141,6 +171,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               scoreValue={10 - data.visaDifficulty * 2}
             />
           </div>
+
           <div className="space-y-3">
             <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
               Score Breakdown
@@ -167,6 +198,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               ))}
             </div>
           </div>
+
           <div className="space-y-3">
             <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
               Average Salaries
@@ -175,6 +207,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               <SalaryChart data={data} currency={country.currency} />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <ScoreCard
               icon={Shield}
@@ -201,6 +234,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               scoreValue={10 - (data.incomeTaxRateMid / 55) * 10}
             />
           </div>
+
           <div className="space-y-3">
             <button
               onClick={() => setCostsExpanded(!costsExpanded)}
@@ -231,13 +265,14 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
                   >
                     <span className="text-text-muted">{item.label}</span>
                     <span className="text-text-primary font-medium">
-                      {"€" + item.value.toLocaleString()}
+                      {currencySymbol + item.value.toLocaleString()}
                     </span>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
           <div className="space-y-3">
             <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
               Visa Information
@@ -259,12 +294,19 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               <VisaLink url={data.visaOfficialUrl} />
             </div>
           </div>
+
           <div className="space-y-3 pb-8">
-            <button className="cta-button w-full py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
+            <button
+              onClick={handleFullReport}
+              className="cta-button w-full py-3.5 rounded-2xl text-base flex items-center justify-center gap-2"
+            >
               <FileText className="w-4 h-4" />
               Get Full Report
             </button>
-            <button className="w-full py-3 rounded-2xl text-sm border border-border hover:border-accent/30 transition-colors flex items-center justify-center gap-2 text-text-muted hover:text-text-primary">
+            <button
+              onClick={handleCompare}
+              className="w-full py-3 rounded-2xl text-sm border border-border hover:border-accent/30 transition-colors flex items-center justify-center gap-2 text-text-muted hover:text-text-primary"
+            >
               <ArrowRightLeft className="w-4 h-4" />
               Compare with another country
             </button>
@@ -277,7 +319,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
 
 function VisaLink(props: { url: string }) {
   if (!props.url) return null;
-  const linkElement = React.createElement(
+  return React.createElement(
     "a",
     {
       href: props.url,
@@ -288,5 +330,4 @@ function VisaLink(props: { url: string }) {
     React.createElement(ExternalLink, { className: "w-3 h-3" }),
     "Official immigration site"
   );
-  return linkElement;
 }
