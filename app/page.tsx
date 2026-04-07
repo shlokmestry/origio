@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -6,15 +7,20 @@ import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry } from "@/types";
 import { MapPin, ChevronDown } from "lucide-react";
-import countriesData from "@/lib/data/countries.json";
 
 export default function Home() {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] =
-    useState<CountryWithData | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryWithData | null>(null);
   const [showHero, setShowHero] = useState(true);
+  const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
 
-  const allCountries: CountryWithData[] = countriesData as CountryWithData[];
+  // Fetch from Supabase API on mount
+  useEffect(() => {
+    fetch('/api/countries')
+      .then((res) => res.json())
+      .then((data) => setAllCountries(data))
+      .catch((err) => console.error('Failed to fetch countries:', err))
+  }, [])
 
   const globeCountries: GlobeCountry[] = allCountries.map((c) => ({
     slug: c.slug,
@@ -61,17 +67,14 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
-      {/* Navigation */}
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-      {/* 3D Globe */}
       <Globe
         countries={globeCountries}
         onCountrySelect={handleCountrySelect}
         selectedSlug={selectedSlug}
       />
 
-      {/* Hero overlay */}
       {showHero && (
         <div className="absolute inset-0 z-10 pointer-events-none">
           <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent" />
@@ -82,9 +85,7 @@ export default function Home() {
                 style={{ animationDelay: "0.1s", opacity: 0 }}
               >
                 <MapPin className="w-3 h-3" />
-                <span>
-                  Explore {allCountries.length} countries with real data
-                </span>
+                <span>Explore {allCountries.length} countries with real data</span>
               </div>
 
               <h1
@@ -124,17 +125,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* Country detail panel */}
       <CountryPanel country={selectedCountry} onClose={handleClosePanel} />
 
-      {/* Bottom status bar */}
       {!showHero && !selectedSlug && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
           <div className="glass-panel rounded-full px-6 py-3 flex items-center gap-3 shadow-xl shadow-black/30">
             <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm text-text-muted">
-              Click a country to explore
-            </span>
+            <span className="text-sm text-text-muted">Click a country to explore</span>
           </div>
         </div>
       )}
