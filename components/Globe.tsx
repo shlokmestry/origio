@@ -1,3 +1,4 @@
+// components/Globe.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -42,21 +43,15 @@ export default function Globe({
       if (cancelled) return;
 
       const globe = GlobeGL()(globeContainer)
-        .globeImageUrl(
-          "//unpkg.com/three-globe/example/img/earth-night.jpg"
-        )
-        .bumpImageUrl(
-          "//unpkg.com/three-globe/example/img/earth-topology.png"
-        )
-        .backgroundImageUrl(
-          "//unpkg.com/three-globe/example/img/night-sky.png"
-        )
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
+        .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
+        .backgroundImageUrl("//unpkg.com/three-globe/example/img/night-sky.png")
         .showAtmosphere(true)
         .atmosphereColor("#00d4c8")
         .atmosphereAltitude(0.25)
         .width(mountEl.clientWidth)
         .height(mountEl.clientHeight)
-        .pointsData(countries)
+        .pointsData([])
         .pointLat((d: any) => d.lat)
         .pointLng((d: any) => d.lng)
         .pointAltitude(() => 0.06)
@@ -70,7 +65,7 @@ export default function Globe({
           setHoveredSlug(point?.slug || null);
           globeContainer.style.cursor = point ? "pointer" : "default";
         })
-        .labelsData(countries)
+        .labelsData([])
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
         .labelText((d: any) => d.name)
@@ -121,6 +116,14 @@ export default function Globe({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync countries data once it arrives from Supabase
+  useEffect(() => {
+    if (!globeRef.current || countries.length === 0) return;
+    globeRef.current
+      .pointsData(countries)
+      .labelsData(countries);
+  }, [countries]);
 
   useEffect(() => {
     if (!globeRef.current) return;

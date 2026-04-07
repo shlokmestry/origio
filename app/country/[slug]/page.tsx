@@ -1,55 +1,62 @@
+// app/country/[slug]/page.tsx
 import { Metadata } from "next";
-import countriesData from "@/lib/data/countries.json";
+import { supabase } from "@/lib/supabase";
+import { mapRowToCountry } from "@/lib/mappers";
 import { CountryWithData } from "@/types";
 import CountryPageClient from "./CountryPageClient";
 
-const allCountries = countriesData as CountryWithData[];
+async function getAllCountries(): Promise<CountryWithData[]> {
+  const { data: countries } = await supabase.from('countries').select('*')
+  const { data: countryData } = await supabase.from('country_data').select('*')
+  if (!countries || !countryData) return []
+  return countries.map((c) => {
+    const d = countryData.find((cd) => cd.country_id === c.id)
+    return mapRowToCountry(c, d)
+  })
+}
+
+async function getCountry(slug: string): Promise<CountryWithData | null> {
+  const { data: c } = await supabase
+    .from('countries').select('*').eq('slug', slug).single()
+  if (!c) return null
+  const { data: d } = await supabase
+    .from('country_data').select('*').eq('country_id', c.id).single()
+  if (!d) return null
+  return mapRowToCountry(c, d)
+}
 
 export async function generateStaticParams() {
-  return allCountries.map((country) => ({
-    slug: country.slug,
-  }));
+  const { data: countries } = await supabase.from('countries').select('slug')
+  return (countries ?? []).map((c) => ({ slug: c.slug }))
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: { slug: string }
 }): Promise<Metadata> {
-  const country = allCountries.find((c) => c.slug === params.slug);
-  if (!country) {
-    return { title: "Country Not Found — Origio" };
-  }
+  const country = await getCountry(params.slug)
+  if (!country) return { title: "Country Not Found — Origio" }
 
-  const title = "Move to " + country.name + " — Salary, Visa, Cost of Living | Origio";
-  const description =
-    "Everything you need to know about moving to " +
-    country.name +
-    ". Average dev salary: €" +
-    Math.round(country.data.salarySoftwareEngineer / 1000) +
-    "k. Cost of living, visa routes, quality of life score: " +
-    country.data.scoreQualityOfLife +
-    "/10. Move Score: " +
-    country.data.moveScore +
-    "/10.";
+  const title = `Move to ${country.name} — Salary, Visa, Cost of Living | Origio`
+  const description = `Everything you need to know about moving to ${country.name}. Average dev salary: €${Math.round(country.data.salarySoftwareEngineer / 1000)}k. Quality of life: ${country.data.scoreQualityOfLife}/10. Move Score: ${country.data.moveScore}/10.`
 
   return {
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-    },
-  };
+    openGraph: { title, description, type: "website" },
+  }
 }
 
-export default function CountryPage({
+export default async function CountryPage({
   params,
 }: {
-  params: { slug: string };
+  params: { slug: string }
 }) {
-  const country = allCountries.find((c) => c.slug === params.slug);
+  const [country, allCountries] = await Promise.all([
+    getCountry(params.slug),
+    getAllCountries(),
+  ])
 
   if (!country) {
     return (
@@ -62,10 +69,9 @@ export default function CountryPage({
           </a>
         </div>
       </div>
-    );
+    )
   }
 
-  const otherCountries = allCountries.filter((c) => c.slug !== params.slug);
-
-  return <CountryPageClient country={country} otherCountries={otherCountries} />;
+  const otherCountries = allCountries.filter((c) => c.slug !== params.slug)
+  return <CountryPageClient country={country} otherCountries={otherCountries} />
 }
