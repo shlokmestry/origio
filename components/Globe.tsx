@@ -26,7 +26,6 @@ export default function Globe({
     const mountEl = mountRef.current;
     if (!mountEl) return;
 
-    // Create a dedicated div for globe.gl so React never touches it
     const globeContainer = document.createElement("div");
     globeContainer.style.width = "100%";
     globeContainer.style.height = "100%";
@@ -44,7 +43,7 @@ export default function Globe({
 
       const globe = GlobeGL()(globeContainer)
         .globeImageUrl(
-          "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+          "//unpkg.com/three-globe/example/img/earth-night.jpg"
         )
         .bumpImageUrl(
           "//unpkg.com/three-globe/example/img/earth-topology.png"
@@ -54,16 +53,16 @@ export default function Globe({
         )
         .showAtmosphere(true)
         .atmosphereColor("#00d4c8")
-        .atmosphereAltitude(0.2)
+        .atmosphereAltitude(0.25)
         .width(mountEl.clientWidth)
         .height(mountEl.clientHeight)
         .pointsData(countries)
         .pointLat((d: any) => d.lat)
         .pointLng((d: any) => d.lng)
-        .pointAltitude(() => 0.04)
-        .pointRadius(() => 0.4)
+        .pointAltitude(() => 0.06)
+        .pointRadius(() => 0.8)
         .pointColor((d: any) => getScoreColor(d.moveScore))
-        .pointResolution(12)
+        .pointResolution(24)
         .onPointClick((point: any) => {
           onCountrySelectRef.current(point.slug);
         })
@@ -74,7 +73,7 @@ export default function Globe({
         .labelsData(countries)
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
-        .labelText((d: any) => d.flagEmoji + " " + d.name)
+        .labelText((d: any) => d.name)
         .labelSize(1.2)
         .labelDotRadius(0.4)
         .labelColor(() => "rgba(240, 240, 245, 0.7)")
@@ -116,7 +115,6 @@ export default function Globe({
         window.removeEventListener("resize", resizeHandler);
       }
       globeRef.current = null;
-      // Remove the globe container we created — not managed by React
       if (globeContainer.parentNode) {
         globeContainer.parentNode.removeChild(globeContainer);
       }
@@ -160,7 +158,6 @@ export default function Globe({
           { lat: selected.lat, lng: selected.lng - 20, altitude: 1.8 },
           1000
         );
-
         const arcs = countries
           .filter((c) => c.slug !== selectedSlug)
           .map((c) => ({

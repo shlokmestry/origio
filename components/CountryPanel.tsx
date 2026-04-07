@@ -117,14 +117,14 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
             <ScoreCard
               icon={DollarSign}
               label="Avg Dev Salary"
-              value={"$" + Math.round(data.salarySoftwareEngineer / 1000) + "k"}
+              value={"€" + Math.round(data.salarySoftwareEngineer / 1000) + "k"}
               sublabel="per year"
               accentBorder
             />
             <ScoreCard
               icon={Home}
               label="Rent (City)"
-              value={"$" + data.costRentCityCentre.toLocaleString()}
+              value={"€" + data.costRentCityCentre.toLocaleString()}
               sublabel="per month"
               scoreValue={10 - ((data.costRentCityCentre - 400) / (4000 - 400)) * 10}
             />
@@ -231,7 +231,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
                   >
                     <span className="text-text-muted">{item.label}</span>
                     <span className="text-text-primary font-medium">
-                      {"$" + item.value.toLocaleString()}
+                      {"€" + item.value.toLocaleString()}
                     </span>
                   </div>
                 ))}
