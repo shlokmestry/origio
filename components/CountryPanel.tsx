@@ -17,7 +17,7 @@ import {
   ArrowRightLeft,
   ExternalLink,
 } from "lucide-react";
-import { CountryWithData } from "@/types";
+import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
 import ScoreCard from "./ScoreCard";
 import SalaryChart from "./SalaryChart";
@@ -26,9 +26,10 @@ import { useRouter } from "next/navigation";
 interface CountryPanelProps {
   country: CountryWithData | null;
   onClose: () => void;
+  selectedRole: JobRole;
+  onRoleChange: (role: JobRole) => void;
 }
 
-// Currency symbol map
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
     USD: "$",
@@ -46,7 +47,7 @@ function getCurrencySymbol(currency: string): string {
   return symbols[currency] ?? currency + " ";
 }
 
-export default function CountryPanel({ country, onClose }: CountryPanelProps) {
+export default function CountryPanel({ country, onClose, selectedRole, onRoleChange }: CountryPanelProps) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [costsExpanded, setCostsExpanded] = useState(false);
@@ -64,6 +65,9 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
   const { data } = country;
   const currencySymbol = getCurrencySymbol(country.currency);
   const scoreBreakdown = getScoreBreakdown(data);
+
+  const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
+  const currentSalary = data[currentRole.salaryKey] as number;
 
   const handleClose = () => {
     setIsVisible(false);
@@ -121,7 +125,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
           <div className="px-5 pb-5">
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-bg-primary/50 accent-border-glow">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center font-heading text-2xl font-extrabold"
+                className="w-16 h-16 rounded-2xl flex items-center justify-center font-heading text-2xl font-extrabold flex-shrink-0"
                 style={{
                   background: "linear-gradient(135deg, " + moveScoreColor + "22, " + moveScoreColor + "08)",
                   color: moveScoreColor,
@@ -131,9 +135,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
                 {data.moveScore}
               </div>
               <div>
-                <p className="text-sm text-text-muted uppercase tracking-wider">
-                  Move Score
-                </p>
+                <p className="text-sm text-text-muted uppercase tracking-wider">Move Score</p>
                 <p className="text-sm text-text-muted mt-1">
                   Based on salary, cost, quality, safety, visa & tax
                 </p>
@@ -143,11 +145,34 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
         </div>
 
         <div className="p-5 space-y-6">
+
+          {/* Job Role Selector — dropdown */}
+          <div className="space-y-3">
+            <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
+              Your Job Role
+            </h3>
+            <div className="relative">
+              <select
+                value={selectedRole}
+                onChange={(e) => onRoleChange(e.target.value as JobRole)}
+                className="w-full appearance-none px-4 py-3 pr-10 rounded-xl bg-bg-elevated border border-border hover:border-accent/30 focus:border-accent/40 focus:outline-none text-text-primary text-sm transition-colors cursor-pointer"
+              >
+                {JOB_ROLES.map((role) => (
+                  <option key={role.key} value={role.key} className="bg-bg-elevated">
+                    {role.emoji} {role.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Key stats */}
           <div className="grid grid-cols-2 gap-3">
             <ScoreCard
               icon={DollarSign}
-              label="Avg Dev Salary"
-              value={currencySymbol + Math.round(data.salarySoftwareEngineer / 1000) + "k"}
+              label={currentRole.label + " Salary"}
+              value={currencySymbol + Math.round(currentSalary / 1000) + "k"}
               sublabel="per year"
               accentBorder
             />
@@ -278,9 +303,7 @@ export default function CountryPanel({ country, onClose }: CountryPanelProps) {
               Visa Information
             </h3>
             <div className="p-4 rounded-2xl bg-bg-primary/50 border border-border space-y-3">
-              <p className="text-sm text-text-muted leading-relaxed">
-                {data.visaNotes}
-              </p>
+              <p className="text-sm text-text-muted leading-relaxed">{data.visaNotes}</p>
               <div className="flex flex-wrap gap-2">
                 {data.visaPopularRoutes.map((route) => (
                   <span
