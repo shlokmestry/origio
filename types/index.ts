@@ -1,3 +1,5 @@
+// types/index.ts
+
 export interface Country {
   id: string;
   slug: string;
@@ -18,6 +20,21 @@ export interface CountryData {
   salaryTeacher: number;
   salaryAccountant: number;
   salaryMarketingManager: number;
+  salaryDoctor: number;
+  salaryDataScientist: number;
+  salaryProductManager: number;
+  salaryUXDesigner: number;
+  salaryDevOps: number;
+  salaryCivilEngineer: number;
+  salaryFinancialAnalyst: number;
+  salaryLawyer: number;
+  salaryPharmacist: number;
+  salaryArchitect: number;
+  salaryHRManager: number;
+  salarySalesManager: number;
+  salaryCybersecurity: number;
+  salaryElectrician: number;
+  salaryChef: number;
   costRentCityCentre: number;
   costRentOutside: number;
   costGroceriesMonthly: number;
@@ -64,24 +81,70 @@ export interface ScoreBreakdown {
 }
 
 export type JobRole =
-  | "software_engineer"
+  | "softwareEngineer"
   | "nurse"
   | "teacher"
   | "accountant"
-  | "marketing_manager";
+  | "marketingManager"
+  | "doctor"
+  | "dataScientist"
+  | "productManager"
+  | "uxDesigner"
+  | "devOps"
+  | "civilEngineer"
+  | "financialAnalyst"
+  | "lawyer"
+  | "pharmacist"
+  | "architect"
+  | "hrManager"
+  | "salesManager"
+  | "cybersecurity"
+  | "electrician"
+  | "chef"
 
-export const JOB_ROLE_LABELS: Record<JobRole, string> = {
+export const JOB_ROLES: {
+  key: JobRole;
+  label: string;
+  emoji: string;
+  salaryKey: keyof CountryData;
+}[] = [
+  { key: "softwareEngineer", label: "Software Engineer", emoji: "💻", salaryKey: "salarySoftwareEngineer" },
+  { key: "doctor", label: "Doctor", emoji: "🩺", salaryKey: "salaryDoctor" },
+  { key: "nurse", label: "Nurse", emoji: "🏥", salaryKey: "salaryNurse" },
+  { key: "dataScientist", label: "Data Scientist", emoji: "📊", salaryKey: "salaryDataScientist" },
+  { key: "productManager", label: "Product Manager", emoji: "🗂️", salaryKey: "salaryProductManager" },
+  { key: "devOps", label: "DevOps Engineer", emoji: "⚙️", salaryKey: "salaryDevOps" },
+  { key: "cybersecurity", label: "Cybersecurity", emoji: "🔐", salaryKey: "salaryCybersecurity" },
+  { key: "uxDesigner", label: "UX Designer", emoji: "🎨", salaryKey: "salaryUXDesigner" },
+  { key: "financialAnalyst", label: "Financial Analyst", emoji: "💹", salaryKey: "salaryFinancialAnalyst" },
+  { key: "lawyer", label: "Lawyer", emoji: "⚖️", salaryKey: "salaryLawyer" },
+  { key: "architect", label: "Architect", emoji: "🏛️", salaryKey: "salaryArchitect" },
+  { key: "civilEngineer", label: "Civil Engineer", emoji: "🏗️", salaryKey: "salaryCivilEngineer" },
+  { key: "pharmacist", label: "Pharmacist", emoji: "💊", salaryKey: "salaryPharmacist" },
+  { key: "teacher", label: "Teacher", emoji: "📚", salaryKey: "salaryTeacher" },
+  { key: "accountant", label: "Accountant", emoji: "🧾", salaryKey: "salaryAccountant" },
+  { key: "hrManager", label: "HR Manager", emoji: "👥", salaryKey: "salaryHRManager" },
+  { key: "salesManager", label: "Sales Manager", emoji: "📈", salaryKey: "salarySalesManager" },
+  { key: "marketingManager", label: "Marketing Manager", emoji: "📣", salaryKey: "salaryMarketingManager" },
+  { key: "electrician", label: "Electrician", emoji: "⚡", salaryKey: "salaryElectrician" },
+  { key: "chef", label: "Chef", emoji: "👨‍🍳", salaryKey: "salaryChef" },
+]
+
+// Keep old exports for any files that still reference them
+export type OldJobRole = "software_engineer" | "nurse" | "teacher" | "accountant" | "marketing_manager"
+
+export const JOB_ROLE_LABELS: Record<OldJobRole, string> = {
   software_engineer: "Software Engineer",
   nurse: "Nurse",
   teacher: "Teacher",
   accountant: "Accountant",
   marketing_manager: "Marketing Manager",
-};
+}
 
-export const JOB_ROLE_SALARY_KEYS: Record<JobRole, keyof CountryData> = {
+export const JOB_ROLE_SALARY_KEYS: Record<OldJobRole, keyof CountryData> = {
   software_engineer: "salarySoftwareEngineer",
   nurse: "salaryNurse",
   teacher: "salaryTeacher",
   accountant: "salaryAccountant",
   marketing_manager: "salaryMarketingManager",
-};
+}

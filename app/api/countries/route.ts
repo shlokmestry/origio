@@ -28,5 +28,7 @@ export async function GET() {
     return mapRowToCountry(c, d)
   })
 
-  return NextResponse.json(merged)
+  return NextResponse.json(merged, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }

@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
-import { CountryWithData, GlobeCountry } from "@/types";
+import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { MapPin, ChevronDown } from "lucide-react";
 
 export default function Home() {
@@ -13,6 +13,7 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<CountryWithData | null>(null);
   const [showHero, setShowHero] = useState(true);
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
+  const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -127,7 +128,12 @@ export default function Home() {
         </div>
       )}
 
-      <CountryPanel country={selectedCountry} onClose={handleClosePanel} />
+      <CountryPanel
+        country={selectedCountry}
+        onClose={handleClosePanel}
+        selectedRole={selectedRole}
+        onRoleChange={setSelectedRole}
+      />
 
       {!showHero && !selectedSlug && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
