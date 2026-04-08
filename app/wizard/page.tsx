@@ -126,10 +126,10 @@ export default function WizardPage() {
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        <div className="flex items-center gap-2">
-          <Globe2 className="w-5 h-5 text-accent" />
-          <span className="font-heading font-extrabold">Origio</span>
-        </div>
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+  <Globe2 className="w-5 h-5 text-accent" />
+  <span className="font-heading font-extrabold">Origio</span>
+</a>
         <span className="text-sm text-text-muted">{step} of {TOTAL_STEPS}</span>
       </div>
 

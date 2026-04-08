@@ -43,16 +43,13 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-
-          {/* Logo */}
-          <div className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Globe2 className="w-6 h-6 text-accent" />
-            <span className="font-heading text-xl font-extrabold tracking-tight">
+            <span className="font-heading text-xl font-extrabold tracking-tight text-text-primary">
               Origio
             </span>
-          </div>
+          </a>
 
-          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
@@ -94,7 +91,6 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-bg-elevated transition-colors"
@@ -104,7 +100,6 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
         </div>
       </div>
 
-      {/* Search overlay */}
       {searchOpen && (
         <div className="absolute top-full left-0 right-0 glass-panel-strong border-t border-border">
           <div className="max-w-2xl mx-auto p-4">
@@ -150,7 +145,6 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
         </div>
       )}
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden glass-panel-strong border-t border-border">
           <div className="p-4 space-y-4">
@@ -183,7 +177,6 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               </div>
             )}
 
-            {/* Mobile auth */}
             <div className="pt-2 border-t border-border">
               {user ? (
                 <div className="space-y-2">
