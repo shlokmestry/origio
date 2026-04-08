@@ -9,12 +9,14 @@ interface GlobeProps {
   countries: GlobeCountry[];
   onCountrySelect: (slug: string) => void;
   selectedSlug: string | null;
+  highlightedSlugs?: string[];
 }
 
 export default function Globe({
   countries,
   onCountrySelect,
   selectedSlug,
+  highlightedSlugs = [],
 }: GlobeProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<any>(null);
@@ -117,7 +119,7 @@ export default function Globe({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync countries data — only runs when both globe is ready AND data has arrived
+  // Sync countries data
   useEffect(() => {
     if (!globeRef.current || !isLoaded || countries.length === 0) return;
     globeRef.current
@@ -125,29 +127,46 @@ export default function Globe({
       .labelsData(countries);
   }, [countries, isLoaded]);
 
+  // Update point styles when selection, hover, or highlights change
   useEffect(() => {
     if (!globeRef.current || !isLoaded) return;
+
+    const hasHighlights = highlightedSlugs.length > 0;
 
     globeRef.current
       .pointAltitude((d: any) => {
         if (d.slug === selectedSlug) return 0.12;
+        if (highlightedSlugs.includes(d.slug)) return 0.10;
         if (d.slug === hoveredSlug) return 0.08;
         return 0.04;
       })
       .pointRadius((d: any) => {
         if (d.slug === selectedSlug) return 0.7;
+        if (highlightedSlugs.includes(d.slug)) return 0.65;
         if (d.slug === hoveredSlug) return 0.6;
-        return 0.4;
+        return hasHighlights ? 0.25 : 0.4; // dim non-matches
       })
       .pointColor((d: any) => {
         if (d.slug === selectedSlug) return "#00d4c8";
         if (d.slug === hoveredSlug) return "#00d4c8";
-        return getScoreColor(d.moveScore);
+        if (highlightedSlugs.includes(d.slug)) {
+          // Gold/yellow for top match, teal for others
+          const rank = highlightedSlugs.indexOf(d.slug);
+          if (rank === 0) return "#fbbf24"; // gold for #1
+          if (rank === 1) return "#00d4c8"; // teal for #2
+          return "#a78bfa"; // purple for #3
+        }
+        // Dim non-highlighted countries when wizard results are shown
+        return hasHighlights ? "#8888a044" : getScoreColor(d.moveScore);
       })
       .labelColor((d: any) => {
         if (d.slug === selectedSlug || d.slug === hoveredSlug)
           return "rgba(0, 212, 200, 1)";
-        return "rgba(240, 240, 245, 0.7)";
+        if (highlightedSlugs.includes(d.slug))
+          return "rgba(251, 191, 36, 1)";
+        return hasHighlights
+          ? "rgba(240, 240, 245, 0.2)" // dim non-matches
+          : "rgba(240, 240, 245, 0.7)";
       });
 
     if (globeRef.current.controls()) {
@@ -174,7 +193,7 @@ export default function Globe({
     } else {
       globeRef.current.arcsData([]);
     }
-  }, [selectedSlug, hoveredSlug, countries, isLoaded]);
+  }, [selectedSlug, hoveredSlug, countries, isLoaded, highlightedSlugs]);
 
   return (
     <div className="globe-container">
