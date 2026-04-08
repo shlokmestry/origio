@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   DollarSign,
   Home,
@@ -59,17 +58,35 @@ function StatBox({ icon: Icon, label, value, color }: { icon: any; label: string
     </div>
   );
 }
+
 export default function CountryPageClient({ country, otherCountries }: Props) {
   const { data } = country;
   const scoreBreakdown = getScoreBreakdown(data);
   const moveScoreColor = getScoreColor(data.moveScore);
+  const currencySymbol = getCurrencySymbol(country.currency);
+  const visaColor = getVisaColor(data.visaDifficulty);
 
   const salaryData = [
     { role: "Software Eng.", salary: data.salarySoftwareEngineer, color: "#00d4c8" },
-    { role: "Nurse", salary: data.salaryNurse, color: "#4ade80" },
-    { role: "Teacher", salary: data.salaryTeacher, color: "#60a5fa" },
-    { role: "Accountant", salary: data.salaryAccountant, color: "#a78bfa" },
-    { role: "Marketing Mgr.", salary: data.salaryMarketingManager, color: "#f472b6" },
+    { role: "Doctor", salary: data.salaryDoctor, color: "#4ade80" },
+    { role: "Nurse", salary: data.salaryNurse, color: "#60a5fa" },
+    { role: "Data Scientist", salary: data.salaryDataScientist, color: "#a78bfa" },
+    { role: "Product Mgr.", salary: data.salaryProductManager, color: "#f472b6" },
+    { role: "DevOps", salary: data.salaryDevOps, color: "#fb923c" },
+    { role: "Cybersecurity", salary: data.salaryCybersecurity, color: "#facc15" },
+    { role: "UX Designer", salary: data.salaryUXDesigner, color: "#34d399" },
+    { role: "Fin. Analyst", salary: data.salaryFinancialAnalyst, color: "#818cf8" },
+    { role: "Lawyer", salary: data.salaryLawyer, color: "#f87171" },
+    { role: "Architect", salary: data.salaryArchitect, color: "#38bdf8" },
+    { role: "Civil Eng.", salary: data.salaryCivilEngineer, color: "#a3e635" },
+    { role: "Pharmacist", salary: data.salaryPharmacist, color: "#e879f9" },
+    { role: "Teacher", salary: data.salaryTeacher, color: "#2dd4bf" },
+    { role: "Accountant", salary: data.salaryAccountant, color: "#fbbf24" },
+    { role: "HR Manager", salary: data.salaryHRManager, color: "#f472b6" },
+    { role: "Sales Mgr.", salary: data.salarySalesManager, color: "#60a5fa" },
+    { role: "Marketing Mgr.", salary: data.salaryMarketingManager, color: "#c084fc" },
+    { role: "Electrician", salary: data.salaryElectrician, color: "#86efac" },
+    { role: "Chef", salary: data.salaryChef, color: "#fca5a5" },
   ];
 
   const costItems = [
@@ -83,14 +100,11 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
 
   const totalMonthlyCost = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costUtilitiesMonthly;
 
-  const currencySymbol = getCurrencySymbol(country.currency);
-  const visaColor = getVisaColor(data.visaDifficulty);
-
   return (
     <div className="min-h-screen bg-bg-primary" style={{ overflow: "auto" }}>
       <nav className="sticky top-0 z-50 glass-panel">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Globe2 className="w-5 h-5 text-accent" />
             <span className="font-heading text-lg font-extrabold">Origio</span>
           </a>
@@ -159,13 +173,27 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
         </section>
 
         <section>
-          <h2 className="font-heading text-xl font-bold mb-6">Average Salaries</h2>
+          <h2 className="font-heading text-xl font-bold mb-2">Average Salaries</h2>
+          <p className="text-text-muted text-sm mb-6">Annual salary across 20 job roles · {country.currency}</p>
           <div className="p-6 rounded-2xl bg-bg-surface border border-border">
-            <div className="w-full h-64">
+            <div className="w-full h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salaryData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                  <XAxis dataKey="role" tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} />
-                  <YAxis tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => Math.round(v / 1000) + "k"} />
+                <BarChart data={salaryData} margin={{ top: 5, right: 5, left: -10, bottom: 60 }}>
+                  <XAxis
+                    dataKey="role"
+                    tick={{ fill: "#8888a0", fontSize: 10 }}
+                    axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+                    tickLine={false}
+                    angle={-45}
+                    textAnchor="end"
+                    interval={0}
+                  />
+                  <YAxis
+                    tick={{ fill: "#8888a0", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => Math.round(v / 1000) + "k"}
+                  />
                   <Tooltip cursor={false} content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
@@ -177,7 +205,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                     }
                     return null;
                   }} />
-                  <Bar dataKey="salary" radius={[6, 6, 0, 0]} maxBarSize={45}>
+                  <Bar dataKey="salary" radius={[4, 4, 0, 0]} maxBarSize={32}>
                     {salaryData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} opacity={0.85} />
                     ))}
@@ -245,7 +273,17 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                 <span key={route} className="px-3 py-1.5 text-xs rounded-full border border-accent/20 text-accent bg-accent/5">{route}</span>
               ))}
             </div>
-            {data.visaOfficialUrl && React.createElement("a", { href: data.visaOfficialUrl, target: "_blank", rel: "noopener noreferrer", className: "inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent/80 transition-colors" }, React.createElement(ExternalLink, { className: "w-4 h-4" }), "Official immigration site")}
+            {data.visaOfficialUrl && (
+              <a
+                href={data.visaOfficialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-accent hover:text-accent/80 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Official immigration site
+              </a>
+            )}
           </div>
         </section>
 
