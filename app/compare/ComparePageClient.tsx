@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Globe2,
   ArrowLeft,
@@ -19,9 +19,17 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { CountryWithData } from "@/types";
+import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getVisaLabel, getVisaColor } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
+
+function getCurrencySymbol(currency: string): string {
+  const symbols: Record<string, string> = {
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+    NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ", NOK: "kr ", SEK: "kr ",
+  };
+  return symbols[currency] ?? currency + " ";
+}
 
 function CountrySelector({
   selected,
@@ -157,8 +165,8 @@ export default function ComparePageClient() {
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [slugA, setSlugA] = useState<string | null>(null);
   const [slugB, setSlugB] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
 
-  // Fetch countries once
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -166,7 +174,6 @@ export default function ComparePageClient() {
       .then((res) => res.json())
       .then((data: CountryWithData[]) => {
         setAllCountries(data);
-        // Read query params after data loads
         const paramA = searchParams.get('a');
         const paramB = searchParams.get('b');
         const validSlugs = data.map((c) => c.slug);
@@ -185,21 +192,23 @@ export default function ComparePageClient() {
     setSlugB(tempA);
   };
 
-  const salaryCompareData = countryA && countryB ? [
-    { role: "Software Eng.", a: countryA.data.salarySoftwareEngineer, b: countryB.data.salarySoftwareEngineer },
-    { role: "Nurse", a: countryA.data.salaryNurse, b: countryB.data.salaryNurse },
-    { role: "Teacher", a: countryA.data.salaryTeacher, b: countryB.data.salaryTeacher },
-    { role: "Accountant", a: countryA.data.salaryAccountant, b: countryB.data.salaryAccountant },
-    { role: "Marketing Mgr.", a: countryA.data.salaryMarketingManager, b: countryB.data.salaryMarketingManager },
-  ] : [];
+  const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
+
+  const salaryCompareData = countryA && countryB ? JOB_ROLES.slice(0, 8).map((role) => ({
+    role: role.label.replace(" Engineer", " Eng.").replace(" Manager", " Mgr.").replace("Financial ", "Fin. "),
+    a: countryA.data[role.salaryKey] as number,
+    b: countryB.data[role.salaryKey] as number,
+  })) : [];
 
   const bothSelected = countryA && countryB;
+  const symA = countryA ? getCurrencySymbol(countryA.currency) : "€";
+  const symB = countryB ? getCurrencySymbol(countryB.currency) : "€";
 
   return (
     <div className="min-h-screen bg-bg-primary" style={{ overflow: "auto" }}>
       <nav className="sticky top-0 z-50 glass-panel">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Globe2 className="w-5 h-5 text-accent" />
             <span className="font-heading text-lg font-extrabold">Origio</span>
           </a>
@@ -218,6 +227,8 @@ export default function ComparePageClient() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+        {/* Country selectors */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
           <div className="flex-1">
             <label className="text-xs text-text-muted uppercase tracking-wider mb-2 block">Country A</label>
@@ -232,8 +243,31 @@ export default function ComparePageClient() {
           </div>
         </div>
 
+        {/* Job role selector */}
+        {bothSelected && (
+          <div className="space-y-2">
+            <label className="text-xs text-text-muted uppercase tracking-wider block">Your Job Role</label>
+            <div className="relative max-w-sm">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as JobRole)}
+                className="w-full appearance-none px-4 py-3 pr-10 rounded-xl bg-bg-elevated border border-border hover:border-accent/30 focus:border-accent/40 focus:outline-none text-text-primary text-sm transition-colors cursor-pointer"
+              >
+                {JOB_ROLES.map((role) => (
+                  <option key={role.key} value={role.key} className="bg-bg-elevated">
+                    {role.emoji} {role.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            </div>
+          </div>
+        )}
+
         {bothSelected && (
           <div className="space-y-10">
+
+            {/* Move score */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Move Score</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -259,6 +293,32 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* Salary for selected role */}
+            <section>
+              <h2 className="font-heading text-xl font-bold mb-2">
+                {currentRole.emoji} {currentRole.label} Salary
+              </h2>
+              <p className="text-text-muted text-sm mb-6">Annual salary in local currency</p>
+              <div className="grid grid-cols-2 gap-4">
+                {[countryA, countryB].map((c, i) => {
+                  const sym = i === 0 ? symA : symB;
+                  const salary = c.data[currentRole.salaryKey] as number;
+                  const color = i === 0 ? "#00d4c8" : "#a78bfa";
+                  return (
+                    <div key={c.slug} className="p-6 rounded-2xl bg-bg-surface border border-border text-center" style={{ borderColor: color + "33" }}>
+                      <span className="text-2xl mb-2 block">{c.flagEmoji}</span>
+                      <p className="text-sm text-text-muted mb-1">{c.name}</p>
+                      <p className="font-heading text-3xl font-extrabold" style={{ color }}>
+                        {sym}{Math.round(salary / 1000)}k
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">per year · {c.currency}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Quality scores */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Quality Scores</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -269,25 +329,32 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* Salary chart — top 8 roles */}
             <section>
-              <h2 className="font-heading text-xl font-bold mb-6">Salary Comparison</h2>
+              <h2 className="font-heading text-xl font-bold mb-6">Salary Comparison (top 8 roles)</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border">
                 <div className="flex items-center gap-4 mb-4 text-xs text-text-muted">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-accent inline-block"></span>{countryA.name}</span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#a78bfa] inline-block"></span>{countryB.name}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-accent inline-block" />
+                    {countryA.name}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#a78bfa] inline-block" />
+                    {countryB.name}
+                  </span>
                 </div>
                 <div className="w-full h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={salaryCompareData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                      <XAxis dataKey="role" tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} />
+                      <XAxis dataKey="role" tick={{ fill: "#8888a0", fontSize: 10 }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} />
                       <YAxis tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => Math.round(v / 1000) + "k"} />
                       <Tooltip cursor={false} content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           return (
                             <div className="glass-panel rounded-lg px-3 py-2">
                               <p className="text-sm font-medium text-text-primary mb-1">{label}</p>
-                              <p className="text-xs text-accent">{countryA.name + ": " + Number(payload[0].value).toLocaleString()}</p>
-                              <p className="text-xs text-[#a78bfa]">{countryB.name + ": " + Number(payload[1].value).toLocaleString()}</p>
+                              <p className="text-xs text-accent">{countryA.name + ": " + symA + Number(payload[0]?.value ?? 0).toLocaleString()}</p>
+                              <p className="text-xs text-[#a78bfa]">{countryB.name + ": " + symB + Number(payload[1]?.value ?? 0).toLocaleString()}</p>
                             </div>
                           );
                         }
@@ -301,6 +368,7 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* Cost of living */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Cost of Living</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border space-y-5">
@@ -312,6 +380,7 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* Tax */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Tax</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border space-y-5">
@@ -320,6 +389,7 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* Visa */}
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Visa</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -348,6 +418,7 @@ export default function ComparePageClient() {
               </div>
             </section>
 
+            {/* View full pages */}
             <section className="flex flex-col sm:flex-row gap-4">
               <a href={"/country/" + countryA.slug} className="flex-1 text-center py-3 rounded-2xl border border-border hover:border-accent/30 transition-colors text-sm text-text-muted hover:text-text-primary">
                 {"View full " + countryA.name + " page"}
@@ -369,7 +440,10 @@ export default function ComparePageClient() {
 
       <footer className="border-t border-border mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-between">
-          <div className="flex items-center gap-2"><Globe2 className="w-4 h-4 text-accent" /><span className="font-heading text-sm font-bold">Origio</span></div>
+          <div className="flex items-center gap-2">
+            <Globe2 className="w-4 h-4 text-accent" />
+            <span className="font-heading text-sm font-bold">Origio</span>
+          </div>
           <p className="text-xs text-text-muted">Compare countries side by side</p>
         </div>
       </footer>
