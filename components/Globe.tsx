@@ -22,6 +22,17 @@ interface PinPosition {
   isHovered: boolean;
 }
 
+function getGlobeTexture(): string {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 18) {
+    return "//unpkg.com/three-globe/example/img/earth-day.jpg";
+  } else if (hour >= 18 && hour < 22) {
+    return "//unpkg.com/three-globe/example/img/earth-dark.jpg";
+  } else {
+    return "//unpkg.com/three-globe/example/img/earth-night.jpg";
+  }
+}
+
 export default function Globe({
   countries,
   onCountrySelect,
@@ -37,63 +48,59 @@ export default function Globe({
   const onCountrySelectRef = useRef(onCountrySelect);
   onCountrySelectRef.current = onCountrySelect;
 
-  // Update pin positions every animation frame
   const updatePins = useCallback(() => {
-  if (!globeRef.current || !mountRef.current) return;
+    if (!globeRef.current || !mountRef.current) return;
 
-  const hasHighlights = highlightedSlugs.length > 0;
-  const pov = globeRef.current.pointOfView();
-  const povLat = (pov.lat * Math.PI) / 180;
-  const povLng = (pov.lng * Math.PI) / 180;
+    const hasHighlights = highlightedSlugs.length > 0;
+    const pov = globeRef.current.pointOfView();
+    const povLat = (pov.lat * Math.PI) / 180;
+    const povLng = (pov.lng * Math.PI) / 180;
 
-  // Camera direction vector
-  const camX = Math.cos(povLat) * Math.cos(povLng);
-  const camY = Math.sin(povLat);
-  const camZ = Math.cos(povLat) * Math.sin(povLng);
+    const camX = Math.cos(povLat) * Math.cos(povLng);
+    const camY = Math.sin(povLat);
+    const camZ = Math.cos(povLat) * Math.sin(povLng);
 
-  const positions: PinPosition[] = countries.map((d) => {
-    const coords = globeRef.current.getScreenCoords(d.lat, d.lng, 0.02);
-    const isSelected = d.slug === selectedSlug;
-    const isHovered = d.slug === hoveredSlug;
-    const rank = highlightedSlugs.indexOf(d.slug);
+    const positions: PinPosition[] = countries.map((d) => {
+      const coords = globeRef.current.getScreenCoords(d.lat, d.lng, 0.02);
+      const isSelected = d.slug === selectedSlug;
+      const isHovered = d.slug === hoveredSlug;
+      const rank = highlightedSlugs.indexOf(d.slug);
 
-    let color: string;
-    if (isSelected || isHovered) color = "#00d4c8";
-    else if (rank === 0) color = "#fbbf24";
-    else if (rank === 1) color = "#00d4c8";
-    else if (rank === 2) color = "#a78bfa";
-    else if (hasHighlights) color = "#555566";
-    else color = getScoreColor(d.moveScore);
+      let color: string;
+      if (isSelected || isHovered) color = "#00d4c8";
+      else if (rank === 0) color = "#fbbf24";
+      else if (rank === 1) color = "#00d4c8";
+      else if (rank === 2) color = "#a78bfa";
+      else if (hasHighlights) color = "#555566";
+      else color = getScoreColor(d.moveScore);
 
-    // Check if country is on the visible hemisphere using dot product
-    const latRad = (d.lat * Math.PI) / 180;
-    const lngRad = (d.lng * Math.PI) / 180;
-    const px = Math.cos(latRad) * Math.cos(lngRad);
-    const py = Math.sin(latRad);
-    const pz = Math.cos(latRad) * Math.sin(lngRad);
-    const dot = px * camX + py * camY + pz * camZ;
+      const latRad = (d.lat * Math.PI) / 180;
+      const lngRad = (d.lng * Math.PI) / 180;
+      const px = Math.cos(latRad) * Math.cos(lngRad);
+      const py = Math.sin(latRad);
+      const pz = Math.cos(latRad) * Math.sin(lngRad);
+      const dot = px * camX + py * camY + pz * camZ;
 
-    // Only show if facing camera (dot > 0.1 gives a small buffer at edges)
-    const visible = dot > 0.1 && coords &&
-      coords.x > 10 &&
-      coords.x < (mountRef.current?.clientWidth ?? 0) - 10 &&
-      coords.y > 10 &&
-      coords.y < (mountRef.current?.clientHeight ?? 0) - 10;
+      const visible = dot > 0.1 && coords &&
+        coords.x > 10 &&
+        coords.x < (mountRef.current?.clientWidth ?? 0) - 10 &&
+        coords.y > 10 &&
+        coords.y < (mountRef.current?.clientHeight ?? 0) - 10;
 
-    return {
-      slug: d.slug,
-      x: coords?.x ?? -999,
-      y: coords?.y ?? -999,
-      visible: !!visible,
-      color,
-      isSelected,
-      isHovered,
-    };
-  });
+      return {
+        slug: d.slug,
+        x: coords?.x ?? -999,
+        y: coords?.y ?? -999,
+        visible: !!visible,
+        color,
+        isSelected,
+        isHovered,
+      };
+    });
 
-  setPinPositions(positions);
-  animFrameRef.current = requestAnimationFrame(updatePins);
-}, [countries, selectedSlug, hoveredSlug, highlightedSlugs]);
+    setPinPositions(positions);
+    animFrameRef.current = requestAnimationFrame(updatePins);
+  }, [countries, selectedSlug, hoveredSlug, highlightedSlugs]);
 
   useEffect(() => {
     const mountEl = mountRef.current;
@@ -113,7 +120,7 @@ export default function Globe({
       if (cancelled) return;
 
       const globe = (GlobeGL as any)()(globeContainer)
-        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
+      .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
         .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
         .backgroundImageUrl("//unpkg.com/three-globe/example/img/night-sky.png")
         .showAtmosphere(true)
@@ -121,7 +128,6 @@ export default function Globe({
         .atmosphereAltitude(0.25)
         .width(mountEl.clientWidth)
         .height(mountEl.clientHeight)
-        // Invisible points just for raycasting/click detection
         .pointsData([])
         .pointLat((d: any) => d.lat)
         .pointLng((d: any) => d.lng)
@@ -182,14 +188,12 @@ export default function Globe({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Start pin position loop once loaded
   useEffect(() => {
     if (!isLoaded || countries.length === 0) return;
     animFrameRef.current = requestAnimationFrame(updatePins);
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [isLoaded, updatePins]);
 
-  // Sync countries to globe points
   useEffect(() => {
     if (!globeRef.current || !isLoaded || countries.length === 0) return;
     globeRef.current
@@ -197,7 +201,6 @@ export default function Globe({
       .labelsData(countries);
   }, [countries, isLoaded]);
 
-  // Handle selection/arcs
   useEffect(() => {
     if (!globeRef.current || !isLoaded) return;
 
@@ -231,7 +234,6 @@ export default function Globe({
     <div className="globe-container" style={{ position: "relative" }}>
       <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
 
-      {/* CSS Pin overlay */}
       {isLoaded && pinPositions.map((pin) => {
         if (!pin.visible) return null;
         const hasHighlights = highlightedSlugs.length > 0;
@@ -251,7 +253,7 @@ export default function Globe({
               cursor: "pointer",
               zIndex: pin.isSelected ? 30 : pin.isHovered ? 25 : 20,
               opacity: isDimmed ? 0.25 : 1,
-              transition: "opacity 0.3s ease, transform 0.2s ease",
+              transition: "opacity 0.3s ease",
               pointerEvents: "auto",
               fontSize: pin.isSelected ? "28px" : pin.isHovered ? "24px" : "20px",
               filter: pin.isSelected
