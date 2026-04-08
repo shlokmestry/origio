@@ -68,10 +68,10 @@ export default function AuthPage() {
         </button>
 
         <div className="glass-panel rounded-2xl p-8">
-          <div className="flex items-center gap-2 mb-8">
-            <Globe2 className="w-6 h-6 text-accent" />
-            <span className="font-heading text-xl font-extrabold">Origio</span>
-          </div>
+         <a href="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
+  <Globe2 className="w-6 h-6 text-accent" />
+  <span className="font-heading text-xl font-extrabold">Origio</span>
+</a>
 
           <h1 className="font-heading text-2xl font-extrabold mb-2">
             {mode === "signin" ? "Welcome back" : "Create your account"}

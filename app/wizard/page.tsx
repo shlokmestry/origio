@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Globe2, Sparkles } from "lucide-react";
 import { JOB_ROLES } from "@/types";
-import { WizardAnswers, scoreCountriesForWizard, CountryMatch } from "@/lib/wizard";
+import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
 
 const TOTAL_STEPS = 8;
@@ -15,8 +15,57 @@ const PASSPORTS = [
   "Ireland", "United Kingdom", "Germany", "France", "Netherlands", "Spain",
   "Portugal", "Sweden", "Norway", "Switzerland", "Australia", "New Zealand",
   "Canada", "USA", "Singapore", "UAE", "India", "China", "Brazil", "South Africa",
-  "Other"
+  "Nigeria", "Kenya", "Philippines", "Italy", "Poland", "Romania", "Other"
 ];
+
+// Currency symbol and rent ranges by passport region
+function getRentBudgets(passport: string) {
+  const p = passport.toLowerCase();
+  if (p === "india") {
+    return [
+      { key: "under800", label: "Under ₹65,000/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  } else if (p === "usa" || p === "canada") {
+    return [
+      { key: "under800", label: "Under $800/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  } else if (p === "united kingdom") {
+    return [
+      { key: "under800", label: "Under £650/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "£650 – £1,200/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "£1,200 – £2,000/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  } else if (p === "australia" || p === "new zealand") {
+    return [
+      { key: "under800", label: "Under A$1,200/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "A$1,200 – A$2,200/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "A$2,200 – A$3,800/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  } else if (p === "uae") {
+    return [
+      { key: "under800", label: "Under AED 3,000/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "AED 3,000 – AED 5,500/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "AED 5,500 – AED 9,000/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  } else {
+    // Default EUR for European passports and others
+    return [
+      { key: "under800", label: "Under €800/mo", sub: "Tight budget" },
+      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ];
+  }
+}
 
 const MOVE_REASONS = [
   { key: "job", label: "I got a job offer abroad", emoji: "💼" },
@@ -24,7 +73,6 @@ const MOVE_REASONS = [
   { key: "remote", label: "I work remotely", emoji: "💻" },
   { key: "retire", label: "I'm planning to retire", emoji: "🌅" },
   { key: "study", label: "I'm going to study", emoji: "🎓" },
-  { key: "partner", label: "Following a partner", emoji: "❤️" },
 ];
 
 const PRIORITIES = [
@@ -43,13 +91,6 @@ const CITY_VIBES = [
   { key: "any", label: "I'm open to anything", sub: "Surprise me" },
 ];
 
-const RENT_BUDGETS = [
-  { key: "under800", label: "Under €800/mo", sub: "Tight budget" },
-  { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
-  { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
-  { key: "any", label: "Money isn't a concern", sub: "No limit" },
-];
-
 const LANGUAGES = [
   { key: "german", label: "German" },
   { key: "french", label: "French" },
@@ -57,6 +98,16 @@ const LANGUAGES = [
   { key: "portuguese", label: "Portuguese" },
   { key: "arabic", label: "Arabic" },
   { key: "mandarin", label: "Mandarin" },
+  { key: "hindi", label: "Hindi" },
+  { key: "italian", label: "Italian" },
+  { key: "dutch", label: "Dutch" },
+  { key: "swedish", label: "Swedish" },
+  { key: "norwegian", label: "Norwegian" },
+  { key: "japanese", label: "Japanese" },
+  { key: "korean", label: "Korean" },
+  { key: "tagalog", label: "Tagalog" },
+  { key: "turkish", label: "Turkish" },
+  { key: "polish", label: "Polish" },
   { key: "none", label: "English only" },
 ];
 
@@ -65,6 +116,7 @@ const DEAL_BREAKERS = [
   { key: "europe", label: "Must be in Europe" },
   { key: "lowtax", label: "Must have low taxes" },
   { key: "warm", label: "Must have warm weather" },
+  { key: "lowcrime", label: "Must have low crime rate" },
   { key: "none", label: "No deal breakers" },
 ];
 
@@ -78,16 +130,47 @@ export default function WizardPage() {
     dealBreakers: [],
   });
 
-  const progress = (step / TOTAL_STEPS) * 100;
+  // If job offer selected, skip steps 4,5,6 (priorities, city vibe, rent)
+  const isJobOffer = answers.moveReason === "job";
+
+  // Actual step sequence based on move reason
+  const getNextStep = (current: number) => {
+    if (current === 2 && isJobOffer) return 3; // go to job role
+    if (current === 3 && isJobOffer) return 7; // skip to languages
+    return current + 1;
+  };
+
+  const getPrevStep = (current: number) => {
+    if (current === 7 && isJobOffer) return 3;
+    if (current === 3 && isJobOffer) return 2;
+    return current - 1;
+  };
+
+  const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
+  const getEffectiveStep = () => {
+    if (!isJobOffer) return step;
+    if (step <= 3) return step;
+    if (step >= 7) return step - 3;
+    return step;
+  };
+
+  const progress = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
 
   const handleNext = () => {
-    if (step < TOTAL_STEPS) setStep(step + 1);
-    else handleSubmit();
+    const next = getNextStep(step);
+    if (next <= TOTAL_STEPS) {
+      setStep(next);
+    } else {
+      handleSubmit();
+    }
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-    else router.push("/");
+    if (step === 1) {
+      router.push("/");
+    } else {
+      setStep(getPrevStep(step));
+    }
   };
 
   const handleSubmit = async () => {
@@ -96,7 +179,6 @@ export default function WizardPage() {
       const res = await fetch("/api/countries");
       const countries: CountryWithData[] = await res.json();
       const matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
-      // Store results in sessionStorage and navigate to results
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
@@ -105,6 +187,8 @@ export default function WizardPage() {
       setLoading(false);
     }
   };
+
+  const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
 
   const canProceed = () => {
     if (step === 1) return !!answers.passport;
@@ -118,6 +202,8 @@ export default function WizardPage() {
     return false;
   };
 
+  const rentBudgets = getRentBudgets(answers.passport ?? "");
+
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
       {/* Header */}
@@ -126,11 +212,13 @@ export default function WizardPage() {
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        <div className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Globe2 className="w-5 h-5 text-accent" />
           <span className="font-heading font-extrabold">Origio</span>
-        </div>
-        <span className="text-sm text-text-muted">{step} of {TOTAL_STEPS}</span>
+        </a>
+        <span className="text-sm text-text-muted">
+          {getEffectiveStep()} of {getEffectiveTotalSteps()}
+        </span>
       </div>
 
       {/* Progress bar */}
@@ -191,6 +279,11 @@ export default function WizardPage() {
                   </button>
                 ))}
               </div>
+              {isJobOffer && (
+                <div className="p-3 rounded-xl bg-accent/5 border border-accent/20">
+                  <p className="text-xs text-accent">Since you have a job offer, we'll skip some questions and focus on what matters most for your move.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -217,7 +310,7 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 4 — Priorities */}
+          {/* Step 4 — Priorities (skipped for job offer) */}
           {step === 4 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -265,7 +358,7 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 5 — City vibe */}
+          {/* Step 5 — City vibe (skipped for job offer) */}
           {step === 5 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -298,7 +391,7 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 6 — Rent budget */}
+          {/* Step 6 — Rent budget (skipped for job offer) */}
           {step === 6 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -307,7 +400,7 @@ export default function WizardPage() {
                 <p className="text-text-muted">We'll filter out countries that would stretch you too thin.</p>
               </div>
               <div className="space-y-3">
-                {RENT_BUDGETS.map((b) => (
+                {rentBudgets.map((b) => (
                   <button
                     key={b.key}
                     onClick={() => setAnswers({ ...answers, rentBudget: b.key })}
@@ -431,7 +524,7 @@ export default function WizardPage() {
             >
               {loading ? (
                 <>Finding your matches...</>
-              ) : step === TOTAL_STEPS ? (
+              ) : isLastStep ? (
                 <>
                   <Sparkles className="w-4 h-4" />
                   Find My Country

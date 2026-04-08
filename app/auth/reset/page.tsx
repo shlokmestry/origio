@@ -49,10 +49,10 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="glass-panel rounded-2xl p-8">
-          <div className="flex items-center gap-2 mb-8">
-            <Globe2 className="w-6 h-6 text-accent" />
-            <span className="font-heading text-xl font-extrabold">Origio</span>
-          </div>
+         <a href="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
+  <Globe2 className="w-6 h-6 text-accent" />
+  <span className="font-heading text-xl font-extrabold">Origio</span>
+</a>
 
           {done ? (
             <div className="text-center space-y-4">
