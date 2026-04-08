@@ -96,11 +96,12 @@ export default function Home() {
     <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-      <Globe
-        countries={globeCountries}
-        onCountrySelect={handleCountrySelect}
-        selectedSlug={selectedSlug}
-      />
+     <Globe
+  countries={globeCountries}
+  onCountrySelect={handleCountrySelect}
+  selectedSlug={selectedSlug}
+  highlightedSlugs={highlightedSlugs}
+/>
 
       {showHero && (
         <div className="absolute inset-0 z-10 pointer-events-none">
