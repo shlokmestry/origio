@@ -5,8 +5,10 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
+import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
+import { CountryMatch } from "@/lib/wizard";
 import { MapPin, ChevronDown, Sparkles } from "lucide-react";
 
 export default function Home() {
@@ -17,6 +19,7 @@ export default function Home() {
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
+  const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -31,11 +34,15 @@ export default function Home() {
   // Check for wizard results to highlight on globe
   useEffect(() => {
     const raw = sessionStorage.getItem("highlightedCountries");
+    const matchesRaw = sessionStorage.getItem("wizardMatches");
     if (raw) {
       const slugs: string[] = JSON.parse(raw);
       setHighlightedSlugs(slugs);
       setShowHero(false);
       sessionStorage.removeItem("highlightedCountries");
+      if (matchesRaw) {
+        setWizardMatches(JSON.parse(matchesRaw));
+      }
       // Auto-open the top match
       if (slugs[0]) {
         setTimeout(() => {
@@ -96,12 +103,12 @@ export default function Home() {
     <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-     <Globe
-  countries={globeCountries}
-  onCountrySelect={handleCountrySelect}
-  selectedSlug={selectedSlug}
-  highlightedSlugs={highlightedSlugs}
-/>
+      <Globe
+        countries={globeCountries}
+        onCountrySelect={handleCountrySelect}
+        selectedSlug={selectedSlug}
+        highlightedSlugs={highlightedSlugs}
+      />
 
       {showHero && (
         <div className="absolute inset-0 z-10 pointer-events-none">
@@ -156,6 +163,23 @@ export default function Home() {
         </div>
       )}
 
+      {/* Wizard matches panel — slides in from left */}
+      {wizardMatches.length > 0 && !selectedSlug && (
+        <WizardMatchesPanel
+          matches={wizardMatches}
+          allCountries={allCountries}
+          selectedRole={selectedRole}
+          onCountrySelect={(slug) => {
+            handleCountrySelect(slug);
+            setWizardMatches([]); // close matches panel when country opens
+          }}
+          onClose={() => {
+            setWizardMatches([]);
+            setHighlightedSlugs([]);
+          }}
+        />
+      )}
+
       <CountryPanel
         country={selectedCountry}
         onClose={handleClosePanel}
@@ -163,7 +187,7 @@ export default function Home() {
         onRoleChange={setSelectedRole}
       />
 
-      {!showHero && !selectedSlug && (
+      {!showHero && !selectedSlug && wizardMatches.length === 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
           <div className="glass-panel rounded-full px-6 py-3 flex items-center gap-3 shadow-xl shadow-black/30">
             <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
