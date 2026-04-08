@@ -84,7 +84,7 @@ export default function Globe({
         .arcDashAnimateTime(4000);
 
       globe.controls().autoRotate = true;
-      globe.controls().autoRotateSpeed = 0.4;
+      globe.controls().autoRotateSpeed = 0.2;
       globe.controls().enableZoom = true;
       globe.controls().minDistance = 150;
       globe.controls().maxDistance = 500;
