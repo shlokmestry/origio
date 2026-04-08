@@ -9,7 +9,7 @@ import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { MapPin, Sparkles, Briefcase, Globe2, FileText } from "lucide-react";
+import { MapPin, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -66,6 +66,14 @@ export default function Home() {
     scoreQualityOfLife: c.data.scoreQualityOfLife,
     visaDifficulty: c.data.visaDifficulty,
   })), [allCountries]);
+
+  // Top 5 countries by move score for trending strip
+  const trendingCountries = useMemo(() =>
+    [...allCountries]
+      .sort((a, b) => b.data.moveScore - a.data.moveScore)
+      .slice(0, 5),
+    [allCountries]
+  );
 
   const handleCountrySelect = useCallback(
     (slug: string) => {
@@ -141,7 +149,7 @@ export default function Home() {
 
               {/* CTA buttons */}
               <div
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10 animate-fade-up"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 animate-fade-up"
                 style={{ animationDelay: "0.6s", opacity: 0 }}
               >
                 <button
@@ -158,6 +166,36 @@ export default function Home() {
                   Explore the Globe
                 </button>
               </div>
+
+              {/* Trending countries strip */}
+              {trendingCountries.length > 0 && (
+                <div
+                  className="mb-8 animate-fade-up"
+                  style={{ animationDelay: "0.7s", opacity: 0 }}
+                >
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs text-text-muted flex-shrink-0">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Trending</span>
+                    </div>
+                    {trendingCountries.map((country) => (
+                      <button
+                        key={country.slug}
+                        onClick={() => handleCountrySelect(country.slug)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
+                      >
+                        <span className="text-sm">{country.flagEmoji}</span>
+                        <span className="text-xs text-text-muted group-hover:text-text-primary transition-colors">
+                          {country.name}
+                        </span>
+                        <span className="text-xs font-bold text-accent">
+                          {country.data.moveScore}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* How it works */}
               <div
