@@ -131,20 +131,3 @@ export const JOB_ROLES: {
 ]
 
 // Keep old exports for any files that still reference them
-export type OldJobRole = "software_engineer" | "nurse" | "teacher" | "accountant" | "marketing_manager"
-
-export const JOB_ROLE_LABELS: Record<OldJobRole, string> = {
-  software_engineer: "Software Engineer",
-  nurse: "Nurse",
-  teacher: "Teacher",
-  accountant: "Accountant",
-  marketing_manager: "Marketing Manager",
-}
-
-export const JOB_ROLE_SALARY_KEYS: Record<OldJobRole, keyof CountryData> = {
-  software_engineer: "salarySoftwareEngineer",
-  nurse: "salaryNurse",
-  teacher: "salaryTeacher",
-  accountant: "salaryAccountant",
-  marketing_manager: "salaryMarketingManager",
-}

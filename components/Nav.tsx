@@ -6,7 +6,6 @@ import { Search, Globe2, Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-import React from "react";
 
 interface NavProps {
   countries: GlobeCountry[];
@@ -79,15 +78,13 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 </button>
               </div>
             ) : (
-              React.createElement(
-                'a',
-                {
-                  href: "/auth",
-                  className: "flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium"
-                },
-                React.createElement(LogIn, { className: "w-4 h-4" }),
-                "Sign In"
-              )
+              <a
+                href="/auth"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </a>
             )}
           </div>
 
@@ -192,15 +189,13 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                   </button>
                 </div>
               ) : (
-                React.createElement(
-                  'a',
-                  {
-                    href: "/auth",
-                    className: "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
-                  },
-                  React.createElement(LogIn, { className: "w-4 h-4" }),
-                  "Sign In"
-                )
+                <a
+                  href="/auth"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </a>
               )}
             </div>
           </div>
