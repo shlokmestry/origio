@@ -35,6 +35,14 @@ import {
   getVisaColor,
 } from "@/lib/utils";
 
+function getCurrencySymbol(currency: string): string {
+  const symbols: Record<string, string> = {
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+    NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ", NOK: "kr ", SEK: "kr ",
+  };
+  return symbols[currency] ?? currency + " ";
+}
+
 interface Props {
   country: CountryWithData;
   otherCountries: CountryWithData[];
@@ -75,6 +83,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
 
   const totalMonthlyCost = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costUtilitiesMonthly;
 
+  const currencySymbol = getCurrencySymbol(country.currency);
   const visaColor = getVisaColor(data.visaDifficulty);
 
   return (
@@ -125,8 +134,8 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
         <section>
           <h2 className="font-heading text-xl font-bold mb-6">At a Glance</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatBox icon={DollarSign} label="Avg Dev Salary" value={"€" + Math.round(data.salarySoftwareEngineer / 1000) + "k/yr"} color="#00d4c8" />
-            <StatBox icon={Home} label="Rent (City)" value={"€" + data.costRentCityCentre.toLocaleString() + "/mo"} color="#4ade80" />
+            <StatBox icon={DollarSign} label="Avg Dev Salary" value={currencySymbol + Math.round(data.salarySoftwareEngineer / 1000) + "k/yr"} color="#00d4c8" />
+            <StatBox icon={Home} label="Rent (City)" value={currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo"} color="#4ade80" />
             <StatBox icon={Heart} label="Quality of Life" value={data.scoreQualityOfLife + "/10"} color="#a78bfa" />
             <StatBox icon={Plane} label="Visa" value={getVisaLabel(data.visaDifficulty)} color={visaColor} />
           </div>
@@ -162,7 +171,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                       return (
                         <div className="glass-panel rounded-lg px-3 py-2">
                           <p className="text-sm font-medium text-text-primary">{payload[0].payload.role}</p>
-                          <p className="text-sm text-accent font-bold">{"€" + Number(payload[0].value).toLocaleString() + "/yr"}</p>
+                          <p className="text-sm text-accent font-bold">{currencySymbol + Number(payload[0].value).toLocaleString() + "/yr"}</p>
                         </div>
                       );
                     }
@@ -185,14 +194,14 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
             {costItems.map((item) => (
               <div key={item.label} className="flex items-center justify-between p-4 rounded-2xl bg-bg-surface border border-border">
                 <span className="text-sm text-text-muted">{item.label}</span>
-                <span className="text-lg font-heading font-bold text-text-primary">{"€" + item.value.toLocaleString()}</span>
+                <span className="text-lg font-heading font-bold text-text-primary">{currencySymbol + item.value.toLocaleString()}</span>
               </div>
             ))}
           </div>
           <div className="mt-4 p-4 rounded-2xl accent-border-glow bg-bg-surface">
             <div className="flex items-center justify-between">
               <span className="text-sm text-text-muted">Estimated Monthly Total (city centre)</span>
-              <span className="text-xl font-heading font-bold text-accent">{"€" + totalMonthlyCost.toLocaleString()}</span>
+              <span className="text-xl font-heading font-bold text-accent">{currencySymbol + totalMonthlyCost.toLocaleString()}</span>
             </div>
           </div>
         </section>
