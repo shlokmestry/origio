@@ -9,7 +9,7 @@ import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { MapPin, ChevronDown, Sparkles } from "lucide-react";
+import { MapPin, Sparkles, Briefcase, Globe2, FileText } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -31,7 +31,6 @@ export default function Home() {
       .catch((err) => console.error('Failed to fetch countries:', err))
   }, [])
 
-  // Check for wizard results to highlight on globe
   useEffect(() => {
     const raw = sessionStorage.getItem("highlightedCountries");
     const matchesRaw = sessionStorage.getItem("wizardMatches");
@@ -43,7 +42,6 @@ export default function Home() {
       if (matchesRaw) {
         setWizardMatches(JSON.parse(matchesRaw));
       }
-      // Auto-open the top match
       if (slugs[0]) {
         setTimeout(() => {
           const country = allCountries.find((c) => c.slug === slugs[0]);
@@ -115,12 +113,14 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16 pointer-events-auto">
             <div className="max-w-2xl">
+
+              {/* Social proof badge */}
               <div
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-6 animate-fade-up"
                 style={{ animationDelay: "0.1s", opacity: 0 }}
               >
                 <MapPin className="w-3 h-3" />
-                <span>Explore {allCountries.length} countries with real data</span>
+                <span>Real data across {allCountries.length} countries · 20 job roles · trusted by expats</span>
               </div>
 
               <h1
@@ -136,12 +136,12 @@ export default function Home() {
                 className="text-lg sm:text-xl text-text-muted max-w-lg leading-relaxed mb-8 animate-fade-up"
                 style={{ animationDelay: "0.4s", opacity: 0 }}
               >
-                Explore opportunities, salaries, visas and life quality across
-                every country — personalised to you.
+                Salaries, visas, cost of living and quality of life — personalised to your job and passport.
               </p>
 
+              {/* CTA buttons */}
               <div
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-fade-up"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-10 animate-fade-up"
                 style={{ animationDelay: "0.6s", opacity: 0 }}
               >
                 <button
@@ -158,12 +158,46 @@ export default function Home() {
                   Explore the Globe
                 </button>
               </div>
+
+              {/* How it works */}
+              <div
+                className="flex items-center gap-6 animate-fade-up"
+                style={{ animationDelay: "0.8s", opacity: 0 }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-accent" />
+                  </div>
+                  <span className="text-xs text-text-muted">Take the quiz</span>
+                </div>
+                <div className="w-4 h-px bg-border flex-shrink-0" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                    <Globe2 className="w-3.5 h-3.5 text-accent" />
+                  </div>
+                  <span className="text-xs text-text-muted">See your matches</span>
+                </div>
+                <div className="w-4 h-px bg-border flex-shrink-0" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-3.5 h-3.5 text-accent" />
+                  </div>
+                  <span className="text-xs text-text-muted">Plan your move</span>
+                </div>
+                <div className="w-4 h-px bg-border flex-shrink-0" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-3.5 h-3.5 text-accent" />
+                  </div>
+                  <span className="text-xs text-text-muted">Get your report</span>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       )}
 
-      {/* Wizard matches panel — slides in from left */}
       {wizardMatches.length > 0 && !selectedSlug && (
         <WizardMatchesPanel
           matches={wizardMatches}
@@ -171,7 +205,7 @@ export default function Home() {
           selectedRole={selectedRole}
           onCountrySelect={(slug) => {
             handleCountrySelect(slug);
-            setWizardMatches([]); // close matches panel when country opens
+            setWizardMatches([]);
           }}
           onClose={() => {
             setWizardMatches([]);
