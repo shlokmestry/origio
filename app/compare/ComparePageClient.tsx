@@ -195,6 +195,7 @@ export default function ComparePageClient() {
   const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
 
   const salaryCompareData = countryA && countryB ? JOB_ROLES.slice(0, 8).map((role) => ({
+    isSelected: role.key === selectedRole,
     role: role.label.replace(" Engineer", " Eng.").replace(" Manager", " Mgr.").replace("Financial ", "Fin. "),
     a: countryA.data[role.salaryKey] as number,
     b: countryB.data[role.salaryKey] as number,
@@ -372,11 +373,11 @@ export default function ComparePageClient() {
             <section>
               <h2 className="font-heading text-xl font-bold mb-6">Cost of Living</h2>
               <div className="p-6 rounded-2xl bg-bg-surface border border-border space-y-5">
-                <CompareBar label="Rent (City Centre)" valueA={countryA.data.costRentCityCentre} valueB={countryB.data.costRentCityCentre} nameA={countryA.name} nameB={countryB.name} format={(v) => "€" + v.toLocaleString()} higherIsBetter={false} />
-                <CompareBar label="Rent (Outside)" valueA={countryA.data.costRentOutside} valueB={countryB.data.costRentOutside} nameA={countryA.name} nameB={countryB.name} format={(v) => "€" + v.toLocaleString()} higherIsBetter={false} />
-                <CompareBar label="Groceries" valueA={countryA.data.costGroceriesMonthly} valueB={countryB.data.costGroceriesMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => "€" + v.toLocaleString()} higherIsBetter={false} />
-                <CompareBar label="Transport" valueA={countryA.data.costTransportMonthly} valueB={countryB.data.costTransportMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => "€" + v.toLocaleString()} higherIsBetter={false} />
-                <CompareBar label="Utilities" valueA={countryA.data.costUtilitiesMonthly} valueB={countryB.data.costUtilitiesMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => "€" + v.toLocaleString()} higherIsBetter={false} />
+                <CompareBar label="Rent (City Centre)" valueA={countryA.data.costRentCityCentre} valueB={countryB.data.costRentCityCentre} nameA={countryA.name} nameB={countryB.name} format={(v) => v.toLocaleString()} higherIsBetter={false} />
+                <CompareBar label="Rent (Outside)" valueA={countryA.data.costRentOutside} valueB={countryB.data.costRentOutside} nameA={countryA.name} nameB={countryB.name} format={(v) => v.toLocaleString()} higherIsBetter={false} />
+                <CompareBar label="Groceries" valueA={countryA.data.costGroceriesMonthly} valueB={countryB.data.costGroceriesMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => v.toLocaleString()} higherIsBetter={false} />
+                <CompareBar label="Transport" valueA={countryA.data.costTransportMonthly} valueB={countryB.data.costTransportMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => v.toLocaleString()} higherIsBetter={false} />
+                <CompareBar label="Utilities" valueA={countryA.data.costUtilitiesMonthly} valueB={countryB.data.costUtilitiesMonthly} nameA={countryA.name} nameB={countryB.name} format={(v) => v.toLocaleString()} higherIsBetter={false} />
               </div>
             </section>
 
