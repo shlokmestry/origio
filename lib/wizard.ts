@@ -30,14 +30,35 @@ const ENGLISH_SPEAKING_COUNTRIES = [
   "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore",
 ];
 
-// Safety scores >= 8 = low crime countries
-const LOW_CRIME_COUNTRIES = [
-  "australia", "new-zealand", "canada", "germany", "netherlands",
-  "portugal", "ireland", "sweden", "switzerland", "norway", "singapore",
-];
+const WARM_COUNTRIES = ["uae", "spain", "portugal", "singapore", "australia", "india", "brazil", "malaysia"];
+const COLD_COUNTRIES = ["sweden", "norway", "germany", "netherlands", "united-kingdom", "ireland", "canada", "finland", "denmark", "austria", "belgium"];
 
-const WARM_COUNTRIES = ["uae", "spain", "portugal", "singapore", "australia"];
-const COLD_COUNTRIES = ["sweden", "norway", "germany", "netherlands", "united-kingdom", "ireland", "canada"];
+// Approximate conversion rates to USD for salary normalisation
+// These don't need to be exact — just need to put all salaries on the same scale
+const TO_USD: Record<string, number> = {
+  USD: 1,
+  EUR: 1.08,
+  GBP: 1.27,
+  AUD: 0.65,
+  CAD: 0.74,
+  NZD: 0.61,
+  CHF: 1.13,
+  SGD: 0.74,
+  AED: 0.27,
+  NOK: 0.093,
+  SEK: 0.096,
+  DKK: 0.145,
+  JPY: 0.0067,
+  INR: 0.012,
+  BRL: 0.20,
+  MYR: 0.22,
+};
+
+// Convert cost to USD for rent budget comparison
+function toUSD(amount: number, currency: string): number {
+  const rate = TO_USD[currency] ?? 1;
+  return amount * rate;
+}
 
 export function scoreCountriesForWizard(
   countries: CountryWithData[],
@@ -48,11 +69,13 @@ export function scoreCountriesForWizard(
     let score = 0;
     const reasons: string[] = [];
 
-    // --- Salary score based on selected job role ---
+    // --- Salary score — normalise to USD first ---
     const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
     const salaryKey = jobRoleDef?.salaryKey ?? "salarySoftwareEngineer";
-    const salary = data[salaryKey] as number;
-    const salaryScore = normalise(salary, 20000, 200000);
+    const salaryRaw = data[salaryKey] as number;
+    const salaryUSD = toUSD(salaryRaw, country.currency);
+    // Normalise USD salary: $25k = 0, $200k = 10
+    const salaryScore = normalise(salaryUSD, 25000, 200000);
 
     // --- Base weights ---
     let weights = {
@@ -83,8 +106,11 @@ export function scoreCountriesForWizard(
       weights[k as keyof typeof weights] /= total;
     });
 
-    // --- Score each dimension ---
-    const affordScore = 10 - normalise(data.costRentCityCentre, 400, 4000);
+    // --- Affordability — normalise rent to USD ---
+    const rentUSD = toUSD(data.costRentCityCentre, country.currency);
+    // $300/mo = very cheap, $4000/mo = very expensive
+    const affordScore = 10 - normalise(rentUSD, 300, 4000);
+
     const qualityScore = data.scoreQualityOfLife;
     const safetyScore = data.scoreSafety;
     const visaScore = 10 - data.visaDifficulty * 2;
@@ -103,8 +129,9 @@ export function scoreCountriesForWizard(
     const isEU = EU_PASSPORTS.includes(passportLower);
 
     if (isEU && [
-      "germany", "netherlands", "portugal", "spain", "ireland",
-      "sweden", "switzerland", "norway",
+      "germany", "netherlands", "portugal", "spain", "ireland", "france",
+      "italy", "sweden", "switzerland", "norway", "austria", "finland",
+      "belgium", "denmark",
     ].includes(country.slug)) {
       score += 0.5;
       reasons.push("Easy visa with your EU passport");
@@ -113,56 +140,44 @@ export function scoreCountriesForWizard(
       reasons.push("Straightforward visa process");
     }
 
-    // --- Rent budget filter ---
-    const rentMap: Record<string, number> = {
+    // --- Rent budget filter — convert user budget to USD for fair comparison ---
+    const rentBudgetUSD: Record<string, number> = {
       under800: 800,
       "800to1500": 1500,
       "1500to2500": 2500,
       any: 9999,
     };
-    const maxRent = rentMap[answers.rentBudget ?? "any"] ?? 9999;
-    if (data.costRentCityCentre > maxRent + 500) {
+    const maxRentUSD = rentBudgetUSD[answers.rentBudget ?? "any"] ?? 9999;
+    if (rentUSD > maxRentUSD + 400) {
       score -= 1.5;
-    } else if (data.costRentCityCentre <= maxRent) {
+    } else if (rentUSD <= maxRentUSD) {
       reasons.push("Fits your rent budget");
     }
 
     // --- Language bonuses ---
-    if (answers.languages?.includes("german") && country.slug === "germany") {
-      score += 0.4;
-      reasons.push("Your German gives you a big advantage");
-    }
+    const languageMap: Record<string, { slug: string; reason: string }> = {
+      german: { slug: "germany", reason: "Your German gives you a big advantage" },
+      french: { slug: "france", reason: "Your French is a major advantage" },
+      spanish: { slug: "spain", reason: "Your Spanish is a major advantage" },
+      portuguese: { slug: "portugal", reason: "Your Portuguese is a major advantage" },
+      arabic: { slug: "uae", reason: "Your Arabic is a major advantage" },
+      dutch: { slug: "netherlands", reason: "Your Dutch gives you a big advantage" },
+      swedish: { slug: "sweden", reason: "Your Swedish gives you a big advantage" },
+      norwegian: { slug: "norway", reason: "Your Norwegian gives you a big advantage" },
+      italian: { slug: "italy", reason: "Your Italian gives you a big advantage" },
+      japanese: { slug: "japan", reason: "Your Japanese gives you a huge advantage" },
+      hindi: { slug: "india", reason: "Your Hindi is a major advantage" },
+    };
+    Object.entries(languageMap).forEach(([lang, { slug, reason }]) => {
+      if (answers.languages?.includes(lang) && country.slug === slug) {
+        score += 0.4;
+        reasons.push(reason);
+      }
+    });
+    // French bonus in Canada too
     if (answers.languages?.includes("french") && country.slug === "canada") {
       score += 0.3;
       reasons.push("French is a bonus in Canada");
-    }
-    if (answers.languages?.includes("spanish") && country.slug === "spain") {
-      score += 0.4;
-      reasons.push("Your Spanish is a major advantage");
-    }
-    if (answers.languages?.includes("portuguese") && country.slug === "portugal") {
-      score += 0.4;
-      reasons.push("Your Portuguese is a major advantage");
-    }
-    if (answers.languages?.includes("arabic") && country.slug === "uae") {
-      score += 0.4;
-      reasons.push("Your Arabic is a major advantage");
-    }
-    if (answers.languages?.includes("dutch") && country.slug === "netherlands") {
-      score += 0.4;
-      reasons.push("Your Dutch gives you a big advantage");
-    }
-    if (answers.languages?.includes("swedish") && country.slug === "sweden") {
-      score += 0.4;
-      reasons.push("Your Swedish gives you a big advantage");
-    }
-    if (answers.languages?.includes("norwegian") && country.slug === "norway") {
-      score += 0.4;
-      reasons.push("Your Norwegian gives you a big advantage");
-    }
-    if (answers.languages?.includes("italian") && country.slug === "italy") {
-      score += 0.4;
-      reasons.push("Your Italian gives you a big advantage");
     }
 
     // --- Deal breaker penalties ---
@@ -174,36 +189,27 @@ export function scoreCountriesForWizard(
     }
     if (
       answers.dealBreakers?.includes("europe") &&
-      !["germany", "netherlands", "portugal", "spain", "ireland",
-        "united-kingdom", "sweden", "switzerland", "norway"].includes(country.slug)
+      !["germany", "netherlands", "portugal", "spain", "ireland", "france",
+        "italy", "united-kingdom", "sweden", "switzerland", "norway",
+        "austria", "finland", "belgium", "denmark"].includes(country.slug)
     ) {
       score -= 2;
     }
     if (answers.dealBreakers?.includes("lowtax") && data.incomeTaxRateMid > 30) {
       score -= 1;
     }
-    if (
-      answers.dealBreakers?.includes("warm") &&
-      COLD_COUNTRIES.includes(country.slug)
-    ) {
+    if (answers.dealBreakers?.includes("warm") && COLD_COUNTRIES.includes(country.slug)) {
       score -= 0.8;
     }
-    if (
-      answers.dealBreakers?.includes("lowcrime") &&
-      !LOW_CRIME_COUNTRIES.includes(country.slug)
-    ) {
+    if (answers.dealBreakers?.includes("lowcrime") && data.scoreCrimeRate < 8.0) {
       score -= 1.5;
-      // Don't add positive reason — this is a filter
     }
-    if (
-      answers.dealBreakers?.includes("lowcrime") &&
-      LOW_CRIME_COUNTRIES.includes(country.slug)
-    ) {
+    if (answers.dealBreakers?.includes("lowcrime") && data.scoreCrimeRate >= 8.0) {
       reasons.push("Very low crime rate");
     }
 
     // --- Move reason adjustments ---
-    if (answers.moveReason === "retire" && data.costRentCityCentre < 1200) {
+    if (answers.moveReason === "retire" && rentUSD < 1200) {
       score += 0.5;
       reasons.push("Affordable for retirement");
     }
@@ -213,14 +219,13 @@ export function scoreCountriesForWizard(
     }
     if (
       answers.moveReason === "study" &&
-      ["germany", "netherlands", "sweden", "norway"].includes(country.slug)
+      ["germany", "netherlands", "sweden", "norway", "finland", "denmark"].includes(country.slug)
     ) {
       score += 0.3;
       reasons.push("Strong university system");
     }
-    if (answers.moveReason === "job") {
-      // Job offer — boost visa ease since they already have a job
-      if (data.visaDifficulty <= 2) score += 0.3;
+    if (answers.moveReason === "job" && data.visaDifficulty <= 2) {
+      score += 0.3;
     }
 
     // --- Positive reasons from data ---
