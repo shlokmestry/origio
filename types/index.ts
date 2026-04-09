@@ -44,6 +44,7 @@ export interface CountryData {
   scoreQualityOfLife: number;
   scoreHealthcare: number;
   scoreSafety: number;
+  scoreCrimeRate: number;
   scoreInternetSpeed: number;
   incomeTaxRateMid: number;
   socialSecurityRate: number;
