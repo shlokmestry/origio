@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { mapRowToCountry } from '@/lib/mappers'
 
+export const revalidate = 3600 // revalidate every hour
+
 export async function GET() {
   const { data: countries, error: countriesError } = await supabase
     .from('countries')
@@ -29,6 +31,6 @@ export async function GET() {
   })
 
   return NextResponse.json(merged, {
-    headers: { 'Cache-Control': 'no-store' },
+    headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
   })
 }

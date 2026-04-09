@@ -61,6 +61,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               </kbd>
             </button>
 
+            <a href="/about" className="text-sm text-text-muted hover:text-text-primary transition-colors">About</a>
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border">
@@ -174,8 +175,10 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               </div>
             )}
 
+            <a href="/about" className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary">About</a>
             <div className="pt-2 border-t border-border">
-              {user ? (
+              <a href="/about" className="text-sm text-text-muted hover:text-text-primary transition-colors">About</a>
+            {user ? (
                 <div className="space-y-2">
                   <p className="text-xs text-text-muted px-1">
                     {user.user_metadata?.full_name || user.email}
