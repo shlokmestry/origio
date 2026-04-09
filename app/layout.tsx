@@ -20,11 +20,20 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://origio-one.vercel.app",
     siteName: "Origio",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Origio — Find Where You Belong",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Origio — Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
+    images: ["/og-image.png"],
   },
 };
 
