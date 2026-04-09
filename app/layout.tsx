@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     "work abroad", "best countries to live", "relocation guide",
   ],
   metadataBase: new URL("https://origio-one.vercel.app"),
+  verification: {
+    google: "4UQHcaX5pSsG7ShIUnxTdO3f0w9oAVKgu3t3ifstmIo",
+  },
   openGraph: {
     title: "Origio — Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
