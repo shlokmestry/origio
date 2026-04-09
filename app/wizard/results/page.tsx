@@ -10,7 +10,7 @@ import type { User } from "@supabase/supabase-js";
 
 const LOADING_STEPS = [
   "Analysing your priorities...",
-  "Comparing 15 countries...",
+  "Comparing 25 countries...",
   "Checking visa compatibility...",
   "Calculating salary potential...",
   "Finding your perfect match...",
