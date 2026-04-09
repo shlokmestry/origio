@@ -75,10 +75,7 @@ const faqs = [
   },
 ];
 
-export const metadata = {
-  title: "FAQ — Origio",
-  description: "Frequently asked questions about Origio — how the data works, how the wizard scores countries, and what the Pro plan includes.",
-};
+
 
 export default function FAQPage() {
   const [open, setOpen] = useState<string | null>(null);
