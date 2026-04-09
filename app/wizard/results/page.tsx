@@ -86,7 +86,6 @@ export default function WizardResultsPage() {
 
   const visibleMatches = user ? matches.slice(0, 10) : matches.slice(0, 3);
 
-  // Get job role info for salary display
   const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
 
   if (isLoading) {
@@ -167,7 +166,6 @@ export default function WizardResultsPage() {
               <div className="text-xs text-text-muted">for you</div>
             </div>
           </div>
-          {/* Salary for top match */}
           {jobRoleDef && (
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border">
               <span className="text-sm text-text-muted">{jobRoleDef.emoji} {jobRoleDef.label} salary:</span>
@@ -216,7 +214,7 @@ export default function WizardResultsPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-heading font-bold text-text-primary">{match.country.name}</p>
                   <p className="text-xs text-text-muted mt-0.5 truncate">{match.reasons[0]}</p>
-                  {salary && (
+                  {salary && jobRoleDef && (
                     <p className="text-xs text-accent mt-0.5 font-medium">
                       {jobRoleDef.emoji} {sym}{Math.round(salary / 1000)}k/yr
                     </p>
