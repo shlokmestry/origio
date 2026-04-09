@@ -125,7 +125,7 @@ export default function Home() {
 
           {/* Hero content — only the interactive bits get pointer events */}
           <div
-            className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16"
+            className="absolute bottom-0 left-0 right-0 p-4 sm:p-10 lg:p-16"
             style={{ zIndex: 6, pointerEvents: "none" }}
           >
             <div className="max-w-2xl">
@@ -141,7 +141,7 @@ export default function Home() {
 
               {/* Headline — not interactive */}
               <h1
-                className="font-heading text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6 animate-fade-up"
+                className="font-heading text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6 animate-fade-up"
                 style={{ animationDelay: "0.2s", opacity: 0 }}
               >
                 Find Where
@@ -209,7 +209,7 @@ export default function Home() {
 
               {/* How it works — not interactive */}
               <div
-                className="flex items-center gap-6 animate-fade-up"
+                className="flex flex-wrap items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
               >
                 <div className="flex items-center gap-2.5">

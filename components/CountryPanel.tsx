@@ -83,7 +83,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   };
 
   const panelClasses = [
-    "fixed top-0 right-0 h-full z-50 w-full max-w-md",
+    "fixed top-0 right-0 h-full z-50 w-full sm:max-w-md",
     "glass-panel-strong shadow-2xl shadow-black/50",
     "transform transition-transform duration-500",
     "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto",
@@ -91,7 +91,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   ].join(" ");
 
   const backdropClasses = [
-    "fixed inset-0 bg-black/50 z-40 md:hidden",
+    "fixed inset-0 bg-black/50 z-40",
     "transition-opacity duration-300",
     isVisible ? "opacity-100" : "opacity-0 pointer-events-none",
   ].join(" ");
