@@ -67,7 +67,6 @@ export default function Home() {
     visaDifficulty: c.data.visaDifficulty,
   })), [allCountries]);
 
-  // Top 5 countries by move score for trending strip
   const trendingCountries = useMemo(() =>
     [...allCountries]
       .sort((a, b) => b.data.moveScore - a.data.moveScore)
@@ -117,12 +116,21 @@ export default function Home() {
       />
 
       {showHero && (
-        <div className="absolute inset-0 z-10 pointer-events-none" style={{ userSelect: "none" }}>
-          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16 pointer-events-auto">
+        <>
+          {/* Gradient — purely visual, never intercepts events */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent"
+            style={{ zIndex: 5, pointerEvents: "none" }}
+          />
+
+          {/* Hero content — only the interactive bits get pointer events */}
+          <div
+            className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16"
+            style={{ zIndex: 6, pointerEvents: "none" }}
+          >
             <div className="max-w-2xl">
 
-              {/* Social proof badge */}
+              {/* Badge — not interactive */}
               <div
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-6 animate-fade-up"
                 style={{ animationDelay: "0.1s", opacity: 0 }}
@@ -131,6 +139,7 @@ export default function Home() {
                 <span>Real data across {allCountries.length} countries · 20 job roles · trusted by expats</span>
               </div>
 
+              {/* Headline — not interactive */}
               <h1
                 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6 animate-fade-up"
                 style={{ animationDelay: "0.2s", opacity: 0 }}
@@ -140,6 +149,7 @@ export default function Home() {
                 <span className="gradient-text">You Belong</span>
               </h1>
 
+              {/* Subtitle — not interactive */}
               <p
                 className="text-lg sm:text-xl text-text-muted max-w-lg leading-relaxed mb-8 animate-fade-up"
                 style={{ animationDelay: "0.4s", opacity: 0 }}
@@ -147,10 +157,10 @@ export default function Home() {
                 Salaries, visas, cost of living and quality of life — personalised to your job and passport.
               </p>
 
-              {/* CTA buttons */}
+              {/* CTA buttons — interactive */}
               <div
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 animate-fade-up"
-                style={{ animationDelay: "0.6s", opacity: 0 }}
+                style={{ animationDelay: "0.6s", opacity: 0, pointerEvents: "auto" }}
               >
                 <button
                   onClick={() => router.push("/wizard")}
@@ -167,11 +177,11 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Trending countries strip */}
+              {/* Trending strip — interactive */}
               {trendingCountries.length > 0 && (
                 <div
                   className="mb-8 animate-fade-up"
-                  style={{ animationDelay: "0.7s", opacity: 0 }}
+                  style={{ animationDelay: "0.7s", opacity: 0, pointerEvents: "auto" }}
                 >
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-1.5 text-xs text-text-muted flex-shrink-0">
@@ -197,7 +207,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* How it works */}
+              {/* How it works — not interactive */}
               <div
                 className="flex items-center gap-6 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
@@ -233,7 +243,7 @@ export default function Home() {
 
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {wizardMatches.length > 0 && !selectedSlug && (
