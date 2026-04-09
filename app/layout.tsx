@@ -2,23 +2,29 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Origio — Find Where You Belong",
+  title: {
+    default: "Origio — Find Where You Belong",
+    template: "%s | Origio",
+  },
   description:
     "Explore opportunities, salaries, visas and life quality across every country — personalised to you.",
   keywords: [
-    "move abroad",
-    "relocation",
-    "salary comparison",
-    "visa",
-    "cost of living",
-    "quality of life",
-    "immigration",
+    "move abroad", "relocation", "salary comparison", "visa",
+    "cost of living", "quality of life", "immigration", "expat",
+    "work abroad", "best countries to live", "relocation guide",
   ],
+  metadataBase: new URL("https://origio-one.vercel.app"),
   openGraph: {
     title: "Origio — Find Where You Belong",
-    description:
-      "Explore opportunities, salaries, visas and life quality across every country.",
+    description: "Explore opportunities, salaries, visas and life quality across every country.",
     type: "website",
+    url: "https://origio-one.vercel.app",
+    siteName: "Origio",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Origio — Find Where You Belong",
+    description: "Explore opportunities, salaries, visas and life quality across every country.",
   },
 };
 
