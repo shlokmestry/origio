@@ -39,7 +39,7 @@ export async function generateMetadata({
   if (!country) return { title: "Country Not Found — Origio" }
 
   const title = `Move to ${country.name} — Salary, Visa, Cost of Living | Origio`
-  const description = `Everything you need to know about moving to ${country.name}. Average dev salary: €${Math.round(country.data.salarySoftwareEngineer / 1000)}k. Quality of life: ${country.data.scoreQualityOfLife}/10. Move Score: ${country.data.moveScore}/10.`
+  const description = `Everything you need to know about moving to ${country.name}. Move Score ${country.data.moveScore}/10 · Quality of life ${country.data.scoreQualityOfLife}/10 · Visa difficulty ${country.data.visaDifficulty}/5. Compare salaries, costs and visas.`
 
   return {
     title,

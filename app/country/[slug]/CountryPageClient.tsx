@@ -297,7 +297,15 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
         </section>
 
         <section>
-          <h2 className="font-heading text-xl font-bold mb-6">Explore Other Countries</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-heading text-xl font-bold">Explore Other Countries</h2>
+            <a
+              href={"/compare?a=" + country.slug}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-accent/20 bg-accent/5 text-accent text-sm hover:bg-accent/10 transition-colors"
+            >
+              Compare countries
+            </a>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {otherCountries.map((c) => (
               <a key={c.slug} href={"/country/" + c.slug} className="flex items-center gap-3 p-4 rounded-2xl bg-bg-surface border border-border hover:border-accent/30 transition-all hover:translate-y-[-2px]">
