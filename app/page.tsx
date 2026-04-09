@@ -117,8 +117,8 @@ export default function Home() {
       />
 
       {showHero && (
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent" />
+        <div className="absolute inset-0 z-10 pointer-events-none" style={{ userSelect: "none" }}>
+          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent pointer-events-none" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16 pointer-events-auto">
             <div className="max-w-2xl">
 
