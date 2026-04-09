@@ -32,17 +32,10 @@ interface CountryPanelProps {
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-    AUD: "A$",
-    CAD: "C$",
-    NZD: "NZ$",
-    CHF: "CHF ",
-    SGD: "S$",
-    AED: "AED ",
-    NOK: "kr ",
-    SEK: "kr ",
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+    NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ",
+    NOK: "kr ", SEK: "kr ", JPY: "¥", INR: "₹", BRL: "R$",
+    MYR: "RM ", DKK: "kr ",
   };
   return symbols[currency] ?? currency + " ";
 }
@@ -146,7 +139,6 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
 
         <div className="p-5 space-y-6">
 
-          {/* Job Role Selector — dropdown */}
           <div className="space-y-3">
             <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
               Your Job Role
@@ -167,7 +159,6 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             </div>
           </div>
 
-          {/* Key stats */}
           <div className="grid grid-cols-2 gap-3">
             <ScoreCard
               icon={DollarSign}
@@ -234,30 +225,10 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <ScoreCard
-              icon={Shield}
-              label="Safety"
-              value={data.scoreSafety + "/10"}
-              scoreValue={data.scoreSafety}
-            />
-            <ScoreCard
-              icon={Wifi}
-              label="Internet"
-              value={data.scoreInternetSpeed + "/10"}
-              scoreValue={data.scoreInternetSpeed}
-            />
-            <ScoreCard
-              icon={TrendingUp}
-              label="Healthcare"
-              value={data.scoreHealthcare + "/10"}
-              scoreValue={data.scoreHealthcare}
-            />
-            <ScoreCard
-              icon={Receipt}
-              label="Income Tax"
-              value={data.incomeTaxRateMid + "%"}
-              scoreValue={10 - (data.incomeTaxRateMid / 55) * 10}
-            />
+            <ScoreCard icon={Shield} label="Safety" value={data.scoreSafety + "/10"} scoreValue={data.scoreSafety} />
+            <ScoreCard icon={Wifi} label="Internet" value={data.scoreInternetSpeed + "/10"} scoreValue={data.scoreInternetSpeed} />
+            <ScoreCard icon={TrendingUp} label="Healthcare" value={data.scoreHealthcare + "/10"} scoreValue={data.scoreHealthcare} />
+            <ScoreCard icon={Receipt} label="Income Tax" value={data.incomeTaxRateMid + "%"} scoreValue={10 - (data.incomeTaxRateMid / 55) * 10} />
           </div>
 
           <div className="space-y-3">
@@ -326,6 +297,12 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
               <FileText className="w-4 h-4" />
               Get Full Report
             </button>
+            <a
+              href={"/country/" + country.slug}
+              className="block text-center text-xs text-text-muted hover:text-accent transition-colors py-1"
+            >
+              View full country page
+            </a>
             <button
               onClick={handleCompare}
               className="w-full py-3 rounded-2xl text-sm border border-border hover:border-accent/30 transition-colors flex items-center justify-center gap-2 text-text-muted hover:text-text-primary"
