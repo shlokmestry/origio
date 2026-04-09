@@ -1,10 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe2, ArrowLeft, Lock, Star } from "lucide-react";
-import { CountryMatch } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers } from "@/lib/wizard";
+import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -16,9 +17,21 @@ const LOADING_STEPS = [
   "Finding your perfect match...",
 ];
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+  NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ",
+  NOK: "kr ", SEK: "kr ", JPY: "¥", INR: "₹", BRL: "R$",
+  MYR: "RM ", DKK: "kr ",
+};
+
+function getCurrencySymbol(currency: string): string {
+  return CURRENCY_SYMBOLS[currency] ?? currency + " ";
+}
+
 export default function WizardResultsPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<CountryMatch[]>([]);
+  const [answers, setAnswers] = useState<Partial<WizardAnswers>>({});
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -27,14 +40,15 @@ export default function WizardResultsPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem("wizardMatches");
+    const answersRaw = sessionStorage.getItem("wizardAnswers");
     if (!raw) { router.push("/wizard"); return; }
     setMatches(JSON.parse(raw));
+    if (answersRaw) setAnswers(JSON.parse(answersRaw));
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // Cycle through loading steps
     let step = 0;
     const stepInterval = setInterval(() => {
       step++;
@@ -45,14 +59,12 @@ export default function WizardResultsPage() {
       }
     }, 700);
 
-    // Progress bar
     let progress = 0;
     const progressInterval = setInterval(() => {
       progress += 2;
       setLoadingProgress(Math.min(progress, 100));
       if (progress >= 100) {
         clearInterval(progressInterval);
-        // Small pause then reveal
         setTimeout(() => {
           setIsLoading(false);
           setTimeout(() => setRevealed(true), 100);
@@ -74,12 +86,13 @@ export default function WizardResultsPage() {
 
   const visibleMatches = user ? matches.slice(0, 10) : matches.slice(0, 3);
 
-  // Loading screen
+  // Get job role info for salary display
+  const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm text-center space-y-8">
-          {/* Spinning globe */}
           <div className="relative mx-auto w-24 h-24">
             <div className="absolute inset-0 rounded-full border-2 border-accent/20 animate-ping" />
             <div className="absolute inset-2 rounded-full border-2 border-accent/40 animate-ping" style={{ animationDelay: "0.3s" }} />
@@ -87,28 +100,20 @@ export default function WizardResultsPage() {
               <Globe2 className="w-12 h-12 text-accent animate-spin" style={{ animationDuration: "3s" }} />
             </div>
           </div>
-
-          {/* Loading text */}
           <div className="space-y-2">
             <h2 className="font-heading text-2xl font-extrabold text-text-primary">
               Finding your country...
             </h2>
-            <p
-              key={loadingStep}
-              className="text-text-muted text-sm animate-fade-up"
-            >
+            <p key={loadingStep} className="text-text-muted text-sm animate-fade-up">
               {LOADING_STEPS[loadingStep]}
             </p>
           </div>
-
-          {/* Progress bar */}
           <div className="w-full h-1.5 bg-bg-elevated rounded-full overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all duration-100 ease-linear"
               style={{ width: loadingProgress + "%" }}
             />
           </div>
-
           <p className="text-xs text-text-muted">{loadingProgress}%</p>
         </div>
       </div>
@@ -128,7 +133,6 @@ export default function WizardResultsPage() {
         transition: "opacity 0.6s ease, transform 0.6s ease",
       }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-border">
         <button onClick={() => router.push("/wizard")} className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -150,12 +154,7 @@ export default function WizardResultsPage() {
             <Star className="w-3 h-3" />
             Your top match
           </div>
-          <div
-            className="text-7xl"
-            style={{
-              animation: revealed ? "bounceIn 0.8s ease 0.2s both" : "none",
-            }}
-          >
+          <div className="text-7xl" style={{ animation: revealed ? "bounceIn 0.8s ease 0.2s both" : "none" }}>
             {top.country.flagEmoji}
           </div>
           <h1 className="font-heading text-4xl font-extrabold">{top.country.name}</h1>
@@ -168,6 +167,15 @@ export default function WizardResultsPage() {
               <div className="text-xs text-text-muted">for you</div>
             </div>
           </div>
+          {/* Salary for top match */}
+          {jobRoleDef && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border">
+              <span className="text-sm text-text-muted">{jobRoleDef.emoji} {jobRoleDef.label} salary:</span>
+              <span className="font-heading font-bold text-accent">
+                {getCurrencySymbol(top.country.currency)}{Math.round((top.country.data[jobRoleDef.salaryKey] as number) / 1000)}k/yr
+              </span>
+            </div>
+          )}
           <div className="flex flex-wrap justify-center gap-2">
             {top.reasons.map((r) => (
               <span key={r} className="px-3 py-1 text-xs rounded-full border border-accent/20 text-accent bg-accent/5">{r}</span>
@@ -181,42 +189,53 @@ export default function WizardResultsPage() {
             {user ? "Your top 10 matches" : "Your top 3 matches"}
           </h2>
 
-          {visibleMatches.map((match, index) => (
-            <button
-              key={match.country.slug}
-              onClick={() => {
-                sessionStorage.setItem("highlightedCountries", JSON.stringify([match.country.slug]));
-                router.push("/");
-              }}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-bg-surface border border-border hover:border-accent/30 transition-all text-left"
-              style={{
-                opacity: revealed ? 1 : 0,
-                transform: revealed ? "translateY(0)" : "translateY(10px)",
-                transition: `opacity 0.4s ease ${0.1 + index * 0.08}s, transform 0.4s ease ${0.1 + index * 0.08}s`,
-              }}
-            >
-              <span className="font-heading font-bold text-text-muted w-6 text-center">
-                {index + 1}
-              </span>
-              <span className="text-3xl">{match.country.flagEmoji}</span>
-              <div className="flex-1">
-                <p className="font-heading font-bold text-text-primary">{match.country.name}</p>
-                <p className="text-xs text-text-muted mt-0.5">{match.reasons[0]}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-heading font-bold text-accent">{match.matchPercent}%</p>
-                <p className="text-xs text-text-muted">match</p>
-              </div>
-              <div className="w-16 h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent rounded-full"
-                  style={{ width: match.matchPercent + "%" }}
-                />
-              </div>
-            </button>
-          ))}
+          {visibleMatches.map((match, index) => {
+            const salary = jobRoleDef
+              ? match.country.data[jobRoleDef.salaryKey] as number
+              : null;
+            const sym = getCurrencySymbol(match.country.currency);
 
-          {/* Gate for non-signed-in users */}
+            return (
+              <button
+                key={match.country.slug}
+                onClick={() => {
+                  sessionStorage.setItem("highlightedCountries", JSON.stringify([match.country.slug]));
+                  router.push("/");
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-bg-surface border border-border hover:border-accent/30 transition-all text-left"
+                style={{
+                  opacity: revealed ? 1 : 0,
+                  transform: revealed ? "translateY(0)" : "translateY(10px)",
+                  transition: `opacity 0.4s ease ${0.1 + index * 0.08}s, transform 0.4s ease ${0.1 + index * 0.08}s`,
+                }}
+              >
+                <span className="font-heading font-bold text-text-muted w-6 text-center">
+                  {index + 1}
+                </span>
+                <span className="text-3xl">{match.country.flagEmoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-heading font-bold text-text-primary">{match.country.name}</p>
+                  <p className="text-xs text-text-muted mt-0.5 truncate">{match.reasons[0]}</p>
+                  {salary && (
+                    <p className="text-xs text-accent mt-0.5 font-medium">
+                      {jobRoleDef.emoji} {sym}{Math.round(salary / 1000)}k/yr
+                    </p>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-heading font-bold text-accent">{match.matchPercent}%</p>
+                  <p className="text-xs text-text-muted">match</p>
+                </div>
+                <div className="w-12 h-1.5 bg-bg-elevated rounded-full overflow-hidden flex-shrink-0">
+                  <div
+                    className="h-full bg-accent rounded-full"
+                    style={{ width: match.matchPercent + "%" }}
+                  />
+                </div>
+              </button>
+            );
+          })}
+
           {!user && matches.length > 3 && (
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-primary z-10 rounded-2xl" />
@@ -246,7 +265,6 @@ export default function WizardResultsPage() {
           )}
         </div>
 
-        {/* CTA to globe */}
         <div className="text-center space-y-4 pt-4">
           <button
             onClick={handleViewOnGlobe}
