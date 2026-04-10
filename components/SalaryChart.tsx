@@ -27,6 +27,9 @@ export default function SalaryChart({ data, currency }: SalaryChartProps) {
 
   const colors = ["#00d4c8", "#4ade80", "#60a5fa", "#a78bfa", "#f472b6"];
 
+  const BAR_WIDTH = 80;
+  const chartWidth = Math.max(chartData.length * BAR_WIDTH, 300);
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
@@ -47,11 +50,26 @@ export default function SalaryChart({ data, currency }: SalaryChartProps) {
   };
 
   return (
-    <div className="w-full h-48">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-          <XAxis dataKey="role" tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} />
-          <YAxis tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => Math.round(v / 1000) + "k"} />
+    <div className="w-full overflow-x-auto">
+      <div style={{ width: chartWidth, height: 192 }}>
+        <BarChart
+          width={chartWidth}
+          height={192}
+          data={chartData}
+          margin={{ top: 5, right: 5, left: -15, bottom: 5 }}
+        >
+          <XAxis
+            dataKey="role"
+            tick={{ fill: "#8888a0", fontSize: 11 }}
+            axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fill: "#8888a0", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => Math.round(v / 1000) + "k"}
+          />
           <Tooltip content={<CustomTooltip />} cursor={false} />
           <Bar dataKey="salary" radius={[6, 6, 0, 0]} maxBarSize={40}>
             {chartData.map((_, i) => (
@@ -59,7 +77,7 @@ export default function SalaryChart({ data, currency }: SalaryChartProps) {
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </div>
     </div>
   );
 }
