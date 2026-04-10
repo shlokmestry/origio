@@ -1,12 +1,17 @@
 import { MetadataRoute } from "next";
-import { supabase } from "@/lib/supabase";
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { data: countries } = await supabase.from("countries").select("slug");
+const COUNTRY_SLUGS = [
+  "australia", "austria", "belgium", "brazil", "canada",
+  "denmark", "finland", "france", "germany", "india",
+  "ireland", "italy", "japan", "malaysia", "netherlands",
+  "new-zealand", "norway", "portugal", "singapore", "spain",
+  "sweden", "switzerland", "uae", "united-kingdom", "usa",
+];
 
-  const countryUrls = (countries ?? []).map((c) => ({
-    url: `https://origio-one.vercel.app/country/${c.slug}`,
-    lastModified: new Date(),
+export default function sitemap(): MetadataRoute.Sitemap {
+  const countryUrls = COUNTRY_SLUGS.map((slug) => ({
+    url: `https://origio-one.vercel.app/country/${slug}`,
+    lastModified: new Date("2025-03-01"),
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));
@@ -14,21 +19,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: "https://origio-one.vercel.app",
-      lastModified: new Date(),
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
       url: "https://origio-one.vercel.app/wizard",
-      lastModified: new Date(),
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "monthly" as const,
       priority: 0.9,
     },
     {
       url: "https://origio-one.vercel.app/compare",
-      lastModified: new Date(),
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "monthly" as const,
       priority: 0.7,
+    },
+    {
+      url: "https://origio-one.vercel.app/about",
+      lastModified: new Date("2025-03-01"),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+    {
+      url: "https://origio-one.vercel.app/faq",
+      lastModified: new Date("2025-03-01"),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
     },
     ...countryUrls,
   ];
