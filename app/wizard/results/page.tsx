@@ -114,7 +114,6 @@ export default function WizardResultsPage() {
     const second = matches[1];
     const third = matches[2];
 
-    // ✅ Always uses whatever domain the app is running on
     const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://origio-one.vercel.app";
     const shareUrl = `${siteUrl}/wizard`;
 
@@ -125,7 +124,7 @@ export default function WizardResultsPage() {
         await navigator.share({
           title: `I'm ${top.matchPercent}% ${top.country.name} ${top.country.flagEmoji}`,
           text: shareText,
-          url: shareUrl,
+          // ✅ removed url: shareUrl — was causing text to be appended to URL
         });
       } catch {
         // user cancelled share — do nothing
