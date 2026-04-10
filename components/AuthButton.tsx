@@ -3,10 +3,12 @@ import { supabase } from '@/lib/supabase'
 
 export default function AuthButton() {
   const signInWithGoogle = async () => {
+    // ✅ Pass the ?next= param through to the callback
+    const next = new URLSearchParams(window.location.search).get('next') ?? '/profile'
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     })
   }
