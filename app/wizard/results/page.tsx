@@ -45,29 +45,34 @@ export default function WizardResultsPage() {
     setMatches(JSON.parse(raw));
     if (answersRaw) setAnswers(JSON.parse(answersRaw));
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    // ✅ Get session AND save result in one async flow
+    ;(async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
 
-      // ✅ Save wizard result if logged in
-      if (session?.user && raw) {
-        const parsedMatches: CountryMatch[] = JSON.parse(raw);
-        const parsedAnswers = answersRaw ? JSON.parse(answersRaw) : {};
+      if (session?.user) {
+        const parsedMatches: CountryMatch[] = JSON.parse(raw)
+        const parsedAnswers = answersRaw ? JSON.parse(answersRaw) : {}
         const topCountries = parsedMatches.slice(0, 3).map((m) => ({
           slug: m.country.slug,
           name: m.country.name,
           flagEmoji: m.country.flagEmoji,
           matchPercent: m.matchPercent,
-        }));
-        supabase.from('wizard_results').upsert(
+        }))
+
+        const { error } = await supabase.from('wizard_results').upsert(
           {
             user_id: session.user.id,
             top_countries: topCountries,
             answers: { role: parsedAnswers.jobRole },
           },
           { onConflict: 'user_id' }
-        );
+        )
+
+        if (error) console.error('Wizard save error:', error.message)
+        else console.log('✅ Wizard result saved!')
       }
-    });
+    })()
 
     let step = 0;
     const stepInterval = setInterval(() => {
@@ -139,7 +144,6 @@ export default function WizardResultsPage() {
   }
 
   if (matches.length === 0) return null;
-
   const top = matches[0];
 
   return (
@@ -166,7 +170,6 @@ export default function WizardResultsPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-12 space-y-10">
-        {/* Hero result */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium">
             <Star className="w-3 h-3" />
@@ -200,7 +203,6 @@ export default function WizardResultsPage() {
           </div>
         </div>
 
-        {/* All matches */}
         <div className="space-y-4">
           <h2 className="font-heading text-xl font-bold">
             {user ? "Your top 10 matches" : "Your top 3 matches"}
@@ -252,9 +254,7 @@ export default function WizardResultsPage() {
                 <div className="flex items-center gap-4">
                   <span className="font-heading font-bold text-text-muted w-6 text-center">4</span>
                   <span className="text-3xl">🌍</span>
-                  <div className="flex-1">
-                    <div className="h-4 w-24 bg-bg-elevated rounded" />
-                  </div>
+                  <div className="flex-1"><div className="h-4 w-24 bg-bg-elevated rounded" /></div>
                 </div>
               </div>
               <div className="absolute inset-0 z-20 flex items-center justify-center">
@@ -262,10 +262,7 @@ export default function WizardResultsPage() {
                   <Lock className="w-8 h-8 text-accent mx-auto" />
                   <p className="font-heading font-bold text-text-primary">See your full top 10</p>
                   <p className="text-sm text-text-muted">Sign in to unlock all your matches and detailed breakdowns.</p>
-                  <button
-                    onClick={() => router.push("/profile")}
-                    className="cta-button px-6 py-3 rounded-xl text-sm font-medium"
-                  >
+                  <button onClick={() => router.push("/profile")} className="cta-button px-6 py-3 rounded-xl text-sm font-medium">
                     Sign in — it's free
                   </button>
                 </div>
