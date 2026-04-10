@@ -1,4 +1,3 @@
-// components/Nav.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -62,14 +61,18 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             </button>
 
             <a href="/about" className="text-sm text-text-muted hover:text-text-primary transition-colors">About</a>
+
             {user ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border">
+                <a
+                  href="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-border-hover transition-colors"
+                >
                   <User className="w-3.5 h-3.5 text-accent" />
                   <span className="text-xs text-text-muted truncate max-w-[120px]">
                     {user.user_metadata?.full_name || user.email}
                   </span>
-                </div>
+                </a>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary"
@@ -80,7 +83,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               </div>
             ) : (
               <a
-                href="/auth"
+                href="/profile"
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium"
               >
                 <LogIn className="w-4 h-4" />
@@ -175,14 +178,13 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               </div>
             )}
 
-            <a href="/about" className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary">About</a>
-            <div className="pt-2 border-t border-border">
-              <a href="/about" className="text-sm text-text-muted hover:text-text-primary transition-colors">About</a>
-            {user ? (
+            <div className="pt-2 border-t border-border space-y-2">
+              <a href="/about" className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors">About</a>
+              {user ? (
                 <div className="space-y-2">
-                  <p className="text-xs text-text-muted px-1">
+                  <a href="/profile" className="block px-3 py-2 text-xs text-text-muted">
                     {user.user_metadata?.full_name || user.email}
-                  </p>
+                  </a>
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors"
@@ -193,7 +195,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 </div>
               ) : (
                 <a
-                  href="/auth"
+                  href="/profile"
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
                 >
                   <LogIn className="w-4 h-4" />
