@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe2, ArrowLeft, Lock, Star } from "lucide-react";
+import { Globe2, ArrowLeft, Lock, Star, Share2, Check } from "lucide-react";
 import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +37,7 @@ export default function WizardResultsPage() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("wizardMatches");
@@ -45,7 +46,6 @@ export default function WizardResultsPage() {
     setMatches(JSON.parse(raw));
     if (answersRaw) setAnswers(JSON.parse(answersRaw));
 
-    // ✅ Get session AND save result in one async flow
     ;(async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
@@ -107,6 +107,30 @@ export default function WizardResultsPage() {
     const topSlugs = matches.slice(0, 3).map((m) => m.country.slug);
     sessionStorage.setItem("highlightedCountries", JSON.stringify(topSlugs));
     router.push("/");
+  };
+
+  const handleShare = async () => {
+    const top = matches[0];
+    const second = matches[1];
+    const third = matches[2];
+    const shareText = `I just found my top country matches on Origio! 🌍\n\n${top.country.flagEmoji} ${top.country.name} — ${top.matchPercent}% match\n${second?.country.flagEmoji ?? ""} ${second?.country.name ?? ""} — ${second?.matchPercent ?? ""}% match\n${third?.country.flagEmoji ?? ""} ${third?.country.name ?? ""} — ${third?.matchPercent ?? ""}% match\n\nFind yours 👇\nhttps://origio.app/wizard`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `I'm ${top.matchPercent}% ${top.country.name} ${top.country.flagEmoji}`,
+          text: shareText,
+          url: "https://origio.app/wizard",
+        });
+      } catch {
+        // user cancelled share — do nothing
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(shareText);
+      setShared(true);
+      setTimeout(() => setShared(false), 2500);
+    }
   };
 
   const visibleMatches = user ? matches.slice(0, 10) : matches.slice(0, 3);
@@ -201,6 +225,24 @@ export default function WizardResultsPage() {
               <span key={r} className="px-3 py-1 text-xs rounded-full border border-accent/20 text-accent bg-accent/5">{r}</span>
             ))}
           </div>
+
+          {/* ✅ Share button — sits right under the hero result */}
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-accent/30 bg-accent/5 text-accent text-sm font-medium hover:bg-accent/10 transition-all"
+          >
+            {shared ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied to clipboard!
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                Share my result
+              </>
+            )}
+          </button>
         </div>
 
         <div className="space-y-4">
