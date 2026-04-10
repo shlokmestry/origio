@@ -4,10 +4,13 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import { Globe2, LogOut, Trash2, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react'
 
+type CountryInfo = { flag_emoji: string; name: string }
+
 type SavedCountry = {
   id: string
   country_slug: string
   created_at: string
+  countries?: CountryInfo | CountryInfo[] | null
 }
 
 type WizardResult = {
@@ -21,6 +24,18 @@ type WizardResult = {
   created_at: string
 }
 
+function formatRole(role: string): string {
+  return role
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (s) => s.toUpperCase())
+    .trim()
+}
+
+function getCountryInfo(countries: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
+  if (!countries) return null
+  return Array.isArray(countries) ? (countries[0] ?? null) : countries
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,7 +43,6 @@ export default function ProfilePage() {
   const [savesLoading, setSavesLoading] = useState(false)
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
-  // Auth form state
   const [tab, setTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,7 +59,7 @@ export default function ProfilePage() {
         const [savesRes, wizardRes] = await Promise.all([
           supabase
             .from('saved_countries')
-            .select('id, country_slug, created_at')
+            .select('id, country_slug, created_at, countries(flag_emoji, name)')
             .eq('user_id', data.user.id)
             .order('created_at', { ascending: false }),
           supabase
@@ -54,7 +68,7 @@ export default function ProfilePage() {
             .eq('user_id', data.user.id)
             .single()
         ])
-        setSavedCountries(savesRes.data ?? [])
+        setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         setSavesLoading(false)
       }
@@ -215,30 +229,39 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {savedCountries.map((save) => (
-                <div key={save.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
-                  <a href={`/country/${save.country_slug}`} className="text-sm font-medium text-text-primary hover:text-accent transition-colors">
-                    {formatSlug(save.country_slug)}
-                  </a>
-                  <button onClick={() => removeSave(save.id)} className="p-1.5 rounded-lg text-text-muted hover:text-score-low hover:bg-rose-500/10 transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+              {savedCountries.map((save) => {
+                const info = getCountryInfo(save.countries)
+                return (
+                  <div key={save.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
+                    <a href={`/country/${save.country_slug}`} className="flex items-center gap-2 text-sm font-medium text-text-primary hover:text-accent transition-colors">
+                      {info?.flag_emoji && <span className="text-base">{info.flag_emoji}</span>}
+                      {info?.name ?? formatSlug(save.country_slug)}
+                    </a>
+                    <button onClick={() => removeSave(save.id)} className="p-1.5 rounded-lg text-text-muted hover:text-score-low hover:bg-rose-500/10 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* ✅ Wizard Result — now wired in */}
+        {/* Wizard Result */}
         <div className="glass-panel rounded-2xl p-6 mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <h2 className="font-heading text-lg font-bold text-text-primary">Last Wizard Result</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-accent" />
+              <h2 className="font-heading text-lg font-bold text-text-primary">Last Wizard Result</h2>
+            </div>
+            <a href="/wizard" className="text-xs text-accent hover:underline">
+              Retake quiz →
+            </a>
           </div>
           {!wizardResult ? (
             <div className="text-center py-6">
               <p className="text-text-muted text-sm mb-3">No wizard results yet</p>
-              <a href="/" className="text-sm text-accent hover:underline">Take the quiz →</a>
+              <a href="/wizard" className="text-sm text-accent hover:underline">Take the quiz →</a>
             </div>
           ) : (
             <div className="space-y-2">
@@ -263,9 +286,11 @@ export default function ProfilePage() {
                   </a>
                 )
               })}
-              <p className="text-xs text-text-muted pt-1">
-                Role: {wizardResult.answers?.role} · {new Date(wizardResult.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-text-muted">
+                  Role: {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {new Date(wizardResult.created_at).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           )}
         </div>
