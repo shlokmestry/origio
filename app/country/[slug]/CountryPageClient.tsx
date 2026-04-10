@@ -33,6 +33,7 @@ import {
   getVisaLabel,
   getVisaColor,
 } from "@/lib/utils";
+import SaveCountryButton from "@/components/SaveCountryButton";
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
@@ -125,6 +126,10 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                 <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{country.continent}</span>
                 <span className="flex items-center gap-1.5"><Languages className="w-4 h-4" />{country.language}</span>
                 <span className="flex items-center gap-1.5"><Banknote className="w-4 h-4" />{country.currency}</span>
+              </div>
+              {/* ✅ Save button sits neatly under the country meta */}
+              <div className="mt-4">
+                <SaveCountryButton countrySlug={country.slug} />
               </div>
             </div>
             <div className="flex flex-col items-center">

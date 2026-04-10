@@ -5,6 +5,9 @@ import { mapRowToCountry } from "@/lib/mappers";
 import { CountryWithData } from "@/types";
 import CountryPageClient from "./CountryPageClient";
 
+
+
+
 async function getAllCountries(): Promise<CountryWithData[]> {
   const { data: countries } = await supabase.from('countries').select('*')
   const { data: countryData } = await supabase.from('country_data').select('*')
