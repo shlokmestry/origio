@@ -47,6 +47,26 @@ export default function WizardResultsPage() {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+
+      // ✅ Save wizard result if logged in
+      if (session?.user && raw) {
+        const parsedMatches: CountryMatch[] = JSON.parse(raw);
+        const parsedAnswers = answersRaw ? JSON.parse(answersRaw) : {};
+        const topCountries = parsedMatches.slice(0, 3).map((m) => ({
+          slug: m.country.slug,
+          name: m.country.name,
+          flagEmoji: m.country.flagEmoji,
+          matchPercent: m.matchPercent,
+        }));
+        supabase.from('wizard_results').upsert(
+          {
+            user_id: session.user.id,
+            top_countries: topCountries,
+            answers: { role: parsedAnswers.jobRole },
+          },
+          { onConflict: 'user_id' }
+        );
+      }
     });
 
     let step = 0;
@@ -85,7 +105,6 @@ export default function WizardResultsPage() {
   };
 
   const visibleMatches = user ? matches.slice(0, 10) : matches.slice(0, 3);
-
   const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
 
   if (isLoading) {
@@ -188,11 +207,8 @@ export default function WizardResultsPage() {
           </h2>
 
           {visibleMatches.map((match, index) => {
-            const salary = jobRoleDef
-              ? match.country.data[jobRoleDef.salaryKey] as number
-              : null;
+            const salary = jobRoleDef ? match.country.data[jobRoleDef.salaryKey] as number : null;
             const sym = getCurrencySymbol(match.country.currency);
-
             return (
               <button
                 key={match.country.slug}
@@ -207,9 +223,7 @@ export default function WizardResultsPage() {
                   transition: `opacity 0.4s ease ${0.1 + index * 0.08}s, transform 0.4s ease ${0.1 + index * 0.08}s`,
                 }}
               >
-                <span className="font-heading font-bold text-text-muted w-6 text-center">
-                  {index + 1}
-                </span>
+                <span className="font-heading font-bold text-text-muted w-6 text-center">{index + 1}</span>
                 <span className="text-3xl">{match.country.flagEmoji}</span>
                 <div className="flex-1 min-w-0">
                   <p className="font-heading font-bold text-text-primary">{match.country.name}</p>
@@ -225,10 +239,7 @@ export default function WizardResultsPage() {
                   <p className="text-xs text-text-muted">match</p>
                 </div>
                 <div className="w-12 h-1.5 bg-bg-elevated rounded-full overflow-hidden flex-shrink-0">
-                  <div
-                    className="h-full bg-accent rounded-full"
-                    style={{ width: match.matchPercent + "%" }}
-                  />
+                  <div className="h-full bg-accent rounded-full" style={{ width: match.matchPercent + "%" }} />
                 </div>
               </button>
             );
@@ -252,7 +263,7 @@ export default function WizardResultsPage() {
                   <p className="font-heading font-bold text-text-primary">See your full top 10</p>
                   <p className="text-sm text-text-muted">Sign in to unlock all your matches and detailed breakdowns.</p>
                   <button
-                    onClick={() => router.push("/auth")}
+                    onClick={() => router.push("/profile")}
                     className="cta-button px-6 py-3 rounded-xl text-sm font-medium"
                   >
                     Sign in — it's free
@@ -264,16 +275,10 @@ export default function WizardResultsPage() {
         </div>
 
         <div className="text-center space-y-4 pt-4">
-          <button
-            onClick={handleViewOnGlobe}
-            className="cta-button px-8 py-4 rounded-2xl text-base font-medium w-full"
-          >
+          <button onClick={handleViewOnGlobe} className="cta-button px-8 py-4 rounded-2xl text-base font-medium w-full">
             View my matches on the Globe
           </button>
-          <button
-            onClick={() => router.push("/wizard")}
-            className="text-sm text-text-muted hover:text-text-primary transition-colors"
-          >
+          <button onClick={() => router.push("/wizard")} className="text-sm text-text-muted hover:text-text-primary transition-colors">
             Retake the quiz
           </button>
         </div>
