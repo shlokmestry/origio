@@ -28,11 +28,11 @@
 
 html,
 body {
-  height: 100%;
-  overflow: hidden; /* page never scrolls — globe is the full experience */
+  min-height: 100%;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: "Satoshi", sans-serif;
+  /* NO overflow:hidden here — other pages need to scroll */
 }
 
 ::-webkit-scrollbar {
@@ -52,13 +52,13 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Globe container: fills whatever parent gives it — positioning owned by page.tsx */
+/* Globe container: fills parent — positioning owned by page.tsx */
 .globe-container {
   width: 100%;
   height: 100%;
 }
 
-/* Canvas fills container, touch-action allows pinch-zoom + drag on mobile */
+/* touch-action:none lets Three.js capture drag + pinch on mobile */
 .globe-container canvas {
   width: 100% !important;
   height: 100% !important;

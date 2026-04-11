@@ -21,6 +21,14 @@ export default function Home() {
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const fetchedRef = useRef(false);
 
+  // Lock body scroll while on homepage, restore on unmount
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -105,7 +113,7 @@ export default function Home() {
   }, [handleClosePanel]);
 
   return (
-    // Fixed full viewport — globe fills screen, nothing scrolls
+    // fixed inset-0: homepage locked to viewport, no scroll — other pages unaffected
     <main className="fixed inset-0 bg-bg-primary overflow-hidden">
 
       {/* Globe: fixed behind everything */}
@@ -118,15 +126,15 @@ export default function Home() {
         />
       </div>
 
-      {/* Nav: always on top */}
+      {/* Nav */}
       <div className="relative z-50">
         <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
       </div>
 
-      {/* Hero overlay: anchored to bottom, fades up over globe */}
+      {/* Hero overlay */}
       {showHero && (
         <>
-          {/* Gradient mask so text is readable over globe */}
+          {/* Gradient: makes text readable over globe */}
           <div
             className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
             style={{
@@ -136,7 +144,7 @@ export default function Home() {
             }}
           />
 
-          {/* Hero content */}
+          {/* Content anchored to bottom */}
           <div
             className="fixed bottom-0 left-0 right-0 z-10 px-5 pb-8 sm:px-10 sm:pb-12 lg:px-16 lg:pb-16"
             style={{ pointerEvents: "none" }}
@@ -222,7 +230,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Step hints — hidden on small mobile to save space */}
+              {/* Step hints — hidden on small mobile */}
               <div
                 className="hidden sm:flex flex-wrap items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
