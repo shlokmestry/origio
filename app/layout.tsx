@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Origio — Find Where You Belong",
+        alt: "Origio ~ Find Where You Belong",
       },
     ],
   },
@@ -49,6 +51,23 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-bg-primary text-text-primary font-body antialiased noise-overlay">
         {children}
+
+        {/* ✅ Vercel Analytics */}
+        <Analytics />
+
+        {/* ✅ Google Analytics GA4 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-FE07VSDBZ2');
+          `}
+        </Script>
       </body>
     </html>
   );
