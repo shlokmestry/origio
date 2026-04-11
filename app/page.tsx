@@ -1,8 +1,8 @@
-// app/page.tsx
 "use client";
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
@@ -10,6 +10,27 @@ import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { MapPin, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
+
+const featuredGuides = [
+  {
+    title: "Best Countries for Software Engineers",
+    slug: "software-engineers",
+    description:
+      "Compare top countries for engineers by salary, tax, visas, and quality of life.",
+  },
+  {
+    title: "Best Countries for Product Managers",
+    slug: "product-managers",
+    description:
+      "See which countries offer the best mix of PM salary, career growth, and relocation potential.",
+  },
+  {
+    title: "Best Countries for Designers",
+    slug: "designers",
+    description:
+      "Explore the strongest countries for designers looking at pay, lifestyle, and market maturity.",
+  },
+];
 
 export default function Home() {
   const router = useRouter();
@@ -25,11 +46,11 @@ export default function Home() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch('/api/countries')
+    fetch("/api/countries")
       .then((res) => res.json())
       .then((data) => setAllCountries(data))
-      .catch((err) => console.error('Failed to fetch countries:', err))
-  }, [])
+      .catch((err) => console.error("Failed to fetch countries:", err));
+  }, []);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("highlightedCountries");
@@ -54,23 +75,28 @@ export default function Home() {
     }
   }, [allCountries]);
 
-  const globeCountries = useMemo<GlobeCountry[]>(() => allCountries.map((c) => ({
-    slug: c.slug,
-    name: c.name,
-    flagEmoji: c.flagEmoji,
-    lat: c.lat,
-    lng: c.lng,
-    moveScore: c.data.moveScore,
-    salarySoftwareEngineer: c.data.salarySoftwareEngineer,
-    costRentCityCentre: c.data.costRentCityCentre,
-    scoreQualityOfLife: c.data.scoreQualityOfLife,
-    visaDifficulty: c.data.visaDifficulty,
-  })), [allCountries]);
+  const globeCountries = useMemo<GlobeCountry[]>(
+    () =>
+      allCountries.map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        flagEmoji: c.flagEmoji,
+        lat: c.lat,
+        lng: c.lng,
+        moveScore: c.data.moveScore,
+        salarySoftwareEngineer: c.data.salarySoftwareEngineer,
+        costRentCityCentre: c.data.costRentCityCentre,
+        scoreQualityOfLife: c.data.scoreQualityOfLife,
+        visaDifficulty: c.data.visaDifficulty,
+      })),
+    [allCountries]
+  );
 
-  const trendingCountries = useMemo(() =>
-    [...allCountries]
-      .sort((a, b) => b.data.moveScore - a.data.moveScore)
-      .slice(0, 5),
+  const trendingCountries = useMemo(
+    () =>
+      [...allCountries]
+        .sort((a, b) => b.data.moveScore - a.data.moveScore)
+        .slice(0, 5),
     [allCountries]
   );
 
@@ -105,7 +131,7 @@ export default function Home() {
   }, [handleClosePanel]);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
+    <main className="relative w-screen min-h-screen overflow-hidden bg-bg-primary">
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
       <Globe
@@ -117,29 +143,26 @@ export default function Home() {
 
       {showHero && (
         <>
-          {/* Gradient — purely visual, never intercepts events */}
           <div
             className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent"
             style={{ zIndex: 5, pointerEvents: "none" }}
           />
 
-          {/* Hero content — only the interactive bits get pointer events */}
           <div
             className="absolute bottom-0 left-0 right-0 p-4 sm:p-10 lg:p-16"
             style={{ zIndex: 6, pointerEvents: "none" }}
           >
             <div className="max-w-2xl">
-
-              {/* Badge — not interactive */}
               <div
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-6 animate-fade-up"
                 style={{ animationDelay: "0.1s", opacity: 0 }}
               >
                 <MapPin className="w-3 h-3" />
-                <span>Real data across {allCountries.length} countries · 20 job roles · trusted by expats</span>
+                <span>
+                  Real data across {allCountries.length} countries · 20 job roles · trusted by expats
+                </span>
               </div>
 
-              {/* Headline — not interactive */}
               <h1
                 className="font-heading text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6 animate-fade-up"
                 style={{ animationDelay: "0.2s", opacity: 0 }}
@@ -149,7 +172,6 @@ export default function Home() {
                 <span className="gradient-text">You Belong</span>
               </h1>
 
-              {/* Subtitle — not interactive */}
               <p
                 className="text-lg sm:text-xl text-text-muted max-w-lg leading-relaxed mb-8 animate-fade-up"
                 style={{ animationDelay: "0.4s", opacity: 0 }}
@@ -157,7 +179,6 @@ export default function Home() {
                 Salaries, visas, cost of living and quality of life — personalised to your job and passport.
               </p>
 
-              {/* CTA buttons — interactive */}
               <div
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 animate-fade-up"
                 style={{ animationDelay: "0.6s", opacity: 0, pointerEvents: "auto" }}
@@ -177,7 +198,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Trending strip — interactive */}
               {trendingCountries.length > 0 && (
                 <div
                   className="mb-8 animate-fade-up"
@@ -207,7 +227,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* How it works — not interactive */}
               <div
                 className="flex flex-wrap items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
@@ -240,7 +259,6 @@ export default function Home() {
                   <span className="text-xs text-text-muted">Get your report</span>
                 </div>
               </div>
-
             </div>
           </div>
         </>
@@ -281,6 +299,43 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <section className="relative z-20 mx-auto max-w-6xl px-4 pb-16 pt-8 sm:pt-10 lg:pt-12">
+        <div className="mb-6 max-w-2xl">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+            Career guides
+          </p>
+          <h2 className="mb-3 font-heading text-2xl font-extrabold text-text-primary sm:text-3xl">
+            Explore the best countries by role
+          </h2>
+          <p className="text-sm leading-7 text-text-muted sm:text-base">
+            These guides help people compare relocation options by role before diving into salary and take-home details.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {featuredGuides.map((guide) => (
+            <Link
+              key={guide.slug}
+              href={`/best-countries-for/${guide.slug}`}
+              className="group rounded-2xl border border-border bg-bg-elevated/80 p-5 backdrop-blur-sm transition-all hover:border-accent/30 hover:bg-accent/5"
+            >
+              <p className="mb-3 text-xs uppercase tracking-wider text-text-muted">
+                Guide
+              </p>
+              <h3 className="mb-2 font-heading text-xl font-bold text-text-primary transition-colors group-hover:text-accent">
+                {guide.title}
+              </h3>
+              <p className="mb-4 text-sm leading-6 text-text-muted">
+                {guide.description}
+              </p>
+              <span className="text-sm font-semibold text-accent">
+                Read guide →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
