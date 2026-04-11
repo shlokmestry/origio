@@ -52,10 +52,10 @@ export default function RootLayout({
       <body className="bg-bg-primary text-text-primary font-body antialiased noise-overlay">
         {children}
 
-        {/* ✅ Vercel Analytics */}
+        {/* Vercel Analytics */}
         <Analytics />
 
-        {/* ✅ Google Analytics GA4 */}
+        {/*Google Analytics GA4 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2"
           strategy="afterInteractive"
