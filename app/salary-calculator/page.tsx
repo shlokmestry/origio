@@ -1,7 +1,7 @@
-// app/salary-calculator/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 // ─── Tax Data ────────────────────────────────────────────────────────────────
 
@@ -113,6 +113,12 @@ const ROLES = [
   "Custom",
 ];
 
+const GUIDES = [
+  { label: "Software Engineers", slug: "software-engineers" },
+  { label: "Product Managers",   slug: "product-managers"   },
+  { label: "Designers",          slug: "designers"          },
+];
+
 // ─── Tax Calculation Functions ────────────────────────────────────────────────
 
 function calcBandedTax(gross: number, bands: { min: number; max: number; rate: number }[]) {
@@ -125,18 +131,14 @@ function calcBandedTax(gross: number, bands: { min: number; max: number; rate: n
   return tax;
 }
 
-function fmt(n: number) {
-  return n >= 1000 ? (n / 1000).toFixed(0) + "k" : String(n);
-}
-
 function calcUK(gross: number) {
   const d = TAX_DATA.UK;
   let pa = d.personalAllowance;
   if (gross > 100000) pa = Math.max(0, pa - (gross - 100000) / 2);
   const taxable = Math.max(0, gross - pa);
   const incomeTax = calcBandedTax(taxable, [
-    { min: 0,      max: 37700,   rate: 0.20 },
-    { min: 37700,  max: 112570,  rate: 0.40 },
+    { min: 0,      max: 37700,    rate: 0.20 },
+    { min: 37700,  max: 112570,   rate: 0.40 },
     { min: 112570, max: Infinity, rate: 0.45 },
   ]);
   const ni =
@@ -242,18 +244,18 @@ export default function SalaryCalculator() {
         .filter(([k]) => !["total", "net", "effectiveRate"].includes(k))
         .map(([k, v]) => ({
           label:
-            k === "incomeTax" ? "Income Tax" :
-            k === "ni" ? "National Insurance" :
-            k === "fica" ? "FICA (SS + Medicare)" :
-            k === "stateTax" ? "State Tax (avg)" :
-            k === "federalTax" ? "Federal Tax" :
-            k === "provincialTax" ? "Provincial Tax" :
-            k === "cpp" ? "CPP" :
-            k === "ei" ? "EI" :
-            k === "medicare" ? "Medicare Levy" :
+            k === "incomeTax"      ? "Income Tax" :
+            k === "ni"             ? "National Insurance" :
+            k === "fica"           ? "FICA (SS + Medicare)" :
+            k === "stateTax"       ? "State Tax (avg)" :
+            k === "federalTax"     ? "Federal Tax" :
+            k === "provincialTax"  ? "Provincial Tax" :
+            k === "cpp"            ? "CPP" :
+            k === "ei"             ? "EI" :
+            k === "medicare"       ? "Medicare Levy" :
             k === "superannuation" ? "Superannuation (employer)" :
-            k === "socialInsurance" ? "Social Insurance" :
-            k === "solidarity" ? "Solidarity Surcharge" :
+            k === "socialInsurance"? "Social Insurance" :
+            k === "solidarity"     ? "Solidarity Surcharge" :
             k,
           value: v as number,
         }))
@@ -455,6 +457,31 @@ export default function SalaryCalculator() {
             </div>
           </div>
         )}
+
+        {/* ── Guides CTA ───────────────────────────────────────────────── */}
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
+          <p className="text-xs uppercase tracking-wider text-text-muted mb-1">
+            Also explore
+          </p>
+          <h2 className="font-heading text-lg font-bold text-text-primary mb-1">
+            Best countries by role
+          </h2>
+          <p className="text-sm text-text-muted mb-4">
+            Not sure where to move yet? Start with the role-based guides first.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {GUIDES.map((g) => (
+              <Link
+                key={g.slug}
+                href={`/best-countries-for/${g.slug}`}
+                className="rounded-lg bg-bg-secondary border border-border px-3 py-2 text-sm text-text-muted hover:text-text-primary hover:border-accent/30 transition-all"
+              >
+                {g.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
