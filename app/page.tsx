@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
@@ -10,27 +9,6 @@ import Nav from "@/components/Nav";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { MapPin, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
-
-const featuredGuides = [
-  {
-    title: "Best Countries for Software Engineers",
-    slug: "software-engineers",
-    description:
-      "Compare top countries for engineers by salary, tax, visas, and quality of life.",
-  },
-  {
-    title: "Best Countries for Product Managers",
-    slug: "product-managers",
-    description:
-      "See which countries offer the best mix of PM salary, career growth, and relocation potential.",
-  },
-  {
-    title: "Best Countries for Designers",
-    slug: "designers",
-    description:
-      "Explore the strongest countries for designers looking at pay, lifestyle, and market maturity.",
-  },
-];
 
 export default function Home() {
   const router = useRouter();
@@ -131,16 +109,25 @@ export default function Home() {
   }, [handleClosePanel]);
 
   return (
-    <main className="relative w-screen min-h-screen overflow-hidden bg-bg-primary">
-      <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+    // overflow-hidden: page never scrolls; globe is the full experience
+    <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
 
-      <Globe
-        countries={globeCountries}
-        onCountrySelect={handleCountrySelect}
-        selectedSlug={selectedSlug}
-        highlightedSlugs={highlightedSlugs}
-      />
+      {/* Globe: fills entire screen */}
+      <div className="absolute inset-0 z-0">
+        <Globe
+          countries={globeCountries}
+          onCountrySelect={handleCountrySelect}
+          selectedSlug={selectedSlug}
+          highlightedSlugs={highlightedSlugs}
+        />
+      </div>
 
+      {/* Nav */}
+      <div className="relative z-50">
+        <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+      </div>
+
+      {/* Hero overlay */}
       {showHero && (
         <>
           <div
@@ -264,29 +251,36 @@ export default function Home() {
         </>
       )}
 
+      {/* Wizard matches panel */}
       {wizardMatches.length > 0 && !selectedSlug && (
-        <WizardMatchesPanel
-          matches={wizardMatches}
-          allCountries={allCountries}
-          selectedRole={selectedRole}
-          onCountrySelect={(slug) => {
-            handleCountrySelect(slug);
-            setWizardMatches([]);
-          }}
-          onClose={() => {
-            setWizardMatches([]);
-            setHighlightedSlugs([]);
-          }}
-        />
+        <div className="relative z-40">
+          <WizardMatchesPanel
+            matches={wizardMatches}
+            allCountries={allCountries}
+            selectedRole={selectedRole}
+            onCountrySelect={(slug) => {
+              handleCountrySelect(slug);
+              setWizardMatches([]);
+            }}
+            onClose={() => {
+              setWizardMatches([]);
+              setHighlightedSlugs([]);
+            }}
+          />
+        </div>
       )}
 
-      <CountryPanel
-        country={selectedCountry}
-        onClose={handleClosePanel}
-        selectedRole={selectedRole}
-        onRoleChange={setSelectedRole}
-      />
+      {/* Country panel */}
+      <div className="relative z-40">
+        <CountryPanel
+          country={selectedCountry}
+          onClose={handleClosePanel}
+          selectedRole={selectedRole}
+          onRoleChange={setSelectedRole}
+        />
+      </div>
 
+      {/* Explore hint */}
       {!showHero && !selectedSlug && wizardMatches.length === 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
           <div className="glass-panel rounded-full px-6 py-3 flex items-center gap-3 shadow-xl shadow-black/30">
@@ -299,43 +293,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      <section className="relative z-20 mx-auto max-w-6xl px-4 pb-16 pt-8 sm:pt-10 lg:pt-12">
-        <div className="mb-6 max-w-2xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Career guides
-          </p>
-          <h2 className="mb-3 font-heading text-2xl font-extrabold text-text-primary sm:text-3xl">
-            Explore the best countries by role
-          </h2>
-          <p className="text-sm leading-7 text-text-muted sm:text-base">
-            These guides help people compare relocation options by role before diving into salary and take-home details.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {featuredGuides.map((guide) => (
-            <Link
-              key={guide.slug}
-              href={`/best-countries-for/${guide.slug}`}
-              className="group rounded-2xl border border-border bg-bg-elevated/80 p-5 backdrop-blur-sm transition-all hover:border-accent/30 hover:bg-accent/5"
-            >
-              <p className="mb-3 text-xs uppercase tracking-wider text-text-muted">
-                Guide
-              </p>
-              <h3 className="mb-2 font-heading text-xl font-bold text-text-primary transition-colors group-hover:text-accent">
-                {guide.title}
-              </h3>
-              <p className="mb-4 text-sm leading-6 text-text-muted">
-                {guide.description}
-              </p>
-              <span className="text-sm font-semibold text-accent">
-                Read guide →
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
     </main>
   );
 }
