@@ -22,17 +22,6 @@ interface PinPosition {
   isHovered: boolean;
 }
 
-function getGlobeTexture(): string {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 18) {
-    return "//unpkg.com/three-globe/example/img/earth-day.jpg";
-  } else if (hour >= 18 && hour < 22) {
-    return "//unpkg.com/three-globe/example/img/earth-dark.jpg";
-  } else {
-    return "//unpkg.com/three-globe/example/img/earth-night.jpg";
-  }
-}
-
 export default function Globe({
   countries,
   onCountrySelect,
@@ -81,7 +70,9 @@ export default function Globe({
       const pz = Math.cos(latRad) * Math.sin(lngRad);
       const dot = px * camX + py * camY + pz * camZ;
 
-      const visible = dot > 0.1 && coords &&
+      const visible =
+        dot > 0.1 &&
+        coords &&
         coords.x > 10 &&
         coords.x < (mountRef.current?.clientWidth ?? 0) - 10 &&
         coords.y > 10 &&
@@ -111,6 +102,10 @@ export default function Globe({
     globeContainer.style.height = "100%";
     mountEl.appendChild(globeContainer);
 
+    // Stop wheel events from propagating to page — globe gets zoom, page doesn't scroll
+    const blockScrollPropagation = (e: WheelEvent) => e.stopPropagation();
+    mountEl.addEventListener("wheel", blockScrollPropagation, { passive: true });
+
     let cancelled = false;
     let resizeHandler: (() => void) | null = null;
 
@@ -120,7 +115,7 @@ export default function Globe({
       if (cancelled) return;
 
       const globe = (GlobeGL as any)()(globeContainer)
-      .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
         .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
         .backgroundImageUrl("//unpkg.com/three-globe/example/img/night-sky.png")
         .showAtmosphere(true)
@@ -159,9 +154,11 @@ export default function Globe({
 
       globe.controls().autoRotate = true;
       globe.controls().autoRotateSpeed = 0.2;
-      globe.controls().enableZoom = true;
+      globe.controls().enableZoom = true;   // zoom via scroll/pinch
+      globe.controls().enableRotate = true; // drag to rotate
+      globe.controls().enablePan = false;   // pan off — wrong feel on globe
       globe.controls().minDistance = 150;
-      globe.controls().maxDistance = 500;
+      globe.controls().maxDistance = 600;
 
       globe.pointOfView({ lat: 30, lng: 0, altitude: 2.5 });
 
@@ -180,6 +177,7 @@ export default function Globe({
 
     return () => {
       cancelled = true;
+      mountEl.removeEventListener("wheel", blockScrollPropagation);
       if (resizeHandler) window.removeEventListener("resize", resizeHandler);
       cancelAnimationFrame(animFrameRef.current);
       globeRef.current = null;
@@ -196,9 +194,7 @@ export default function Globe({
 
   useEffect(() => {
     if (!globeRef.current || !isLoaded || countries.length === 0) return;
-    globeRef.current
-      .pointsData(countries)
-      .labelsData(countries);
+    globeRef.current.pointsData(countries).labelsData(countries);
   }, [countries, isLoaded]);
 
   useEffect(() => {
@@ -234,40 +230,45 @@ export default function Globe({
     <div className="globe-container" style={{ position: "relative" }}>
       <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
 
-      {isLoaded && pinPositions.map((pin) => {
-        if (!pin.visible) return null;
-        const hasHighlights = highlightedSlugs.length > 0;
-        const isDimmed = hasHighlights && !highlightedSlugs.includes(pin.slug) && !pin.isSelected && !pin.isHovered;
+      {isLoaded &&
+        pinPositions.map((pin) => {
+          if (!pin.visible) return null;
+          const hasHighlights = highlightedSlugs.length > 0;
+          const isDimmed =
+            hasHighlights &&
+            !highlightedSlugs.includes(pin.slug) &&
+            !pin.isSelected &&
+            !pin.isHovered;
 
-        return (
-          <div
-            key={pin.slug}
-            onClick={() => onCountrySelectRef.current(pin.slug)}
-            onMouseEnter={() => setHoveredSlug(pin.slug)}
-            onMouseLeave={() => setHoveredSlug(null)}
-            style={{
-              position: "absolute",
-              left: pin.x,
-              top: pin.y,
-              transform: "translate(-50%, -100%)",
-              cursor: "pointer",
-              zIndex: pin.isSelected ? 30 : pin.isHovered ? 25 : 20,
-              opacity: isDimmed ? 0.25 : 1,
-              transition: "opacity 0.3s ease",
-              pointerEvents: "auto",
-              fontSize: pin.isSelected ? "28px" : pin.isHovered ? "24px" : "20px",
-              filter: pin.isSelected
-                ? "drop-shadow(0 0 8px " + pin.color + ")"
-                : pin.isHovered
-                ? "drop-shadow(0 0 4px " + pin.color + ")"
-                : "drop-shadow(0 2px 3px rgba(0,0,0,0.5))",
-              userSelect: "none",
-            }}
-          >
-            📌
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={pin.slug}
+              onClick={() => onCountrySelectRef.current(pin.slug)}
+              onMouseEnter={() => setHoveredSlug(pin.slug)}
+              onMouseLeave={() => setHoveredSlug(null)}
+              style={{
+                position: "absolute",
+                left: pin.x,
+                top: pin.y,
+                transform: "translate(-50%, -100%)",
+                cursor: "pointer",
+                zIndex: pin.isSelected ? 30 : pin.isHovered ? 25 : 20,
+                opacity: isDimmed ? 0.25 : 1,
+                transition: "opacity 0.3s ease",
+                pointerEvents: "auto",
+                fontSize: pin.isSelected ? "28px" : pin.isHovered ? "24px" : "20px",
+                filter: pin.isSelected
+                  ? "drop-shadow(0 0 8px " + pin.color + ")"
+                  : pin.isHovered
+                  ? "drop-shadow(0 0 4px " + pin.color + ")"
+                  : "drop-shadow(0 2px 3px rgba(0,0,0,0.5))",
+                userSelect: "none",
+              }}
+            >
+              📌
+            </div>
+          );
+        })}
 
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
