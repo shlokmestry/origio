@@ -28,7 +28,8 @@
 
 html,
 body {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden; /* page never scrolls — globe is the full experience */
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: "Satoshi", sans-serif;
@@ -51,15 +52,17 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Globe container: fills whatever parent gives it — positioning owned by page.tsx */
 .globe-container {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
+  width: 100%;
+  height: 100%;
 }
 
+/* Canvas fills container, touch-action allows pinch-zoom + drag on mobile */
 .globe-container canvas {
   width: 100% !important;
   height: 100% !important;
+  touch-action: none;
 }
 
 .glass-panel {

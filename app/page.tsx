@@ -97,23 +97,19 @@ export default function Home() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-      }
-      if (e.key === "Escape") {
-        handleClosePanel();
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") e.preventDefault();
+      if (e.key === "Escape") handleClosePanel();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleClosePanel]);
 
   return (
-    // overflow-hidden: page never scrolls; globe is the full experience
-    <main className="relative w-screen h-screen overflow-hidden bg-bg-primary">
+    // Fixed full viewport — globe fills screen, nothing scrolls
+    <main className="fixed inset-0 bg-bg-primary overflow-hidden">
 
-      {/* Globe: fills entire screen */}
-      <div className="absolute inset-0 z-0">
+      {/* Globe: fixed behind everything */}
+      <div className="fixed inset-0 z-0">
         <Globe
           countries={globeCountries}
           onCountrySelect={handleCountrySelect}
@@ -122,36 +118,44 @@ export default function Home() {
         />
       </div>
 
-      {/* Nav */}
+      {/* Nav: always on top */}
       <div className="relative z-50">
         <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
       </div>
 
-      {/* Hero overlay */}
+      {/* Hero overlay: anchored to bottom, fades up over globe */}
       {showHero && (
         <>
+          {/* Gradient mask so text is readable over globe */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-bg-primary/90 via-bg-primary/40 to-transparent"
-            style={{ zIndex: 5, pointerEvents: "none" }}
+            className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
+            style={{
+              zIndex: 5,
+              background:
+                "linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 40%, transparent 100%)",
+            }}
           />
 
+          {/* Hero content */}
           <div
-            className="absolute bottom-0 left-0 right-0 p-4 sm:p-10 lg:p-16"
-            style={{ zIndex: 6, pointerEvents: "none" }}
+            className="fixed bottom-0 left-0 right-0 z-10 px-5 pb-8 sm:px-10 sm:pb-12 lg:px-16 lg:pb-16"
+            style={{ pointerEvents: "none" }}
           >
             <div className="max-w-2xl">
+              {/* Badge */}
               <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-6 animate-fade-up"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4 animate-fade-up"
                 style={{ animationDelay: "0.1s", opacity: 0 }}
               >
-                <MapPin className="w-3 h-3" />
+                <MapPin className="w-3 h-3 flex-shrink-0" />
                 <span>
                   Real data across {allCountries.length} countries · 20 job roles · trusted by expats
                 </span>
               </div>
 
+              {/* Headline */}
               <h1
-                className="font-heading text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6 animate-fade-up"
+                className="font-heading text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-4 animate-fade-up"
                 style={{ animationDelay: "0.2s", opacity: 0 }}
               >
                 Find Where
@@ -159,38 +163,42 @@ export default function Home() {
                 <span className="gradient-text">You Belong</span>
               </h1>
 
+              {/* Subtext */}
               <p
-                className="text-lg sm:text-xl text-text-muted max-w-lg leading-relaxed mb-8 animate-fade-up"
+                className="text-base sm:text-xl text-text-muted max-w-lg leading-relaxed mb-6 animate-fade-up"
                 style={{ animationDelay: "0.4s", opacity: 0 }}
               >
-                Salaries, visas, cost of living and quality of life — personalised to your job and passport.
+                Salaries, visas, cost of living and quality of life —{" "}
+                personalised to your job and passport.
               </p>
 
+              {/* CTAs */}
               <div
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 animate-fade-up"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 animate-fade-up"
                 style={{ animationDelay: "0.6s", opacity: 0, pointerEvents: "auto" }}
               >
                 <button
                   onClick={() => router.push("/wizard")}
-                  className="cta-button px-8 py-4 rounded-2xl text-base tracking-wide animate-pulse-glow flex items-center gap-2"
+                  className="cta-button px-7 py-3.5 rounded-2xl text-sm sm:text-base tracking-wide animate-pulse-glow flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   Find My Country
                 </button>
                 <button
                   onClick={() => setShowHero(false)}
-                  className="px-8 py-4 rounded-2xl text-base tracking-wide border border-border hover:border-accent/30 text-text-muted hover:text-text-primary transition-colors"
+                  className="px-7 py-3.5 rounded-2xl text-sm sm:text-base tracking-wide border border-border hover:border-accent/30 text-text-muted hover:text-text-primary transition-colors"
                 >
                   Explore the Globe
                 </button>
               </div>
 
+              {/* Trending */}
               {trendingCountries.length > 0 && (
                 <div
-                  className="mb-8 animate-fade-up"
+                  className="mb-5 animate-fade-up"
                   style={{ animationDelay: "0.7s", opacity: 0, pointerEvents: "auto" }}
                 >
-                  <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 text-xs text-text-muted flex-shrink-0">
                       <TrendingUp className="w-3 h-3" />
                       <span>Trending</span>
@@ -214,8 +222,9 @@ export default function Home() {
                 </div>
               )}
 
+              {/* Step hints — hidden on small mobile to save space */}
               <div
-                className="flex flex-wrap items-center gap-3 animate-fade-up"
+                className="hidden sm:flex flex-wrap items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
               >
                 <div className="flex items-center gap-2.5">
