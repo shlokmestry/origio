@@ -14,8 +14,22 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Password validation — only enforced on signup tab
+  const passwordTooShort = tab === 'signup' && password.length > 0 && password.length < 8
+  const passwordTooLong = tab === 'signup' && password.length > 16
+  const passwordInvalid = passwordTooShort || passwordTooLong
+  const submitDisabled = loading || (tab === 'signup' && passwordInvalid)
+
+  const passwordHint = () => {
+    if (passwordTooLong) return `Too long — max 16 characters (${password.length}/16)`
+    if (passwordTooShort) return `Too short — min 8 characters (${password.length}/8)`
+    if (tab === 'signup' && password.length > 0) return `${password.length}/16`
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitDisabled) return
     setLoading(true)
     setError('')
     setSuccess('')
@@ -34,7 +48,6 @@ export default function SignInPage() {
       }
 
     } else {
-      // Signup — just call signUp directly, no signin-first trick
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
         const msg = error.message.toLowerCase()
@@ -46,14 +59,11 @@ export default function SignInPage() {
         ) {
           setError('An account with this email already exists.')
           setTab('signin')
-        } else if (msg.includes('weak') || msg.includes('password')) {
-          setError('Password too weak. Use at least 6 characters.')
         } else {
           setError(error.message)
         }
       } else if (data.user && data.user.identities?.length === 0) {
-        // Supabase returns empty identities when email already exists
-        // This is the reliable way to detect duplicate accounts
+        // Supabase returns empty identities for duplicate accounts
         setError('An account with this email already exists.')
         setTab('signin')
       } else {
@@ -67,9 +77,7 @@ export default function SignInPage() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
   }
 
@@ -111,36 +119,48 @@ export default function SignInPage() {
             />
           </div>
 
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full pl-10 pr-10 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          <div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                maxLength={tab === 'signup' ? 16 : undefined}
+                className={`w-full pl-10 pr-10 py-3 bg-bg-elevated border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 transition-colors ${
+                  passwordInvalid
+                    ? 'border-score-low/50 focus:border-score-low/50 focus:ring-score-low/20'
+                    : 'border-border focus:border-accent/40 focus:ring-accent/20'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {/* Password hint */}
+            {tab === 'signup' && passwordHint() && (
+              <p className={`text-xs mt-1.5 ${passwordInvalid ? 'text-score-low' : 'text-text-muted'}`}>
+                {passwordHint()}
+              </p>
+            )}
+            {tab === 'signup' && password.length === 0 && (
+              <p className="text-xs mt-1.5 text-text-muted">8–16 characters</p>
+            )}
           </div>
 
-          {error && (
-            <p className="text-xs text-score-low">{error}</p>
-          )}
-          {success && (
-            <p className="text-xs text-score-high">{success}</p>
-          )}
+          {error && <p className="text-xs text-score-low">{error}</p>}
+          {success && <p className="text-xs text-score-high">{success}</p>}
 
           <button
             type="submit"
-            disabled={loading}
-            className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-50"
+            disabled={submitDisabled}
+            className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
