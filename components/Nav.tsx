@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, Globe2, Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -13,6 +14,9 @@ interface NavProps {
 }
 
 export default function Nav({ countries, onCountrySelect }: NavProps) {
+  const pathname = usePathname();
+  const isProfilePage = pathname === "/profile";
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -88,13 +92,16 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                     {user.user_metadata?.full_name || user.email}
                   </span>
                 </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign Out
-                </button>
+                {/* Hide sign out in nav on profile page — profile has its own sign out */}
+                {!isProfilePage && (
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                )}
               </div>
             ) : (
               <Link
@@ -220,13 +227,16 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                   >
                     {user.user_metadata?.full_name || user.email}
                   </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
+                  {/* Hide sign out in mobile nav on profile page too */}
+                  {!isProfilePage && (
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  )}
                 </div>
               ) : (
                 <Link

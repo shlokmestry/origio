@@ -112,43 +112,6 @@ function formatRole(r: string) {
   return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
 }
 
-// ─── Auth error interpreter ───────────────────────────────────────────────────
-
-function interpretAuthError(
-  error: { message: string },
-  mode: 'signin' | 'signup'
-): { message: string; switchTab?: 'signin' | 'signup' } {
-  const msg = error.message.toLowerCase()
-
-  if (mode === 'signup') {
-    if (
-      msg.includes('already registered') ||
-      msg.includes('already exists') ||
-      msg.includes('user already') ||
-      msg.includes('email already')
-    ) {
-      return {
-        message: 'An account with this email already exists. Switching to sign in.',
-        switchTab: 'signin',
-      }
-    }
-    if (msg.includes('password') && msg.includes('weak')) {
-      return { message: 'Password too weak. Use at least 8 characters.' }
-    }
-  }
-
-  if (mode === 'signin') {
-    if (msg.includes('email not confirmed')) {
-      return { message: 'Please confirm your email before signing in. Check your inbox.' }
-    }
-    // Supabase returns the same error string for both wrong password and
-    // non-existent account — cannot distinguish, show generic message
-    return { message: 'Invalid email or password. Please check your credentials and try again.' }
-  }
-
-  return { message: error.message }
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
@@ -216,19 +179,39 @@ export default function ProfilePage() {
     setAuthSuccess('')
 
     if (tab === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) {
-        const { message, switchTab } = interpretAuthError(error, 'signup')
-        setAuthError(message)
-        if (switchTab) setTimeout(() => setTab(switchTab), 1200)
+      // FIX: try signing in first — Supabase signUp on existing account
+      // returns success but sends a confirmation email instead of signing in.
+      // By attempting signin first, existing users get signed in directly.
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError) {
+        // Account exists and password correct — signed in
+        window.location.reload()
+        setAuthLoading(false)
+        return
+      }
+      // signin failed — account either doesn't exist or wrong password
+      // If wrong password for existing account, signUp will fail with "already registered"
+      const { error: signUpError } = await supabase.auth.signUp({ email, password })
+      if (signUpError) {
+        const msg = signUpError.message.toLowerCase()
+        if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
+          setAuthError('An account with this email exists but the password is incorrect. Please sign in instead.')
+          setTimeout(() => setTab('signin'), 1500)
+        } else {
+          setAuthError(signUpError.message)
+        }
       } else {
         setAuthSuccess('Check your email to confirm your account!')
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        const { message } = interpretAuthError(error, 'signin')
-        setAuthError(message)
+        const msg = error.message.toLowerCase()
+        if (msg.includes('email not confirmed')) {
+          setAuthError('Please confirm your email before signing in. Check your inbox.')
+        } else {
+          setAuthError('Invalid email or password. Please check your credentials and try again.')
+        }
       } else {
         window.location.reload()
       }
@@ -264,7 +247,6 @@ export default function ProfilePage() {
     setNameSaving(false)
   }
 
-  // Uses server API route with service role key to fully delete auth user
   const deleteAccount = async () => {
     if (!user) return
     setDeleteLoading(true)
@@ -333,7 +315,7 @@ export default function ProfilePage() {
           </div>
 
           {authError && (
-            <p className={`text-xs ${authError.includes('Switching') ? 'text-amber-400' : 'text-score-low'}`}>
+            <p className={`text-xs ${authError.includes('Switching') || authError.includes('instead') ? 'text-amber-400' : 'text-score-low'}`}>
               {authError}
             </p>
           )}
