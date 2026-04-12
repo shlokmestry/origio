@@ -1,11 +1,25 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Origio — Find Where You Belong";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OgImage() {
+const roleLabels: Record<string, { title: string; emoji: string }> = {
+  "software-engineers": { title: "Software Engineers", emoji: "💻" },
+  "product-managers": { title: "Product Managers", emoji: "📋" },
+  "designers": { title: "Designers", emoji: "🎨" },
+  "data-scientists": { title: "Data Scientists", emoji: "📊" },
+  "devops-engineers": { title: "DevOps Engineers", emoji: "⚙️" },
+  "marketing-managers": { title: "Marketing Managers", emoji: "📣" },
+  "financial-analysts": { title: "Financial Analysts", emoji: "💹" },
+  "cybersecurity-analysts": { title: "Cybersecurity Analysts", emoji: "🔐" },
+  "sales-managers": { title: "Sales Managers", emoji: "🤝" },
+  "hr-managers": { title: "HR Managers", emoji: "👥" },
+};
+
+export default function OgImage({ params }: { params: { role: string } }) {
+  const role = roleLabels[params.role] ?? { title: "Professionals", emoji: "🌍" };
+
   return new ImageResponse(
     (
       <div
@@ -22,7 +36,7 @@ export default function OgImage() {
           overflow: "hidden",
         }}
       >
-        {/* Background glow — teal */}
+        {/* Background glow */}
         <div
           style={{
             position: "absolute",
@@ -37,50 +51,56 @@ export default function OgImage() {
           }}
         />
 
-        {/* Globe emoji */}
-        <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>🌍</div>
+        {/* Role emoji */}
+        <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>
+          {role.emoji}
+        </div>
 
-        {/* Title */}
+        {/* Eyebrow */}
         <div
           style={{
-            fontSize: 88,
+            fontSize: 20,
+            color: "#00d4c8",
+            fontWeight: 600,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            marginBottom: 16,
+            display: "flex",
+          }}
+        >
+          Best Countries for
+        </div>
+
+        {/* Role title */}
+        <div
+          style={{
+            fontSize: 72,
             fontWeight: 800,
             color: "#ffffff",
-            letterSpacing: "-3px",
-            marginBottom: 12,
+            letterSpacing: "-2px",
+            marginBottom: 20,
             display: "flex",
+            textAlign: "center",
           }}
         >
-          Origio
+          {role.title}
         </div>
 
-        {/* Tagline */}
-        <div
-          style={{
-            fontSize: 28,
-            color: "#8888a0",
-            marginBottom: 40,
-            display: "flex",
-          }}
-        >
-          Find Where You Belong
-        </div>
-
-        {/* Divider — teal */}
+        {/* Divider */}
         <div
           style={{
             width: 48,
             height: 3,
             background: "#00d4c8",
             borderRadius: 99,
-            marginBottom: 40,
+            marginBottom: 32,
             display: "flex",
           }}
         />
 
-        {/* Pills — teal */}
+        {/* Pills */}
         <div style={{ display: "flex", gap: 12 }}>
-          {["🌐 25 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
+          {["💰 Salaries", "🏛️ Tax Rates", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
             <div
               key={label}
               style={{
@@ -98,17 +118,19 @@ export default function OgImage() {
           ))}
         </div>
 
-        {/* Bottom URL */}
+        {/* Origio branding bottom */}
         <div
           style={{
             position: "absolute",
             bottom: 36,
-            fontSize: 18,
-            color: "#44445a",
             display: "flex",
+            alignItems: "center",
+            gap: 10,
           }}
         >
-          origio.vercel.app
+          <div style={{ fontSize: 18, color: "#44445a", display: "flex" }}>
+            origio.vercel.app
+          </div>
         </div>
       </div>
     ),
