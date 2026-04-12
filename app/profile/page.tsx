@@ -6,284 +6,118 @@ import Nav from '@/components/Nav'
 import type { User } from '@supabase/supabase-js'
 import {
   Globe2, LogOut, Trash2, Mail, Lock, Eye, EyeOff,
-  Sparkles, Pencil, Check, X, AlertTriangle, MapPin
+  Sparkles, Pencil, Check, X, AlertTriangle, Briefcase
 } from 'lucide-react'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type CountryInfo = { flag_emoji: string; name: string }
-
 type SavedCountry = {
   id: string
   country_slug: string
   created_at: string
   countries?: CountryInfo | CountryInfo[] | null
 }
-
 type WizardResult = {
-  top_countries: {
-    slug: string
-    name: string
-    flagEmoji: string
-    matchPercent: number
-  }[]
+  top_countries: { slug: string; name: string; flagEmoji: string; matchPercent: number }[]
   answers: { role: string }
   created_at: string
 }
-
-// ─── Passport data ───────────────────────────────────────────────────────────
-
-type PassportDesign = {
-  name: string
-  flag: string
-  bgColor: string
-  accentColor: string
-  textColor: string
-  pattern: 'lines' | 'dots' | 'waves' | 'grid' | 'chevron'
-  emblem: string
-  coverText: string
+type Profile = {
+  passport_slug: string | null
+  job_title: string | null
+  onboarded: boolean
 }
 
-const PASSPORTS: Record<string, PassportDesign> = {
-  'united-states': {
-    name: 'United States', flag: '🇺🇸',
-    bgColor: '#1a3055', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT'
-  },
-  'united-kingdom': {
-    name: 'United Kingdom', flag: '🇬🇧',
-    bgColor: '#012169', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '👑', coverText: 'PASSPORT'
-  },
-  'canada': {
-    name: 'Canada', flag: '🇨🇦',
-    bgColor: '#cc0001', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🍁', coverText: 'PASSPORT'
-  },
-  'australia': {
-    name: 'Australia', flag: '🇦🇺',
-    bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'dots', emblem: '🦘', coverText: 'PASSPORT'
-  },
-  'germany': {
-    name: 'Germany', flag: '🇩🇪',
-    bgColor: '#2a2a2a', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS'
-  },
-  'france': {
-    name: 'France', flag: '🇫🇷',
-    bgColor: '#002395', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'waves', emblem: '⚜️', coverText: 'PASSEPORT'
-  },
-  'netherlands': {
-    name: 'Netherlands', flag: '🇳🇱',
-    bgColor: '#ae1c28', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '👑', coverText: 'PASPOORT'
-  },
-  'sweden': {
-    name: 'Sweden', flag: '🇸🇪',
-    bgColor: '#006aa7', accentColor: '#fecc02', textColor: '#ffffff',
-    pattern: 'grid', emblem: '⚜️', coverText: 'PASS'
-  },
-  'norway': {
-    name: 'Norway', flag: '🇳🇴',
-    bgColor: '#ef2b2d', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦁', coverText: 'PASS'
-  },
-  'denmark': {
-    name: 'Denmark', flag: '🇩🇰',
-    bgColor: '#c60c30', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'lines', emblem: '👑', coverText: 'PAS'
-  },
-  'finland': {
-    name: 'Finland', flag: '🇫🇮',
-    bgColor: '#003580', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦁', coverText: 'PASSI'
-  },
-  'switzerland': {
-    name: 'Switzerland', flag: '🇨🇭',
-    bgColor: '#d52b1e', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'dots', emblem: '✚', coverText: 'PASSEPORT'
-  },
-  'singapore': {
-    name: 'Singapore', flag: '🇸🇬',
-    bgColor: '#c8102e', accentColor: '#ffffff', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦁', coverText: 'PASSPORT'
-  },
-  'japan': {
-    name: 'Japan', flag: '🇯🇵',
-    bgColor: '#1a3a6b', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'waves', emblem: '🌸', coverText: 'パスポート'
-  },
-  'south-korea': {
-    name: 'South Korea', flag: '🇰🇷',
-    bgColor: '#003478', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '☯️', coverText: '여권'
-  },
-  'new-zealand': {
-    name: 'New Zealand', flag: '🇳🇿',
-    bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'dots', emblem: '🌿', coverText: 'PASSPORT'
-  },
-  'ireland': {
-    name: 'Ireland', flag: '🇮🇪',
-    bgColor: '#169b62', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🍀', coverText: 'PASSPORT'
-  },
-  'portugal': {
-    name: 'Portugal', flag: '🇵🇹',
-    bgColor: '#006600', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '⚔️', coverText: 'PASSAPORTE'
-  },
-  'spain': {
-    name: 'Spain', flag: '🇪🇸',
-    bgColor: '#aa151b', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '👑', coverText: 'PASAPORTE'
-  },
-  'italy': {
-    name: 'Italy', flag: '🇮🇹',
-    bgColor: '#009246', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '⭐', coverText: 'PASSAPORTO'
-  },
-  'austria': {
-    name: 'Austria', flag: '🇦🇹',
-    bgColor: '#ed2939', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS'
-  },
-  'india': {
-    name: 'India', flag: '🇮🇳',
-    bgColor: '#046A38', accentColor: '#FF9933', textColor: '#ffffff',
-    pattern: 'lines', emblem: '⚖️', coverText: 'PASSPORT'
-  },
-  'brazil': {
-    name: 'Brazil', flag: '🇧🇷',
-    bgColor: '#009C3B', accentColor: '#FEDD00', textColor: '#ffffff',
-    pattern: 'dots', emblem: '⭐', coverText: 'PASSAPORTE'
-  },
-  'uae': {
-    name: 'UAE', flag: '🇦🇪',
-    bgColor: '#00732f', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT'
-  },
-  'mexico': {
-    name: 'Mexico', flag: '🇲🇽',
-    bgColor: '#006847', accentColor: '#c8a84b', textColor: '#ffffff',
-    pattern: 'lines', emblem: '🦅', coverText: 'PASAPORTE'
-  },
+// ─── Passport data (for badge display) ───────────────────────────────────────
+
+const PASSPORT_FLAGS: Record<string, { flag: string; name: string; bgColor: string; accentColor: string; emblem: string; coverText: string; pattern: string }> = {
+  'united-states': { flag: '🇺🇸', name: 'United States', bgColor: '#1a3055', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
+  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom', bgColor: '#012169', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASSPORT', pattern: 'lines' },
+  'canada': { flag: '🇨🇦', name: 'Canada', bgColor: '#cc0001', accentColor: '#ffffff', emblem: '🍁', coverText: 'PASSPORT', pattern: 'lines' },
+  'australia': { flag: '🇦🇺', name: 'Australia', bgColor: '#00205b', accentColor: '#c8a84b', emblem: '🦘', coverText: 'PASSPORT', pattern: 'dots' },
+  'germany': { flag: '🇩🇪', name: 'Germany', bgColor: '#2a2a2a', accentColor: '#c8a84b', emblem: '🦅', coverText: 'REISEPASS', pattern: 'lines' },
+  'france': { flag: '🇫🇷', name: 'France', bgColor: '#002395', accentColor: '#c8a84b', emblem: '⚜️', coverText: 'PASSEPORT', pattern: 'waves' },
+  'netherlands': { flag: '🇳🇱', name: 'Netherlands', bgColor: '#ae1c28', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASPOORT', pattern: 'lines' },
+  'sweden': { flag: '🇸🇪', name: 'Sweden', bgColor: '#006aa7', accentColor: '#fecc02', emblem: '⚜️', coverText: 'PASS', pattern: 'grid' },
+  'norway': { flag: '🇳🇴', name: 'Norway', bgColor: '#ef2b2d', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASS', pattern: 'lines' },
+  'denmark': { flag: '🇩🇰', name: 'Denmark', bgColor: '#c60c30', accentColor: '#ffffff', emblem: '👑', coverText: 'PAS', pattern: 'lines' },
+  'finland': { flag: '🇫🇮', name: 'Finland', bgColor: '#003580', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASSI', pattern: 'lines' },
+  'switzerland': { flag: '🇨🇭', name: 'Switzerland', bgColor: '#d52b1e', accentColor: '#ffffff', emblem: '✚', coverText: 'PASSEPORT', pattern: 'dots' },
+  'singapore': { flag: '🇸🇬', name: 'Singapore', bgColor: '#c8102e', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASSPORT', pattern: 'lines' },
+  'japan': { flag: '🇯🇵', name: 'Japan', bgColor: '#1a3a6b', accentColor: '#c8a84b', emblem: '🌸', coverText: 'パスポート', pattern: 'waves' },
+  'south-korea': { flag: '🇰🇷', name: 'South Korea', bgColor: '#003478', accentColor: '#c8a84b', emblem: '☯️', coverText: '여권', pattern: 'lines' },
+  'new-zealand': { flag: '🇳🇿', name: 'New Zealand', bgColor: '#00205b', accentColor: '#c8a84b', emblem: '🌿', coverText: 'PASSPORT', pattern: 'dots' },
+  'ireland': { flag: '🇮🇪', name: 'Ireland', bgColor: '#169b62', accentColor: '#c8a84b', emblem: '🍀', coverText: 'PASSPORT', pattern: 'lines' },
+  'portugal': { flag: '🇵🇹', name: 'Portugal', bgColor: '#006600', accentColor: '#c8a84b', emblem: '⚔️', coverText: 'PASSAPORTE', pattern: 'lines' },
+  'spain': { flag: '🇪🇸', name: 'Spain', bgColor: '#aa151b', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASAPORTE', pattern: 'lines' },
+  'italy': { flag: '🇮🇹', name: 'Italy', bgColor: '#009246', accentColor: '#c8a84b', emblem: '⭐', coverText: 'PASSAPORTO', pattern: 'lines' },
+  'austria': { flag: '🇦🇹', name: 'Austria', bgColor: '#ed2939', accentColor: '#c8a84b', emblem: '🦅', coverText: 'REISEPASS', pattern: 'lines' },
+  'india': { flag: '🇮🇳', name: 'India', bgColor: '#046A38', accentColor: '#FF9933', emblem: '⚖️', coverText: 'PASSPORT', pattern: 'lines' },
+  'brazil': { flag: '🇧🇷', name: 'Brazil', bgColor: '#009C3B', accentColor: '#FEDD00', emblem: '⭐', coverText: 'PASSAPORTE', pattern: 'dots' },
+  'uae': { flag: '🇦🇪', name: 'UAE', bgColor: '#00732f', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
+  'mexico': { flag: '🇲🇽', name: 'Mexico', bgColor: '#006847', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASAPORTE', pattern: 'lines' },
+  'china': { flag: '🇨🇳', name: 'China', bgColor: '#de2910', accentColor: '#ffde00', emblem: '⭐', coverText: '护照', pattern: 'lines' },
+  'pakistan': { flag: '🇵🇰', name: 'Pakistan', bgColor: '#01411C', accentColor: '#ffffff', emblem: '🌙', coverText: 'PASSPORT', pattern: 'lines' },
+  'nigeria': { flag: '🇳🇬', name: 'Nigeria', bgColor: '#008751', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
+  'south-africa': { flag: '🇿🇦', name: 'South Africa', bgColor: '#007A4D', accentColor: '#FFB612', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
+  'philippines': { flag: '🇵🇭', name: 'Philippines', bgColor: '#0038a8', accentColor: '#fcd116', emblem: '☀️', coverText: 'PASSPORT', pattern: 'lines' },
+  'malaysia': { flag: '🇲🇾', name: 'Malaysia', bgColor: '#cc0001', accentColor: '#ffd700', emblem: '🌙', coverText: 'PASPORT', pattern: 'lines' },
+  'turkey': { flag: '🇹🇷', name: 'Turkey', bgColor: '#e30a17', accentColor: '#ffffff', emblem: '🌙', coverText: 'PASAPORT', pattern: 'lines' },
+  'poland': { flag: '🇵🇱', name: 'Poland', bgColor: '#dc143c', accentColor: '#ffffff', emblem: '🦅', coverText: 'PASZPORT', pattern: 'lines' },
+  'ukraine': { flag: '🇺🇦', name: 'Ukraine', bgColor: '#005bbb', accentColor: '#ffd500', emblem: '🌾', coverText: 'ПАСПОРТ', pattern: 'lines' },
+  'ghana': { flag: '🇬🇭', name: 'Ghana', bgColor: '#006b3f', accentColor: '#fcd116', emblem: '⭐', coverText: 'PASSPORT', pattern: 'lines' },
 }
 
-const PASSPORT_LIST = Object.entries(PASSPORTS).map(([slug, d]) => ({ slug, ...d }))
-
-// ─── Passport SVG component ───────────────────────────────────────────────────
-
-function PassportCard({ design }: { design: PassportDesign }) {
-  const patternId = `pat-${design.name.replace(/\s/g, '')}`
-
-  const patterns: Record<string, JSX.Element> = {
-    lines: (
-      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.4" opacity="0.15" />
-      </pattern>
-    ),
-    dots: (
-      <pattern id={patternId} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-        <circle cx="8" cy="8" r="1" fill={design.accentColor} opacity="0.2" />
-      </pattern>
-    ),
-    waves: (
-      <pattern id={patternId} x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
-        <path d="M0 10 Q10 0 20 10 Q30 20 40 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" />
-      </pattern>
-    ),
-    grid: (
-      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" />
-        <line x1="0" y1="0" x2="20" y2="0" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" />
-      </pattern>
-    ),
-    chevron: (
-      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <path d="M0 10 L10 0 L20 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" />
-      </pattern>
-    ),
-  }
-
+function PassportMiniSVG({ slug }: { slug: string }) {
+  const d = PASSPORT_FLAGS[slug]
+  if (!d) return null
+  const pid = `pm-${slug.replace(/-/g, '')}`
   return (
-    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-2xl">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
       <defs>
-        {patterns[design.pattern]}
-        <linearGradient id={`grad-${patternId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={design.bgColor} stopOpacity="1" />
-          <stop offset="100%" stopColor={design.bgColor} stopOpacity="0.85" />
-        </linearGradient>
+        <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="0" y2="20" stroke={d.accentColor} strokeWidth="0.4" opacity="0.15" />
+        </pattern>
       </defs>
-
-      {/* Passport body */}
-      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#grad-${patternId})`} />
-
-      {/* Pattern overlay */}
-      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#${patternId})`} />
-
-      {/* Top accent stripe */}
-      <rect x="0" y="0" width="200" height="6" rx="0" fill={design.accentColor} opacity="0.6" />
-      <rect x="0" y="274" width="200" height="6" rx="0" fill={design.accentColor} opacity="0.6" />
-
-      {/* Left accent stripe */}
-      <rect x="0" y="0" width="6" height="280" fill={design.accentColor} opacity="0.3" />
-
-      {/* Emblem circle */}
-      <circle cx="100" cy="110" r="38" fill={design.accentColor} opacity="0.12" />
-      <circle cx="100" cy="110" r="34" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.4" />
-      <circle cx="100" cy="110" r="28" fill="none" stroke={design.accentColor} strokeWidth="0.4" opacity="0.25" />
-
-      {/* Emblem text */}
-      <text x="100" y="120" textAnchor="middle" fontSize="32" fill={design.textColor} opacity="0.9">{design.emblem}</text>
-
-      {/* Country name */}
-      <text x="100" y="170" textAnchor="middle" fontSize="9" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">
-        {design.name.toUpperCase()}
-      </text>
-
-      {/* PASSPORT text */}
-      <text x="100" y="190" textAnchor="middle" fontSize="11" fill={design.textColor} opacity="0.7" letterSpacing="4" fontFamily="serif">
-        {design.coverText}
-      </text>
-
-      {/* Flag */}
-      <text x="100" y="230" textAnchor="middle" fontSize="24" opacity="0.9">{design.flag}</text>
-
-      {/* Bottom MRZ lines */}
-      <rect x="10" y="250" width="180" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
-      <rect x="10" y="258" width="180" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
-      <rect x="10" y="266" width="120" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
+      <rect x="0" y="0" width="200" height="280" rx="8" fill={d.bgColor} />
+      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#${pid})`} />
+      <rect x="0" y="0" width="200" height="5" fill={d.accentColor} opacity="0.5" />
+      <rect x="0" y="275" width="200" height="5" fill={d.accentColor} opacity="0.5" />
+      <rect x="0" y="0" width="5" height="280" fill={d.accentColor} opacity="0.25" />
+      <circle cx="100" cy="108" r="34" fill={d.accentColor} opacity="0.1" />
+      <circle cx="100" cy="108" r="30" fill="none" stroke={d.accentColor} strokeWidth="0.8" opacity="0.35" />
+      <text x="100" y="118" textAnchor="middle" fontSize="28" fill="#ffffff" opacity="0.9">{d.emblem}</text>
+      <text x="100" y="163" textAnchor="middle" fontSize="7" fill={d.accentColor} opacity="0.8" letterSpacing="2" fontFamily="serif" fontWeight="bold">{d.name.toUpperCase()}</text>
+      <text x="100" y="180" textAnchor="middle" fontSize="9" fill="#ffffff" opacity="0.65" letterSpacing="3" fontFamily="serif">{d.coverText}</text>
+      <text x="100" y="220" textAnchor="middle" fontSize="20" opacity="0.9">{d.flag}</text>
+      <rect x="10" y="245" width="180" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
+      <rect x="10" y="251" width="180" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
+      <rect x="10" y="257" width="120" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
     </svg>
   )
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatRole(role: string): string {
-  return role.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+function getCountryInfo(c: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
+  if (!c) return null
+  return Array.isArray(c) ? (c[0] ?? null) : c
+}
+function capPercent(n: number) { return Math.min(n, 99) }
+function formatRole(r: string) {
+  return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function getCountryInfo(countries: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
-  if (!countries) return null
-  return Array.isArray(countries) ? (countries[0] ?? null) : countries
-}
-
-function capPercent(n: number): number {
-  return Math.min(n, 99)
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [savesLoading, setSavesLoading] = useState(false)
@@ -303,12 +137,7 @@ export default function ProfilePage() {
   const [nameValue, setNameValue] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
 
-  // Passport
-  const [passportSlug, setPassportSlug] = useState<string | null>(null)
-  const [passportSaving, setPassportSaving] = useState(false)
-  const [passportSearch, setPassportSearch] = useState('')
-
-  // Delete account
+  // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -319,25 +148,22 @@ export default function ProfilePage() {
         setNameValue(data.user.user_metadata?.full_name ?? '')
         setSavesLoading(true)
         const [savesRes, wizardRes, profileRes] = await Promise.all([
-          supabase
-            .from('saved_countries')
+          supabase.from('saved_countries')
             .select('id, country_slug, created_at, countries(flag_emoji, name)')
             .eq('user_id', data.user.id)
             .order('created_at', { ascending: false }),
-          supabase
-            .from('wizard_results')
+          supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', data.user.id)
             .single(),
-          supabase
-            .from('profiles')
-            .select('passport_slug')
+          supabase.from('profiles')
+            .select('passport_slug, job_title, onboarded')
             .eq('id', data.user.id)
             .single(),
         ])
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
-        setPassportSlug(profileRes.data?.passport_slug ?? null)
+        setProfile(profileRes.data ?? null)
         setSavesLoading(false)
       }
       setLoading(false)
@@ -388,19 +214,9 @@ export default function ProfilePage() {
     setNameSaving(false)
   }
 
-  const savePassport = async (slug: string) => {
-    if (!user) return
-    setPassportSaving(true)
-    setPassportSlug(slug)
-    await supabase.from('profiles').upsert({ id: user.id, passport_slug: slug }, { onConflict: 'id' })
-    setPassportSaving(false)
-    setPassportSearch('')
-  }
-
   const deleteAccount = async () => {
     if (!user) return
     setDeleteLoading(true)
-    // Delete all user data first
     await Promise.all([
       supabase.from('saved_countries').delete().eq('user_id', user.id),
       supabase.from('wizard_results').delete().eq('user_id', user.id),
@@ -413,11 +229,7 @@ export default function ProfilePage() {
   const formatSlug = (slug: string) =>
     slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
-  const filteredPassports = PASSPORT_LIST.filter(p =>
-    p.name.toLowerCase().includes(passportSearch.toLowerCase())
-  )
-
-  const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
+  const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
 
   // ── Loading ──
   if (loading) return (
@@ -488,121 +300,77 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-bg-primary">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-2xl mx-auto px-6 py-12">
 
-        {/* ── Top: Avatar + Name + Passport ── */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-8">
-
-          {/* Left: user info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-6">
-              {user.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border" />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent">
-                  {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
-                </div>
-              )}
-              <div className="flex-1">
-                {editingName ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      value={nameValue}
-                      onChange={e => setNameValue(e.target.value)}
-                      className="font-heading text-xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/30"
-                      autoFocus
-                      onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
-                    />
-                    <button onClick={saveName} disabled={nameSaving} className="p-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors">
-                      <Check className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted transition-colors">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-heading text-2xl font-extrabold text-text-primary">
-                      {user.user_metadata?.full_name ?? 'Explorer'}
-                    </h1>
-                    <button onClick={() => setEditingName(true)} className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-                <p className="text-text-muted text-sm">{user.email}</p>
-              </div>
+        {/* ── Avatar + name + passport badge ── */}
+        <div className="flex items-start gap-4 mb-8">
+          {/* Avatar */}
+          {user.user_metadata?.avatar_url ? (
+            <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
+              {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
             </div>
+          )}
 
-            {/* Explore globe CTA */}
-            <a href="/"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-accent/30 hover:bg-accent/5 text-sm text-text-muted hover:text-text-primary transition-all mb-6">
-              <Globe2 className="w-4 h-4 text-accent" />
-              Explore the Globe
-            </a>
-
-            {/* Passport selector */}
-            <div className="glass-panel rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-4 h-4 text-accent" />
-                <h2 className="font-heading text-lg font-bold text-text-primary">Your Passport</h2>
-                {passportSaving && <span className="text-xs text-text-muted animate-pulse">Saving...</span>}
-              </div>
-
-              {selectedPassport && (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-elevated border border-accent/20 mb-4">
-                  <span className="text-2xl">{selectedPassport.flag}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{selectedPassport.name}</p>
-                    <p className="text-xs text-text-muted">Current passport</p>
-                  </div>
-                  <button onClick={() => setPassportSlug(null)} className="ml-auto p-1 text-text-muted hover:text-text-primary">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              <input
-                placeholder="Search country..."
-                value={passportSearch}
-                onChange={e => setPassportSearch(e.target.value)}
-                className="w-full px-3 py-2 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none mb-3 transition-colors"
-              />
-
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                {filteredPassports.map(p => (
-                  <button
-                    key={p.slug}
-                    onClick={() => savePassport(p.slug)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-left transition-all border ${
-                      passportSlug === p.slug
-                        ? 'border-accent/40 bg-accent/10 text-text-primary'
-                        : 'border-border bg-bg-elevated hover:border-accent/20 hover:bg-accent/5 text-text-muted hover:text-text-primary'
-                    }`}
-                  >
-                    <span>{p.flag}</span>
-                    <span className="truncate text-xs">{p.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Passport visual */}
-          <div className="lg:w-52 flex flex-col items-center justify-start pt-2">
-            {selectedPassport ? (
-              <div className="w-44 animate-fade-in">
-                <PassportCard design={selectedPassport} />
-                <p className="text-center text-xs text-text-muted mt-3">{selectedPassport.name} passport</p>
+          <div className="flex-1 min-w-0">
+            {/* Name */}
+            {editingName ? (
+              <div className="flex items-center gap-2 mb-1">
+                <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+                  className="font-heading text-xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none" />
+                <button onClick={saveName} disabled={nameSaving} className="p-1.5 rounded-lg bg-accent/10 text-accent"><Check className="w-4 h-4" /></button>
+                <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg text-text-muted"><X className="w-4 h-4" /></button>
               </div>
             ) : (
-              <div className="w-44 h-64 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-center p-4">
-                <span className="text-4xl opacity-30">🛂</span>
-                <p className="text-xs text-text-muted">Select your passport to see it here</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="font-heading text-2xl font-extrabold text-text-primary">
+                  {user.user_metadata?.full_name ?? 'Explorer'}
+                </h1>
+                <button onClick={() => setEditingName(true)} className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
+            <p className="text-text-muted text-sm mb-3">{user.email}</p>
+
+            {/* Passport + job badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              {passportData && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
+                  <span>{passportData.flag}</span>
+                  <span>{passportData.name} passport</span>
+                </div>
+              )}
+              {profile?.job_title && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
+                  <Briefcase className="w-3 h-3" />
+                  <span>{profile.job_title}</span>
+                </div>
+              )}
+              {(!passportData || !profile?.job_title) && (
+                <button onClick={() => router.push('/onboarding')}
+                  className="text-xs text-accent hover:underline">
+                  Complete your profile →
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Passport mini on right */}
+          {profile?.passport_slug && (
+            <div className="w-14 flex-shrink-0">
+              <PassportMiniSVG slug={profile.passport_slug} />
+            </div>
+          )}
         </div>
+
+        {/* Explore globe */}
+        <a href="/" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-accent/30 hover:bg-accent/5 text-sm text-text-muted hover:text-text-primary transition-all mb-6">
+          <Globe2 className="w-4 h-4 text-accent" />
+          Explore the Globe
+        </a>
 
         {/* ── Saved Countries ── */}
         <div className="glass-panel rounded-2xl p-6 mb-6">
@@ -662,9 +430,7 @@ export default function ProfilePage() {
                 return (
                   <div key={c.slug} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color, background: color + '20' }}>
-                        {labels[i]}
-                      </span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color, background: color + '20' }}>{labels[i]}</span>
                       <span className="text-lg">{c.flagEmoji}</span>
                       <span className="text-sm font-medium text-text-primary">{c.name}</span>
                     </div>
@@ -679,22 +445,18 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* ── Danger zone ── */}
+        {/* ── Account ── */}
         <div className="glass-panel rounded-2xl p-6 border border-rose-500/10">
           <h2 className="font-heading text-lg font-bold text-text-primary mb-1">Account</h2>
           <p className="text-xs text-text-muted mb-4">Manage your account settings</p>
-
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={signOut}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-border-hover text-sm text-text-muted hover:text-text-primary transition-colors">
-              <LogOut className="w-4 h-4" />
-              Sign out
+              <LogOut className="w-4 h-4" />Sign out
             </button>
-
             <button onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-500/5 text-sm text-rose-400 transition-colors">
-              <Trash2 className="w-4 h-4" />
-              Delete account
+              <Trash2 className="w-4 h-4" />Delete account
             </button>
           </div>
         </div>
@@ -714,9 +476,7 @@ export default function ProfilePage() {
                 <p className="text-xs text-text-muted">This cannot be undone</p>
               </div>
             </div>
-            <p className="text-sm text-text-muted mb-6">
-              All your saved countries, wizard results, and profile data will be permanently deleted.
-            </p>
+            <p className="text-sm text-text-muted mb-6">All your saved countries, wizard results, and profile data will be permanently deleted.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
