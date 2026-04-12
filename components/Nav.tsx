@@ -26,13 +26,9 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -62,52 +58,39 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             >
               <Search className="w-4 h-4" />
               <span>Search countries...</span>
-              <kbd className="ml-4 px-1.5 py-0.5 text-[10px] rounded bg-bg-elevated border border-border text-text-muted">
-                ⌘K
-              </kbd>
+              <kbd className="ml-4 px-1.5 py-0.5 text-[10px] rounded bg-bg-elevated border border-border text-text-muted">⌘K</kbd>
             </button>
 
-            <Link
-              href="/best-countries-for/software-engineers"
-              className="text-sm text-text-muted hover:text-text-primary transition-colors"
-            >
+            <Link href="/best-countries-for/software-engineers"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors">
               Guides
             </Link>
 
-            <Link
-              href="/about"
-              className="text-sm text-text-muted hover:text-text-primary transition-colors"
-            >
+            <Link href="/about"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors">
               About
             </Link>
 
             {user ? (
               <div className="flex items-center gap-3">
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-border-hover transition-colors"
-                >
+                <Link href="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-border-hover transition-colors">
                   <User className="w-3.5 h-3.5 text-accent" />
                   <span className="text-xs text-text-muted truncate max-w-[120px]">
                     {user.user_metadata?.full_name || user.email}
                   </span>
                 </Link>
-                {/* Hide sign out in nav on profile page — profile has its own sign out */}
                 {!isProfilePage && (
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary"
-                  >
+                  <button onClick={handleSignOut}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-border-hover transition-colors text-xs text-text-muted hover:text-text-primary">
                     <LogOut className="w-3.5 h-3.5" />
                     Sign Out
                   </button>
                 )}
               </div>
             ) : (
-              <Link
-                href="/profile"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium"
-              >
+              <Link href="/signin"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium">
                 <LogIn className="w-4 h-4" />
                 Sign In
               </Link>
@@ -116,8 +99,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-bg-elevated transition-colors"
-          >
+            className="md:hidden p-2 rounded-lg hover:bg-bg-elevated transition-colors">
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -128,14 +110,9 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
           <div className="max-w-2xl mx-auto p-4">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-              <input
-                type="text"
-                placeholder="Search for a country..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-                className="w-full pl-12 pr-4 py-3 bg-bg-elevated rounded-xl border border-border focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-colors"
-              />
+              <input type="text" placeholder="Search for a country..." value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)} autoFocus
+                className="w-full pl-12 pr-4 py-3 bg-bg-elevated rounded-xl border border-border focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-colors" />
             </div>
             {searchQuery.length > 0 && (
               <div className="mt-3 max-h-64 overflow-y-auto">
@@ -144,15 +121,9 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 ) : (
                   <div className="space-y-1">
                     {filteredCountries.map((country) => (
-                      <button
-                        key={country.slug}
-                        onClick={() => {
-                          onCountrySelect(country.slug);
-                          setSearchOpen(false);
-                          setSearchQuery("");
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-bg-elevated transition-colors text-left"
-                      >
+                      <button key={country.slug}
+                        onClick={() => { onCountrySelect(country.slug); setSearchOpen(false); setSearchQuery(""); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-bg-elevated transition-colors text-left">
                         <span className="text-2xl">{country.flagEmoji}</span>
                         <div>
                           <p className="text-sm font-medium text-text-primary">{country.name}</p>
@@ -173,27 +144,17 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
           <div className="p-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <input
-                type="text"
-                placeholder="Search countries..."
-                value={searchQuery}
+              <input type="text" placeholder="Search countries..." value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-bg-elevated rounded-xl border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary placeholder:text-text-muted"
-              />
+                className="w-full pl-10 pr-4 py-2.5 bg-bg-elevated rounded-xl border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary placeholder:text-text-muted" />
             </div>
 
             {searchQuery.length > 0 && (
               <div className="space-y-1 max-h-48 overflow-y-auto">
                 {filteredCountries.map((country) => (
-                  <button
-                    key={country.slug}
-                    onClick={() => {
-                      onCountrySelect(country.slug);
-                      setMobileMenuOpen(false);
-                      setSearchQuery("");
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-elevated transition-colors text-left"
-                  >
+                  <button key={country.slug}
+                    onClick={() => { onCountrySelect(country.slug); setMobileMenuOpen(false); setSearchQuery(""); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-elevated transition-colors text-left">
                     <span className="text-lg">{country.flagEmoji}</span>
                     <span className="text-sm">{country.name}</span>
                   </button>
@@ -202,50 +163,36 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             )}
 
             <div className="pt-2 border-t border-border space-y-2">
-              <Link
-                href="/best-countries-for/software-engineers"
+              <Link href="/best-countries-for/software-engineers"
                 className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+                onClick={() => setMobileMenuOpen(false)}>
                 Guides
               </Link>
-
-              <Link
-                href="/about"
+              <Link href="/about"
                 className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+                onClick={() => setMobileMenuOpen(false)}>
                 About
               </Link>
 
               {user ? (
                 <div className="space-y-2">
-                  <Link
-                    href="/profile"
+                  <Link href="/profile"
                     className="block px-3 py-2 text-xs text-text-muted"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                    onClick={() => setMobileMenuOpen(false)}>
                     {user.user_metadata?.full_name || user.email}
                   </Link>
-                  {/* Hide sign out in mobile nav on profile page too */}
                   {!isProfilePage && (
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
+                    <button onClick={handleSignOut}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
+                      <LogOut className="w-4 h-4" />Sign Out
                     </button>
                   )}
                 </div>
               ) : (
-                <Link
-                  href="/profile"
+                <Link href="/signin"
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
+                  onClick={() => setMobileMenuOpen(false)}>
+                  <LogIn className="w-4 h-4" />Sign In
                 </Link>
               )}
             </div>
