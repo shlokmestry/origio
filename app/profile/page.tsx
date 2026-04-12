@@ -112,6 +112,52 @@ function formatRole(r: string) {
   return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
 }
 
+// ─── Auth error interpreter ───────────────────────────────────────────────────
+
+function interpretAuthError(error: { message: string }, mode: 'signin' | 'signup'): { message: string; switchTab?: 'signin' | 'signup' } {
+  const msg = error.message.toLowerCase()
+
+  if (mode === 'signup') {
+    if (
+      msg.includes('already registered') ||
+      msg.includes('already exists') ||
+      msg.includes('user already') ||
+      msg.includes('email already')
+    ) {
+      return {
+        message: 'An account with this email already exists. Switching to sign in.',
+        switchTab: 'signin',
+      }
+    }
+    if (msg.includes('password') && msg.includes('weak')) {
+      return { message: 'Password too weak. Use at least 8 characters.' }
+    }
+  }
+
+  if (mode === 'signin') {
+    if (
+      msg.includes('invalid login') ||
+      msg.includes('user not found') ||
+      msg.includes('no user') ||
+      msg.includes('invalid credentials') ||
+      msg.includes('email not confirmed') === false && msg.includes('not found')
+    ) {
+      return {
+        message: 'No account found with this email. Switching to create account.',
+        switchTab: 'signup',
+      }
+    }
+    if (msg.includes('invalid password') || msg.includes('wrong password') || msg.includes('invalid login credentials')) {
+      return { message: 'Incorrect password. Please try again.' }
+    }
+    if (msg.includes('email not confirmed')) {
+      return { message: 'Please confirm your email before signing in. Check your inbox.' }
+    }
+  }
+
+  return { message: error.message }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
@@ -164,7 +210,7 @@ export default function ProfilePage() {
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         setProfile(profileRes.data ?? null)
-        if (!profileRes.data?.onboarded) { window.location.href = "/onboarding"; return }
+        if (!profileRes.data?.onboarded) { window.location.href = '/onboarding'; return }
         setSavesLoading(false)
       }
       setLoading(false)
@@ -176,15 +222,27 @@ export default function ProfilePage() {
     setAuthLoading(true)
     setAuthError('')
     setAuthSuccess('')
+
     if (tab === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setAuthError(error.message)
-      else setAuthSuccess('Check your email to confirm your account!')
+      if (error) {
+        const { message, switchTab } = interpretAuthError(error, 'signup')
+        setAuthError(message)
+        if (switchTab) setTimeout(() => setTab(switchTab), 1200)
+      } else {
+        setAuthSuccess('Check your email to confirm your account!')
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setAuthError(error.message)
-      else window.location.reload()
+      if (error) {
+        const { message, switchTab } = interpretAuthError(error, 'signin')
+        setAuthError(message)
+        if (switchTab) setTimeout(() => setTab(switchTab), 1200)
+      } else {
+        window.location.reload()
+      }
     }
+
     setAuthLoading(false)
   }
 
@@ -247,6 +305,7 @@ export default function ProfilePage() {
           <Globe2 className="w-7 h-7 text-accent" />
           <span className="font-heading text-2xl font-extrabold">Origio</span>
         </div>
+
         <div className="flex rounded-xl bg-bg-elevated border border-border p-1 mb-6">
           <button onClick={() => { setTab('signin'); setAuthError(''); setAuthSuccess('') }}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signin' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>
@@ -257,6 +316,7 @@ export default function ProfilePage() {
             Create Account
           </button>
         </div>
+
         <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -271,17 +331,26 @@ export default function ProfilePage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          {authError && <p className="text-xs text-score-low">{authError}</p>}
+
+          {/* Error — amber for tab-switch errors, red for hard errors */}
+          {authError && (
+            <p className={`text-xs ${authError.includes('Switching') ? 'text-amber-400' : 'text-score-low'}`}>
+              {authError}
+            </p>
+          )}
           {authSuccess && <p className="text-xs text-score-high">{authSuccess}</p>}
+
           <button type="submit" disabled={authLoading} className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-50">
             {authLoading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
+
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-text-muted">or</span>
           <div className="flex-1 h-px bg-border" />
         </div>
+
         <button onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover bg-bg-elevated hover:bg-bg-surface transition-all text-sm text-text-primary font-medium">
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -292,6 +361,9 @@ export default function ProfilePage() {
           </svg>
           Continue with Google
         </button>
+        <p className="text-xs text-text-muted text-center mt-3">
+          Google sign-in works for both new and existing accounts.
+        </p>
       </div>
     </div>
   )
@@ -305,7 +377,6 @@ export default function ProfilePage() {
 
         {/* ── Avatar + name + passport badge ── */}
         <div className="flex items-start gap-4 mb-8">
-          {/* Avatar */}
           {user.user_metadata?.avatar_url ? (
             <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" referrerPolicy="no-referrer" />
           ) : (
@@ -315,7 +386,6 @@ export default function ProfilePage() {
           )}
 
           <div className="flex-1 min-w-0">
-            {/* Name */}
             {editingName ? (
               <div className="flex items-center gap-2 mb-1">
                 <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
@@ -336,7 +406,6 @@ export default function ProfilePage() {
             )}
             <p className="text-text-muted text-sm mb-3">{user.email}</p>
 
-            {/* Passport + job badges */}
             <div className="flex flex-wrap items-center gap-2">
               {passportData && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
@@ -350,16 +419,9 @@ export default function ProfilePage() {
                   <span>{profile.job_title}</span>
                 </div>
               )}
-              {(!passportData || !profile?.job_title) && (
-                <button onClick={() => router.push('/onboarding')}
-                  className="text-xs text-accent hover:underline">
-                  Complete your profile →
-                </button>
-              )}
             </div>
           </div>
 
-          {/* Passport mini on right */}
           {profile?.passport_slug && (
             <div className="w-14 flex-shrink-0">
               <PassportMiniSVG slug={profile.passport_slug} />
