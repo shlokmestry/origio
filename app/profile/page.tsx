@@ -306,7 +306,7 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4 mb-8">
           {/* Avatar */}
           {user.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" />
+            <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" referrerPolicy="no-referrer" />
           ) : (
             <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
               {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}

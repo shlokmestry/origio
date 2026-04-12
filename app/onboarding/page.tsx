@@ -232,7 +232,7 @@ export default function OnboardingPage() {
                 What do you do?
               </h1>
               <p className="text-text-muted text-sm mb-8">
-                Tell us your job, field, or if you're a student — anything works.
+                Tell us your job, field, or if you&apos;re a student — anything works.
               </p>
 
               <input
