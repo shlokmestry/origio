@@ -29,73 +29,44 @@ type Profile = {
   onboarded: boolean
 }
 
-// ─── Passport data ────────────────────────────────────────────────────────────
+// ─── Passport flags (badge only, no SVG) ─────────────────────────────────────
 
-const PASSPORT_FLAGS: Record<string, { flag: string; name: string; bgColor: string; accentColor: string; emblem: string; coverText: string; pattern: string }> = {
-  'united-states': { flag: '🇺🇸', name: 'United States', bgColor: '#1a3055', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
-  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom', bgColor: '#012169', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASSPORT', pattern: 'lines' },
-  'canada': { flag: '🇨🇦', name: 'Canada', bgColor: '#cc0001', accentColor: '#ffffff', emblem: '🍁', coverText: 'PASSPORT', pattern: 'lines' },
-  'australia': { flag: '🇦🇺', name: 'Australia', bgColor: '#00205b', accentColor: '#c8a84b', emblem: '🦘', coverText: 'PASSPORT', pattern: 'dots' },
-  'germany': { flag: '🇩🇪', name: 'Germany', bgColor: '#2a2a2a', accentColor: '#c8a84b', emblem: '🦅', coverText: 'REISEPASS', pattern: 'lines' },
-  'france': { flag: '🇫🇷', name: 'France', bgColor: '#002395', accentColor: '#c8a84b', emblem: '⚜️', coverText: 'PASSEPORT', pattern: 'waves' },
-  'netherlands': { flag: '🇳🇱', name: 'Netherlands', bgColor: '#ae1c28', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASPOORT', pattern: 'lines' },
-  'sweden': { flag: '🇸🇪', name: 'Sweden', bgColor: '#006aa7', accentColor: '#fecc02', emblem: '⚜️', coverText: 'PASS', pattern: 'grid' },
-  'norway': { flag: '🇳🇴', name: 'Norway', bgColor: '#ef2b2d', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASS', pattern: 'lines' },
-  'denmark': { flag: '🇩🇰', name: 'Denmark', bgColor: '#c60c30', accentColor: '#ffffff', emblem: '👑', coverText: 'PAS', pattern: 'lines' },
-  'finland': { flag: '🇫🇮', name: 'Finland', bgColor: '#003580', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASSI', pattern: 'lines' },
-  'switzerland': { flag: '🇨🇭', name: 'Switzerland', bgColor: '#d52b1e', accentColor: '#ffffff', emblem: '✚', coverText: 'PASSEPORT', pattern: 'dots' },
-  'singapore': { flag: '🇸🇬', name: 'Singapore', bgColor: '#c8102e', accentColor: '#ffffff', emblem: '🦁', coverText: 'PASSPORT', pattern: 'lines' },
-  'japan': { flag: '🇯🇵', name: 'Japan', bgColor: '#1a3a6b', accentColor: '#c8a84b', emblem: '🌸', coverText: 'パスポート', pattern: 'waves' },
-  'south-korea': { flag: '🇰🇷', name: 'South Korea', bgColor: '#003478', accentColor: '#c8a84b', emblem: '☯️', coverText: '여권', pattern: 'lines' },
-  'new-zealand': { flag: '🇳🇿', name: 'New Zealand', bgColor: '#00205b', accentColor: '#c8a84b', emblem: '🌿', coverText: 'PASSPORT', pattern: 'dots' },
-  'ireland': { flag: '🇮🇪', name: 'Ireland', bgColor: '#169b62', accentColor: '#c8a84b', emblem: '🍀', coverText: 'PASSPORT', pattern: 'lines' },
-  'portugal': { flag: '🇵🇹', name: 'Portugal', bgColor: '#006600', accentColor: '#c8a84b', emblem: '⚔️', coverText: 'PASSAPORTE', pattern: 'lines' },
-  'spain': { flag: '🇪🇸', name: 'Spain', bgColor: '#aa151b', accentColor: '#c8a84b', emblem: '👑', coverText: 'PASAPORTE', pattern: 'lines' },
-  'italy': { flag: '🇮🇹', name: 'Italy', bgColor: '#009246', accentColor: '#c8a84b', emblem: '⭐', coverText: 'PASSAPORTO', pattern: 'lines' },
-  'austria': { flag: '🇦🇹', name: 'Austria', bgColor: '#ed2939', accentColor: '#c8a84b', emblem: '🦅', coverText: 'REISEPASS', pattern: 'lines' },
-  'india': { flag: '🇮🇳', name: 'India', bgColor: '#046A38', accentColor: '#FF9933', emblem: '⚖️', coverText: 'PASSPORT', pattern: 'lines' },
-  'brazil': { flag: '🇧🇷', name: 'Brazil', bgColor: '#009C3B', accentColor: '#FEDD00', emblem: '⭐', coverText: 'PASSAPORTE', pattern: 'dots' },
-  'uae': { flag: '🇦🇪', name: 'UAE', bgColor: '#00732f', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
-  'mexico': { flag: '🇲🇽', name: 'Mexico', bgColor: '#006847', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASAPORTE', pattern: 'lines' },
-  'china': { flag: '🇨🇳', name: 'China', bgColor: '#de2910', accentColor: '#ffde00', emblem: '⭐', coverText: '护照', pattern: 'lines' },
-  'pakistan': { flag: '🇵🇰', name: 'Pakistan', bgColor: '#01411C', accentColor: '#ffffff', emblem: '🌙', coverText: 'PASSPORT', pattern: 'lines' },
-  'nigeria': { flag: '🇳🇬', name: 'Nigeria', bgColor: '#008751', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
-  'south-africa': { flag: '🇿🇦', name: 'South Africa', bgColor: '#007A4D', accentColor: '#FFB612', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
-  'philippines': { flag: '🇵🇭', name: 'Philippines', bgColor: '#0038a8', accentColor: '#fcd116', emblem: '☀️', coverText: 'PASSPORT', pattern: 'lines' },
-  'malaysia': { flag: '🇲🇾', name: 'Malaysia', bgColor: '#cc0001', accentColor: '#ffd700', emblem: '🌙', coverText: 'PASPORT', pattern: 'lines' },
-  'turkey': { flag: '🇹🇷', name: 'Turkey', bgColor: '#e30a17', accentColor: '#ffffff', emblem: '🌙', coverText: 'PASAPORT', pattern: 'lines' },
-  'poland': { flag: '🇵🇱', name: 'Poland', bgColor: '#dc143c', accentColor: '#ffffff', emblem: '🦅', coverText: 'PASZPORT', pattern: 'lines' },
-  'ukraine': { flag: '🇺🇦', name: 'Ukraine', bgColor: '#005bbb', accentColor: '#ffd500', emblem: '🌾', coverText: 'ПАСПОРТ', pattern: 'lines' },
-  'ghana': { flag: '🇬🇭', name: 'Ghana', bgColor: '#006b3f', accentColor: '#fcd116', emblem: '⭐', coverText: 'PASSPORT', pattern: 'lines' },
-}
-
-function PassportMiniSVG({ slug }: { slug: string }) {
-  const d = PASSPORT_FLAGS[slug]
-  if (!d) return null
-  const pid = `pm-${slug.replace(/-/g, '')}`
-  return (
-    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <defs>
-        <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-          <line x1="0" y1="0" x2="0" y2="20" stroke={d.accentColor} strokeWidth="0.4" opacity="0.15" />
-        </pattern>
-      </defs>
-      <rect x="0" y="0" width="200" height="280" rx="8" fill={d.bgColor} />
-      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#${pid})`} />
-      <rect x="0" y="0" width="200" height="5" fill={d.accentColor} opacity="0.5" />
-      <rect x="0" y="275" width="200" height="5" fill={d.accentColor} opacity="0.5" />
-      <rect x="0" y="0" width="5" height="280" fill={d.accentColor} opacity="0.25" />
-      <circle cx="100" cy="108" r="34" fill={d.accentColor} opacity="0.1" />
-      <circle cx="100" cy="108" r="30" fill="none" stroke={d.accentColor} strokeWidth="0.8" opacity="0.35" />
-      <text x="100" y="118" textAnchor="middle" fontSize="28" fill="#ffffff" opacity="0.9">{d.emblem}</text>
-      <text x="100" y="163" textAnchor="middle" fontSize="7" fill={d.accentColor} opacity="0.8" letterSpacing="2" fontFamily="serif" fontWeight="bold">{d.name.toUpperCase()}</text>
-      <text x="100" y="180" textAnchor="middle" fontSize="9" fill="#ffffff" opacity="0.65" letterSpacing="3" fontFamily="serif">{d.coverText}</text>
-      <text x="100" y="220" textAnchor="middle" fontSize="20" opacity="0.9">{d.flag}</text>
-      <rect x="10" y="245" width="180" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
-      <rect x="10" y="251" width="180" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
-      <rect x="10" y="257" width="120" height="2.5" rx="1" fill={d.accentColor} opacity="0.1" />
-    </svg>
-  )
+const PASSPORT_FLAGS: Record<string, { flag: string; name: string }> = {
+  'united-states': { flag: '🇺🇸', name: 'United States' },
+  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom' },
+  'canada': { flag: '🇨🇦', name: 'Canada' },
+  'australia': { flag: '🇦🇺', name: 'Australia' },
+  'germany': { flag: '🇩🇪', name: 'Germany' },
+  'france': { flag: '🇫🇷', name: 'France' },
+  'netherlands': { flag: '🇳🇱', name: 'Netherlands' },
+  'sweden': { flag: '🇸🇪', name: 'Sweden' },
+  'norway': { flag: '🇳🇴', name: 'Norway' },
+  'denmark': { flag: '🇩🇰', name: 'Denmark' },
+  'finland': { flag: '🇫🇮', name: 'Finland' },
+  'switzerland': { flag: '🇨🇭', name: 'Switzerland' },
+  'singapore': { flag: '🇸🇬', name: 'Singapore' },
+  'japan': { flag: '🇯🇵', name: 'Japan' },
+  'south-korea': { flag: '🇰🇷', name: 'South Korea' },
+  'new-zealand': { flag: '🇳🇿', name: 'New Zealand' },
+  'ireland': { flag: '🇮🇪', name: 'Ireland' },
+  'portugal': { flag: '🇵🇹', name: 'Portugal' },
+  'spain': { flag: '🇪🇸', name: 'Spain' },
+  'italy': { flag: '🇮🇹', name: 'Italy' },
+  'austria': { flag: '🇦🇹', name: 'Austria' },
+  'india': { flag: '🇮🇳', name: 'India' },
+  'brazil': { flag: '🇧🇷', name: 'Brazil' },
+  'uae': { flag: '🇦🇪', name: 'UAE' },
+  'mexico': { flag: '🇲🇽', name: 'Mexico' },
+  'china': { flag: '🇨🇳', name: 'China' },
+  'pakistan': { flag: '🇵🇰', name: 'Pakistan' },
+  'nigeria': { flag: '🇳🇬', name: 'Nigeria' },
+  'south-africa': { flag: '🇿🇦', name: 'South Africa' },
+  'philippines': { flag: '🇵🇭', name: 'Philippines' },
+  'malaysia': { flag: '🇲🇾', name: 'Malaysia' },
+  'turkey': { flag: '🇹🇷', name: 'Turkey' },
+  'poland': { flag: '🇵🇱', name: 'Poland' },
+  'ukraine': { flag: '🇺🇦', name: 'Ukraine' },
+  'ghana': { flag: '🇬🇭', name: 'Ghana' },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -179,31 +150,43 @@ export default function ProfilePage() {
     setAuthSuccess('')
 
     if (tab === 'signup') {
-      // FIX: try signing in first — Supabase signUp on existing account
-      // returns success but sends a confirmation email instead of signing in.
-      // By attempting signin first, existing users get signed in directly.
+      // Step 1: try signing in first
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+
       if (!signInError) {
-        // Account exists and password correct — signed in
+        // Confirmed existing account — sign in worked
         window.location.reload()
         setAuthLoading(false)
         return
       }
-      // signin failed — account either doesn't exist or wrong password
-      // If wrong password for existing account, signUp will fail with "already registered"
+
+      const signInMsg = signInError.message.toLowerCase()
+
+      if (signInMsg.includes('email not confirmed')) {
+        // Account exists but not confirmed — don't try signUp again
+        setAuthError('This email is already registered but not confirmed yet. Please check your inbox and confirm your account, then sign in.')
+        setAuthLoading(false)
+        return
+      }
+
+      if (signInMsg.includes('invalid login credentials') || signInMsg.includes('invalid password')) {
+        // Account exists, wrong password entered
+        setAuthError('An account with this email already exists. Please sign in instead.')
+        setTimeout(() => setTab('signin'), 1500)
+        setAuthLoading(false)
+        return
+      }
+
+      // signin failed — account doesn't exist, create it
       const { error: signUpError } = await supabase.auth.signUp({ email, password })
       if (signUpError) {
-        const msg = signUpError.message.toLowerCase()
-        if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
-          setAuthError('An account with this email exists but the password is incorrect. Please sign in instead.')
-          setTimeout(() => setTab('signin'), 1500)
-        } else {
-          setAuthError(signUpError.message)
-        }
+        setAuthError(signUpError.message)
       } else {
-        setAuthSuccess('Check your email to confirm your account!')
+        setAuthSuccess('Account created! Check your email to confirm before signing in.')
       }
+
     } else {
+      // Sign in tab
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         const msg = error.message.toLowerCase()
@@ -315,7 +298,7 @@ export default function ProfilePage() {
           </div>
 
           {authError && (
-            <p className={`text-xs ${authError.includes('Switching') || authError.includes('instead') ? 'text-amber-400' : 'text-score-low'}`}>
+            <p className={`text-xs ${authError.includes('already') || authError.includes('instead') ? 'text-amber-400' : 'text-score-low'}`}>
               {authError}
             </p>
           )}
@@ -387,6 +370,7 @@ export default function ProfilePage() {
             )}
             <p className="text-text-muted text-sm mb-3">{user.email}</p>
 
+            {/* Passport + job badges — text only, no SVG */}
             <div className="flex flex-wrap items-center gap-2">
               {passportData && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
@@ -402,12 +386,6 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-
-          {profile?.passport_slug && (
-            <div className="w-14 flex-shrink-0">
-              <PassportMiniSVG slug={profile.passport_slug} />
-            </div>
-          )}
         </div>
 
         {/* Explore globe */}
