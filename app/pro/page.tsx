@@ -47,13 +47,22 @@ export default function ProPage() {
   const handleUpgrade = async () => {
     setLoading(true)
     setError('')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
       router.push('/signin?next=/pro')
       return
     }
+
     try {
-      const res = await fetch('/api/checkout', { method: 'POST' })
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          // Send token so server can verify without cookies
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      })
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url

@@ -1,6 +1,5 @@
 // app/api/checkout/route.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -9,24 +8,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export async function POST(request: Request) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  // Get token from Authorization header — sent from client
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const token = authHeader.replace('Bearer ', '')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  // Use token to get user — works reliably on Vercel without cookie issues
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: { user }, error } = await supabase.auth.getUser(token)
+
+  if (error || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -34,19 +30,12 @@ export async function POST(request: Request) {
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    line_items: [
-      {
-        price: process.env.STRIPE_PRICE_ID!,
-        quantity: 1,
-      },
-    ],
+    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     customer_email: user.email,
     client_reference_id: user.id,
     success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/profile`,
-    metadata: {
-      user_id: user.id,
-    },
+    cancel_url: `${origin}/pro`,
+    metadata: { user_id: user.id },
   })
 
   return NextResponse.json({ url: session.url })
