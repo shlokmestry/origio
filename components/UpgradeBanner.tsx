@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import Link from 'next/link'
 import { Sparkles, Lock } from 'lucide-react'
 
 const PRO_FEATURES = [
@@ -7,33 +7,9 @@ const PRO_FEATURES = [
   'Full country deep-dives',
   'Side-by-side country comparison',
   'Saved wizard results',
-  'Salary breakdown by role',
 ]
 
 export default function UpgradeBanner({ compact = false }: { compact?: boolean }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleUpgrade = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch('/api/checkout', { method: 'POST' })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else if (res.status === 401) {
-        window.location.href = '/signin'
-      } else {
-        setError('Something went wrong. Please try again.')
-        setLoading(false)
-      }
-    } catch {
-      setError('Network error. Please try again.')
-      setLoading(false)
-    }
-  }
-
   if (compact) {
     return (
       <div className="glass-panel rounded-2xl p-6 text-center border border-accent/10">
@@ -44,60 +20,35 @@ export default function UpgradeBanner({ compact = false }: { compact?: boolean }
         <p className="text-sm text-text-muted mb-4">
           Upgrade for €5 — one time, no subscription.
         </p>
-        {error && <p className="text-xs text-score-low mb-3">{error}</p>}
-        <button
-          onClick={handleUpgrade}
-          disabled={loading}
-          className="cta-button px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 mx-auto disabled:opacity-50"
-        >
+        <Link href="/pro"
+          className="cta-button px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 mx-auto w-fit">
           <Sparkles className="w-4 h-4" />
-          {loading ? 'Loading...' : 'Upgrade to Pro — €5'}
-        </button>
+          Upgrade to Pro — €5
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="glass-panel rounded-2xl p-8 text-center border border-accent/10 max-w-md mx-auto">
-      <div className="w-14 h-14 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-        <Sparkles className="w-7 h-7 text-accent" />
-      </div>
-      <h2 className="font-heading text-2xl font-extrabold text-text-primary mb-2">
-        Origio Pro
-      </h2>
-      <p className="text-text-muted text-sm mb-6">
-        One-time payment. No subscription. Unlock everything forever.
-      </p>
-
-      <div className="text-left space-y-2.5 mb-6">
-        {PRO_FEATURES.map(f => (
-          <div key={f} className="flex items-center gap-2.5">
-            <div className="w-4 h-4 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-accent text-[10px]">✓</span>
-            </div>
-            <span className="text-sm text-text-muted">{f}</span>
+    <div className="glass-panel rounded-2xl p-6 border border-accent/10">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-accent" />
           </div>
-        ))}
+          <div>
+            <p className="text-sm font-bold text-text-primary">Upgrade to Origio Pro</p>
+            <p className="text-xs text-text-muted">
+              {PRO_FEATURES.join(' · ')}
+            </p>
+          </div>
+        </div>
+        <Link href="/pro"
+          className="cta-button px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 flex-shrink-0">
+          <Sparkles className="w-3.5 h-3.5" />
+          €5 one-time
+        </Link>
       </div>
-
-      <div className="mb-4">
-        <span className="font-heading text-4xl font-extrabold text-text-primary">€5</span>
-        <span className="text-text-muted text-sm ml-2">one-time</span>
-      </div>
-
-      {error && <p className="text-xs text-score-low mb-3">{error}</p>}
-
-      <button
-        onClick={handleUpgrade}
-        disabled={loading}
-        className="cta-button w-full py-3 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-      >
-        <Sparkles className="w-4 h-4" />
-        {loading ? 'Loading...' : 'Upgrade to Pro — €5'}
-      </button>
-      <p className="text-xs text-text-muted mt-3">
-        Secure payment via Stripe. No recurring charges.
-      </p>
     </div>
   )
 }

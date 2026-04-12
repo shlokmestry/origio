@@ -1,11 +1,14 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Globe2, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const next = searchParams.get('next') ?? '/profile'
+
   const [tab, setTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -14,7 +17,13 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Password validation — only enforced on signup tab
+  // If already signed in, redirect
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) router.push(next)
+    })
+  }, [next, router])
+
   const passwordTooShort = tab === 'signup' && password.length > 0 && password.length < 8
   const passwordTooLong = tab === 'signup' && password.length > 16
   const passwordInvalid = passwordTooShort || passwordTooLong
@@ -44,9 +53,8 @@ export default function SignInPage() {
           setError('Invalid email or password.')
         }
       } else {
-        router.push('/profile')
+        router.push(next)
       }
-
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
@@ -63,7 +71,6 @@ export default function SignInPage() {
           setError(error.message)
         }
       } else if (data.user && data.user.identities?.length === 0) {
-        // Supabase returns empty identities for duplicate accounts
         setError('An account with this email already exists.')
         setTab('signin')
       } else {
@@ -77,7 +84,9 @@ export default function SignInPage() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     })
   }
 
@@ -85,13 +94,11 @@ export default function SignInPage() {
     <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <Globe2 className="w-7 h-7 text-accent" />
           <span className="font-heading text-2xl font-extrabold text-text-primary">Origio</span>
         </div>
 
-        {/* Tab switcher */}
         <div className="flex rounded-xl bg-bg-elevated border border-border p-1 mb-6">
           <button
             onClick={() => { setTab('signin'); setError(''); setSuccess('') }}
@@ -105,18 +112,12 @@ export default function SignInPage() {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3 mb-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="w-full pl-10 pr-4 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
-            />
+            <input type="email" placeholder="Email" value={email}
+              onChange={e => setEmail(e.target.value)} required
+              className="w-full pl-10 pr-4 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors" />
           </div>
 
           <div>
@@ -135,15 +136,11 @@ export default function SignInPage() {
                     : 'border-border focus:border-accent/40 focus:ring-accent/20'
                 }`}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {/* Password hint */}
             {tab === 'signup' && passwordHint() && (
               <p className={`text-xs mt-1.5 ${passwordInvalid ? 'text-score-low' : 'text-text-muted'}`}>
                 {passwordHint()}
@@ -157,27 +154,20 @@ export default function SignInPage() {
           {error && <p className="text-xs text-score-low">{error}</p>}
           {success && <p className="text-xs text-score-high">{success}</p>}
 
-          <button
-            type="submit"
-            disabled={submitDisabled}
-            className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={submitDisabled}
+            className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed">
             {loading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-text-muted">or</span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* Google */}
-        <button
-          onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover bg-bg-elevated hover:bg-bg-surface transition-all text-sm text-text-primary font-medium"
-        >
+        <button onClick={handleGoogle}
+          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover bg-bg-elevated hover:bg-bg-surface transition-all text-sm text-text-primary font-medium">
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -189,7 +179,6 @@ export default function SignInPage() {
         <p className="text-xs text-text-muted text-center mt-3">
           Google sign-in works for both new and existing accounts.
         </p>
-
       </div>
     </div>
   )
