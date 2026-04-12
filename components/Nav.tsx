@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Globe2, Menu, X, LogIn, LogOut, User } from "lucide-react";
+import { Search, Globe2, Menu, X, LogIn, LogOut, User, Sparkles } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -21,14 +21,35 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single();
+        setIsPro(profile?.is_pro ?? false);
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single();
+        setIsPro(profile?.is_pro ?? false);
+      } else {
+        setIsPro(false);
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -71,14 +92,33 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               About
             </Link>
 
+            {/* Origio Pro link — shown to non-pro users */}
+            {!isPro && (
+              <Link href="/pro"
+                className="flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors">
+                <Sparkles className="w-3.5 h-3.5" />
+                Origio Pro
+              </Link>
+            )}
+
             {user ? (
               <div className="flex items-center gap-3">
                 <Link href="/profile"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-border-hover transition-colors">
-                  <User className="w-3.5 h-3.5 text-accent" />
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
+                    isPro
+                      ? 'bg-accent/10 border-accent/30 hover:border-accent/50'
+                      : 'bg-bg-elevated border-border hover:border-border-hover'
+                  }`}>
+                  {isPro
+                    ? <Sparkles className="w-3.5 h-3.5 text-accent" />
+                    : <User className="w-3.5 h-3.5 text-accent" />
+                  }
                   <span className="text-xs text-text-muted truncate max-w-[120px]">
-                    {user.user_metadata?.full_name || user.email}
+                    {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
                   </span>
+                  {isPro && (
+                    <span className="text-[10px] font-bold text-accent">PRO</span>
+                  )}
                 </Link>
                 {!isProfilePage && (
                   <button onClick={handleSignOut}
@@ -173,13 +213,21 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 onClick={() => setMobileMenuOpen(false)}>
                 About
               </Link>
+              {!isPro && (
+                <Link href="/pro"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-accent"
+                  onClick={() => setMobileMenuOpen(false)}>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Origio Pro
+                </Link>
+              )}
 
               {user ? (
                 <div className="space-y-2">
                   <Link href="/profile"
                     className="block px-3 py-2 text-xs text-text-muted"
                     onClick={() => setMobileMenuOpen(false)}>
-                    {user.user_metadata?.full_name || user.email}
+                    {isPro && '✦ '}{user.user_metadata?.full_name || user.email}
                   </Link>
                   {!isProfilePage && (
                     <button onClick={handleSignOut}
