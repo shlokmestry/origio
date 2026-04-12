@@ -164,6 +164,7 @@ export default function ProfilePage() {
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         setProfile(profileRes.data ?? null)
+        if (!profileRes.data?.onboarded) { window.location.href = "/onboarding"; return }
         setSavesLoading(false)
       }
       setLoading(false)
