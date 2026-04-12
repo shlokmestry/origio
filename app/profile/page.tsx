@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import type { User } from '@supabase/supabase-js'
 import {
-  Globe2, LogOut, Trash2, Mail, Lock, Eye, EyeOff,
+  Globe2, LogOut, Trash2,
   Sparkles, Pencil, Check, X, AlertTriangle, Briefcase
 } from 'lucide-react'
 
@@ -29,7 +29,7 @@ type Profile = {
   onboarded: boolean
 }
 
-// ─── Passport flags (badge only, no SVG) ─────────────────────────────────────
+// ─── Passport flags (badge only) ─────────────────────────────────────────────
 
 const PASSPORT_FLAGS: Record<string, { flag: string; name: string }> = {
   'united-states': { flag: '🇺🇸', name: 'United States' },
@@ -94,15 +94,6 @@ export default function ProfilePage() {
   const [savesLoading, setSavesLoading] = useState(false)
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
-  // Auth form
-  const [tab, setTab] = useState<'signin' | 'signup'>('signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const [authSuccess, setAuthSuccess] = useState('')
-
   // Edit name
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -115,101 +106,36 @@ export default function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      setUser(data.user)
-      if (data.user) {
-        setNameValue(data.user.user_metadata?.full_name ?? '')
-        setSavesLoading(true)
-        const [savesRes, wizardRes, profileRes] = await Promise.all([
-          supabase.from('saved_countries')
-            .select('id, country_slug, created_at, countries(flag_emoji, name)')
-            .eq('user_id', data.user.id)
-            .order('created_at', { ascending: false }),
-          supabase.from('wizard_results')
-            .select('top_countries, answers, created_at')
-            .eq('user_id', data.user.id)
-            .single(),
-          supabase.from('profiles')
-            .select('passport_slug, job_title, onboarded')
-            .eq('id', data.user.id)
-            .single(),
-        ])
-        setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
-        setWizardResult(wizardRes.data ?? null)
-        setProfile(profileRes.data ?? null)
-        if (!profileRes.data?.onboarded) { window.location.href = '/onboarding'; return }
-        setSavesLoading(false)
+      if (!data.user) {
+        // Not logged in — send to dedicated signin page
+        router.push('/signin')
+        return
       }
+      setUser(data.user)
+      setNameValue(data.user.user_metadata?.full_name ?? '')
+      setSavesLoading(true)
+      const [savesRes, wizardRes, profileRes] = await Promise.all([
+        supabase.from('saved_countries')
+          .select('id, country_slug, created_at, countries(flag_emoji, name)')
+          .eq('user_id', data.user.id)
+          .order('created_at', { ascending: false }),
+        supabase.from('wizard_results')
+          .select('top_countries, answers, created_at')
+          .eq('user_id', data.user.id)
+          .single(),
+        supabase.from('profiles')
+          .select('passport_slug, job_title, onboarded')
+          .eq('id', data.user.id)
+          .single(),
+      ])
+      setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
+      setWizardResult(wizardRes.data ?? null)
+      setProfile(profileRes.data ?? null)
+      if (!profileRes.data?.onboarded) { window.location.href = '/onboarding'; return }
+      setSavesLoading(false)
       setLoading(false)
     })
-  }, [])
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAuthLoading(true)
-    setAuthError('')
-    setAuthSuccess('')
-
-    if (tab === 'signup') {
-      // Step 1: try signing in first
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-
-      if (!signInError) {
-        // Confirmed existing account — sign in worked
-        window.location.reload()
-        setAuthLoading(false)
-        return
-      }
-
-      const signInMsg = signInError.message.toLowerCase()
-
-      if (signInMsg.includes('email not confirmed')) {
-        // Account exists but not confirmed — don't try signUp again
-        setAuthError('This email is already registered but not confirmed yet. Please check your inbox and confirm your account, then sign in.')
-        setAuthLoading(false)
-        return
-      }
-
-      if (signInMsg.includes('invalid login credentials') || signInMsg.includes('invalid password')) {
-        // Account exists, wrong password entered
-        setAuthError('An account with this email already exists. Please sign in instead.')
-        setTimeout(() => setTab('signin'), 1500)
-        setAuthLoading(false)
-        return
-      }
-
-      // signin failed — account doesn't exist, create it
-      const { error: signUpError } = await supabase.auth.signUp({ email, password })
-      if (signUpError) {
-        setAuthError(signUpError.message)
-      } else {
-        setAuthSuccess('Account created! Check your email to confirm before signing in.')
-      }
-
-    } else {
-      // Sign in tab
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        const msg = error.message.toLowerCase()
-        if (msg.includes('email not confirmed')) {
-          setAuthError('Please confirm your email before signing in. Check your inbox.')
-        } else {
-          setAuthError('Invalid email or password. Please check your credentials and try again.')
-        }
-      } else {
-        window.location.reload()
-      }
-    }
-
-    setAuthLoading(false)
-  }
-
-  const handleGoogleSignIn = async () => {
-    const next = new URLSearchParams(window.location.search).get('next') ?? '/profile'
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    })
-  }
+  }, [router])
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
@@ -218,7 +144,7 @@ export default function ProfilePage() {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
+    router.push('/')
   }
 
   const saveName = async () => {
@@ -255,84 +181,14 @@ export default function ProfilePage() {
 
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
 
-  // ── Loading ──
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>
   )
 
-  // ── Not signed in ──
-  if (!user) return (
-    <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Globe2 className="w-7 h-7 text-accent" />
-          <span className="font-heading text-2xl font-extrabold">Origio</span>
-        </div>
+  if (!user) return null
 
-        <div className="flex rounded-xl bg-bg-elevated border border-border p-1 mb-6">
-          <button onClick={() => { setTab('signin'); setAuthError(''); setAuthSuccess('') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signin' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>
-            Sign In
-          </button>
-          <button onClick={() => { setTab('signup'); setAuthError(''); setAuthSuccess('') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signup' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>
-            Create Account
-          </button>
-        </div>
-
-        <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-              className="w-full pl-10 pr-4 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors" />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required
-              className="w-full pl-10 pr-10 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {authError && (
-            <p className={`text-xs ${authError.includes('already') || authError.includes('instead') ? 'text-amber-400' : 'text-score-low'}`}>
-              {authError}
-            </p>
-          )}
-          {authSuccess && <p className="text-xs text-score-high">{authSuccess}</p>}
-
-          <button type="submit" disabled={authLoading} className="cta-button w-full py-3 rounded-xl text-sm disabled:opacity-50">
-            {authLoading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-text-muted">or</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <button onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover bg-bg-elevated hover:bg-bg-surface transition-all text-sm text-text-primary font-medium">
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
-        <p className="text-xs text-text-muted text-center mt-3">
-          Google sign-in works for both new and existing accounts.
-        </p>
-      </div>
-    </div>
-  )
-
-  // ── Signed in ──
   return (
     <div className="min-h-screen bg-bg-primary">
       <Nav countries={[]} onCountrySelect={() => {}} />
@@ -370,7 +226,6 @@ export default function ProfilePage() {
             )}
             <p className="text-text-muted text-sm mb-3">{user.email}</p>
 
-            {/* Passport + job badges — text only, no SVG */}
             <div className="flex flex-wrap items-center gap-2">
               {passportData && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
@@ -501,9 +356,7 @@ export default function ProfilePage() {
             <p className="text-sm text-text-muted mb-4">
               All your saved countries, wizard results, and profile data will be permanently deleted.
             </p>
-            {deleteError && (
-              <p className="text-xs text-score-low mb-4">{deleteError}</p>
-            )}
+            {deleteError && <p className="text-xs text-score-low mb-4">{deleteError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
