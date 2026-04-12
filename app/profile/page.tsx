@@ -1,8 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import Nav from '@/components/Nav'
 import type { User } from '@supabase/supabase-js'
-import { Globe2, LogOut, Trash2, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react'
+import {
+  Globe2, LogOut, Trash2, Mail, Lock, Eye, EyeOff,
+  Sparkles, Pencil, Check, X, AlertTriangle, MapPin
+} from 'lucide-react'
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type CountryInfo = { flag_emoji: string; name: string }
 
@@ -24,11 +31,243 @@ type WizardResult = {
   created_at: string
 }
 
+// ─── Passport data ───────────────────────────────────────────────────────────
+
+type PassportDesign = {
+  name: string
+  flag: string
+  bgColor: string
+  accentColor: string
+  textColor: string
+  pattern: 'lines' | 'dots' | 'waves' | 'grid' | 'chevron'
+  emblem: string
+  coverText: string
+}
+
+const PASSPORTS: Record<string, PassportDesign> = {
+  'united-states': {
+    name: 'United States', flag: '🇺🇸',
+    bgColor: '#1a3055', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT'
+  },
+  'united-kingdom': {
+    name: 'United Kingdom', flag: '🇬🇧',
+    bgColor: '#012169', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '👑', coverText: 'PASSPORT'
+  },
+  'canada': {
+    name: 'Canada', flag: '🇨🇦',
+    bgColor: '#cc0001', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🍁', coverText: 'PASSPORT'
+  },
+  'australia': {
+    name: 'Australia', flag: '🇦🇺',
+    bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'dots', emblem: '🦘', coverText: 'PASSPORT'
+  },
+  'germany': {
+    name: 'Germany', flag: '🇩🇪',
+    bgColor: '#2a2a2a', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS'
+  },
+  'france': {
+    name: 'France', flag: '🇫🇷',
+    bgColor: '#002395', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'waves', emblem: '⚜️', coverText: 'PASSEPORT'
+  },
+  'netherlands': {
+    name: 'Netherlands', flag: '🇳🇱',
+    bgColor: '#ae1c28', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '👑', coverText: 'PASPOORT'
+  },
+  'sweden': {
+    name: 'Sweden', flag: '🇸🇪',
+    bgColor: '#006aa7', accentColor: '#fecc02', textColor: '#ffffff',
+    pattern: 'grid', emblem: '⚜️', coverText: 'PASS'
+  },
+  'norway': {
+    name: 'Norway', flag: '🇳🇴',
+    bgColor: '#ef2b2d', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦁', coverText: 'PASS'
+  },
+  'denmark': {
+    name: 'Denmark', flag: '🇩🇰',
+    bgColor: '#c60c30', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'lines', emblem: '👑', coverText: 'PAS'
+  },
+  'finland': {
+    name: 'Finland', flag: '🇫🇮',
+    bgColor: '#003580', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦁', coverText: 'PASSI'
+  },
+  'switzerland': {
+    name: 'Switzerland', flag: '🇨🇭',
+    bgColor: '#d52b1e', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'dots', emblem: '✚', coverText: 'PASSEPORT'
+  },
+  'singapore': {
+    name: 'Singapore', flag: '🇸🇬',
+    bgColor: '#c8102e', accentColor: '#ffffff', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦁', coverText: 'PASSPORT'
+  },
+  'japan': {
+    name: 'Japan', flag: '🇯🇵',
+    bgColor: '#1a3a6b', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'waves', emblem: '🌸', coverText: 'パスポート'
+  },
+  'south-korea': {
+    name: 'South Korea', flag: '🇰🇷',
+    bgColor: '#003478', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '☯️', coverText: '여권'
+  },
+  'new-zealand': {
+    name: 'New Zealand', flag: '🇳🇿',
+    bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'dots', emblem: '🌿', coverText: 'PASSPORT'
+  },
+  'ireland': {
+    name: 'Ireland', flag: '🇮🇪',
+    bgColor: '#169b62', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🍀', coverText: 'PASSPORT'
+  },
+  'portugal': {
+    name: 'Portugal', flag: '🇵🇹',
+    bgColor: '#006600', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '⚔️', coverText: 'PASSAPORTE'
+  },
+  'spain': {
+    name: 'Spain', flag: '🇪🇸',
+    bgColor: '#aa151b', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '👑', coverText: 'PASAPORTE'
+  },
+  'italy': {
+    name: 'Italy', flag: '🇮🇹',
+    bgColor: '#009246', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '⭐', coverText: 'PASSAPORTO'
+  },
+  'austria': {
+    name: 'Austria', flag: '🇦🇹',
+    bgColor: '#ed2939', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS'
+  },
+  'india': {
+    name: 'India', flag: '🇮🇳',
+    bgColor: '#046A38', accentColor: '#FF9933', textColor: '#ffffff',
+    pattern: 'lines', emblem: '⚖️', coverText: 'PASSPORT'
+  },
+  'brazil': {
+    name: 'Brazil', flag: '🇧🇷',
+    bgColor: '#009C3B', accentColor: '#FEDD00', textColor: '#ffffff',
+    pattern: 'dots', emblem: '⭐', coverText: 'PASSAPORTE'
+  },
+  'uae': {
+    name: 'UAE', flag: '🇦🇪',
+    bgColor: '#00732f', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT'
+  },
+  'mexico': {
+    name: 'Mexico', flag: '🇲🇽',
+    bgColor: '#006847', accentColor: '#c8a84b', textColor: '#ffffff',
+    pattern: 'lines', emblem: '🦅', coverText: 'PASAPORTE'
+  },
+}
+
+const PASSPORT_LIST = Object.entries(PASSPORTS).map(([slug, d]) => ({ slug, ...d }))
+
+// ─── Passport SVG component ───────────────────────────────────────────────────
+
+function PassportCard({ design }: { design: PassportDesign }) {
+  const patternId = `pat-${design.name.replace(/\s/g, '')}`
+
+  const patterns: Record<string, JSX.Element> = {
+    lines: (
+      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.4" opacity="0.15" />
+      </pattern>
+    ),
+    dots: (
+      <pattern id={patternId} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+        <circle cx="8" cy="8" r="1" fill={design.accentColor} opacity="0.2" />
+      </pattern>
+    ),
+    waves: (
+      <pattern id={patternId} x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
+        <path d="M0 10 Q10 0 20 10 Q30 20 40 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" />
+      </pattern>
+    ),
+    grid: (
+      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" />
+        <line x1="0" y1="0" x2="20" y2="0" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" />
+      </pattern>
+    ),
+    chevron: (
+      <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M0 10 L10 0 L20 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" />
+      </pattern>
+    ),
+  }
+
+  return (
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-2xl">
+      <defs>
+        {patterns[design.pattern]}
+        <linearGradient id={`grad-${patternId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={design.bgColor} stopOpacity="1" />
+          <stop offset="100%" stopColor={design.bgColor} stopOpacity="0.85" />
+        </linearGradient>
+      </defs>
+
+      {/* Passport body */}
+      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#grad-${patternId})`} />
+
+      {/* Pattern overlay */}
+      <rect x="0" y="0" width="200" height="280" rx="8" fill={`url(#${patternId})`} />
+
+      {/* Top accent stripe */}
+      <rect x="0" y="0" width="200" height="6" rx="0" fill={design.accentColor} opacity="0.6" />
+      <rect x="0" y="274" width="200" height="6" rx="0" fill={design.accentColor} opacity="0.6" />
+
+      {/* Left accent stripe */}
+      <rect x="0" y="0" width="6" height="280" fill={design.accentColor} opacity="0.3" />
+
+      {/* Emblem circle */}
+      <circle cx="100" cy="110" r="38" fill={design.accentColor} opacity="0.12" />
+      <circle cx="100" cy="110" r="34" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.4" />
+      <circle cx="100" cy="110" r="28" fill="none" stroke={design.accentColor} strokeWidth="0.4" opacity="0.25" />
+
+      {/* Emblem text */}
+      <text x="100" y="120" textAnchor="middle" fontSize="32" fill={design.textColor} opacity="0.9">{design.emblem}</text>
+
+      {/* Country name */}
+      <text x="100" y="170" textAnchor="middle" fontSize="9" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">
+        {design.name.toUpperCase()}
+      </text>
+
+      {/* PASSPORT text */}
+      <text x="100" y="190" textAnchor="middle" fontSize="11" fill={design.textColor} opacity="0.7" letterSpacing="4" fontFamily="serif">
+        {design.coverText}
+      </text>
+
+      {/* Flag */}
+      <text x="100" y="230" textAnchor="middle" fontSize="24" opacity="0.9">{design.flag}</text>
+
+      {/* Bottom MRZ lines */}
+      <rect x="10" y="250" width="180" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
+      <rect x="10" y="258" width="180" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
+      <rect x="10" y="266" width="120" height="4" rx="1" fill={design.accentColor} opacity="0.1" />
+    </svg>
+  )
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function formatRole(role: string): string {
-  return role
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (s) => s.toUpperCase())
-    .trim()
+  return role.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function getCountryInfo(countries: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
@@ -36,13 +275,21 @@ function getCountryInfo(countries: CountryInfo | CountryInfo[] | null | undefine
   return Array.isArray(countries) ? (countries[0] ?? null) : countries
 }
 
+function capPercent(n: number): number {
+  return Math.min(n, 99)
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function ProfilePage() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [savesLoading, setSavesLoading] = useState(false)
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
+  // Auth form
   const [tab, setTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -51,12 +298,27 @@ export default function ProfilePage() {
   const [authError, setAuthError] = useState('')
   const [authSuccess, setAuthSuccess] = useState('')
 
+  // Edit name
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
+
+  // Passport
+  const [passportSlug, setPassportSlug] = useState<string | null>(null)
+  const [passportSaving, setPassportSaving] = useState(false)
+  const [passportSearch, setPassportSearch] = useState('')
+
+  // Delete account
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user)
       if (data.user) {
+        setNameValue(data.user.user_metadata?.full_name ?? '')
         setSavesLoading(true)
-        const [savesRes, wizardRes] = await Promise.all([
+        const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase
             .from('saved_countries')
             .select('id, country_slug, created_at, countries(flag_emoji, name)')
@@ -66,10 +328,16 @@ export default function ProfilePage() {
             .from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', data.user.id)
-            .single()
+            .single(),
+          supabase
+            .from('profiles')
+            .select('passport_slug')
+            .eq('id', data.user.id)
+            .single(),
         ])
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
+        setPassportSlug(profileRes.data?.passport_slug ?? null)
         setSavesLoading(false)
       }
       setLoading(false)
@@ -97,15 +365,13 @@ export default function ProfilePage() {
     const next = new URLSearchParams(window.location.search).get('next') ?? '/profile'
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     })
   }
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
-    setSavedCountries((prev) => prev.filter((s) => s.id !== id))
+    setSavedCountries(prev => prev.filter(s => s.id !== id))
   }
 
   const signOut = async () => {
@@ -113,15 +379,54 @@ export default function ProfilePage() {
     window.location.href = '/'
   }
 
-  const formatSlug = (slug: string) =>
-    slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const saveName = async () => {
+    if (!user || !nameValue.trim()) return
+    setNameSaving(true)
+    await supabase.auth.updateUser({ data: { full_name: nameValue.trim() } })
+    setUser(prev => prev ? { ...prev, user_metadata: { ...prev.user_metadata, full_name: nameValue.trim() } } : prev)
+    setEditingName(false)
+    setNameSaving(false)
+  }
 
+  const savePassport = async (slug: string) => {
+    if (!user) return
+    setPassportSaving(true)
+    setPassportSlug(slug)
+    await supabase.from('profiles').upsert({ id: user.id, passport_slug: slug }, { onConflict: 'id' })
+    setPassportSaving(false)
+    setPassportSearch('')
+  }
+
+  const deleteAccount = async () => {
+    if (!user) return
+    setDeleteLoading(true)
+    // Delete all user data first
+    await Promise.all([
+      supabase.from('saved_countries').delete().eq('user_id', user.id),
+      supabase.from('wizard_results').delete().eq('user_id', user.id),
+      supabase.from('profiles').delete().eq('id', user.id),
+    ])
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  const formatSlug = (slug: string) =>
+    slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  const filteredPassports = PASSPORT_LIST.filter(p =>
+    p.name.toLowerCase().includes(passportSearch.toLowerCase())
+  )
+
+  const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
+
+  // ── Loading ──
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-text-muted">Loading...</p>
+    <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+      <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>
   )
 
+  // ── Not signed in ──
   if (!user) return (
     <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -130,24 +435,24 @@ export default function ProfilePage() {
           <span className="font-heading text-2xl font-extrabold">Origio</span>
         </div>
         <div className="flex rounded-xl bg-bg-elevated border border-border p-1 mb-6">
-          <button
-            onClick={() => { setTab('signin'); setAuthError(''); setAuthSuccess('') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signin' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}
-          >Sign In</button>
-          <button
-            onClick={() => { setTab('signup'); setAuthError(''); setAuthSuccess('') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signup' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}
-          >Create Account</button>
+          <button onClick={() => { setTab('signin'); setAuthError(''); setAuthSuccess('') }}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signin' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>
+            Sign In
+          </button>
+          <button onClick={() => { setTab('signup'); setAuthError(''); setAuthSuccess('') }}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === 'signup' ? 'bg-bg-surface text-text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'}`}>
+            Create Account
+          </button>
         </div>
         <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
               className="w-full pl-10 pr-4 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors" />
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required
+            <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required
               className="w-full pl-10 pr-10 py-3 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors" />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -178,41 +483,128 @@ export default function ProfilePage() {
     </div>
   )
 
+  // ── Signed in ──
   return (
     <div className="min-h-screen bg-bg-primary">
-      <nav className="sticky top-0 z-50 glass-panel">
-        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Globe2 className="w-5 h-5 text-accent" />
-            <span className="font-heading text-lg font-extrabold">Origio</span>
-          </a>
-          <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors">
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
-        </div>
-      </nav>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-12">
 
-        {/* Avatar + Name */}
-        <div className="flex items-center gap-4 mb-10">
-          {user.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent">
-              {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+        {/* ── Top: Avatar + Name + Passport ── */}
+        <div className="flex flex-col lg:flex-row gap-8 mb-8">
+
+          {/* Left: user info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-6">
+              {user.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent">
+                  {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1">
+                {editingName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={nameValue}
+                      onChange={e => setNameValue(e.target.value)}
+                      className="font-heading text-xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/30"
+                      autoFocus
+                      onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+                    />
+                    <button onClick={saveName} disabled={nameSaving} className="p-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-colors">
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-heading text-2xl font-extrabold text-text-primary">
+                      {user.user_metadata?.full_name ?? 'Explorer'}
+                    </h1>
+                    <button onClick={() => setEditingName(true)} className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                <p className="text-text-muted text-sm">{user.email}</p>
+              </div>
             </div>
-          )}
-          <div>
-            <h1 className="font-heading text-2xl font-extrabold text-text-primary">
-              {user.user_metadata?.full_name ?? 'Explorer'}
-            </h1>
-            <p className="text-text-muted text-sm">{user.email}</p>
+
+            {/* Explore globe CTA */}
+            <a href="/"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-accent/30 hover:bg-accent/5 text-sm text-text-muted hover:text-text-primary transition-all mb-6">
+              <Globe2 className="w-4 h-4 text-accent" />
+              Explore the Globe
+            </a>
+
+            {/* Passport selector */}
+            <div className="glass-panel rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-4 h-4 text-accent" />
+                <h2 className="font-heading text-lg font-bold text-text-primary">Your Passport</h2>
+                {passportSaving && <span className="text-xs text-text-muted animate-pulse">Saving...</span>}
+              </div>
+
+              {selectedPassport && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-elevated border border-accent/20 mb-4">
+                  <span className="text-2xl">{selectedPassport.flag}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">{selectedPassport.name}</p>
+                    <p className="text-xs text-text-muted">Current passport</p>
+                  </div>
+                  <button onClick={() => setPassportSlug(null)} className="ml-auto p-1 text-text-muted hover:text-text-primary">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <input
+                placeholder="Search country..."
+                value={passportSearch}
+                onChange={e => setPassportSearch(e.target.value)}
+                className="w-full px-3 py-2 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none mb-3 transition-colors"
+              />
+
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                {filteredPassports.map(p => (
+                  <button
+                    key={p.slug}
+                    onClick={() => savePassport(p.slug)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-left transition-all border ${
+                      passportSlug === p.slug
+                        ? 'border-accent/40 bg-accent/10 text-text-primary'
+                        : 'border-border bg-bg-elevated hover:border-accent/20 hover:bg-accent/5 text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    <span>{p.flag}</span>
+                    <span className="truncate text-xs">{p.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Passport visual */}
+          <div className="lg:w-52 flex flex-col items-center justify-start pt-2">
+            {selectedPassport ? (
+              <div className="w-44 animate-fade-in">
+                <PassportCard design={selectedPassport} />
+                <p className="text-center text-xs text-text-muted mt-3">{selectedPassport.name} passport</p>
+              </div>
+            ) : (
+              <div className="w-44 h-64 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-center p-4">
+                <span className="text-4xl opacity-30">🛂</span>
+                <p className="text-xs text-text-muted">Select your passport to see it here</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Saved Countries */}
+        {/* ── Saved Countries ── */}
         <div className="glass-panel rounded-2xl p-6 mb-6">
           <h2 className="font-heading text-lg font-bold mb-4 text-text-primary">
             Saved Countries
@@ -229,7 +621,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {savedCountries.map((save) => {
+              {savedCountries.map(save => {
                 const info = getCountryInfo(save.countries)
                 return (
                   <div key={save.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
@@ -247,16 +639,14 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Wizard Result */}
-        <div className="glass-panel rounded-2xl p-6 mb-10">
+        {/* ── Wizard Result ── */}
+        <div className="glass-panel rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent" />
               <h2 className="font-heading text-lg font-bold text-text-primary">Last Wizard Result</h2>
             </div>
-            <a href="/wizard" className="text-xs text-accent hover:underline">
-              Retake quiz →
-            </a>
+            <a href="/wizard" className="text-xs text-accent hover:underline">Retake quiz →</a>
           </div>
           {!wizardResult ? (
             <div className="text-center py-6">
@@ -266,15 +656,11 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-2">
               {wizardResult.top_countries.map((c, i) => {
-                const colors = ["#fbbf24", "#00d4c8", "#a78bfa"]
-                const labels = ["Best Match", "2nd Match", "3rd Match"]
+                const colors = ['#fbbf24', '#00d4c8', '#a78bfa']
+                const labels = ['Best Match', '2nd Match', '3rd Match']
                 const color = colors[i]
                 return (
-                  <a
-                    key={c.slug}
-                    href={`/country/${c.slug}`}
-                    className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors"
-                  >
+                  <div key={c.slug} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color, background: color + '20' }}>
                         {labels[i]}
@@ -282,20 +668,68 @@ export default function ProfilePage() {
                       <span className="text-lg">{c.flagEmoji}</span>
                       <span className="text-sm font-medium text-text-primary">{c.name}</span>
                     </div>
-                    <span className="text-sm font-bold" style={{ color }}>{c.matchPercent}%</span>
-                  </a>
+                    <span className="text-sm font-bold" style={{ color }}>{capPercent(c.matchPercent)}%</span>
+                  </div>
                 )
               })}
-              <div className="flex items-center justify-between pt-2">
-                <p className="text-xs text-text-muted">
-                  Role: {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {new Date(wizardResult.created_at).toLocaleDateString()}
-                </p>
-              </div>
+              <p className="text-xs text-text-muted pt-2">
+                Role: {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
+              </p>
             </div>
           )}
         </div>
 
+        {/* ── Danger zone ── */}
+        <div className="glass-panel rounded-2xl p-6 border border-rose-500/10">
+          <h2 className="font-heading text-lg font-bold text-text-primary mb-1">Account</h2>
+          <p className="text-xs text-text-muted mb-4">Manage your account settings</p>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button onClick={signOut}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-border-hover text-sm text-text-muted hover:text-text-primary transition-colors">
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
+
+            <button onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-500/5 text-sm text-rose-400 transition-colors">
+              <Trash2 className="w-4 h-4" />
+              Delete account
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {/* ── Delete confirm modal ── */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel rounded-2xl p-6 max-w-sm w-full border border-rose-500/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="font-heading text-lg font-bold text-text-primary">Delete account?</h3>
+                <p className="text-xs text-text-muted">This cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-text-muted mb-6">
+              All your saved countries, wizard results, and profile data will be permanently deleted.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
+                Cancel
+              </button>
+              <button onClick={deleteAccount} disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-sm text-rose-400 font-medium transition-colors disabled:opacity-50">
+                {deleteLoading ? 'Deleting...' : 'Yes, delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
