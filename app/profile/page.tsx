@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
+import UpgradeBanner from '@/components/UpgradeBanner'
 import type { User } from '@supabase/supabase-js'
 import {
   Globe2, LogOut, Trash2,
@@ -27,6 +28,7 @@ type Profile = {
   passport_slug: string | null
   job_title: string | null
   onboarded: boolean
+  is_pro: boolean
 }
 
 // ─── Passport flags (badge only) ─────────────────────────────────────────────
@@ -107,7 +109,6 @@ export default function ProfilePage() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
-        // Not logged in — send to dedicated signin page
         router.push('/signin')
         return
       }
@@ -124,7 +125,7 @@ export default function ProfilePage() {
           .eq('user_id', data.user.id)
           .single(),
         supabase.from('profiles')
-          .select('passport_slug, job_title, onboarded')
+          .select('passport_slug, job_title, onboarded, is_pro')
           .eq('id', data.user.id)
           .single(),
       ])
@@ -180,6 +181,7 @@ export default function ProfilePage() {
     slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
+  const isPro = profile?.is_pro ?? false
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
@@ -198,7 +200,9 @@ export default function ProfilePage() {
         {/* ── Avatar + name + badges ── */}
         <div className="flex items-start gap-4 mb-8">
           {user.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" referrerPolicy="no-referrer" />
+            <img src={user.user_metadata.avatar_url} alt="avatar"
+              className="w-16 h-16 rounded-full border border-border flex-shrink-0"
+              referrerPolicy="no-referrer" />
           ) : (
             <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
               {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
@@ -211,15 +215,21 @@ export default function ProfilePage() {
                 <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
                   onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
                   className="font-heading text-xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none" />
-                <button onClick={saveName} disabled={nameSaving} className="p-1.5 rounded-lg bg-accent/10 text-accent"><Check className="w-4 h-4" /></button>
-                <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg text-text-muted"><X className="w-4 h-4" /></button>
+                <button onClick={saveName} disabled={nameSaving}
+                  className="p-1.5 rounded-lg bg-accent/10 text-accent">
+                  <Check className="w-4 h-4" />
+                </button>
+                <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg text-text-muted">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="font-heading text-2xl font-extrabold text-text-primary">
                   {user.user_metadata?.full_name ?? 'Explorer'}
                 </h1>
-                <button onClick={() => setEditingName(true)} className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                <button onClick={() => setEditingName(true)}
+                  className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -227,6 +237,13 @@ export default function ProfilePage() {
             <p className="text-text-muted text-sm mb-3">{user.email}</p>
 
             <div className="flex flex-wrap items-center gap-2">
+              {/* Pro badge */}
+              {isPro && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent font-semibold">
+                  <Sparkles className="w-3 h-3" />
+                  Origio Pro
+                </div>
+              )}
               {passportData && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-bg-elevated text-xs text-text-muted">
                   <span>{passportData.flag}</span>
@@ -249,12 +266,21 @@ export default function ProfilePage() {
           Explore the Globe
         </a>
 
+        {/* ── Upgrade banner — only for free users ── */}
+        {!isPro && (
+          <div className="mb-6">
+            <UpgradeBanner />
+          </div>
+        )}
+
         {/* ── Saved Countries ── */}
         <div className="glass-panel rounded-2xl p-6 mb-6">
           <h2 className="font-heading text-lg font-bold mb-4 text-text-primary">
             Saved Countries
             {savedCountries.length > 0 && (
-              <span className="ml-2 text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">{savedCountries.length}</span>
+              <span className="ml-2 text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                {savedCountries.length}
+              </span>
             )}
           </h2>
           {savesLoading ? (
@@ -274,7 +300,8 @@ export default function ProfilePage() {
                       {info?.flag_emoji && <span className="text-base">{info.flag_emoji}</span>}
                       {info?.name ?? formatSlug(save.country_slug)}
                     </a>
-                    <button onClick={() => removeSave(save.id)} className="p-1.5 rounded-lg text-text-muted hover:text-score-low hover:bg-rose-500/10 transition-colors">
+                    <button onClick={() => removeSave(save.id)}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-score-low hover:bg-rose-500/10 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -307,7 +334,8 @@ export default function ProfilePage() {
                 return (
                   <div key={c.slug} className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:border-accent/20 transition-colors">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color, background: color + '20' }}>{labels[i]}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{ color, background: color + '20' }}>{labels[i]}</span>
                       <span className="text-lg">{c.flagEmoji}</span>
                       <span className="text-sm font-medium text-text-primary">{c.name}</span>
                     </div>
