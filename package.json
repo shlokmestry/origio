@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^9.1.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@vercel/analytics": "^2.0.1",
@@ -20,6 +21,7 @@
     "react-dom": "^18",
     "react-to-pdf": "^3.2.2",
     "recharts": "^3.8.1",
+    "stripe": "^22.0.1",
     "three": "^0.183.2"
   },
   "devDependencies": {
