@@ -29,7 +29,7 @@ type Profile = {
   onboarded: boolean
 }
 
-// ─── Passport data (for badge display) ───────────────────────────────────────
+// ─── Passport data ────────────────────────────────────────────────────────────
 
 const PASSPORT_FLAGS: Record<string, { flag: string; name: string; bgColor: string; accentColor: string; emblem: string; coverText: string; pattern: string }> = {
   'united-states': { flag: '🇺🇸', name: 'United States', bgColor: '#1a3055', accentColor: '#c8a84b', emblem: '🦅', coverText: 'PASSPORT', pattern: 'lines' },
@@ -114,7 +114,10 @@ function formatRole(r: string) {
 
 // ─── Auth error interpreter ───────────────────────────────────────────────────
 
-function interpretAuthError(error: { message: string }, mode: 'signin' | 'signup'): { message: string; switchTab?: 'signin' | 'signup' } {
+function interpretAuthError(
+  error: { message: string },
+  mode: 'signin' | 'signup'
+): { message: string; switchTab?: 'signin' | 'signup' } {
   const msg = error.message.toLowerCase()
 
   if (mode === 'signup') {
@@ -135,24 +138,12 @@ function interpretAuthError(error: { message: string }, mode: 'signin' | 'signup
   }
 
   if (mode === 'signin') {
-    if (
-      msg.includes('invalid login') ||
-      msg.includes('user not found') ||
-      msg.includes('no user') ||
-      msg.includes('invalid credentials') ||
-      msg.includes('email not confirmed') === false && msg.includes('not found')
-    ) {
-      return {
-        message: 'No account found with this email. Switching to create account.',
-        switchTab: 'signup',
-      }
-    }
-    if (msg.includes('invalid password') || msg.includes('wrong password') || msg.includes('invalid login credentials')) {
-      return { message: 'Incorrect password. Please try again.' }
-    }
     if (msg.includes('email not confirmed')) {
       return { message: 'Please confirm your email before signing in. Check your inbox.' }
     }
+    // Supabase returns the same error string for both wrong password and
+    // non-existent account — cannot distinguish, show generic message
+    return { message: 'Invalid email or password. Please check your credentials and try again.' }
   }
 
   return { message: error.message }
@@ -186,6 +177,7 @@ export default function ProfilePage() {
   // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -235,9 +227,8 @@ export default function ProfilePage() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        const { message, switchTab } = interpretAuthError(error, 'signin')
+        const { message } = interpretAuthError(error, 'signin')
         setAuthError(message)
-        if (switchTab) setTimeout(() => setTab(switchTab), 1200)
       } else {
         window.location.reload()
       }
@@ -273,16 +264,25 @@ export default function ProfilePage() {
     setNameSaving(false)
   }
 
+  // Uses server API route with service role key to fully delete auth user
   const deleteAccount = async () => {
     if (!user) return
     setDeleteLoading(true)
-    await Promise.all([
-      supabase.from('saved_countries').delete().eq('user_id', user.id),
-      supabase.from('wizard_results').delete().eq('user_id', user.id),
-      supabase.from('profiles').delete().eq('id', user.id),
-    ])
-    await supabase.auth.signOut()
-    router.push('/')
+    setDeleteError('')
+    try {
+      const res = await fetch('/api/delete-account', { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        setDeleteError(data.error ?? 'Something went wrong. Please try again.')
+        setDeleteLoading(false)
+        return
+      }
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch {
+      setDeleteError('Network error. Please try again.')
+      setDeleteLoading(false)
+    }
   }
 
   const formatSlug = (slug: string) =>
@@ -332,7 +332,6 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          {/* Error — amber for tab-switch errors, red for hard errors */}
           {authError && (
             <p className={`text-xs ${authError.includes('Switching') ? 'text-amber-400' : 'text-score-low'}`}>
               {authError}
@@ -375,7 +374,7 @@ export default function ProfilePage() {
 
       <div className="max-w-2xl mx-auto px-6 pt-20 pb-12">
 
-        {/* ── Avatar + name + passport badge ── */}
+        {/* ── Avatar + name + badges ── */}
         <div className="flex items-start gap-4 mb-8">
           {user.user_metadata?.avatar_url ? (
             <img src={user.user_metadata.avatar_url} alt="avatar" className="w-16 h-16 rounded-full border border-border flex-shrink-0" referrerPolicy="no-referrer" />
@@ -517,7 +516,7 @@ export default function ProfilePage() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-border-hover text-sm text-text-muted hover:text-text-primary transition-colors">
               <LogOut className="w-4 h-4" />Sign out
             </button>
-            <button onClick={() => setShowDeleteConfirm(true)}
+            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-500/5 text-sm text-rose-400 transition-colors">
               <Trash2 className="w-4 h-4" />Delete account
             </button>
@@ -539,7 +538,12 @@ export default function ProfilePage() {
                 <p className="text-xs text-text-muted">This cannot be undone</p>
               </div>
             </div>
-            <p className="text-sm text-text-muted mb-6">All your saved countries, wizard results, and profile data will be permanently deleted.</p>
+            <p className="text-sm text-text-muted mb-4">
+              All your saved countries, wizard results, and profile data will be permanently deleted.
+            </p>
+            {deleteError && (
+              <p className="text-xs text-score-low mb-4">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
