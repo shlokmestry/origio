@@ -79,7 +79,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
     "fixed top-0 right-0 h-full z-50 w-full sm:max-w-md",
     "glass-panel-strong shadow-2xl shadow-black/50",
     "transform transition-transform duration-500",
-    "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto",
+    "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto overscroll-contain",
     isVisible ? "translate-x-0" : "translate-x-full",
   ].join(" ");
 

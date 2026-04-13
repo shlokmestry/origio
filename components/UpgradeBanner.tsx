@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { Sparkles, Lock } from 'lucide-react'
 
 const PRO_FEATURES = [
-  'Unlimited wizard runs',
+  'Unlimited Find My Country',
   'Full country deep-dives',
   'Side-by-side country comparison',
-  'Saved wizard results',
+  'Saved country matches',
 ]
 
 export default function UpgradeBanner({ compact = false }: { compact?: boolean }) {

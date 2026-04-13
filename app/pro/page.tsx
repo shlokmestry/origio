@@ -10,15 +10,15 @@ const FREE_FEATURES = [
   'Basic country info',
   'Salary calculator',
   'Career guides by role',
-  '1 wizard run',
+  '1 Find My Country run',
 ]
 
 const PRO_FEATURES = [
   'Everything in Free',
-  'Unlimited wizard runs',
+  'Unlimited Find My Country',
   'Full country deep-dives',
   'Side-by-side country comparison',
-  'Saved wizard results',
+  'Saved country matches',
   'Visa route details',
   'Priority updates',
 ]

@@ -71,16 +71,16 @@ function Confetti() {
 const PRO_FEATURES = [
   {
     icon: Zap,
-    title: 'Unlimited Wizard Runs',
-    desc: 'Run the country-matching wizard as many times as you want. Change priorities, job, budget — fresh results every time.',
-    cta: 'Run the Wizard',
+    title: 'Unlimited Find My Country',
+    desc: 'Run Find My Country as many times as you want. Change priorities, job, budget — fresh results every time.',
+    cta: 'Find My Country',
     href: '/wizard',
   },
   {
     icon: BarChart3,
     title: 'All 25 Countries Ranked',
     desc: 'See your full personalised ranking across all 25 countries — not just the top 10.',
-    cta: 'Run the Wizard',
+    cta: 'Find My Country',
     href: '/wizard',
   },
   {
@@ -240,7 +240,7 @@ export default function SuccessClient() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link href="/wizard" className="cta-button px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Run the Wizard
+                  Find My Country
                 </Link>
                 <Link href="/" className="px-6 py-3 rounded-xl text-sm border border-border text-text-muted hover:text-text-primary transition-colors flex items-center justify-center gap-2">
                   <Globe2 className="w-4 h-4" />
