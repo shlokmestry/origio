@@ -5,6 +5,7 @@ import Stripe from 'stripe'
 import { resend } from '@/lib/resend'
 import WelcomePro from '@/emails/WelcomePro'
 import { createElement } from 'react'
+import { rateLimit } from '@/lib/rate-limit'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
@@ -17,6 +18,9 @@ const adminSupabase = createClient(
 )
 
 export async function POST(request: Request) {
+  // Rate limit: max 20 webhook calls per minute (Stripe retries can burst)
+  const limited = rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
+  if (limited) return limited
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
 

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { resend } from '@/lib/resend'
 import AccountDeleted from '@/emails/AccountDeleted'
 import { createElement } from 'react'
+import { rateLimit } from '@/lib/rate-limit'
 
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,9 @@ const adminClient = createClient(
 )
 
 export async function DELETE(request: Request) {
+  // Rate limit: max 2 deletion attempts per minute
+  const limited = rateLimit(request, { name: 'delete-account', maxRequests: 2, windowSeconds: 60 })
+  if (limited) return limited
   const authHeader = request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
