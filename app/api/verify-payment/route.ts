@@ -6,6 +6,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { rateLimit } from '@/lib/rate-limit'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
@@ -18,6 +19,9 @@ const adminSupabase = createClient(
 )
 
 export async function POST(request: Request) {
+  // Rate limit: max 10 verification attempts per minute
+  const limited = rateLimit(request, { name: 'verify-payment', maxRequests: 10, windowSeconds: 60 })
+  if (limited) return limited
   const authHeader = request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
