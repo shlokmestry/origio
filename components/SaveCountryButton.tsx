@@ -27,8 +27,8 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
 
   const toggle = async () => {
     if (!userId) {
-      // ✅ Pass current page as next so user returns here after login
-      window.location.href = `/profile?next=${encodeURIComponent(window.location.pathname)}`
+      // Redirect to signin with current page as next destination
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname)}`
       return
     }
 

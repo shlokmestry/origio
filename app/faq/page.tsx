@@ -56,7 +56,7 @@ const faqs = [
       },
       {
         q: "Why do free users only see the top 3 results?",
-        a: "The top 3 matches are free forever. Signed-in users can see their full top 10. A Pro plan with deeper reports is coming soon.",
+        a: "The top 3 matches are free forever. Signed-in users can see their full top 10. Upgrade to Pro for unlimited runs and deeper country reports.",
       },
     ],
   },
@@ -68,22 +68,31 @@ const faqs = [
         a: "No. The globe, country pages, compare tool, and wizard top 3 results are all free without an account. Sign in to unlock your full top 10 wizard matches.",
       },
       {
-        q: "What will the Pro plan include?",
-        a: "Pro will include a full PDF relocation report, saved countries dashboard, and detailed visa + tax breakdowns. It will be a one-time payment of €10.",
+        q: "What does the Pro plan include?",
+        a: "Pro includes unlimited wizard runs, full country deep-dives, side-by-side country comparison, saved wizard results, visa route details, and priority updates. It is a one-time payment of €5 — no subscription, ever.",
+      },
+      {
+        q: "Is this really a one-time payment?",
+        a: "Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no recurring charges.",
+      },
+      {
+        q: "What payment methods are accepted?",
+        a: "All major credit and debit cards via Stripe. Safe and secure.",
+      },
+      {
+        q: "Can I get a refund?",
+        a: "If you have an issue, contact us and we'll sort it out.",
       },
     ],
   },
 ];
 
-
-
 export default function FAQPage() {
   const [open, setOpen] = useState<string | null>(null);
-
   const toggle = (key: string) => setOpen(open === key ? null : key);
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <div className="min-h-screen bg-bg-primary text-text-primary">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
@@ -107,23 +116,19 @@ export default function FAQPage() {
                   const key = section.category + item.q;
                   const isOpen = open === key;
                   return (
-                    <div
-                      key={key}
-                      className="border border-border rounded-lg overflow-hidden"
-                    >
+                    <div key={key} className="border border-border rounded-lg overflow-hidden">
                       <button
                         onClick={() => toggle(key)}
                         className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium hover:bg-white/5 transition-colors"
                       >
                         <span>{item.q}</span>
-                        {isOpen ? (
-                          <ChevronUp className="w-4 h-4 text-text-muted shrink-0 ml-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-text-muted shrink-0 ml-4" />
-                        )}
+                        {isOpen
+                          ? <ChevronUp className="w-4 h-4 text-text-muted flex-shrink-0" />
+                          : <ChevronDown className="w-4 h-4 text-text-muted flex-shrink-0" />
+                        }
                       </button>
                       {isOpen && (
-                        <div className="px-4 pb-4 text-sm text-text-muted leading-relaxed border-t border-border pt-3">
+                        <div className="px-4 pb-4 text-sm text-text-muted leading-relaxed">
                           {item.a}
                         </div>
                       )}
@@ -135,16 +140,6 @@ export default function FAQPage() {
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-border mt-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-accent" />
-            <span className="font-heading text-sm font-bold">Origio</span>
-          </div>
-          <p className="text-xs text-text-muted">Built by Shlok Mestry</p>
-        </div>
-      </footer>
     </div>
   );
 }
