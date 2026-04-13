@@ -1,8 +1,9 @@
 // lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// Use this everywhere — it handles auth state in the browser
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Use SSR browser client — persists session in cookies so it survives
+// external redirects (Stripe checkout → back to app) without losing auth state.
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
