@@ -243,4 +243,312 @@ export const rolePages: RolePage[] = [
       },
     ],
   },
+  {
+    slug: "nurses",
+    title: "Best Countries for Nurses in 2026",
+    intro:
+      "Nurses are in high demand globally. The best countries offer strong salaries, clear registration pathways for international nurses, and excellent working conditions.",
+    metaDescription:
+      "Compare the best countries for nurses in 2026 by salary, registration requirements, visa routes, and quality of life.",
+    countries: [
+      {
+        name: "Australia",
+        slug: "australia",
+        salary: "A$70k–A$95k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "High demand for nurses with clear AHPRA registration pathway for internationally qualified nurses.",
+      },
+      {
+        name: "Canada",
+        slug: "canada",
+        salary: "CA$65k–CA$90k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Shortage-driven demand across provinces with structured immigration routes.",
+      },
+      {
+        name: "United Kingdom",
+        slug: "united-kingdom",
+        salary: "£28k–£45k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "NHS actively recruits internationally with a defined overseas registration process.",
+      },
+      {
+        name: "Ireland",
+        slug: "ireland",
+        salary: "€35k–€55k",
+        tax: "Medium to high",
+        visa: "Easy for EU",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Strong demand, English-speaking, and easy entry for EU passport holders.",
+      },
+      {
+        name: "UAE",
+        slug: "uae",
+        salary: "AED 8,000–AED 14,000/mo",
+        tax: "None",
+        visa: "Moderate",
+        language: "English widely used",
+        qualityOfLife: "High",
+        why: "Tax-free salaries with strong expat nursing community and modern hospitals.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Which country is easiest for nurses to immigrate to?",
+        answer:
+          "Australia and Canada have the clearest pathways for internationally qualified nurses, with structured registration and skilled migration routes.",
+      },
+      {
+        question: "Do nurses need to re-qualify when moving abroad?",
+        answer:
+          "Usually not fully, but most countries require registration with the local nursing body, English language tests, and credential verification.",
+      },
+      {
+        question: "Is tax-free nursing in the UAE worth it?",
+        answer:
+          "For many nurses yes — the combination of no income tax and competitive salaries means take-home pay is significantly higher than in Europe.",
+      },
+    ],
+  },
+  {
+    slug: "teachers",
+    title: "Best Countries for Teachers in 2026",
+    intro:
+      "Teaching abroad can combine career growth with an international lifestyle. The best destinations offer good salaries, respected qualifications, and manageable visa routes.",
+    metaDescription:
+      "Find the best countries for teachers in 2026 — salary, visa routes, qualification recognition, and quality of life compared.",
+    countries: [
+      {
+        name: "UAE",
+        slug: "uae",
+        salary: "AED 10,000–AED 20,000/mo",
+        tax: "None",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Tax-free salaries at international schools with housing and flights often included.",
+      },
+      {
+        name: "Singapore",
+        slug: "singapore",
+        salary: "S$40k–S$65k",
+        tax: "Low",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Highly respected profession with strong salaries and excellent public school system.",
+      },
+      {
+        name: "Australia",
+        slug: "australia",
+        salary: "A$65k–A$95k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Shortage of teachers in many states drives competitive pay and fast registration.",
+      },
+      {
+        name: "Canada",
+        slug: "canada",
+        salary: "CA$55k–CA$85k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Strong public school salaries and clear credential recognition process.",
+      },
+      {
+        name: "Germany",
+        slug: "germany",
+        salary: "€45k–€65k",
+        tax: "High",
+        visa: "Moderate",
+        language: "German required",
+        qualityOfLife: "High",
+        why: "Well-paid and respected profession with strong job security.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need a teaching degree to teach abroad?",
+        answer:
+          "For public schools yes — most countries require a recognised teaching qualification. International schools may have more flexibility.",
+      },
+      {
+        question: "Which country pays teachers the most?",
+        answer:
+          "The UAE and Singapore consistently offer the highest effective teaching salaries when factoring in tax rates and benefits packages.",
+      },
+      {
+        question: "Is TEFL teaching different from qualified teaching?",
+        answer:
+          "Yes. TEFL covers English language teaching and has its own job market. Qualified teachers with subject expertise have more options and higher salaries.",
+      },
+    ],
+  },
+  {
+    slug: "accountants",
+    title: "Best Countries for Accountants in 2026",
+    intro:
+      "Accountants with internationally recognised qualifications like ACCA, CPA, or CFA have strong options globally. The best countries combine high demand, good salaries, and clear credential pathways.",
+    metaDescription:
+      "Compare the best countries for accountants in 2026 by salary, tax, visa routes, qualification recognition, and quality of life.",
+    countries: [
+      {
+        name: "Australia",
+        slug: "australia",
+        salary: "A$70k–A$110k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Strong demand for accountants with CPA Australia pathway well-defined for international applicants.",
+      },
+      {
+        name: "Canada",
+        slug: "canada",
+        salary: "CA$60k–CA$95k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "CPA Canada has clear bridging programs and accounting is on the skilled worker list.",
+      },
+      {
+        name: "United Kingdom",
+        slug: "united-kingdom",
+        salary: "£40k–£70k",
+        tax: "Medium to high",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "ACCA and CIMA are globally recognised and London is a major finance hub.",
+      },
+      {
+        name: "Singapore",
+        slug: "singapore",
+        salary: "S$55k–S$90k",
+        tax: "Low",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Regional finance hub with competitive salaries and low personal tax rates.",
+      },
+      {
+        name: "UAE",
+        slug: "uae",
+        salary: "AED 10,000–AED 18,000/mo",
+        tax: "None",
+        visa: "Moderate",
+        language: "English widely used",
+        qualityOfLife: "High",
+        why: "Tax-free income with strong demand across audit, finance, and corporate sectors.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Are accounting qualifications recognised internationally?",
+        answer:
+          "ACCA, CPA, and CFA are the most portable. Each country has its own recognition process but these qualifications are well respected globally.",
+      },
+      {
+        question: "Which country has the highest accountant salaries?",
+        answer:
+          "The UAE offers the highest take-home due to zero income tax. The US and Australia lead on gross salaries.",
+      },
+      {
+        question: "Do accountants need to re-qualify when moving abroad?",
+        answer:
+          "Often not fully, but most countries require registration with the local accounting body and may require bridging exams.",
+      },
+    ],
+  },
+  {
+    slug: "marketing-managers",
+    title: "Best Countries for Marketing Managers in 2026",
+    intro:
+      "Marketing managers with digital, brand, or growth experience are in demand across markets. The best countries combine strong salaries, mature marketing ecosystems, and manageable visa routes.",
+    metaDescription:
+      "Find the best countries for marketing managers in 2026 — salary, visa, language, and career opportunities compared.",
+    countries: [
+      {
+        name: "United States",
+        slug: "united-states",
+        salary: "$90k–$140k",
+        tax: "Medium to high, varies by state",
+        visa: "Harder",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Largest marketing budgets and most sophisticated digital marketing ecosystem globally.",
+      },
+      {
+        name: "United Kingdom",
+        slug: "united-kingdom",
+        salary: "£50k–£80k",
+        tax: "Medium to high",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "London is a global marketing hub with strong agency and brand-side opportunities.",
+      },
+      {
+        name: "Australia",
+        slug: "australia",
+        salary: "A$90k–A$130k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Growing digital market with strong demand for experienced marketing leaders.",
+      },
+      {
+        name: "Canada",
+        slug: "canada",
+        salary: "CA$75k–CA$115k",
+        tax: "Medium",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Steady demand with Toronto and Vancouver as major marketing centres.",
+      },
+      {
+        name: "Singapore",
+        slug: "singapore",
+        salary: "S$70k–S$110k",
+        tax: "Low",
+        visa: "Moderate",
+        language: "English",
+        qualityOfLife: "High",
+        why: "Regional hub for APAC marketing roles with competitive pay and low taxes.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Do marketing managers need local language skills?",
+        answer:
+          "For most English-speaking markets no, but local language fluency is a significant advantage in Germany, France, and Japan.",
+      },
+      {
+        question: "Which country has the best marketing career opportunities?",
+        answer:
+          "The US has the highest pay ceiling, but Australia and Singapore offer strong salaries with better work-life balance and easier visa routes.",
+      },
+      {
+        question: "Is digital marketing experience transferable across countries?",
+        answer:
+          "Yes — digital marketing skills are highly portable. Platform knowledge, data analytics, and growth experience translate well across markets.",
+      },
+    ],
+  },
 ];
