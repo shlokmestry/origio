@@ -44,15 +44,15 @@ const faqs = [
     ],
   },
   {
-    category: "The Wizard",
+    category: "Find My Country",
     items: [
       {
-        q: "How does the wizard scoring work?",
-        a: "The wizard asks 8 questions about your priorities, job role, budget, and preferences. Each country is scored across multiple dimensions — salary, cost of living, safety, visa ease, and more — weighted by your answers. All salaries are normalised to USD for fair comparison.",
+        q: "How does Find My Country work?",
+        a: "Find My Country asks 8 questions about your priorities, job role, budget, and preferences. Each country is scored across multiple dimensions — salary, cost of living, safety, visa ease, and more — weighted by your answers. All salaries are normalised to USD for fair comparison.",
       },
       {
         q: "What does the job offer flow do?",
-        a: "If you already have a job offer, the wizard skips the priorities, city vibe, and rent budget steps since those are less relevant when you have a fixed destination in mind.",
+        a: "If you already have a job offer, Find My Country skips the priorities, city vibe, and rent budget steps since those are less relevant when you have a fixed destination in mind.",
       },
       {
         q: "Why do free users only see the top 3 results?",
@@ -65,11 +65,11 @@ const faqs = [
     items: [
       {
         q: "Do I need an account to use Origio?",
-        a: "No. The globe, country pages, compare tool, and wizard top 3 results are all free without an account. Sign in to unlock your full top 10 wizard matches.",
+        a: "No. The globe, country pages, compare tool, and Find My Country top 3 results are all free without an account. Sign in to unlock your full top 10 country matches.",
       },
       {
         q: "What does the Pro plan include?",
-        a: "Pro includes unlimited wizard runs, full country deep-dives, side-by-side country comparison, saved wizard results, visa route details, and priority updates. It is a one-time payment of €5 — no subscription, ever.",
+        a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. It is a one-time payment of €5 — no subscription, ever.",
       },
       {
         q: "Is this really a one-time payment?",
@@ -101,7 +101,7 @@ export default function FAQPage() {
             Frequently Asked Questions
           </h1>
           <p className="text-text-muted text-base">
-            Everything you need to know about Origio, the data, and how the wizard works.
+            Everything you need to know about Origio, the data, and how Find My Country works.
           </p>
         </div>
 

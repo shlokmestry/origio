@@ -366,11 +366,11 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* ── Last Wizard Result ── */}
+        {/* ── Last Find My Country Result ── */}
         <div className="glass-panel rounded-2xl p-6 border border-border mb-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-heading text-lg font-bold text-text-primary">Last Wizard Result</h2>
+              <h2 className="font-heading text-lg font-bold text-text-primary">Last Find My Country Result</h2>
               <p className="text-xs text-text-muted">Your most recent country matches</p>
             </div>
             <a href="/wizard" className="text-xs text-accent hover:underline">Retake quiz →</a>
@@ -378,7 +378,7 @@ export default function ProfilePage() {
 
           {!wizardResult ? (
             <div className="text-center py-6">
-              <p className="text-sm text-text-muted mb-2">No wizard results yet</p>
+              <p className="text-sm text-text-muted mb-2">No results yet</p>
               <a href="/wizard" className="text-sm text-accent hover:underline">Take the quiz →</a>
             </div>
           ) : (
@@ -430,7 +430,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <p className="text-sm text-text-muted mb-4">
-              All your saved countries, wizard results, and profile data will be permanently deleted.
+              All your saved countries, country matches, and profile data will be permanently deleted.
             </p>
             {deleteError && <p className="text-xs text-rose-400 mb-4">{deleteError}</p>}
             <div className="flex gap-3">
