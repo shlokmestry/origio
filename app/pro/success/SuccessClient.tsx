@@ -22,40 +22,72 @@ export default function SuccessClient() {
 
     let cancelled = false
 
-    async function verifyAndPoll() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+    async function verify() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
         setStatus('error')
         setErrorMsg('You need to be signed in.')
         return
       }
 
-      const maxAttempts = 15
-      for (let i = 0; i < maxAttempts; i++) {
+      if (cancelled) return
+
+      try {
+        // Call verify-payment API — checks Stripe directly and grants pro.
+        // This works even when the webhook is misconfigured.
+        const res = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ sessionId }),
+        })
+
         if (cancelled) return
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', user.id)
-          .single()
+        const data = await res.json()
 
-        if (profile?.is_pro) {
-          setStatus('success')
-          // Force Next.js to re-fetch server data so Nav reflects new pro state
+        if (!res.ok) {
+          throw new Error(data.error ?? 'Verification failed')
+        }
+
+        if (data.paid && data.pro) {
           router.refresh()
+          setStatus('success')
           return
         }
 
-        await new Promise(r => setTimeout(r, 2000))
-      }
+        if (data.paid === false) {
+          setStatus('error')
+          setErrorMsg('Payment not completed. No charge was made.')
+          return
+        }
 
-      // Webhook may still be in flight — show success anyway, profile will update
-      setStatus('success')
-      router.refresh()
+        // Fallback: webhook may have already fired
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile?.is_pro) {
+          router.refresh()
+          setStatus('success')
+        } else {
+          setStatus('error')
+          setErrorMsg("Something went wrong. If you were charged, contact us and we'll sort it out.")
+        }
+
+      } catch (err) {
+        if (cancelled) return
+        console.error('Verification error:', err)
+        setStatus('error')
+        setErrorMsg("Couldn't verify your payment. If you were charged, contact us and we'll sort it out.")
+      }
     }
 
-    verifyAndPoll()
+    verify()
     return () => { cancelled = true }
   }, [sessionId, router])
 
@@ -72,9 +104,7 @@ export default function SuccessClient() {
             <h1 className="font-heading text-2xl font-bold text-text-primary">
               Verifying your payment…
             </h1>
-            <p className="text-text-muted text-sm">
-              This should only take a moment.
-            </p>
+            <p className="text-text-muted text-sm">This should only take a moment.</p>
           </div>
         )}
 
@@ -94,17 +124,11 @@ export default function SuccessClient() {
               Your account has been upgraded. All Pro features are now unlocked — forever.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              <Link
-                href="/wizard"
-                className="cta-button px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2"
-              >
+              <Link href="/wizard" className="cta-button px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2">
                 <Sparkles className="w-4 h-4" />
                 Run the Wizard
               </Link>
-              <Link
-                href="/"
-                className="px-6 py-3 rounded-xl text-sm border border-border text-text-muted hover:text-text-primary transition-colors text-center"
-              >
+              <Link href="/" className="px-6 py-3 rounded-xl text-sm border border-border text-text-muted hover:text-text-primary transition-colors text-center">
                 Explore countries
               </Link>
             </div>
@@ -116,16 +140,9 @@ export default function SuccessClient() {
             <div className="w-16 h-16 rounded-full bg-score-low/10 border border-score-low/20 flex items-center justify-center mx-auto">
               <span className="text-2xl">⚠️</span>
             </div>
-            <h1 className="font-heading text-2xl font-bold text-text-primary">
-              Something went wrong
-            </h1>
-            <p className="text-text-muted text-sm max-w-sm mx-auto">
-              {errorMsg || "We couldn't verify your payment. If you were charged, don't worry — contact us and we'll sort it out."}
-            </p>
-            <Link
-              href="/pro"
-              className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2"
-            >
+            <h1 className="font-heading text-2xl font-bold text-text-primary">Something went wrong</h1>
+            <p className="text-text-muted text-sm max-w-sm mx-auto">{errorMsg}</p>
+            <Link href="/pro" className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2">
               Back to Pro
             </Link>
           </div>

@@ -3,11 +3,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe2, ArrowLeft, Lock, Star, Share2, Check } from "lucide-react";
+import { Globe2, ArrowLeft, Lock, Star, Share2, Check, Sparkles } from "lucide-react";
 import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 
 const LOADING_STEPS = [
   "Analysing your priorities...",
@@ -33,6 +34,7 @@ export default function WizardResultsPage() {
   const [matches, setMatches] = useState<CountryMatch[]>([]);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({});
   const [user, setUser] = useState<User | null>(null);
+  const [isPro, setIsPro] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -47,55 +49,56 @@ export default function WizardResultsPage() {
     if (answersRaw) setAnswers(JSON.parse(answersRaw));
 
     ;(async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
 
       if (session?.user) {
-        const parsedMatches: CountryMatch[] = JSON.parse(raw)
-        const parsedAnswers = answersRaw ? JSON.parse(answersRaw) : {}
+        // Fetch isPro from DB server-side — not from client state
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', session.user.id)
+          .single();
+        setIsPro(profile?.is_pro ?? false);
+
+        // Save wizard result
+        const parsedMatches: CountryMatch[] = JSON.parse(raw);
+        const parsedAnswers = answersRaw ? JSON.parse(answersRaw) : {};
         const topCountries = parsedMatches.slice(0, 3).map((m) => ({
           slug: m.country.slug,
           name: m.country.name,
           flagEmoji: m.country.flagEmoji,
           matchPercent: m.matchPercent,
-        }))
-
-        const { error } = await supabase.from('wizard_results').upsert(
+        }));
+        await supabase.from('wizard_results').upsert(
           {
             user_id: session.user.id,
             top_countries: topCountries,
             answers: { role: parsedAnswers.jobRole },
           },
           { onConflict: 'user_id' }
-        )
-
-        if (error) console.error('Wizard save error:', error.message)
-        else console.log('✅ Wizard result saved!')
+        );
       }
-    })()
+    })();
 
-    let step = 0;
+    // Loading animation
     const stepInterval = setInterval(() => {
-      step++;
-      if (step < LOADING_STEPS.length) {
-        setLoadingStep(step);
-      } else {
-        clearInterval(stepInterval);
-      }
-    }, 700);
-
-    let progress = 0;
+      setLoadingStep((s) => (s + 1) % LOADING_STEPS.length);
+    }, 600);
     const progressInterval = setInterval(() => {
-      progress += 2;
-      setLoadingProgress(Math.min(progress, 100));
-      if (progress >= 100) {
-        clearInterval(progressInterval);
-        setTimeout(() => {
-          setIsLoading(false);
-          setTimeout(() => setRevealed(true), 100);
-        }, 400);
-      }
-    }, 70);
+      setLoadingProgress((p) => {
+        if (p >= 100) {
+          clearInterval(progressInterval);
+          clearInterval(stepInterval);
+          setTimeout(() => {
+            setIsLoading(false);
+            setTimeout(() => setRevealed(true), 100);
+          }, 400);
+          return 100;
+        }
+        return p + 2;
+      });
+    }, 50);
 
     return () => {
       clearInterval(stepInterval);
@@ -104,8 +107,8 @@ export default function WizardResultsPage() {
   }, [router]);
 
   const handleViewOnGlobe = () => {
-    const topSlugs = matches.slice(0, 3).map((m) => m.country.slug);
-    sessionStorage.setItem("highlightedCountries", JSON.stringify(topSlugs));
+    const slugs = matches.slice(0, 3).map((m) => m.country.slug);
+    sessionStorage.setItem("highlightedCountries", JSON.stringify(slugs));
     router.push("/");
   };
 
@@ -113,22 +116,13 @@ export default function WizardResultsPage() {
     const top = matches[0];
     const second = matches[1];
     const third = matches[2];
-
-    const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://origio-one.vercel.app";
-    const shareUrl = `${siteUrl}/wizard`;
-
-    const shareText = `I just found my top country matches on Origio! 🌍\n\n${top.country.flagEmoji} ${top.country.name} — ${top.matchPercent}% match\n${second?.country.flagEmoji ?? ""} ${second?.country.name ?? ""} — ${second?.matchPercent ?? ""}% match\n${third?.country.flagEmoji ?? ""} ${third?.country.name ?? ""} — ${third?.matchPercent ?? ""}% match\n\nFind yours 👇\n${shareUrl}`;
+    const shareUrl = typeof window !== "undefined" ? window.location.origin + "/wizard" : "";
+    const shareText = `🌍 My Origio country matches:\n1. ${top?.country.flagEmoji} ${top?.country.name} — ${top?.matchPercent}% match\n2. ${second?.country.flagEmoji} ${second?.country.name} — ${second?.matchPercent}% match\n3. ${third?.country.flagEmoji} ${third?.country.name} — ${third?.matchPercent}% match\n\nFind yours 👇\n${shareUrl}`;
 
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `I'm ${top.matchPercent}% ${top.country.name} ${top.country.flagEmoji}`,
-          text: shareText,
-          // ✅ removed url: shareUrl — was causing text to be appended to URL
-        });
-      } catch {
-        // user cancelled share — do nothing
-      }
+        await navigator.share({ title: `I'm ${top?.matchPercent}% ${top?.country.name} ${top?.country.flagEmoji}`, text: shareText });
+      } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(shareText);
       setShared(true);
@@ -136,7 +130,16 @@ export default function WizardResultsPage() {
     }
   };
 
-  const visibleMatches = user ? matches.slice(0, 10) : matches.slice(0, 3);
+  // Gating logic — server-verified:
+  // - Not signed in: show top 3
+  // - Signed in, not pro: show top 10
+  // - Pro: show all 25
+  const visibleMatches = isPro
+    ? matches.slice(0, 25)
+    : user
+      ? matches.slice(0, 10)
+      : matches.slice(0, 3);
+
   const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
 
   if (isLoading) {
@@ -151,18 +154,11 @@ export default function WizardResultsPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h2 className="font-heading text-2xl font-extrabold text-text-primary">
-              Finding your country...
-            </h2>
-            <p key={loadingStep} className="text-text-muted text-sm animate-fade-up">
-              {LOADING_STEPS[loadingStep]}
-            </p>
+            <h2 className="font-heading text-2xl font-extrabold text-text-primary">Finding your country...</h2>
+            <p key={loadingStep} className="text-text-muted text-sm animate-fade-up">{LOADING_STEPS[loadingStep]}</p>
           </div>
           <div className="w-full h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-            <div
-              className="h-full bg-accent rounded-full transition-all duration-100 ease-linear"
-              style={{ width: loadingProgress + "%" }}
-            />
+            <div className="h-full bg-accent rounded-full transition-all duration-100 ease-linear" style={{ width: loadingProgress + "%" }} />
           </div>
           <p className="text-xs text-text-muted">{loadingProgress}%</p>
         </div>
@@ -174,42 +170,30 @@ export default function WizardResultsPage() {
   const top = matches[0];
 
   return (
-    <div
-      className="min-h-screen bg-bg-primary"
-      style={{
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity 0.6s ease, transform 0.6s ease",
-      }}
-    >
+    <div className="min-h-screen bg-bg-primary" style={{ opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.6s ease, transform 0.6s ease" }}>
       <div className="flex items-center justify-between px-6 py-5 border-b border-border">
         <button onClick={() => router.push("/wizard")} className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Retake Quiz
+          <ArrowLeft className="w-4 h-4" />Retake Quiz
         </button>
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Globe2 className="w-5 h-5 text-accent" />
           <span className="font-heading font-extrabold">Origio</span>
         </a>
-        <button onClick={handleViewOnGlobe} className="text-sm text-accent hover:underline">
-          View on Globe
-        </button>
+        <button onClick={handleViewOnGlobe} className="text-sm text-accent hover:underline">View on Globe</button>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-12 space-y-10">
+        {/* Top match hero */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium">
-            <Star className="w-3 h-3" />
-            Your top match
+            <Star className="w-3 h-3" />Your top match
           </div>
           <div className="text-7xl" style={{ animation: revealed ? "bounceIn 0.8s ease 0.2s both" : "none" }}>
             {top.country.flagEmoji}
           </div>
           <h1 className="font-heading text-4xl font-extrabold">{top.country.name}</h1>
           <div className="flex items-center justify-center gap-2">
-            <div className="font-heading font-extrabold text-accent" style={{ fontSize: "4rem", lineHeight: 1 }}>
-              {top.matchPercent}%
-            </div>
+            <div className="font-heading font-extrabold text-accent" style={{ fontSize: "4rem", lineHeight: 1 }}>{top.matchPercent}%</div>
             <div className="text-left">
               <div className="text-sm font-medium text-text-primary">match</div>
               <div className="text-xs text-text-muted">for you</div>
@@ -228,28 +212,15 @@ export default function WizardResultsPage() {
               <span key={r} className="px-3 py-1 text-xs rounded-full border border-accent/20 text-accent bg-accent/5">{r}</span>
             ))}
           </div>
-
-          <button
-            onClick={handleShare}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-accent/30 bg-accent/5 text-accent text-sm font-medium hover:bg-accent/10 transition-all"
-          >
-            {shared ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copied to clipboard!
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4" />
-                Share my result
-              </>
-            )}
+          <button onClick={handleShare} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-accent/30 bg-accent/5 text-accent text-sm font-medium hover:bg-accent/10 transition-all">
+            {shared ? <><Check className="w-4 h-4" />Copied!</> : <><Share2 className="w-4 h-4" />Share my result</>}
           </button>
         </div>
 
+        {/* Match list */}
         <div className="space-y-4">
           <h2 className="font-heading text-xl font-bold">
-            {user ? "Your top 10 matches" : "Your top 3 matches"}
+            {isPro ? "All 25 countries ranked" : user ? "Your top 10 matches" : "Your top 3 matches"}
           </h2>
 
           {visibleMatches.map((match, index) => {
@@ -284,13 +255,11 @@ export default function WizardResultsPage() {
                   <p className="font-heading font-bold text-accent">{match.matchPercent}%</p>
                   <p className="text-xs text-text-muted">match</p>
                 </div>
-                <div className="w-12 h-1.5 bg-bg-elevated rounded-full overflow-hidden flex-shrink-0">
-                  <div className="h-full bg-accent rounded-full" style={{ width: match.matchPercent + "%" }} />
-                </div>
               </button>
             );
           })}
 
+          {/* Gate: not signed in — show sign-in prompt after top 3 */}
           {!user && matches.length > 3 && (
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-primary z-10 rounded-2xl" />
@@ -305,10 +274,35 @@ export default function WizardResultsPage() {
                 <div className="text-center space-y-4 p-6">
                   <Lock className="w-8 h-8 text-accent mx-auto" />
                   <p className="font-heading font-bold text-text-primary">See your full top 10</p>
-                  <p className="text-sm text-text-muted">Sign in to unlock all your matches and detailed breakdowns.</p>
-                  <button onClick={() => router.push("/profile")} className="cta-button px-6 py-3 rounded-xl text-sm font-medium">
+                  <p className="text-sm text-text-muted">Sign in free to unlock all your matches.</p>
+                  <Link href="/signin?next=/wizard/results" className="cta-button px-6 py-3 rounded-xl text-sm font-medium inline-block">
                     Sign in — it's free
-                  </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Gate: signed in but not pro — show upgrade prompt after top 10 */}
+          {user && !isPro && matches.length > 10 && (
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-primary z-10 rounded-2xl" />
+              <div className="p-6 rounded-2xl bg-bg-surface border border-border opacity-30 pointer-events-none">
+                <div className="flex items-center gap-4">
+                  <span className="font-heading font-bold text-text-muted w-6 text-center">11</span>
+                  <span className="text-3xl">🌍</span>
+                  <div className="flex-1"><div className="h-4 w-24 bg-bg-elevated rounded" /></div>
+                </div>
+              </div>
+              <div className="absolute inset-0 z-20 flex items-center justify-center">
+                <div className="text-center space-y-4 p-6">
+                  <Sparkles className="w-8 h-8 text-accent mx-auto" />
+                  <p className="font-heading font-bold text-text-primary">See all 25 countries ranked</p>
+                  <p className="text-sm text-text-muted">Upgrade to Pro to unlock the full ranking.</p>
+                  <Link href="/pro" className="cta-button px-6 py-3 rounded-xl text-sm font-medium inline-flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Upgrade to Pro — €5
+                  </Link>
                 </div>
               </div>
             </div>
