@@ -22,7 +22,7 @@ function Confetti() {
     canvas.height = window.innerHeight
 
     const colors = ['#00d4c8', '#4ade80', '#fbbf24', '#a78bfa', '#f472b6']
-    const pieces = Array.from({ length: 120 }, () => ({
+    const pieces = Array.from({ length: 60 }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height - canvas.height,
       r: Math.random() * 6 + 4,
@@ -59,7 +59,7 @@ function Confetti() {
     }
 
     draw()
-    const stop = setTimeout(() => cancelAnimationFrame(frame), 5000)
+    const stop = setTimeout(() => cancelAnimationFrame(frame), 3000)
     return () => { cancelAnimationFrame(frame); clearTimeout(stop) }
   }, [])
 
