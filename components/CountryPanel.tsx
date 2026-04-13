@@ -76,7 +76,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   };
 
   const panelClasses = [
-    "fixed top-0 right-0 h-full z-50 w-full sm:max-w-md",
+    // Start below the 64px nav (top-16), fill remaining height
+    "fixed top-16 right-0 z-40 w-full sm:max-w-md",
     "glass-panel-strong shadow-2xl shadow-black/50",
     "transform transition-transform duration-500",
     "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto overscroll-contain",
@@ -84,7 +85,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   ].join(" ");
 
   const backdropClasses = [
-    "fixed inset-0 bg-black/50 z-40",
+    "fixed inset-0 bg-black/50 z-30",
     "transition-opacity duration-300",
     isVisible ? "opacity-100" : "opacity-0 pointer-events-none",
   ].join(" ");
@@ -94,7 +95,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   return (
     <div>
       <div className={backdropClasses} onClick={handleClose} />
-      <div className={panelClasses}>
+      {/* height = viewport minus nav height (4rem = 64px) */}
+      <div className={panelClasses} style={{ height: "calc(100vh - 4rem)" }}>
         <div className="sticky top-0 z-10 glass-panel-strong border-b border-border">
           <div className="flex items-center justify-between p-5">
             <div className="flex items-center gap-3">

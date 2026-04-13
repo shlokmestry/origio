@@ -93,7 +93,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               <kbd className="ml-4 px-1.5 py-0.5 text-[10px] rounded bg-bg-elevated border border-border text-text-muted">⌘K</kbd>
             </button>
 
-            <Link href="/best-countries-for/software-engineers"
+            <Link href="/guides"
               className="text-sm text-text-muted hover:text-text-primary transition-colors">
               Guides
             </Link>
@@ -199,7 +199,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             ))}
 
             <div className="pt-2 border-t border-border space-y-2">
-              <Link href="/best-countries-for/software-engineers"
+              <Link href="/guides"
                 className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors"
                 onClick={() => setMobileMenuOpen(false)}>
                 Guides

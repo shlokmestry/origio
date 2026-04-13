@@ -279,7 +279,7 @@ export default function SalaryCalculator() {
         </div>
 
         {/* Inputs */}
-        <div className="bg-surface rounded-2xl border border-border p-6 mb-6 space-y-5">
+        <div className="bg-bg-elevated rounded-2xl border border-border p-6 mb-6 space-y-5">
 
           {/* Country */}
           <div>
@@ -294,7 +294,7 @@ export default function SalaryCalculator() {
                   className={`rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
                     country === c
                       ? "bg-accent text-white"
-                      : "bg-bg-secondary text-text-muted hover:bg-surface-hover border border-transparent"
+                      : "bg-bg-elevated text-text-muted hover:bg-bg-elevated-hover border border-transparent"
                   }`}
                 >
                   {TAX_DATA[c].label.split(" ")[0]}
@@ -312,7 +312,7 @@ export default function SalaryCalculator() {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full bg-bg-elevated border border-border rounded-xl px-4 py-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>{r}</option>
@@ -333,7 +333,7 @@ export default function SalaryCalculator() {
                 type="text"
                 value={inputVal}
                 onChange={(e) => handleSalaryInput(e.target.value)}
-                className="w-full bg-bg-secondary border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-accent"
                 placeholder="65,000"
               />
             </div>
@@ -348,7 +348,7 @@ export default function SalaryCalculator() {
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border ${
                   salary === v
                     ? "bg-accent/20 text-accent border-accent/30"
-                    : "bg-bg-secondary text-text-muted hover:bg-surface-hover border-transparent"
+                    : "bg-bg-elevated text-text-muted hover:bg-bg-elevated-hover border-transparent"
                 }`}
               >
                 {sym}{new Intl.NumberFormat("en", { notation: "compact" }).format(v)}
@@ -359,7 +359,7 @@ export default function SalaryCalculator() {
 
         {/* Results */}
         {result && salary > 0 && (
-          <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          <div className="bg-bg-elevated rounded-2xl border border-border overflow-hidden">
 
             {/* Take-home hero */}
             <div className="bg-accent/10 border-b border-border px-6 py-5 flex items-center justify-between">
@@ -459,7 +459,7 @@ export default function SalaryCalculator() {
         )}
 
         {/* ── Guides CTA ───────────────────────────────────────────────── */}
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
+        <div className="mt-6 rounded-2xl border border-border bg-bg-elevated p-5">
           <p className="text-xs uppercase tracking-wider text-text-muted mb-1">
             Also explore
           </p>
@@ -474,7 +474,7 @@ export default function SalaryCalculator() {
               <Link
                 key={g.slug}
                 href={`/best-countries-for/${g.slug}`}
-                className="rounded-lg bg-bg-secondary border border-border px-3 py-2 text-sm text-text-muted hover:text-text-primary hover:border-accent/30 transition-all"
+                className="rounded-lg bg-bg-elevated border border-border px-3 py-2 text-sm text-text-muted hover:text-text-primary hover:border-accent/30 transition-all"
               >
                 {g.label}
               </Link>
