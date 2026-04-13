@@ -37,12 +37,12 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
               // Styles: self + inline (Tailwind/CSS-in-JS) + Google Fonts
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com",
-              // Images: self + data URIs + Supabase avatars + Google user content
-              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com",
+              // Images: self + data URIs + Supabase avatars + Google user content + unpkg (globe textures)
+              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com",
               // Fonts: self + Fontshare + Google Fonts
               "font-src 'self' https://api.fontshare.com https://fonts.gstatic.com",
-              // API connections: self + Supabase + Stripe + Google Analytics + Vercel Analytics
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://vitals.vercel-insights.com",
+              // API connections: self + Supabase + Stripe + Google Analytics + Vercel Analytics + unpkg (globe assets)
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://vitals.vercel-insights.com https://unpkg.com",
               // Stripe checkout is loaded in a frame
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               // Block all object/embed
