@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "@stripe/stripe-js": "^9.1.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
@@ -19,8 +20,10 @@
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18",
+    "react-email": "^5.2.10",
     "react-to-pdf": "^3.2.2",
     "recharts": "^3.8.1",
+    "resend": "^6.11.0",
     "stripe": "^22.0.1",
     "three": "^0.183.2"
   },
