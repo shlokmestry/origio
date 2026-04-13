@@ -105,7 +105,6 @@ export default function OnboardingPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) { router.push('/profile'); return }
       setUserId(data.user.id)
-      // If already onboarded, skip to profile
       supabase.from('profiles').select('onboarded').eq('id', data.user.id).single().then(({ data: p }) => {
         if (p?.onboarded) router.push('/profile')
       })
@@ -119,7 +118,7 @@ export default function OnboardingPage() {
   const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
 
   const handleFinish = async () => {
-    if (!userId || !jobTitle.trim()) return
+    if (!userId || jobTitle.trim().length < 2) return
     setSaving(true)
     await supabase.from('profiles').upsert({
       id: userId,
@@ -240,11 +239,17 @@ export default function OnboardingPage() {
                 placeholder="e.g. Software Engineer, Student, Marketing Manager..."
                 value={jobTitle}
                 onChange={e => setJobTitle(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && jobTitle.trim()) handleFinish() }}
+                onKeyDown={e => { if (e.key === 'Enter' && jobTitle.trim().length >= 2) handleFinish() }}
                 autoFocus
-                className="w-full px-4 py-4 bg-bg-elevated border border-border rounded-2xl text-base text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors mb-3"
+                className="w-full px-4 py-4 bg-bg-elevated border border-border rounded-2xl text-base text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors mb-2"
               />
-              <p className="text-xs text-text-muted mb-10">Free text — write whatever describes you best.</p>
+
+              {/* Validation hint */}
+              {jobTitle.length > 0 && jobTitle.trim().length < 2 ? (
+                <p className="text-xs text-score-low mb-8">Please enter at least 2 characters</p>
+              ) : (
+                <p className="text-xs text-text-muted mb-8">Free text — write whatever describes you best.</p>
+              )}
 
               <div className="flex items-center justify-between">
                 <button onClick={() => setStep(1)} className="text-sm text-text-muted hover:text-text-primary transition-colors">
@@ -252,7 +257,7 @@ export default function OnboardingPage() {
                 </button>
                 <button
                   onClick={handleFinish}
-                  disabled={!jobTitle.trim() || saving}
+                  disabled={jobTitle.trim().length < 2 || saving}
                   className="cta-button px-6 py-3 rounded-xl text-sm flex items-center gap-2 disabled:opacity-40"
                 >
                   {saving ? 'Saving...' : 'Go to my profile'} <ArrowRight className="w-4 h-4" />
