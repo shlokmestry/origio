@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
-import UpgradeBanner from '@/components/UpgradeBanner'
 import type { User } from '@supabase/supabase-js'
 import {
-  Globe2, LogOut, Trash2,
-  Sparkles, Pencil, Check, X, AlertTriangle, Briefcase
+  Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
+  AlertTriangle, Briefcase, Zap, BarChart3, Calculator,
+  BookOpen, ArrowRight, MapPin
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -85,6 +85,19 @@ function formatRole(r: string) {
   return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
 }
 
+const MATCH_COLORS = ['#fbbf24', '#00d4c8', '#a78bfa']
+const MATCH_LABELS = ['Best Match', '2nd', '3rd']
+
+// ─── Quick action buttons ─────────────────────────────────────────────────────
+
+const QUICK_ACTIONS = [
+  { label: 'Find My Country', icon: Zap, href: '/wizard', accent: true },
+  { label: 'Compare', icon: BarChart3, href: '/compare', accent: false },
+  { label: 'Salary Calc', icon: Calculator, href: '/salary-calculator', accent: false },
+  { label: 'Guides', icon: BookOpen, href: '/guides', accent: false },
+  { label: 'Globe', icon: Globe2, href: '/', accent: false },
+]
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
@@ -96,32 +109,22 @@ export default function ProfilePage() {
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
-  // Edit name
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
 
-  // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
-    // Timeout fallback — if session check hangs more than 8s, show error
     const timeout = setTimeout(() => {
-      if (loading) {
-        setLoading(false)
-        setLoadError(true)
-      }
+      if (loading) { setLoading(false); setLoadError(true) }
     }, 8000)
 
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       clearTimeout(timeout)
-
-      if (error || !session?.user) {
-        router.push('/signin')
-        return
-      }
+      if (error || !session?.user) { router.push('/signin'); return }
 
       const u = session.user
       setUser(u)
@@ -147,14 +150,10 @@ export default function ProfilePage() {
         setWizardResult(wizardRes.data ?? null)
         setProfile(profileRes.data ?? null)
 
-        // Not onboarded — redirect
         if (profileRes.data && !profileRes.data.onboarded) {
-          window.location.href = '/onboarding'
-          return
+          window.location.href = '/onboarding'; return
         }
-      } catch {
-        setLoadError(true)
-      }
+      } catch { setLoadError(true) }
 
       setLoading(false)
     })
@@ -169,7 +168,6 @@ export default function ProfilePage() {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    // Hard redirect — forces full page reload so Nav clears session state
     window.location.href = '/'
   }
 
@@ -177,9 +175,7 @@ export default function ProfilePage() {
     if (!user || !nameValue.trim()) return
     setNameSaving(true)
     await supabase.auth.updateUser({ data: { full_name: nameValue.trim() } })
-    setUser(prev => prev
-      ? { ...prev, user_metadata: { ...prev.user_metadata, full_name: nameValue.trim() } }
-      : prev)
+    setUser(prev => prev ? { ...prev, user_metadata: { ...prev.user_metadata, full_name: nameValue.trim() } } : prev)
     setEditingName(false)
     setNameSaving(false)
   }
@@ -189,24 +185,17 @@ export default function ProfilePage() {
     setDeleteLoading(true)
     setDeleteError('')
     try {
-      // Get token to send as Bearer — same pattern as /api/checkout
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setDeleteError('Session expired. Please sign in again.')
-        setDeleteLoading(false)
-        return
-      }
+      if (!session) { setDeleteError('Session expired. Please sign in again.'); setDeleteLoading(false); return }
 
       const res = await fetch('/api/delete-account', {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       })
 
       if (!res.ok) {
         const data = await res.json()
-        setDeleteError(data.error ?? 'Something went wrong. Please try again.')
+        setDeleteError(data.error ?? 'Something went wrong.')
         setDeleteLoading(false)
         return
       }
@@ -224,6 +213,7 @@ export default function ProfilePage() {
 
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
   const isPro = profile?.is_pro ?? false
+  const topMatch = wizardResult?.top_countries?.[0]
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
@@ -247,170 +237,249 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-bg-primary">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div className="max-w-2xl mx-auto px-6 pt-20 pb-12">
-
-        {/* ── Avatar + name + badges ── */}
-        <div className="flex items-start gap-4 mb-8">
-          {user.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="avatar"
-              className="w-16 h-16 rounded-full border border-border flex-shrink-0"
-              referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
-              {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            {editingName ? (
-              <div className="flex items-center gap-2 mb-1">
-                <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
-                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
-                  className="font-heading text-xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none" />
-                <button onClick={saveName} disabled={nameSaving}
-                  className="p-1.5 rounded-lg bg-accent/10 text-accent">
-                  <Check className="w-4 h-4" />
-                </button>
-                <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg text-text-muted">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+      {/* ── Profile header banner ── */}
+      <div className="border-b border-border bg-bg-surface">
+        <div className="max-w-4xl mx-auto px-6 pt-24 pb-8">
+          <div className="flex items-start gap-5">
+            {/* Avatar */}
+            {user.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="avatar"
+                className="w-20 h-20 rounded-2xl border border-border flex-shrink-0"
+                referrerPolicy="no-referrer" />
             ) : (
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="font-heading text-2xl font-extrabold text-text-primary truncate">
-                  {user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'You'}
-                </h1>
-                <button onClick={() => setEditingName(true)}
-                  className="p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0">
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
+              <div className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-3xl font-bold text-accent flex-shrink-0">
+                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
               </div>
             )}
 
-            <p className="text-sm text-text-muted mb-3 truncate">{user.email}</p>
+            <div className="flex-1 min-w-0">
+              {/* Name */}
+              {editingName ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+                    className="font-heading text-2xl font-extrabold bg-bg-elevated border border-accent/40 rounded-lg px-3 py-1 text-text-primary focus:outline-none" />
+                  <button onClick={saveName} disabled={nameSaving} className="p-1.5 rounded-lg bg-accent/10 text-accent">
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg text-text-muted">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="font-heading text-2xl font-extrabold text-text-primary truncate">
+                    {user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'You'}
+                  </h1>
+                  <button onClick={() => setEditingName(true)}
+                    className="p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors flex-shrink-0">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
-            <div className="flex flex-wrap gap-2">
-              {isPro && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold">
-                  <Sparkles className="w-3 h-3" />
-                  Origio Pro
-                </span>
-              )}
-              {passportData && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
-                  {passportData.flag} {passportData.name} passport
-                </span>
-              )}
-              {profile?.job_title && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
-                  <Briefcase className="w-3 h-3" />
-                  {profile.job_title}
-                </span>
-              )}
+              <p className="text-sm text-text-muted mb-3 truncate">{user.email}</p>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2">
+                {isPro && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold">
+                    <Sparkles className="w-3 h-3" /> Origio Pro
+                  </span>
+                )}
+                {passportData && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
+                    {passportData.flag} {passportData.name}
+                  </span>
+                )}
+                {profile?.job_title && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
+                    <Briefcase className="w-3 h-3" /> {profile.job_title}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Sign out top right */}
+            <button onClick={signOut}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs text-text-muted hover:text-text-primary transition-colors flex-shrink-0">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+
+        {/* ── Quick actions ── */}
+        <div className="grid grid-cols-5 gap-2">
+          {QUICK_ACTIONS.map(action => {
+            const Icon = action.icon
+            return (
+              <a key={action.label} href={action.href}
+                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all text-center ${
+                  action.accent
+                    ? 'bg-accent/10 border-accent/30 hover:bg-accent/20 text-accent'
+                    : 'bg-bg-elevated border-border hover:border-accent/20 text-text-muted hover:text-text-primary'
+                }`}>
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{action.label}</span>
+              </a>
+            )
+          })}
         </div>
 
         {/* ── Upgrade banner for free users ── */}
         {!isPro && (
-          <div className="mb-6">
-            <UpgradeBanner />
+          <div className="glass-panel rounded-2xl p-5 border border-accent/20 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-text-primary">Upgrade to Origio Pro</p>
+                <p className="text-xs text-text-muted">Unlimited matches · All 25 countries · Full deep-dives</p>
+              </div>
+            </div>
+            <a href="/pro" className="cta-button px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 flex-shrink-0">
+              <Zap className="w-4 h-4" /> €5 one-time
+            </a>
           </div>
         )}
 
-        {/* ── Quick actions ── */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          <a href="/"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border hover:border-border-hover text-sm text-text-muted hover:text-text-primary transition-colors">
-            <Globe2 className="w-4 h-4" />
-            Explore the Globe
-          </a>
-        </div>
+        {/* ── Two column layout ── */}
+        <div className="grid md:grid-cols-2 gap-6">
 
-        {/* ── Saved Countries ── */}
-        <div className="glass-panel rounded-2xl p-6 border border-border mb-4">
-          <h2 className="font-heading text-lg font-bold text-text-primary mb-1">Saved Countries</h2>
-          <p className="text-xs text-text-muted mb-4">Countries you&apos;ve bookmarked</p>
-          {savedCountries.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-text-muted mb-2">No saved countries yet</p>
-              <a href="/" className="text-sm text-accent hover:underline">Start exploring →</a>
+          {/* LEFT — Top Match Hero */}
+          <div className="glass-panel rounded-2xl border border-border overflow-hidden">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h2 className="font-heading text-base font-bold text-text-primary">Your Top Match</h2>
+              <a href="/wizard" className="text-xs text-accent hover:underline flex items-center gap-1">
+                Retake <ArrowRight className="w-3 h-3" />
+              </a>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {savedCountries.map(s => {
-                const info = getCountryInfo(s.countries)
-                return (
-                  <div key={s.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{info?.flag_emoji ?? '🌍'}</span>
-                      <div>
-                        <p className="text-sm font-medium text-text-primary">
-                          {info?.name ?? formatSlug(s.country_slug)}
-                        </p>
-                        <p className="text-xs text-text-muted">{formatDate(s.created_at)}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a href={`/country/${s.country_slug}`}
-                        className="text-xs text-accent hover:underline">View</a>
-                      <button onClick={() => removeSave(s.id)}
-                        className="text-xs text-text-muted hover:text-rose-400 transition-colors ml-2">
-                        Remove
-                      </button>
-                    </div>
+
+            {!wizardResult ? (
+              <div className="text-center py-10 px-5">
+                <div className="text-5xl mb-3">🌍</div>
+                <p className="text-sm text-text-muted mb-4">No results yet</p>
+                <a href="/wizard" className="cta-button px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
+                  <Zap className="w-4 h-4" /> Find My Country
+                </a>
+              </div>
+            ) : (
+              <div>
+                {/* Hero — #1 match */}
+                <div className="px-5 pb-4">
+                  <div className="rounded-2xl p-5 text-center"
+                    style={{ background: `linear-gradient(135deg, ${MATCH_COLORS[0]}15, ${MATCH_COLORS[0]}05)`, border: `1px solid ${MATCH_COLORS[0]}30` }}>
+                    <div className="text-5xl mb-2">{topMatch?.flagEmoji}</div>
+                    <p className="font-heading text-xl font-extrabold text-text-primary">{topMatch?.name}</p>
+                    <p className="font-heading text-3xl font-extrabold mt-1" style={{ color: MATCH_COLORS[0] }}>
+                      {capPercent(topMatch?.matchPercent ?? 0)}%
+                    </p>
+                    <p className="text-xs text-text-muted">match</p>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                </div>
 
-        {/* ── Last Find My Country Result ── */}
-        <div className="glass-panel rounded-2xl p-6 border border-border mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-heading text-lg font-bold text-text-primary">Last Find My Country Result</h2>
-              <p className="text-xs text-text-muted">Your most recent country matches</p>
-            </div>
-            <a href="/wizard" className="text-xs text-accent hover:underline">Retake quiz →</a>
+                {/* #2 and #3 */}
+                <div className="border-t border-border">
+                  {wizardResult.top_countries.slice(1).map((c, i) => (
+                    <div key={c.slug} className="flex items-center gap-3 px-5 py-3 border-b border-border last:border-0">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full text-center min-w-[28px]"
+                        style={{ color: MATCH_COLORS[i + 1], background: MATCH_COLORS[i + 1] + '20' }}>
+                        {MATCH_LABELS[i + 1]}
+                      </span>
+                      <span className="text-lg">{c.flagEmoji}</span>
+                      <span className="text-sm font-medium text-text-primary flex-1">{c.name}</span>
+                      <span className="text-xs font-semibold" style={{ color: MATCH_COLORS[i + 1] }}>
+                        {capPercent(c.matchPercent)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-5 py-3 border-t border-border">
+                  <p className="text-xs text-text-muted">
+                    {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown role'} · {formatDate(wizardResult.created_at)}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {!wizardResult ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-text-muted mb-2">No results yet</p>
-              <a href="/wizard" className="text-sm text-accent hover:underline">Take the quiz →</a>
+          {/* RIGHT — Saved Countries */}
+          <div className="glass-panel rounded-2xl border border-border overflow-hidden">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h2 className="font-heading text-base font-bold text-text-primary">
+                Saved Countries
+                {savedCountries.length > 0 && (
+                  <span className="ml-2 text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                    {savedCountries.length}
+                  </span>
+                )}
+              </h2>
+              <a href="/" className="text-xs text-accent hover:underline flex items-center gap-1">
+                Explore <ArrowRight className="w-3 h-3" />
+              </a>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {wizardResult.top_countries.map((c, i) => (
-                <div key={c.slug} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                  <span className="text-text-muted text-xs w-4 text-center font-mono">#{i + 1}</span>
-                  <span className="text-xl">{c.flagEmoji}</span>
-                  <span className="text-sm font-medium text-text-primary flex-1">{c.name}</span>
-                  <span className="text-xs text-accent font-semibold">{capPercent(c.matchPercent)}% match</span>
-                </div>
-              ))}
-              <p className="text-xs text-text-muted pt-2">
-                {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
-              </p>
-            </div>
-          )}
+
+            {savedCountries.length === 0 ? (
+              <div className="text-center py-10 px-5">
+                <div className="text-5xl mb-3">📌</div>
+                <p className="text-sm text-text-muted mb-4">No saved countries yet</p>
+                <a href="/" className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors mx-auto w-fit">
+                  <Globe2 className="w-4 h-4" /> Explore the Globe
+                </a>
+              </div>
+            ) : (
+              <div>
+                {savedCountries.slice(0, 6).map(s => {
+                  const info = getCountryInfo(s.countries)
+                  return (
+                    <div key={s.id} className="flex items-center gap-3 px-5 py-3 border-b border-border last:border-0 group">
+                      <span className="text-xl flex-shrink-0">{info?.flag_emoji ?? '🌍'}</span>
+                      <a href={`/country/${s.country_slug}`}
+                        className="text-sm font-medium text-text-primary hover:text-accent transition-colors flex-1 truncate">
+                        {info?.name ?? formatSlug(s.country_slug)}
+                      </a>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a href={`/country/${s.country_slug}`} className="text-xs text-accent hover:underline">View</a>
+                        <button onClick={() => removeSave(s.id)}
+                          className="text-xs text-text-muted hover:text-rose-400 transition-colors">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {savedCountries.length > 6 && (
+                  <div className="px-5 py-3 text-xs text-text-muted">
+                    +{savedCountries.length - 6} more saved
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ── Account ── */}
-        <div className="glass-panel rounded-2xl p-6 border border-rose-500/10">
-          <h2 className="font-heading text-lg font-bold text-text-primary mb-1">Account</h2>
-          <p className="text-xs text-text-muted mb-4">Manage your account settings</p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button onClick={signOut}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:border-border-hover text-sm text-text-muted hover:text-text-primary transition-colors">
-              <LogOut className="w-4 h-4" />Sign out
-            </button>
-            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-500/5 text-sm text-rose-400 transition-colors">
-              <Trash2 className="w-4 h-4" />Delete account
-            </button>
+        {/* ── Account / Danger zone ── */}
+        <div className="glass-panel rounded-2xl p-5 border border-border">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Account settings</p>
+              <p className="text-xs text-text-muted">{user.email}</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={signOut}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs text-text-muted hover:text-text-primary transition-colors">
+                <LogOut className="w-3.5 h-3.5" /> Sign out
+              </button>
+              <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/5 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" /> Delete account
+              </button>
+            </div>
           </div>
         </div>
 
