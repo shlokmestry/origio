@@ -30,7 +30,6 @@ export default function SuccessClient() {
         return
       }
 
-      // Poll the profile until is_pro is true (webhook might take a moment)
       const maxAttempts = 15
       for (let i = 0; i < maxAttempts; i++) {
         if (cancelled) return
@@ -43,15 +42,17 @@ export default function SuccessClient() {
 
         if (profile?.is_pro) {
           setStatus('success')
+          // Force Next.js to re-fetch server data so Nav reflects new pro state
+          router.refresh()
           return
         }
 
-        // Wait 2 seconds before next poll
         await new Promise(r => setTimeout(r, 2000))
       }
 
-      // Webhook hasn't fired yet — but payment likely went through
+      // Webhook may still be in flight — show success anyway, profile will update
       setStatus('success')
+      router.refresh()
     }
 
     verifyAndPoll()
@@ -119,7 +120,7 @@ export default function SuccessClient() {
               Something went wrong
             </h1>
             <p className="text-text-muted text-sm max-w-sm mx-auto">
-              {errorMsg || 'We couldn\'t verify your payment. If you were charged, don\'t worry — contact us and we\'ll sort it out.'}
+              {errorMsg || "We couldn't verify your payment. If you were charged, don't worry — contact us and we'll sort it out."}
             </p>
             <Link
               href="/pro"

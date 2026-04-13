@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Search, Globe2, Menu, X, LogIn, User, Sparkles } from "lucide-react";
 import { GlobeCountry } from "@/types";
@@ -19,35 +19,53 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isPro, setIsPro] = useState(false);
 
+  const fetchProStatus = useCallback(async (userId: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', userId)
+      .single();
+    setIsPro(profile?.is_pro ?? false);
+  }, []);
+
   useEffect(() => {
+    // Initial session load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', session.user.id)
-          .single();
-        setIsPro(profile?.is_pro ?? false);
+        await fetchProStatus(session.user.id);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Auth state changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', session.user.id)
-          .single();
-        setIsPro(profile?.is_pro ?? false);
+        await fetchProStatus(session.user.id);
       } else {
         setIsPro(false);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Re-check when tab regains focus — covers Stripe redirect back to app
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProStatus(session.user.id);
+        } else {
+          setIsPro(false);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchProStatus]);
 
   const filteredCountries = countries.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -85,7 +103,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               About
             </Link>
 
-            {/* Origio Pro link — only for non-pro users */}
+            {/* Hide "Origio Pro" upgrade link for pro users */}
             {!isPro && (
               <Link href="/pro"
                 className="flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors">
@@ -139,21 +157,22 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             {searchQuery.length > 0 && (
               <div className="mt-3 max-h-64 overflow-y-auto">
                 {filteredCountries.length === 0 ? (
-                  <p className="text-text-muted text-sm py-4 text-center">No countries found</p>
+                  <p className="text-sm text-text-muted text-center py-4">No countries found</p>
                 ) : (
-                  <div className="space-y-1">
-                    {filteredCountries.map((country) => (
-                      <button key={country.slug}
-                        onClick={() => { onCountrySelect(country.slug); setSearchOpen(false); setSearchQuery(""); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-bg-elevated transition-colors text-left">
-                        <span className="text-2xl">{country.flagEmoji}</span>
-                        <div>
-                          <p className="text-sm font-medium text-text-primary">{country.name}</p>
-                          <p className="text-xs text-text-muted">Move Score: {country.moveScore}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  filteredCountries.map((country) => (
+                    <button
+                      key={country.slug}
+                      onClick={() => {
+                        onCountrySelect(country.slug);
+                        setSearchOpen(false);
+                        setSearchQuery("");
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-elevated transition-colors text-left"
+                    >
+                      <span className="text-xl">{country.flagEmoji}</span>
+                      <span className="text-sm">{country.name}</span>
+                    </button>
+                  ))
                 )}
               </div>
             )}
@@ -162,27 +181,22 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
       )}
 
       {mobileMenuOpen && (
-        <div className="md:hidden glass-panel-strong border-t border-border">
-          <div className="p-4 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <input type="text" placeholder="Search countries..." value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-bg-elevated rounded-xl border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary placeholder:text-text-muted" />
-            </div>
-
-            {searchQuery.length > 0 && (
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {filteredCountries.map((country) => (
-                  <button key={country.slug}
-                    onClick={() => { onCountrySelect(country.slug); setMobileMenuOpen(false); setSearchQuery(""); }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-elevated transition-colors text-left">
-                    <span className="text-lg">{country.flagEmoji}</span>
-                    <span className="text-sm">{country.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="md:hidden absolute top-full left-0 right-0 glass-panel-strong border-t border-border">
+          <div className="p-4 space-y-2">
+            {searchQuery.length > 0 && filteredCountries.map((country) => (
+              <button
+                key={country.slug}
+                onClick={() => {
+                  onCountrySelect(country.slug);
+                  setMobileMenuOpen(false);
+                  setSearchQuery("");
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-elevated transition-colors text-left"
+              >
+                <span className="text-xl">{country.flagEmoji}</span>
+                <span className="text-sm">{country.name}</span>
+              </button>
+            ))}
 
             <div className="pt-2 border-t border-border space-y-2">
               <Link href="/best-countries-for/software-engineers"
@@ -208,6 +222,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                   className="block px-3 py-2 text-xs text-text-muted"
                   onClick={() => setMobileMenuOpen(false)}>
                   {isPro && '✦ '}{user.user_metadata?.full_name || user.email}
+                  {isPro && <span className="ml-1 text-accent font-bold">PRO</span>}
                 </Link>
               ) : (
                 <Link href="/signin"
