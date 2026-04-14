@@ -18,61 +18,149 @@ const PASSPORTS = [
   "Nigeria", "Kenya", "Philippines", "Italy", "Poland", "Romania", "Other"
 ];
 
-// Currency symbol and rent ranges by passport region
+// Rent budgets shown in user's home currency with local context
 function getRentBudgets(passport: string) {
   const p = passport.toLowerCase();
+
   if (p === "india") {
-    return [
-      { key: "under800", label: "Under ₹65,000/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
-  } else if (p === "usa" || p === "canada") {
-    return [
-      { key: "under800", label: "Under $800/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
-  } else if (p === "united kingdom") {
-    return [
-      { key: "under800", label: "Under £650/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "£650 – £1,200/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "£1,200 – £2,000/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
-  } else if (p === "australia" || p === "new zealand") {
-    return [
-      { key: "under800", label: "Under A$1,200/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "A$1,200 – A$2,200/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "A$2,200 – A$3,800/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
-  } else if (p === "uae") {
-    return [
-      { key: "under800", label: "Under AED 3,000/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "AED 3,000 – AED 5,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "AED 5,500 – AED 9,000/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
-  } else {
-    // Default EUR for European passports and others
-    return [
-      { key: "under800", label: "Under €800/mo", sub: "Tight budget" },
-      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ];
+    return {
+      note: "Shown in Indian Rupees — typical rent abroad converted to INR for perspective",
+      options: [
+        { key: "under800", label: "Under ₹65,000/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
   }
+
+  if (p === "usa") {
+    return {
+      note: "Shown in US Dollars — your familiar frame of reference",
+      options: [
+        { key: "under800", label: "Under $800/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "canada") {
+    return {
+      note: "Shown in Canadian Dollars — converted for your perspective",
+      options: [
+        { key: "under800", label: "Under CA$1,100/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "CA$1,100 – CA$2,000/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "CA$2,000 – CA$3,400/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "united kingdom") {
+    return {
+      note: "Shown in Pounds Sterling — your familiar frame of reference",
+      options: [
+        { key: "under800", label: "Under £650/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "£650 – £1,200/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "£1,200 – £2,000/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "australia" || p === "new zealand") {
+    return {
+      note: "Shown in Australian Dollars — converted for your perspective",
+      options: [
+        { key: "under800", label: "Under A$1,200/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "A$1,200 – A$2,200/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "A$2,200 – A$3,800/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "uae") {
+    return {
+      note: "Shown in UAE Dirhams — your familiar frame of reference",
+      options: [
+        { key: "under800", label: "Under AED 3,000/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "AED 3,000 – AED 5,500/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "AED 5,500 – AED 9,000/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "china") {
+    return {
+      note: "Shown in Chinese Yuan — converted for your perspective",
+      options: [
+        { key: "under800", label: "Under ¥5,800/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "¥5,800 – ¥11,000/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "¥11,000 – ¥18,000/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "brazil") {
+    return {
+      note: "Shown in Brazilian Reais — converted for your perspective",
+      options: [
+        { key: "under800", label: "Under R$4,000/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "R$4,000 – R$7,500/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "R$7,500 – R$12,500/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "singapore") {
+    return {
+      note: "Shown in Singapore Dollars — your familiar frame of reference",
+      options: [
+        { key: "under800", label: "Under S$1,100/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "S$1,100 – S$2,000/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "S$2,000 – S$3,400/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  if (p === "nigeria" || p === "kenya" || p === "south africa" || p === "ghana") {
+    return {
+      note: "Shown in Euros — international standard for your destination countries",
+      options: [
+        { key: "under800", label: "Under €800/mo", sub: "Budget-conscious move" },
+        { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable abroad" },
+        { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible budget" },
+        { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      ]
+    };
+  }
+
+  // Default EUR — European passports and others
+  return {
+    note: "Shown in Euros — standard for most European destinations",
+    options: [
+      { key: "under800", label: "Under €800/mo", sub: "Budget-conscious move" },
+      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable abroad" },
+      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible budget" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ]
+  };
 }
 
 const MOVE_REASONS = [
-  { key: "job", label: "I got a job offer abroad", emoji: "💼" },
-  { key: "looking", label: "I'm looking for work", emoji: "🔍" },
-  { key: "remote", label: "I work remotely", emoji: "💻" },
-  { key: "retire", label: "I'm planning to retire", emoji: "🌅" },
+  { key: "job", label: "I have a job offer", emoji: "💼" },
+  { key: "looking", label: "I'm looking for better opportunities", emoji: "🔍" },
+  { key: "lifestyle", label: "I want a better quality of life", emoji: "🌅" },
+  { key: "partner", label: "I'm following my partner", emoji: "❤️" },
   { key: "study", label: "I'm going to study", emoji: "🎓" },
+  { key: "financial", label: "I want lower taxes or cost of living", emoji: "💰" },
 ];
 
 const PRIORITIES = [
@@ -130,13 +218,11 @@ export default function WizardPage() {
     dealBreakers: [],
   });
 
-  // If job offer selected, skip steps 4,5,6 (priorities, city vibe, rent)
   const isJobOffer = answers.moveReason === "job";
 
-  // Actual step sequence based on move reason
   const getNextStep = (current: number) => {
-    if (current === 2 && isJobOffer) return 3; // go to job role
-    if (current === 3 && isJobOffer) return 7; // skip to languages
+    if (current === 2 && isJobOffer) return 3;
+    if (current === 3 && isJobOffer) return 7;
     return current + 1;
   };
 
@@ -202,7 +288,7 @@ export default function WizardPage() {
     return false;
   };
 
-  const rentBudgets = getRentBudgets(answers.passport ?? "");
+  const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col">
@@ -222,7 +308,7 @@ export default function WizardPage() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 bg-bg-elevated">
+      <div className="h-1.5 bg-bg-elevated">
         <div
           className="h-full bg-accent transition-all duration-500 ease-out"
           style={{ width: progress + "%" }}
@@ -295,22 +381,20 @@ export default function WizardPage() {
                 <h2 className="font-heading text-3xl font-extrabold mb-3">What do you do?</h2>
                 <p className="text-text-muted">We'll show you salaries specific to your field in each country.</p>
               </div>
-              <div className="relative">
-                <select
-                  value={answers.jobRole ?? ""}
-                  onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
-                  className="w-full px-4 py-3.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-text-primary text-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Select your job role...</option>
-                  {JOB_ROLES.map((r) => (
-                    <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={answers.jobRole ?? ""}
+                onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
+                className="w-full px-4 py-3.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-text-primary text-sm appearance-none cursor-pointer"
+              >
+                <option value="">Select your job role...</option>
+                {JOB_ROLES.map((r) => (
+                  <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
+                ))}
+              </select>
             </div>
           )}
 
-          {/* Step 4 — Priorities (skipped for job offer) */}
+          {/* Step 4 — Priorities */}
           {step === 4 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -358,7 +442,7 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 5 — City vibe (skipped for job offer) */}
+          {/* Step 5 — City vibe */}
           {step === 5 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -391,16 +475,23 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 6 — Rent budget (skipped for job offer) */}
+          {/* Step 6 — Rent budget */}
           {step === 6 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-6 animate-fade-up">
               <div>
                 <p className="text-accent text-sm font-medium mb-2">Your budget</p>
                 <h2 className="font-heading text-3xl font-extrabold mb-3">What's your monthly rent budget?</h2>
                 <p className="text-text-muted">We'll filter out countries that would stretch you too thin.</p>
               </div>
+
+              {/* Currency context note */}
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-bg-elevated border border-border">
+                <span className="text-base mt-0.5">💡</span>
+                <p className="text-xs text-text-muted leading-relaxed">{rentNote}</p>
+              </div>
+
               <div className="space-y-3">
-                {rentBudgets.map((b) => (
+                {rentOptions.map((b) => (
                   <button
                     key={b.key}
                     onClick={() => setAnswers({ ...answers, rentBudget: b.key })}
