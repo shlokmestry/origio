@@ -154,20 +154,33 @@ export default function ProfilePage() {
   }
 
   const saveEdit = async () => {
-    if (!user) return
+    console.log('saveEdit called!')
+    if (!user) {
+      console.log('No user!')
+      setSaveError('Not logged in')
+      setSaving(false)
+      return
+    }
+    console.log('user.id:', user.id)
     setSaving(true)
     setSaveError('')
     try {
+      console.log('Starting save...', { editName, editJobTitle, editPassport })
+      
+      // Get session first
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log('Session:', session ? 'exists' : 'missing')
+      if (!session) throw new Error('No session')
+
       // Update name via Supabase auth
       const { error: nameError } = await supabase.auth.updateUser({
         data: { full_name: editName.trim() }
       })
+      console.log('Name update result:', nameError)
       if (nameError) throw nameError
 
       // Update profile via direct DB call with current session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('No session')
-
+      console.log('Updating profile with:', { job_title: editJobTitle.trim() || null, passport_slug: editPassport })
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -176,6 +189,7 @@ export default function ProfilePage() {
         })
         .eq('id', user.id)
 
+      console.log('Profile update result:', profileError)
       if (profileError) throw profileError
 
       // Update local state
@@ -185,10 +199,11 @@ export default function ProfilePage() {
         passport_slug: editPassport,
       } : prev)
 
+      console.log('Save success!')
       setEditing(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Save error:', err)
-      setSaveError('Failed to save. Please try again.')
+      setSaveError(err?.message || 'Failed to save. Please try again.')
     }
     setSaving(false)
   }
