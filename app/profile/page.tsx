@@ -187,23 +187,14 @@ export default function ProfilePage() {
       }
       console.log('Profile updated')
 
-      // Update name - try separately, don't fail whole save if this fails
-      console.log('Checking name update:', editName.trim())
+      // Update name - fire and forget, don't await
       if (editName.trim()) {
-        try {
-          console.log('Calling updateUser...')
-          const nameRes = await supabase.auth.updateUser({
-            data: { full_name: editName.trim() }
-          })
-          console.log('updateUser result:', nameRes)
-          if (nameRes.error) {
-            console.error('Name update failed:', nameRes.error)
-          } else {
-            console.log('Name updated')
-          }
-        } catch (e) {
-          console.error('Name update error:', e)
-        }
+        supabase.auth.updateUser({
+          data: { full_name: editName.trim() }
+        }).then(({ error }) => {
+          if (error) console.error('Name update failed:', error)
+          else console.log('Name updated')
+        })
       }
 
       // Update local state
