@@ -172,7 +172,7 @@ export default function ProfilePage() {
       console.log('Session:', session ? 'exists' : 'missing')
       if (!session) throw new Error('No session')
 
-      // Update profile via direct DB call - skip name update for now
+      // Update profile via direct DB call
       console.log('Updating profile with:', { job_title: editJobTitle.trim() || null, passport_slug: editPassport })
       try {
         const { error: profileError } = await supabase
@@ -188,6 +188,25 @@ export default function ProfilePage() {
       } catch (e: any) {
         console.error('profile update failed:', e)
         throw e
+      }
+
+      // Update name via Supabase auth - test with timeout
+      if (editName.trim()) {
+        console.log('Updating name to:', editName.trim())
+        try {
+          const updatePromise = supabase.auth.updateUser({
+            data: { full_name: editName.trim() }
+          })
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Name update timeout')), 10000)
+          )
+          const result = await Promise.race([updatePromise, timeoutPromise])
+          console.log('Name update result:', result)
+          if (result.error) throw result.error
+        } catch (e: any) {
+          console.error('Name update failed:', e.message || e)
+          throw new Error('Failed to update name: ' + (e.message || 'timeout'))
+        }
       }
 
       // Update local state
