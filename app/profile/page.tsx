@@ -7,10 +7,8 @@ import type { User } from '@supabase/supabase-js'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
   AlertTriangle, Briefcase, Zap, BarChart3, Calculator,
-  BookOpen, ArrowRight, MapPin
+  BookOpen, ArrowRight
 } from 'lucide-react'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type CountryInfo = { flag_emoji: string; name: string }
 type SavedCountry = {
@@ -30,8 +28,6 @@ type Profile = {
   onboarded: boolean
   is_pro: boolean
 }
-
-// ─── Passport flags ───────────────────────────────────────────────────────────
 
 const PASSPORT_FLAGS: Record<string, { flag: string; name: string }> = {
   'united-states': { flag: '🇺🇸', name: 'United States' },
@@ -71,8 +67,6 @@ const PASSPORT_FLAGS: Record<string, { flag: string; name: string }> = {
   'ghana': { flag: '🇬🇭', name: 'Ghana' },
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -88,8 +82,6 @@ function formatRole(r: string) {
 const MATCH_COLORS = ['#fbbf24', '#00d4c8', '#a78bfa']
 const MATCH_LABELS = ['Best Match', '2nd', '3rd']
 
-// ─── Quick action buttons ─────────────────────────────────────────────────────
-
 const QUICK_ACTIONS = [
   { label: 'Find My Country', icon: Zap, href: '/wizard', accent: true },
   { label: 'Compare', icon: BarChart3, href: '/compare', accent: false },
@@ -97,8 +89,6 @@ const QUICK_ACTIONS = [
   { label: 'Guides', icon: BookOpen, href: '/guides', accent: false },
   { label: 'Globe', icon: Globe2, href: '/', accent: false },
 ]
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -108,11 +98,9 @@ export default function ProfilePage() {
   const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
-
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -123,9 +111,13 @@ export default function ProfilePage() {
       setLoadError(true)
     }, 8000)
 
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       clearTimeout(timeout)
-      if (error || !session?.user) { router.push('/signin'); return }
+
+      if (!session?.user) {
+        router.push('/signin')
+        return
+      }
 
       const u = session.user
       setUser(u)
@@ -152,14 +144,19 @@ export default function ProfilePage() {
         setProfile(profileRes.data ?? null)
 
         if (profileRes.data && !profileRes.data.onboarded) {
-          window.location.href = '/onboarding'; return
+          window.location.href = '/onboarding'
+          return
         }
-      } catch { setLoadError(true) }
+      } catch {
+        setLoadError(true)
+      }
 
       setLoading(false)
     })
 
-    return () => clearTimeout(timeout)
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [router])
 
   const removeSave = async (id: string) => {
@@ -188,19 +185,16 @@ export default function ProfilePage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setDeleteError('Session expired. Please sign in again.'); setDeleteLoading(false); return }
-
       const res = await fetch('/api/delete-account', {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       })
-
       if (!res.ok) {
         const data = await res.json()
         setDeleteError(data.error ?? 'Something went wrong.')
         setDeleteLoading(false)
         return
       }
-
       await supabase.auth.signOut()
       window.location.href = '/'
     } catch {
@@ -238,11 +232,9 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-bg-primary">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      {/* ── Profile header banner ── */}
       <div className="border-b border-border bg-bg-surface">
         <div className="max-w-4xl mx-auto px-6 pt-24 pb-8">
           <div className="flex items-start gap-5">
-            {/* Avatar */}
             {user.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url} alt="avatar"
                 className="w-20 h-20 rounded-2xl border border-border flex-shrink-0"
@@ -254,7 +246,6 @@ export default function ProfilePage() {
             )}
 
             <div className="flex-1 min-w-0">
-              {/* Name */}
               {editingName ? (
                 <div className="flex items-center gap-2 mb-2">
                   <input value={nameValue} onChange={e => setNameValue(e.target.value)} autoFocus
@@ -281,7 +272,6 @@ export default function ProfilePage() {
 
               <p className="text-sm text-text-muted mb-3 truncate">{user.email}</p>
 
-              {/* Badges */}
               <div className="flex flex-wrap gap-2">
                 {isPro && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold">
@@ -301,7 +291,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Sign out top right */}
             <button onClick={signOut}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs text-text-muted hover:text-text-primary transition-colors flex-shrink-0">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -312,7 +301,6 @@ export default function ProfilePage() {
 
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
 
-        {/* ── Quick actions ── */}
         <div className="grid grid-cols-5 gap-2">
           {QUICK_ACTIONS.map(action => {
             const Icon = action.icon
@@ -330,7 +318,6 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* ── Upgrade banner for free users ── */}
         {!isPro && (
           <div className="glass-panel rounded-2xl p-5 border border-accent/20 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
@@ -348,10 +335,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Two column layout ── */}
         <div className="grid md:grid-cols-2 gap-6">
 
-          {/* LEFT — Top Match Hero */}
           <div className="glass-panel rounded-2xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <h2 className="font-heading text-base font-bold text-text-primary">Your Top Match</h2>
@@ -370,7 +355,6 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div>
-                {/* Hero — #1 match */}
                 <div className="px-5 pb-4">
                   <div className="rounded-2xl p-5 text-center"
                     style={{ background: `linear-gradient(135deg, ${MATCH_COLORS[0]}15, ${MATCH_COLORS[0]}05)`, border: `1px solid ${MATCH_COLORS[0]}30` }}>
@@ -383,7 +367,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* #2 and #3 */}
                 <div className="border-t border-border">
                   {wizardResult.top_countries.slice(1).map((c, i) => (
                     <div key={c.slug} className="flex items-center gap-3 px-5 py-3 border-b border-border last:border-0">
@@ -409,7 +392,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* RIGHT — Saved Countries */}
           <div className="glass-panel rounded-2xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <h2 className="font-heading text-base font-bold text-text-primary">
@@ -464,7 +446,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Account / Danger zone ── */}
         <div className="glass-panel rounded-2xl p-5 border border-border">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -486,7 +467,6 @@ export default function ProfilePage() {
 
       </div>
 
-      {/* ── Delete confirm modal ── */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-panel rounded-2xl p-6 max-w-sm w-full border border-rose-500/20">

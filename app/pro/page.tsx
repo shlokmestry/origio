@@ -27,18 +27,16 @@ export default function ProPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isPro, setIsPro] = useState(false)
   const [checkingUser, setCheckingUser] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_pro')
           .eq('id', session.user.id)
           .single()
-        // Pro user — redirect to profile instead of showing pricing
         if (profile?.is_pro) {
           router.replace('/profile')
           return
@@ -46,6 +44,8 @@ export default function ProPage() {
       }
       setCheckingUser(false)
     })
+
+    return () => subscription.unsubscribe()
   }, [router])
 
   const handleUpgrade = async () => {
@@ -61,9 +61,7 @@ export default function ProPage() {
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       })
       const data = await res.json()
       if (data.url) {
@@ -78,7 +76,6 @@ export default function ProPage() {
     }
   }
 
-  // Don't flash pricing page while checking/redirecting pro users
   if (checkingUser) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
@@ -92,7 +89,6 @@ export default function ProPage() {
       <Nav countries={[]} onCountrySelect={() => {}} />
       <div className="max-w-4xl mx-auto px-6 pt-28 pb-16">
 
-        {/* Header */}
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-semibold mb-6 uppercase tracking-widest">
             <Sparkles className="w-3 h-3" />
@@ -106,10 +102,8 @@ export default function ProPage() {
           </p>
         </div>
 
-        {/* Pricing cards */}
         <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-16">
 
-          {/* Free card */}
           <div className="glass-panel rounded-2xl p-6 border border-border">
             <div className="flex items-center gap-2 mb-1">
               <Globe2 className="w-4 h-4 text-text-muted" />
@@ -133,7 +127,6 @@ export default function ProPage() {
             </div>
           </div>
 
-          {/* Pro card */}
           <div className="glass-panel rounded-2xl p-6 border border-accent/30 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="px-3 py-1 rounded-full bg-accent text-bg-primary text-xs font-bold uppercase tracking-wider">
@@ -157,11 +150,10 @@ export default function ProPage() {
                 </li>
               ))}
             </ul>
-
             {error && <p className="text-xs text-score-low mb-3">{error}</p>}
             <button
               onClick={handleUpgrade}
-              disabled={loading || isPro}
+              disabled={loading}
               className="cta-button w-full py-3 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Zap className="w-4 h-4" />
@@ -173,13 +165,12 @@ export default function ProPage() {
           </div>
         </div>
 
-        {/* FAQ */}
         <div className="max-w-xl mx-auto space-y-4">
           <h3 className="font-heading text-lg font-bold text-text-primary text-center mb-6">Common questions</h3>
           {[
             { q: 'Is this really a one-time payment?', a: 'Yes. Pay once, access Pro forever. No subscription, no hidden fees.' },
             { q: 'What payment methods are accepted?', a: 'All major credit and debit cards via Stripe. Safe and secure.' },
-            { q: 'Can I get a refund?', a: "If you have an issue, contact us and we'll sort it out." },
+            { q: "Can I get a refund?", a: "If you have an issue, contact us and we'll sort it out." },
             { q: 'Do I need an account?', a: 'Yes — you need an account so we can unlock Pro features for you.' },
           ].map(({ q, a }) => (
             <div key={q} className="glass-panel rounded-xl p-5">
