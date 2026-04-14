@@ -9,13 +9,17 @@ export function useAuth() {
   useEffect(() => {
     let mounted = true
     let attempts = 0
+    let started = false
 
     async function checkAuthWithRetry() {
+      if (!mounted || started) return
+      started = true
+      
+      await new Promise(resolve => setTimeout(resolve, 200))
       if (!mounted) return
       
       attempts++
       
-      await supabase.auth.refreshSession()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!mounted) return
@@ -27,8 +31,11 @@ export function useAuth() {
       }
 
       if (attempts < 5) {
+        started = false
         await new Promise(resolve => setTimeout(resolve, 300))
-        checkAuthWithRetry()
+        if (mounted) {
+          checkAuthWithRetry()
+        }
       } else {
         setLoading(false)
       }
