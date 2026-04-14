@@ -30,8 +30,12 @@ export default function ProPage() {
   const [checkingUser, setCheckingUser] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     async function init() {
+      await supabase.auth.refreshSession()
       const { data: { session } } = await supabase.auth.getSession()
+      if (!mounted) return
 
       if (session?.user) {
         const { data: profile } = await supabase
@@ -39,33 +43,35 @@ export default function ProPage() {
           .select('is_pro')
           .eq('id', session.user.id)
           .single()
-        if (profile?.is_pro) {
+        if (mounted && profile?.is_pro) {
           router.replace('/profile')
           return
         }
       }
 
-      setCheckingUser(false)
+      if (mounted) setCheckingUser(false)
     }
 
     init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION' && session?.user) {
+      if (!mounted) return
+      if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_pro')
           .eq('id', session.user.id)
           .single()
-        if (profile?.is_pro) {
+        if (mounted && profile?.is_pro) {
           router.replace('/profile')
-        } else {
+        } else if (mounted) {
           setCheckingUser(false)
         }
       }
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [router])
