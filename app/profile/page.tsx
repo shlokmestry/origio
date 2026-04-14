@@ -5,8 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import {
-  Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
-  AlertTriangle, Briefcase, Zap, ArrowRight, Search
+  Globe2, LogOut, Trash2, Sparkles, Pencil,
+  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X
 } from 'lucide-react'
 
 type CountryInfo = { flag_emoji: string; name: string }
@@ -92,15 +92,14 @@ export default function ProfilePage() {
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
-  // Edit panel
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editJobTitle, setEditJobTitle] = useState('')
   const [editPassport, setEditPassport] = useState<string | null>(null)
   const [passportSearch, setPassportSearch] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
-  // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -150,27 +149,49 @@ export default function ProfilePage() {
     setEditJobTitle(profile?.job_title ?? '')
     setEditPassport(profile?.passport_slug ?? null)
     setPassportSearch('')
+    setSaveError('')
     setEditing(true)
   }
 
-const saveEdit = async () => {
-  if (!user) return
-  setSaving(true)
-  try {
-    await Promise.all([
-      supabase.auth.updateUser({ data: { full_name: editName.trim() } }),
-      supabase.from('profiles').update({
+  const saveEdit = async () => {
+    if (!user) return
+    setSaving(true)
+    setSaveError('')
+    try {
+      // Update name via Supabase auth
+      const { error: nameError } = await supabase.auth.updateUser({
+        data: { full_name: editName.trim() }
+      })
+      if (nameError) throw nameError
+
+      // Update profile via direct DB call with current session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('No session')
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          job_title: editJobTitle.trim() || null,
+          passport_slug: editPassport,
+        })
+        .eq('id', user.id)
+
+      if (profileError) throw profileError
+
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
         job_title: editJobTitle.trim() || null,
         passport_slug: editPassport,
-      }).eq('id', user.id),
-    ])
-    setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport } : prev)
-    setEditing(false)
-  } catch {
-    // silent fail — modal stays open
+      } : prev)
+
+      setEditing(false)
+    } catch (err) {
+      console.error('Save error:', err)
+      setSaveError('Failed to save. Please try again.')
+    }
+    setSaving(false)
   }
-  setSaving(false)
-}
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
@@ -242,9 +263,8 @@ const saveEdit = async () => {
 
       {/* ── Header ── */}
       <div className="border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 pt-24 pb-8">
+        <div className="max-w-5xl mx-auto px-6 pt-24 pb-8">
           <div className="flex items-start gap-5">
-            {/* Avatar */}
             {user.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url} alt="avatar"
                 className="w-16 h-16 rounded-2xl border border-border flex-shrink-0"
@@ -267,7 +287,6 @@ const saveEdit = async () => {
               </div>
               <p className="text-sm text-text-muted mb-3 truncate">{user.email}</p>
 
-              {/* Badges */}
               <div className="flex flex-wrap gap-1.5">
                 {isPro && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold">
@@ -293,7 +312,6 @@ const saveEdit = async () => {
             </div>
           </div>
 
-          {/* Subtle upgrade nudge for free users */}
           {!isPro && (
             <div className="mt-5 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-bg-elevated">
               <p className="text-xs text-text-muted">
@@ -308,9 +326,8 @@ const saveEdit = async () => {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-5">
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-5">
 
-        {/* Two column — Top Match + Saved Countries */}
         <div className="grid md:grid-cols-2 gap-5">
 
           {/* Top Match */}
@@ -323,7 +340,7 @@ const saveEdit = async () => {
             </div>
 
             {!wizardResult ? (
-              <div className="text-center py-8 px-5">
+              <div className="text-center py-10 px-5">
                 <div className="text-4xl mb-3">🌍</div>
                 <p className="text-sm text-text-muted mb-4">No results yet</p>
                 <a href="/wizard" className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-2">
@@ -333,7 +350,7 @@ const saveEdit = async () => {
             ) : (
               <div>
                 <div className="px-5 pb-4">
-                  <div className="rounded-xl p-4 text-center"
+                  <div className="rounded-xl p-5 text-center"
                     style={{ background: `linear-gradient(135deg, ${MATCH_COLORS[0]}15, ${MATCH_COLORS[0]}05)`, border: `1px solid ${MATCH_COLORS[0]}30` }}>
                     <div className="text-4xl mb-1.5">{topMatch?.flagEmoji}</div>
                     <p className="font-heading text-lg font-extrabold text-text-primary">{topMatch?.name}</p>
@@ -384,12 +401,10 @@ const saveEdit = async () => {
             </div>
 
             {savedCountries.length === 0 ? (
-              <div className="text-center py-8 px-5">
+              <div className="text-center py-10 px-5">
                 <div className="text-4xl mb-3">📌</div>
                 <p className="text-sm text-text-muted mb-3">No saved countries yet</p>
-                <a href="/" className="text-xs text-accent hover:underline">
-                  Start exploring →
-                </a>
+                <a href="/" className="text-xs text-accent hover:underline">Start exploring →</a>
               </div>
             ) : (
               <div>
@@ -421,7 +436,7 @@ const saveEdit = async () => {
           </div>
         </div>
 
-        {/* Account settings */}
+        {/* Account row */}
         <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border">
           <p className="text-xs text-text-muted">{user.email}</p>
           <div className="flex gap-2">
@@ -450,14 +465,12 @@ const saveEdit = async () => {
             </div>
 
             <div className="space-y-4">
-              {/* Name */}
               <div>
                 <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Display name</label>
                 <input value={editName} onChange={e => setEditName(e.target.value)}
                   className="w-full px-3 py-2.5 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary focus:border-accent/40 focus:outline-none transition-colors" />
               </div>
 
-              {/* Job title */}
               <div>
                 <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Job title</label>
                 <input value={editJobTitle} onChange={e => setEditJobTitle(e.target.value)}
@@ -465,7 +478,6 @@ const saveEdit = async () => {
                   className="w-full px-3 py-2.5 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none transition-colors" />
               </div>
 
-              {/* Passport */}
               <div>
                 <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Passport</label>
                 {editPassport && (
@@ -484,25 +496,28 @@ const saveEdit = async () => {
                     value={passportSearch} onChange={e => setPassportSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none transition-colors" />
                 </div>
-                <div className="max-h-40 overflow-y-auto space-y-1">
+                <div className="max-h-36 overflow-y-auto space-y-0.5">
                   {filteredPassports.slice(0, 20).map(p => (
                     <button key={p.slug} onClick={() => { setEditPassport(p.slug); setPassportSearch('') }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
+                      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-left transition-colors ${
                         editPassport === p.slug
-                          ? 'bg-accent/10 border border-accent/20 text-text-primary'
+                          ? 'bg-accent/10 text-text-primary'
                           : 'hover:bg-bg-elevated text-text-muted hover:text-text-primary'
                       }`}>
-                      <span>{p.flag}</span><span>{p.name}</span>
-                      {editPassport === p.slug && <Check className="w-3.5 h-3.5 text-accent ml-auto" />}
+                      <span>{p.flag}</span>
+                      <span className="flex-1">{p.name}</span>
+                      {editPassport === p.slug && <Check className="w-3.5 h-3.5 text-accent" />}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
+            {saveError && <p className="text-xs text-rose-400 mt-3">{saveError}</p>}
+
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditing(false)}
-                className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
+              <button onClick={() => setEditing(false)} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors disabled:opacity-50">
                 Cancel
               </button>
               <button onClick={saveEdit} disabled={saving}
@@ -514,7 +529,7 @@ const saveEdit = async () => {
         </div>
       )}
 
-      {/* ── Delete confirm modal ── */}
+      {/* ── Delete confirm ── */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-panel rounded-2xl p-6 max-w-sm w-full border border-rose-500/20">
