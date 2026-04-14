@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
-import type { User } from '@supabase/supabase-js'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
   AlertTriangle, Briefcase, Zap, BarChart3, Calculator,
@@ -92,7 +92,7 @@ const QUICK_ACTIONS = [
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -106,26 +106,32 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
-    let mounted = true
+    if (authLoading) return
 
-    async function loadData(userId: string) {
+    if (!user) {
+      router.push('/signin')
+      return
+    }
+
+    setNameValue(user.user_metadata?.full_name ?? '')
+
+    async function loadData() {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at, countries(flag_emoji, name)')
-            .eq('user_id', userId)
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', userId)
+            .eq('user_id', user.id)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', userId)
+            .eq('id', user.id)
             .single(),
         ])
 
-        if (!mounted) return
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         setProfile(profileRes.data ?? null)
@@ -135,33 +141,13 @@ export default function ProfilePage() {
           return
         }
       } catch {
-        if (mounted) setLoadError(true)
+        setLoadError(true)
       }
-      if (mounted) setLoading(false)
+      setLoading(false)
     }
 
-    async function handleUser(user: any) {
-      if (!mounted || user) return
-      const u = user
-      setUser(u)
-      setNameValue(u.user_metadata?.full_name ?? '')
-      await loadData(u.id)
-    }
-
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!mounted) return
-      
-      if (user) {
-        handleUser(user)
-      } else {
-        setLoading(false)
-        router.push('/signin')
-      }
-    }
-
-    init()
-  }, [router])
+    loadData()
+  }, [user, authLoading, router])
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import { Check, Sparkles, Globe2, Zap } from 'lucide-react'
 
@@ -25,31 +26,26 @@ const PRO_FEATURES = [
 
 export default function ProPage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [checkingUser, setCheckingUser] = useState(true)
 
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', user.id)
-          .single()
-        if (profile?.is_pro) {
-          router.replace('/profile')
-          return
-        }
-      }
+    if (authLoading) return
 
-      setCheckingUser(false)
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single()
+        .then(({ data: profile }) => {
+          if (profile?.is_pro) {
+            router.replace('/profile')
+          }
+        })
     }
-
-    init()
-  }, [router])
+  }, [user, authLoading, router])
 
   const handleUpgrade = async () => {
     setLoading(true)
@@ -79,7 +75,7 @@ export default function ProPage() {
     }
   }
 
-  if (checkingUser) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
