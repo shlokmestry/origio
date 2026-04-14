@@ -197,12 +197,12 @@ export default function ProfilePage() {
           const updatePromise = supabase.auth.updateUser({
             data: { full_name: editName.trim() }
           })
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise<{error: Error}>((_, reject) => 
             setTimeout(() => reject(new Error('Name update timeout')), 10000)
           )
-          const result = await Promise.race([updatePromise, timeoutPromise])
+          const result: any = await Promise.race([updatePromise, timeoutPromise])
           console.log('Name update result:', result)
-          if (result.error) throw result.error
+          if (result?.error) throw result.error
         } catch (e: any) {
           console.error('Name update failed:', e.message || e)
           throw new Error('Failed to update name: ' + (e.message || 'timeout'))
