@@ -113,6 +113,7 @@ export default function ProfilePage() {
       return
     }
 
+    const userId = user.id
     setNameValue(user.user_metadata?.full_name ?? '')
 
     async function loadData() {
@@ -120,15 +121,15 @@ export default function ProfilePage() {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at, countries(flag_emoji, name)')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', user.id)
+            .eq('id', userId)
             .single(),
         ])
 
