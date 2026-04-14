@@ -154,25 +154,16 @@ export default function ProfilePage() {
   }
 
   const saveEdit = async () => {
-    console.log('saveEdit called!')
     if (!user) {
-      console.log('No user!')
       setSaveError('Not logged in')
-      setSaving(false)
       return
     }
-    console.log('user.id:', user.id)
     setSaving(true)
     setSaveError('')
     try {
-      console.log('Starting save...', { editName, editJobTitle, editPassport })
-      
-      // Get session first
       const { data: { session } } = await supabase.auth.getSession()
-      console.log('Session:', session ? 'exists' : 'missing')
       if (!session) throw new Error('No session')
 
-      // Update profile via direct DB call
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -181,37 +172,27 @@ export default function ProfilePage() {
         })
         .eq('id', user.id)
 
-      if (profileError) {
-        console.error('Profile update failed:', profileError)
-        throw profileError
-      }
-      console.log('Profile updated')
+      if (profileError) throw profileError
 
-      // Update name - fire and forget, don't await
       if (editName.trim()) {
-        supabase.auth.updateUser({
+        const { error: nameError } = await supabase.auth.updateUser({
           data: { full_name: editName.trim() }
-        }).then(({ error }) => {
-          if (error) console.error('Name update failed:', error)
-          else console.log('Name updated')
         })
+        if (nameError) console.error('Name update failed:', nameError)
       }
 
-      // Update local state
       setProfile(prev => prev ? {
         ...prev,
         job_title: editJobTitle.trim() || null,
         passport_slug: editPassport,
       } : prev)
 
-      console.log('Save success!')
       setEditing(false)
-      setSaving(false)
     } catch (err: any) {
-      console.error('Save error:', err)
       setSaveError(err?.message || 'Failed to save. Please try again.')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   const removeSave = async (id: string) => {
