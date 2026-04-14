@@ -119,7 +119,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (loading) { setLoading(false); setLoadError(true) }
+      setLoading(false)
+      setLoadError(true)
     }, 8000)
 
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
@@ -159,7 +160,7 @@ export default function ProfilePage() {
     })
 
     return () => clearTimeout(timeout)
-  }, [router, loading])
+  }, [router])
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
