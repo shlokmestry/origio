@@ -13,19 +13,21 @@ export function useAuth() {
     async function checkAuthWithRetry() {
       if (!mounted) return
       
-      const { data: { user: authUser } } = await supabase.auth.getUser()
+      attempts++
+      
+      await supabase.auth.refreshSession()
+      const { data: { session } } = await supabase.auth.getSession()
       
       if (!mounted) return
       
-      if (authUser) {
-        setUser(authUser)
+      if (session?.user) {
+        setUser(session.user)
         setLoading(false)
         return
       }
 
-      attempts++
-      if (attempts < 3) {
-        await new Promise(resolve => setTimeout(resolve, 500))
+      if (attempts < 5) {
+        await new Promise(resolve => setTimeout(resolve, 300))
         checkAuthWithRetry()
       } else {
         setLoading(false)
@@ -36,7 +38,9 @@ export function useAuth() {
       if (!mounted) return
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        setUser(session?.user ?? null)
+        if (session?.user) {
+          setUser(session.user)
+        }
         setLoading(false)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
