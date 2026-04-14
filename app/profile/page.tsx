@@ -172,25 +172,23 @@ export default function ProfilePage() {
       console.log('Session:', session ? 'exists' : 'missing')
       if (!session) throw new Error('No session')
 
-      // Update name via Supabase auth
-      const { error: nameError } = await supabase.auth.updateUser({
-        data: { full_name: editName.trim() }
-      })
-      console.log('Name update result:', nameError)
-      if (nameError) throw nameError
-
-      // Update profile via direct DB call with current session
+      // Update profile via direct DB call - skip name update for now
       console.log('Updating profile with:', { job_title: editJobTitle.trim() || null, passport_slug: editPassport })
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          job_title: editJobTitle.trim() || null,
-          passport_slug: editPassport,
-        })
-        .eq('id', user.id)
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            job_title: editJobTitle.trim() || null,
+            passport_slug: editPassport,
+          })
+          .eq('id', user.id)
 
-      console.log('Profile update result:', profileError)
-      if (profileError) throw profileError
+        console.log('Profile update result:', profileError)
+        if (profileError) throw profileError
+      } catch (e: any) {
+        console.error('profile update failed:', e)
+        throw e
+      }
 
       // Update local state
       setProfile(prev => prev ? {
