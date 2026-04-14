@@ -170,7 +170,7 @@ export default function ProPage() {
           </div>
 
           {/* Pro */}
-          <div className="glass-panel rounded-2xl p-6 border border-accent/30 relative">
+          <div className="glass-panel rounded-2xl p-6 border border-accent/30 relative card-accent-top">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="px-3 py-1 rounded-full bg-accent text-bg-primary text-xs font-bold uppercase tracking-wider">
                 Best Value

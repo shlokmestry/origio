@@ -187,17 +187,12 @@ export default function Home() {
               >
                 <button
                   onClick={() => router.push("/wizard")}
-                  className="cta-button px-7 py-3.5 rounded-2xl text-sm sm:text-base tracking-wide animate-pulse-glow flex items-center gap-2"
+                  className="cta-button px-10 py-4 rounded-2xl text-base sm:text-lg tracking-wide animate-pulse-glow flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   Find My Country
                 </button>
                 <button
-                  onClick={() => setShowHero(false)}
-                  className="px-7 py-3.5 rounded-2xl text-sm sm:text-base tracking-wide border border-border hover:border-accent/30 text-text-muted hover:text-text-primary transition-colors"
-                >
-                  Explore the Globe
-                </button>
               </div>
 
               {/* Trending */}
