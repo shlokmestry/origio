@@ -7,50 +7,55 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let authCheckTimeout: NodeJS.Timeout
     let mounted = true
-    let checked = false
+    let attempts = 0
 
-    async function checkAuth() {
-      if (checked || !mounted) return
-      checked = true
-
-      const { data: { user: authUser } } = await supabase.auth.getUser()
+    async function checkAuthWithRetry() {
       if (!mounted) return
-
+      
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      
+      if (!mounted) return
+      
       if (authUser) {
         setUser(authUser)
+        setLoading(false)
+        return
       }
-      setLoading(false)
+
+      attempts++
+      if (attempts < 3) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        checkAuthWithRetry()
+      } else {
+        setLoading(false)
+      }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted || checked) return
+      if (!mounted) return
 
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        checked = true
         setUser(session?.user ?? null)
         setLoading(false)
       } else if (event === 'SIGNED_OUT') {
-        checked = true
         setUser(null)
         setLoading(false)
       }
     })
 
-    checkAuth()
+    checkAuthWithRetry()
 
-    authCheckTimeout = setTimeout(() => {
-      if (mounted && !checked) {
-        checked = true
+    const timeout = setTimeout(() => {
+      if (mounted) {
         setLoading(false)
       }
-    }, 8000)
+    }, 10000)
 
     return () => {
       mounted = false
       subscription.unsubscribe()
-      clearTimeout(authCheckTimeout)
+      clearTimeout(timeout)
     }
   }, [])
 
