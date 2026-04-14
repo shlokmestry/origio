@@ -106,9 +106,12 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
+    let mounted = true
     const timeout = setTimeout(() => {
-      setLoading(false)
-      setLoadError(true)
+      if (mounted) {
+        setLoading(false)
+        setLoadError(true)
+      }
     }, 10000)
 
     async function loadData(userId: string) {
@@ -128,6 +131,7 @@ export default function ProfilePage() {
             .single(),
         ])
 
+        if (!mounted) return
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         setProfile(profileRes.data ?? null)
@@ -137,29 +141,37 @@ export default function ProfilePage() {
           return
         }
       } catch {
-        setLoadError(true)
+        if (mounted) setLoadError(true)
       }
-      clearTimeout(timeout)
-      setLoading(false)
+      if (mounted) {
+        clearTimeout(timeout)
+        setLoading(false)
+      }
     }
 
     async function initAuth() {
+      await supabase.auth.refreshSession()
       const { data: { session } } = await supabase.auth.getSession()
+      if (!mounted) return
+      
       if (session?.user) {
         const u = session.user
         setUser(u)
         setNameValue(u.user_metadata?.full_name ?? '')
         await loadData(u.id)
       } else {
-        clearTimeout(timeout)
-        router.push('/signin')
+        if (mounted) {
+          clearTimeout(timeout)
+          router.push('/signin')
+        }
       }
     }
 
     initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION' && session?.user && !user) {
+      if (!mounted) return
+      if (session?.user && !user) {
         const u = session.user
         setUser(u)
         setNameValue(u.user_metadata?.full_name ?? '')
@@ -168,6 +180,7 @@ export default function ProfilePage() {
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
