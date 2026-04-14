@@ -111,46 +111,20 @@ export default function ProfilePage() {
       setLoadError(true)
     }, 10000)
 
-    async function init() {
-      // Try getSession first
-      let { data: { session } } = await supabase.auth.getSession()
-
-      // If no session yet, wait briefly for auth to restore from cookies
-      if (!session) {
-        await new Promise<void>(resolve => {
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-            session = s
-            subscription.unsubscribe()
-            resolve()
-          })
-          setTimeout(resolve, 3000)
-        })
-      }
-
-      clearTimeout(timeout)
-
-      if (!session?.user) {
-        router.push('/signin')
-        return
-      }
-
-      const u = session.user
-      setUser(u)
-      setNameValue(u.user_metadata?.full_name ?? '')
-
+    async function loadData(userId: string) {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at, countries(flag_emoji, name)')
-            .eq('user_id', u.id)
+            .eq('user_id', userId)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', u.id)
+            .eq('user_id', userId)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', u.id)
+            .eq('id', userId)
             .single(),
         ])
 
@@ -165,12 +139,29 @@ export default function ProfilePage() {
       } catch {
         setLoadError(true)
       }
-
+      clearTimeout(timeout)
       setLoading(false)
     }
 
-    init()
-    return () => clearTimeout(timeout)
+    // Use onAuthStateChange — fires as soon as session is ready
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        if (!session?.user) {
+          clearTimeout(timeout)
+          router.push('/signin')
+          return
+        }
+        const u = session.user
+        setUser(u)
+        setNameValue(u.user_metadata?.full_name ?? '')
+        await loadData(u.id)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router])
 
   const removeSave = async (id: string) => {
