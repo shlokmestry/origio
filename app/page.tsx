@@ -192,9 +192,8 @@ export default function Home() {
                   <Sparkles className="w-4 h-4" />
                   Find My Country
                 </button>
-                <button
-              </div>
 
+              </div>
               {/* Trending */}
               {trendingCountries.length > 0 && (
                 <div
