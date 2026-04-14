@@ -164,7 +164,6 @@ export default function ProfilePage() {
     if (!user || !nameValue.trim()) return
     setNameSaving(true)
     await supabase.auth.updateUser({ data: { full_name: nameValue.trim() } })
-    setUser(prev => prev ? { ...prev, user_metadata: { ...prev.user_metadata, full_name: nameValue.trim() } } : prev)
     setEditingName(false)
     setNameSaving(false)
   }
