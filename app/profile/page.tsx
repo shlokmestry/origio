@@ -109,9 +109,24 @@ export default function ProfilePage() {
     const timeout = setTimeout(() => {
       setLoading(false)
       setLoadError(true)
-    }, 8000)
+    }, 10000)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    async function init() {
+      // Try getSession first
+      let { data: { session } } = await supabase.auth.getSession()
+
+      // If no session yet, wait briefly for auth to restore from cookies
+      if (!session) {
+        await new Promise<void>(resolve => {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+            session = s
+            subscription.unsubscribe()
+            resolve()
+          })
+          setTimeout(resolve, 3000)
+        })
+      }
+
       clearTimeout(timeout)
 
       if (!session?.user) {
@@ -152,11 +167,10 @@ export default function ProfilePage() {
       }
 
       setLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
     }
+
+    init()
+    return () => clearTimeout(timeout)
   }, [router])
 
   const removeSave = async (id: string) => {
