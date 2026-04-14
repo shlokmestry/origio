@@ -153,9 +153,10 @@ export default function ProfilePage() {
     setEditing(true)
   }
 
-  const saveEdit = async () => {
-    if (!user) return
-    setSaving(true)
+const saveEdit = async () => {
+  if (!user) return
+  setSaving(true)
+  try {
     await Promise.all([
       supabase.auth.updateUser({ data: { full_name: editName.trim() } }),
       supabase.from('profiles').update({
@@ -164,9 +165,12 @@ export default function ProfilePage() {
       }).eq('id', user.id),
     ])
     setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport } : prev)
-    setSaving(false)
     setEditing(false)
+  } catch {
+    // silent fail — modal stays open
   }
+  setSaving(false)
+}
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
@@ -238,7 +242,7 @@ export default function ProfilePage() {
 
       {/* ── Header ── */}
       <div className="border-b border-border">
-        <div className="max-w-3xl mx-auto px-6 pt-24 pb-8">
+        <div className="max-w-4xl mx-auto px-6 pt-24 pb-8">
           <div className="flex items-start gap-5">
             {/* Avatar */}
             {user.user_metadata?.avatar_url ? (
@@ -304,7 +308,7 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-5">
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-5">
 
         {/* Two column — Top Match + Saved Countries */}
         <div className="grid md:grid-cols-2 gap-5">
