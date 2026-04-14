@@ -9,29 +9,28 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { setLoading(false); return }
-      setUserId(session.user.id)
-
-      const { data } = await supabase
-        .from('saved_countries')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .eq('country_slug', countrySlug)
-        .single()
-
-      setSaved(!!data)
-      setLoading(false)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        if (!session) { setLoading(false); return }
+        setUserId(session.user.id)
+        const { data } = await supabase
+          .from('saved_countries')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('country_slug', countrySlug)
+          .single()
+        setSaved(!!data)
+        setLoading(false)
+      }
     })
+    return () => subscription.unsubscribe()
   }, [countrySlug])
 
   const toggle = async () => {
     if (!userId) {
-      // Redirect to signin with current page as next destination
       window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname)}`
       return
     }
-
     setLoading(true)
     if (saved) {
       await supabase
