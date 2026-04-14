@@ -32,11 +32,8 @@ export default function ProPage() {
   useEffect(() => {
     let mounted = true
 
-    async function init() {
-      await supabase.auth.refreshSession()
-      const { data: { session } } = await supabase.auth.getSession()
+    async function checkPro(session: any) {
       if (!mounted) return
-
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -48,25 +45,13 @@ export default function ProPage() {
           return
         }
       }
-
       if (mounted) setCheckingUser(false)
     }
 
-    init()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', session.user.id)
-          .single()
-        if (mounted && profile?.is_pro) {
-          router.replace('/profile')
-        } else if (mounted) {
-          setCheckingUser(false)
-        }
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        checkPro(session)
       }
     })
 
