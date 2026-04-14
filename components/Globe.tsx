@@ -103,7 +103,7 @@ export default function Globe({
     mountEl.appendChild(globeContainer);
 
     // Stop wheel events from propagating to page — globe gets zoom, page doesn't scroll
-    const blockScrollPropagation = (e: WheelEvent) => e.stopPropagation();
+    const blockScrollPropagation = (e: WheelEvent) => { if (window.innerWidth >= 768) e.stopPropagation(); };
     mountEl.addEventListener("wheel", blockScrollPropagation, { passive: true });
 
     let cancelled = false;
@@ -154,7 +154,7 @@ export default function Globe({
 
       globe.controls().autoRotate = true;
       globe.controls().autoRotateSpeed = 0.2;
-      globe.controls().enableZoom = true;   // zoom via scroll/pinch
+      globe.controls().enableZoom = window.innerWidth >= 768; // zoom only on desktop
       globe.controls().enableRotate = true; // drag to rotate
       globe.controls().enablePan = false;   // pan off — wrong feel on globe
       globe.controls().minDistance = 150;
