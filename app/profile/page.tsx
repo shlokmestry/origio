@@ -92,6 +92,9 @@ export default function ProfilePage() {
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
 
+  // Local display state — updates instantly on save
+  const [displayName, setDisplayName] = useState('')
+
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editJobTitle, setEditJobTitle] = useState('')
@@ -109,7 +112,9 @@ export default function ProfilePage() {
     if (!user) { setLoading(false); setLoadError(true); return }
 
     const userId = user.id
-    setEditName(user.user_metadata?.full_name ?? '')
+    const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
+    setDisplayName(initialName)
+    setEditName(initialName)
 
     async function loadData() {
       try {
@@ -145,7 +150,7 @@ export default function ProfilePage() {
   }, [user, authLoading, router])
 
   const openEdit = () => {
-    setEditName(user?.user_metadata?.full_name ?? '')
+    setEditName(displayName)
     setEditJobTitle(profile?.job_title ?? '')
     setEditPassport(profile?.passport_slug ?? null)
     setPassportSearch('')
@@ -181,6 +186,8 @@ export default function ProfilePage() {
         if (nameError) console.error('Name update failed:', nameError)
       }
 
+      // Update all local display state instantly — no refresh needed
+      setDisplayName(editName.trim() || displayName)
       setProfile(prev => prev ? {
         ...prev,
         job_title: editJobTitle.trim() || null,
@@ -273,14 +280,14 @@ export default function ProfilePage() {
                 referrerPolicy="no-referrer" />
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
-                {(user.user_metadata?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
+                {(displayName || user.email || 'U')[0].toUpperCase()}
               </div>
             )}
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <h1 className="font-heading text-xl font-extrabold text-text-primary truncate">
-                  {user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'You'}
+                  {displayName || user.email?.split('@')[0] || 'You'}
                 </h1>
                 <button onClick={openEdit}
                   className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors flex-shrink-0">
