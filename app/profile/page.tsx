@@ -109,7 +109,8 @@ export default function ProfilePage() {
     if (authLoading) return
 
     if (!user) {
-      router.push('/signin')
+      setLoading(false)
+      setLoadError(true)
       return
     }
 

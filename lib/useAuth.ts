@@ -9,24 +9,30 @@ export function useAuth() {
   useEffect(() => {
     let authCheckTimeout: NodeJS.Timeout
     let mounted = true
+    let checked = false
 
     async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession()
+      if (checked || !mounted) return
+      checked = true
+
+      const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!mounted) return
-      
-      if (session?.user) {
-        setUser(session.user)
+
+      if (authUser) {
+        setUser(authUser)
       }
       setLoading(false)
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return
-      
+      if (!mounted || checked) return
+
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        checked = true
         setUser(session?.user ?? null)
         setLoading(false)
       } else if (event === 'SIGNED_OUT') {
+        checked = true
         setUser(null)
         setLoading(false)
       }
@@ -35,7 +41,8 @@ export function useAuth() {
     checkAuth()
 
     authCheckTimeout = setTimeout(() => {
-      if (mounted) {
+      if (mounted && !checked) {
+        checked = true
         setLoading(false)
       }
     }, 8000)
