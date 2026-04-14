@@ -44,7 +44,11 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
 
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+      if (
+        event === 'INITIAL_SESSION' ||
+        event === 'SIGNED_IN' ||
+        event === 'USER_UPDATED'
+      ) {
         if (session?.user) {
           setUser(session.user)
         }
