@@ -10,6 +10,7 @@ interface GlobeProps {
   onCountrySelect: (slug: string) => void;
   selectedSlug: string | null;
   highlightedSlugs?: string[];
+  savedSlugs?: string[];
 }
 
 interface PinPosition {
@@ -20,6 +21,28 @@ interface PinPosition {
   color: string;
   isSelected: boolean;
   isHovered: boolean;
+  moveScore: number;
+  name: string;
+  flagEmoji: string;
+}
+
+function getStartLng(): number {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+    if (tz.startsWith("America")) return -95;
+    if (tz.startsWith("Australia") || tz.startsWith("Pacific")) return 135;
+    if (tz.startsWith("Asia/Kolkata") || tz.startsWith("Asia/Dhaka")) return 80;
+    if (tz.startsWith("Asia")) return 105;
+    if (tz.startsWith("Africa")) return 20;
+  } catch {}
+  return 10;
+}
+
+function getPinSize(moveScore: number, isSelected: boolean, isHovered: boolean): string {
+  if (isSelected) return "32px";
+  if (isHovered) return "28px";
+  const size = 18 + Math.round((moveScore / 10) * 10);
+  return `${Math.min(size, 28)}px`;
 }
 
 export default function Globe({
@@ -27,6 +50,7 @@ export default function Globe({
   onCountrySelect,
   selectedSlug,
   highlightedSlugs = [],
+  savedSlugs = [],
 }: GlobeProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<any>(null);
@@ -53,6 +77,7 @@ export default function Globe({
       const coords = globeRef.current.getScreenCoords(d.lat, d.lng, 0.02);
       const isSelected = d.slug === selectedSlug;
       const isHovered = d.slug === hoveredSlug;
+      const isSaved = savedSlugs.includes(d.slug);
       const rank = highlightedSlugs.indexOf(d.slug);
 
       let color: string;
@@ -61,6 +86,7 @@ export default function Globe({
       else if (rank === 1) color = "#00d4c8";
       else if (rank === 2) color = "#a78bfa";
       else if (hasHighlights) color = "#555566";
+      else if (isSaved) color = "#f472b6";
       else color = getScoreColor(d.moveScore);
 
       const latRad = (d.lat * Math.PI) / 180;
@@ -86,12 +112,15 @@ export default function Globe({
         color,
         isSelected,
         isHovered,
+        moveScore: d.moveScore,
+        name: d.name,
+        flagEmoji: d.flagEmoji,
       };
     });
 
     setPinPositions(positions);
     animFrameRef.current = requestAnimationFrame(updatePins);
-  }, [countries, selectedSlug, hoveredSlug, highlightedSlugs]);
+  }, [countries, selectedSlug, hoveredSlug, highlightedSlugs, savedSlugs]);
 
   useEffect(() => {
     const mountEl = mountRef.current;
@@ -102,7 +131,6 @@ export default function Globe({
     globeContainer.style.height = "100%";
     mountEl.appendChild(globeContainer);
 
-    // Stop wheel events from propagating to page — globe gets zoom, page doesn't scroll
     const blockScrollPropagation = (e: WheelEvent) => { if (window.innerWidth >= 768) e.stopPropagation(); };
     mountEl.addEventListener("wheel", blockScrollPropagation, { passive: true });
 
@@ -113,6 +141,8 @@ export default function Globe({
       if (cancelled) return;
       const GlobeGL = (await import("globe.gl")).default;
       if (cancelled) return;
+
+      const startLng = getStartLng();
 
       const globe = (GlobeGL as any)()(globeContainer)
         .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
@@ -154,13 +184,13 @@ export default function Globe({
 
       globe.controls().autoRotate = true;
       globe.controls().autoRotateSpeed = 0.2;
-      globe.controls().enableZoom = window.innerWidth >= 768; // zoom only on desktop
-      globe.controls().enableRotate = true; // drag to rotate
-      globe.controls().enablePan = false;   // pan off — wrong feel on globe
+      globe.controls().enableZoom = window.innerWidth >= 768;
+      globe.controls().enableRotate = true;
+      globe.controls().enablePan = false;
       globe.controls().minDistance = 150;
       globe.controls().maxDistance = 600;
 
-      globe.pointOfView({ lat: 30, lng: 0, altitude: 2.5 });
+      globe.pointOfView({ lat: 30, lng: startLng, altitude: 2.5 });
 
       globeRef.current = globe;
       setIsLoaded(true);
@@ -240,6 +270,8 @@ export default function Globe({
             !pin.isSelected &&
             !pin.isHovered;
 
+          const pinSize = getPinSize(pin.moveScore, pin.isSelected, pin.isHovered);
+
           return (
             <div
               key={pin.slug}
@@ -254,9 +286,9 @@ export default function Globe({
                 cursor: "pointer",
                 zIndex: pin.isSelected ? 30 : pin.isHovered ? 25 : 20,
                 opacity: isDimmed ? 0.25 : 1,
-                transition: "opacity 0.3s ease",
+                transition: "opacity 0.3s ease, font-size 0.15s ease",
                 pointerEvents: "auto",
-                fontSize: pin.isSelected ? "28px" : pin.isHovered ? "24px" : "20px",
+                fontSize: pinSize,
                 filter: pin.isSelected
                   ? "drop-shadow(0 0 8px " + pin.color + ")"
                   : pin.isHovered
@@ -266,6 +298,53 @@ export default function Globe({
               }}
             >
               📌
+
+              {/* Hover tooltip */}
+              {pin.isHovered && !pin.isSelected && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "calc(100% + 8px)",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: "rgba(17,17,24,0.96)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px",
+                    padding: "8px 12px",
+                    whiteSpace: "nowrap",
+                    pointerEvents: "none",
+                    zIndex: 50,
+                    fontSize: "13px",
+                    lineHeight: 1.4,
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "18px" }}>{pin.flagEmoji}</span>
+                    <div>
+                      <div style={{ color: "#f0f0f5", fontWeight: 700, fontFamily: "Cabinet Grotesk, sans-serif", fontSize: "14px" }}>
+                        {pin.name}
+                      </div>
+                      <div style={{ color: "#00d4c8", fontSize: "11px", fontWeight: 600 }}>
+                        Move score {pin.moveScore}/10
+                      </div>
+                    </div>
+                  </div>
+                  {/* Tooltip arrow */}
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 0,
+                    height: 0,
+                    borderLeft: "6px solid transparent",
+                    borderRight: "6px solid transparent",
+                    borderTop: "6px solid rgba(17,17,24,0.96)",
+                  }} />
+                </div>
+              )}
             </div>
           );
         })}

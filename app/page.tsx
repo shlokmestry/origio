@@ -6,6 +6,7 @@ import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
+import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { MapPin, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
@@ -19,6 +20,7 @@ export default function Home() {
   const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
+  const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const fetchedRef = useRef(false);
 
   // Lock body scroll while on homepage, restore on unmount
@@ -36,6 +38,22 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => setAllCountries(data))
       .catch((err) => console.error("Failed to fetch countries:", err));
+  }, []);
+
+  // Load saved countries for pink pin highlighting
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data } = await supabase
+          .from("saved_countries")
+          .select("country_slug")
+          .eq("user_id", session.user.id);
+        setSavedSlugs((data ?? []).map((r: any) => r.country_slug));
+      } else {
+        setSavedSlugs([]);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -113,16 +131,16 @@ export default function Home() {
   }, [handleClosePanel]);
 
   return (
-    // fixed inset-0: homepage locked to viewport, no scroll — other pages unaffected
     <main className="fixed inset-0 bg-bg-primary overflow-hidden">
 
-      {/* Globe: fixed behind everything */}
+      {/* Globe */}
       <div className="fixed inset-0 z-0">
         <Globe
           countries={globeCountries}
           onCountrySelect={handleCountrySelect}
           selectedSlug={selectedSlug}
           highlightedSlugs={highlightedSlugs}
+          savedSlugs={savedSlugs}
         />
       </div>
 
@@ -134,7 +152,6 @@ export default function Home() {
       {/* Hero overlay */}
       {showHero && (
         <>
-          {/* Gradient: makes text readable over globe */}
           <div
             className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
             style={{
@@ -144,7 +161,6 @@ export default function Home() {
             }}
           />
 
-          {/* Content anchored to bottom */}
           <div
             className="fixed bottom-0 left-0 right-0 z-10 px-5 pb-8 sm:px-10 sm:pb-12 lg:px-16 lg:pb-16"
             style={{ pointerEvents: "none" }}
@@ -180,7 +196,7 @@ export default function Home() {
                 personalised to your job and passport.
               </p>
 
-              {/* CTAs */}
+              {/* CTA */}
               <div
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 animate-fade-up"
                 style={{ animationDelay: "0.6s", opacity: 0, pointerEvents: "auto" }}
@@ -192,8 +208,8 @@ export default function Home() {
                   <Sparkles className="w-4 h-4" />
                   Find My Country
                 </button>
-
               </div>
+
               {/* Trending */}
               {trendingCountries.length > 0 && (
                 <div
@@ -224,38 +240,27 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Step hints — hidden on small mobile */}
+              {/* Step hints */}
               <div
                 className="hidden sm:flex flex-wrap items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.8s", opacity: 0 }}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-3.5 h-3.5 text-accent" />
-                  </div>
-                  <span className="text-xs text-text-muted">Take the quiz</span>
-                </div>
-                <div className="w-4 h-px bg-border flex-shrink-0" />
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                    <Globe2 className="w-3.5 h-3.5 text-accent" />
-                  </div>
-                  <span className="text-xs text-text-muted">See your matches</span>
-                </div>
-                <div className="w-4 h-px bg-border flex-shrink-0" />
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="w-3.5 h-3.5 text-accent" />
-                  </div>
-                  <span className="text-xs text-text-muted">Plan your move</span>
-                </div>
-                <div className="w-4 h-px bg-border flex-shrink-0" />
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-3.5 h-3.5 text-accent" />
-                  </div>
-                  <span className="text-xs text-text-muted">Get your report</span>
-                </div>
+                {[
+                  { icon: Sparkles, label: "Take the quiz" },
+                  { icon: Globe2, label: "See your matches" },
+                  { icon: Briefcase, label: "Plan your move" },
+                  { icon: FileText, label: "Get your report" },
+                ].map((item, i) => (
+                  <>
+                    {i > 0 && <div key={`sep-${i}`} className="w-4 h-px bg-border flex-shrink-0" />}
+                    <div key={item.label} className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-3.5 h-3.5 text-accent" />
+                      </div>
+                      <span className="text-xs text-text-muted">{item.label}</span>
+                    </div>
+                  </>
+                ))}
               </div>
             </div>
           </div>
