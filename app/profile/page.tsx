@@ -188,13 +188,16 @@ export default function ProfilePage() {
       console.log('Profile updated')
 
       // Update name - try separately, don't fail whole save if this fails
+      console.log('Checking name update:', editName.trim())
       if (editName.trim()) {
         try {
-          const { error: nameError } = await supabase.auth.updateUser({
+          console.log('Calling updateUser...')
+          const nameRes = await supabase.auth.updateUser({
             data: { full_name: editName.trim() }
           })
-          if (nameError) {
-            console.error('Name update failed:', nameError)
+          console.log('updateUser result:', nameRes)
+          if (nameRes.error) {
+            console.error('Name update failed:', nameRes.error)
           } else {
             console.log('Name updated')
           }
@@ -212,6 +215,7 @@ export default function ProfilePage() {
 
       console.log('Save success!')
       setEditing(false)
+      setSaving(false)
     } catch (err: any) {
       console.error('Save error:', err)
       setSaveError(err?.message || 'Failed to save. Please try again.')
