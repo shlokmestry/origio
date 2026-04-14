@@ -105,15 +105,15 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
 
             {/* Hide "Origio Pro" upgrade link for pro users */}
             {!isPro && (
-              <Link href="/pro"
+              <a href="/pro"
                 className="flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors">
                 <Sparkles className="w-3.5 h-3.5" />
                 Origio Pro
-              </Link>
+              </a>
             )}
 
             {user ? (
-              <Link href="/profile"
+              <a href="/profile"
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
                   isPro
                     ? 'bg-accent/10 border-accent/30 hover:border-accent/50'
@@ -127,13 +127,13 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                   {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}
                 </span>
                 {isPro && <span className="text-[10px] font-bold text-accent">PRO</span>}
-              </Link>
+              </a>
             ) : (
-              <Link href="/signin"
+              <a href="/signin"
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors text-sm text-accent font-medium">
                 <LogIn className="w-4 h-4" />
                 Sign In
-              </Link>
+              </a>
             )}
           </div>
 
@@ -199,38 +199,38 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             ))}
 
             <div className="pt-2 border-t border-border space-y-2">
-              <Link href="/guides"
+              <a href="/guides"
                 className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors"
                 onClick={() => setMobileMenuOpen(false)}>
                 Guides
-              </Link>
-              <Link href="/about"
+              </a>
+              <a href="/about"
                 className="block px-3 py-2 text-sm text-text-muted hover:text-text-primary transition-colors"
                 onClick={() => setMobileMenuOpen(false)}>
                 About
-              </Link>
+              </a>
               {!isPro && (
-                <Link href="/pro"
+                <a href="/pro"
                   className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-accent"
                   onClick={() => setMobileMenuOpen(false)}>
                   <Sparkles className="w-3.5 h-3.5" />
                   Origio Pro
-                </Link>
+                </a>
               )}
               {user ? (
-                <Link href="/profile"
+                <a href="/profile"
                   className="block px-3 py-2 text-xs text-text-muted"
                   onClick={() => setMobileMenuOpen(false)}>
                   {isPro && '✦ '}{user.user_metadata?.full_name || user.email}
                   {isPro && <span className="ml-1 text-accent font-bold">PRO</span>}
-                </Link>
+                </a>
               ) : (
-                <Link href="/signin"
+                <a href="/signin"
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 text-sm text-accent font-medium"
                   onClick={() => setMobileMenuOpen(false)}>
                   <LogIn className="w-4 h-4" />
                   Sign In
-                </Link>
+                </a>
               )}
             </div>
           </div>
