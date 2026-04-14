@@ -143,14 +143,23 @@ export default function ProfilePage() {
       setLoading(false)
     }
 
-    // Use onAuthStateChange — fires as soon as session is ready
+    async function initAuth() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const u = session.user
+        setUser(u)
+        setNameValue(u.user_metadata?.full_name ?? '')
+        await loadData(u.id)
+      } else {
+        clearTimeout(timeout)
+        router.push('/signin')
+      }
+    }
+
+    initAuth()
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') {
-        if (!session?.user) {
-          clearTimeout(timeout)
-          router.push('/signin')
-          return
-        }
+      if (event === 'INITIAL_SESSION' && session?.user && !user) {
         const u = session.user
         setUser(u)
         setNameValue(u.user_metadata?.full_name ?? '')
@@ -162,7 +171,7 @@ export default function ProfilePage() {
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
-  }, [router])
+  }, [router, user])
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
