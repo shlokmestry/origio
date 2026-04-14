@@ -107,8 +107,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let mounted = true
+    let authResolved = false
     const timeout = setTimeout(() => {
-      if (mounted) {
+      if (mounted && !authResolved) {
         setLoading(false)
         setLoadError(true)
       }
@@ -149,10 +150,9 @@ export default function ProfilePage() {
       }
     }
 
-    async function initAuth() {
-      await supabase.auth.refreshSession()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!mounted) return
+    async function handleSession(session: any) {
+      if (!mounted || authResolved) return
+      authResolved = true
       
       if (session?.user) {
         const u = session.user
@@ -167,15 +167,10 @@ export default function ProfilePage() {
       }
     }
 
-    initAuth()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
-      if (session?.user && !user) {
-        const u = session.user
-        setUser(u)
-        setNameValue(u.user_metadata?.full_name ?? '')
-        await loadData(u.id)
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        handleSession(session)
       }
     })
 
@@ -184,7 +179,7 @@ export default function ProfilePage() {
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
-  }, [router, user])
+  }, [router])
 
   const removeSave = async (id: string) => {
     await supabase.from('saved_countries').delete().eq('id', id)
