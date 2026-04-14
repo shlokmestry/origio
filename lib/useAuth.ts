@@ -1,39 +1,57 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const initRef = useRef(false)
 
   useEffect(() => {
-    let mounted = true
+    if (initRef.current) return
+    initRef.current = true
 
-    async function getSession() {
+    let resolved = false
+
+    async function resolveAuth() {
+      if (resolved) return
+      
       const { data: { session } } = await supabase.auth.getSession()
-      if (!mounted) return
+      if (resolved) return
+      
       if (session?.user) {
         setUser(session.user)
       }
+      resolved = true
       setLoading(false)
     }
 
-    getSession()
+    resolveAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user)
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (resolved) return
+      
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        if (session?.user) {
+          setUser(session.user)
+        }
+        resolved = true
+        setLoading(false)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
-      } else if (event === 'INITIAL_SESSION') {
-        setUser(session?.user ?? null)
       }
     })
 
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        setLoading(false)
+      }
+    }, 5000)
+
     return () => {
-      mounted = false
-      subscription.unsubscribe()
+      resolved = true
+      clearTimeout(timeout)
     }
   }, [])
 
