@@ -107,13 +107,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let mounted = true
-    let authResolved = false
-    const timeout = setTimeout(() => {
-      if (mounted && !authResolved) {
-        setLoading(false)
-        setLoadError(true)
-      }
-    }, 10000)
 
     async function loadData(userId: string) {
       try {
@@ -144,41 +137,30 @@ export default function ProfilePage() {
       } catch {
         if (mounted) setLoadError(true)
       }
-      if (mounted) {
-        clearTimeout(timeout)
-        setLoading(false)
-      }
+      if (mounted) setLoading(false)
     }
 
-    async function handleSession(session: any) {
-      if (!mounted || authResolved) return
-      authResolved = true
-      
-      if (session?.user) {
-        const u = session.user
-        setUser(u)
-        setNameValue(u.user_metadata?.full_name ?? '')
-        await loadData(u.id)
-      } else {
-        if (mounted) {
-          clearTimeout(timeout)
-          router.push('/signin')
-        }
-      }
+    async function handleUser(user: any) {
+      if (!mounted || user) return
+      const u = user
+      setUser(u)
+      setNameValue(u.user_metadata?.full_name ?? '')
+      await loadData(u.id)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
       if (!mounted) return
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        handleSession(session)
+      
+      if (user) {
+        handleUser(user)
+      } else {
+        setLoading(false)
+        router.push('/signin')
       }
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-      clearTimeout(timeout)
     }
+
+    init()
   }, [router])
 
   const removeSave = async (id: string) => {

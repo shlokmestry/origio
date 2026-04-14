@@ -30,35 +30,25 @@ export default function ProPage() {
   const [checkingUser, setCheckingUser] = useState(true)
 
   useEffect(() => {
-    let mounted = true
-
-    async function checkPro(session: any) {
-      if (!mounted) return
-      if (session?.user) {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_pro')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single()
-        if (mounted && profile?.is_pro) {
+        if (profile?.is_pro) {
           router.replace('/profile')
           return
         }
       }
-      if (mounted) setCheckingUser(false)
+
+      setCheckingUser(false)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        checkPro(session)
-      }
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
+    init()
   }, [router])
 
   const handleUpgrade = async () => {
