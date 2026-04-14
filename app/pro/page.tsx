@@ -30,7 +30,22 @@ export default function ProPage() {
   const [checkingUser, setCheckingUser] = useState(true)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    async function init() {
+      // Try getSession first
+      let { data: { session } } = await supabase.auth.getSession()
+
+      // If no session yet, wait briefly for auth to restore from cookies
+      if (!session) {
+        await new Promise<void>(resolve => {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+            session = s
+            subscription.unsubscribe()
+            resolve()
+          })
+          setTimeout(resolve, 3000)
+        })
+      }
+
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -42,10 +57,11 @@ export default function ProPage() {
           return
         }
       }
-      setCheckingUser(false)
-    })
 
-    return () => subscription.unsubscribe()
+      setCheckingUser(false)
+    }
+
+    init()
   }, [router])
 
   const handleUpgrade = async () => {
