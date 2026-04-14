@@ -173,39 +173,33 @@ export default function ProfilePage() {
       if (!session) throw new Error('No session')
 
       // Update profile via direct DB call
-      console.log('Updating profile with:', { job_title: editJobTitle.trim() || null, passport_slug: editPassport })
-      try {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            job_title: editJobTitle.trim() || null,
-            passport_slug: editPassport,
-          })
-          .eq('id', user.id)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          job_title: editJobTitle.trim() || null,
+          passport_slug: editPassport,
+        })
+        .eq('id', user.id)
 
-        console.log('Profile update result:', profileError)
-        if (profileError) throw profileError
-      } catch (e: any) {
-        console.error('profile update failed:', e)
-        throw e
+      if (profileError) {
+        console.error('Profile update failed:', profileError)
+        throw profileError
       }
+      console.log('Profile updated')
 
-      // Update name via Supabase auth - test with timeout
+      // Update name - try separately, don't fail whole save if this fails
       if (editName.trim()) {
-        console.log('Updating name to:', editName.trim())
         try {
-          const updatePromise = supabase.auth.updateUser({
+          const { error: nameError } = await supabase.auth.updateUser({
             data: { full_name: editName.trim() }
           })
-          const timeoutPromise = new Promise<{error: Error}>((_, reject) => 
-            setTimeout(() => reject(new Error('Name update timeout')), 10000)
-          )
-          const result: any = await Promise.race([updatePromise, timeoutPromise])
-          console.log('Name update result:', result)
-          if (result?.error) throw result.error
-        } catch (e: any) {
-          console.error('Name update failed:', e.message || e)
-          throw new Error('Failed to update name: ' + (e.message || 'timeout'))
+          if (nameError) {
+            console.error('Name update failed:', nameError)
+          } else {
+            console.log('Name updated')
+          }
+        } catch (e) {
+          console.error('Name update error:', e)
         }
       }
 
