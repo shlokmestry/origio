@@ -117,6 +117,7 @@ export default function ProfilePage() {
     setEditName(initialName)
 
     async function loadData() {
+      await new Promise(r => setTimeout(r, 300))
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
@@ -446,7 +447,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Account row */}
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-xl border border-border">
           <p className="text-xs text-text-muted">{user.email}</p>
           <div className="flex gap-2">
             <button onClick={signOut}
