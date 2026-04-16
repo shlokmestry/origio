@@ -20,11 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: page.title,
     description: page.metaDescription,
-    alternates: { canonical: `https://origio.app/best-countries-for/${page.slug}` },
+    alternates: { canonical: `https://origio-one.vercel.app/best-countries-for/${page.slug}` },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
-      url: `https://origio.app/best-countries-for/${page.slug}`,
+      url: `https://origio-one.vercel.app/best-countries-for/${page.slug}`,
       siteName: "Origio",
       type: "article",
     },
