@@ -42,7 +42,7 @@ const nextConfig = {
               // Fonts: self + Fontshare + Google Fonts
               "font-src 'self' https://api.fontshare.com https://fonts.gstatic.com",
               // API connections: self + Supabase + Stripe + Google Analytics + Vercel Analytics + unpkg (globe assets)
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://vitals.vercel-insights.com https://unpkg.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com",
               // Stripe checkout is loaded in a frame
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               // Block all object/embed
