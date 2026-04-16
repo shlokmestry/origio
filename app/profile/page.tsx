@@ -450,11 +450,11 @@ export default function ProfilePage() {
           <p className="text-xs text-text-muted">{user.email}</p>
           <div className="flex gap-2">
             <button onClick={signOut}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary transition-colors whitespace-nowrap">
               <LogOut className="w-3 h-3" /> Sign out
             </button>
             <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/5 transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/5 transition-colors whitespace-nowrap">
               <Trash2 className="w-3 h-3" /> Delete account
             </button>
           </div>

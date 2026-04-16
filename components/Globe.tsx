@@ -170,7 +170,7 @@ export default function Globe({
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
         .labelText((d: any) => d.name)
-        .labelSize(1.0)
+        .labelSize(window.innerWidth < 768 ? 0 : 1.0)
         .labelDotRadius(0)
         .labelColor(() => "rgba(240, 240, 245, 0.7)")
         .labelResolution(2)
