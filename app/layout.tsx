@@ -19,6 +19,14 @@ export const metadata: Metadata = {
   verification: {
     google: "4UQHcaX5pSsG7ShIUnxTdO3f0w9oAVKgu3t3ifstmIo",
   },
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.ico',
+  },
   openGraph: {
     title: "Origio — Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
@@ -55,7 +63,7 @@ export default function RootLayout({
         {/* Vercel Analytics */}
         <Analytics />
 
-        {/*Google Analytics GA4 */}
+        {/* Google Analytics GA4 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2"
           strategy="afterInteractive"
