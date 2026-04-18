@@ -429,7 +429,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           {/* Footer */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "#00d4c8" }}>Origio</span>
-            <span style={{ fontSize: "11px", color: "#8888a0" }}>Last verified: {data.lastVerified} · origio-one.vercel.app</span>
+            <span style={{ fontSize: "11px", color: "#8888a0" }}>Last verified: {data.lastVerified} · findorigio.com</span>
           </div>
         </div>
       </div>

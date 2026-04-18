@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "cost of living", "quality of life", "immigration", "expat",
     "work abroad", "best countries to live", "relocation guide",
   ],
-  metadataBase: new URL("https://origio-one.vercel.app"),
+  metadataBase: new URL("https://findorigio.com"),
   verification: {
     google: "4UQHcaX5pSsG7ShIUnxTdO3f0w9oAVKgu3t3ifstmIo",
   },
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: "Origio — Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
     type: "website",
-    url: "https://origio-one.vercel.app",
+    url: "https://findorigio.com",
     siteName: "Origio",
     images: [
       {
