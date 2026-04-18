@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://origio-one.vercel.app/sitemap.xml
+Sitemap: https://findorigio.com/sitemap.xml
