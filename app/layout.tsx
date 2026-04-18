@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Origio — Find Where You Belong",
+    title: "Origio - Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
     images: ["/og-image.png"],
   },

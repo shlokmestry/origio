@@ -181,7 +181,7 @@ export default function ProfilePage() {
       if (profileError) throw profileError
 
       if (editName.trim()) {
-        const { error: nameError } = await supabase.auth.updateUser({
+        const nameUpdatePromise = supabase.auth.updateUser({
           data: { full_name: editName.trim() }
         })
         if (nameError) console.error('Name update failed:', nameError)
