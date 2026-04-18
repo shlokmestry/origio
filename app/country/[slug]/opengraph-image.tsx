@@ -152,7 +152,7 @@ export default async function OgImage({
             display: "flex",
           }}
         >
-          origio-one.vercel.app/country/{params.slug}
+          findorigio.com/country/{params.slug}
         </div>
       </div>
     ),

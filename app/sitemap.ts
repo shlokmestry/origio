@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE = "https://origio-one.vercel.app";
+const BASE = "https://findorigio.com";
 const NOW = new Date().toISOString();
 
 const COUNTRY_SLUGS = [
