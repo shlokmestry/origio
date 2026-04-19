@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Globe2, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 
@@ -148,6 +149,14 @@ export default function SignInClient() {
             {tab === 'signup' && password.length === 0 && (
               <p className="text-xs mt-1.5 text-text-muted">8–16 characters</p>
             )}
+            {/* Forgot password — only show on sign in tab */}
+            {tab === 'signin' && (
+              <div className="flex justify-end mt-1.5">
+                <Link href="/auth/forgot-password" className="text-xs text-text-muted hover:text-accent transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
           </div>
 
           {error && <p className="text-xs text-score-low">{error}</p>}
@@ -159,14 +168,18 @@ export default function SignInClient() {
           </button>
         </form>
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-text-muted">or</span>
-          <div className="flex-1 h-px bg-border" />
+        {/* Google OAuth */}
+        <div className="relative mb-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs text-text-muted">
+            <span className="bg-bg-primary px-3">or</span>
+          </div>
         </div>
 
         <button onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover bg-bg-elevated hover:bg-bg-surface transition-all text-sm text-text-primary font-medium">
+          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-border hover:border-border-hover transition-colors text-sm text-text-muted hover:text-text-primary">
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -175,8 +188,12 @@ export default function SignInClient() {
           </svg>
           Continue with Google
         </button>
-        <p className="text-xs text-text-muted text-center mt-3">
-          Google sign-in works for both new and existing accounts.
+
+        <p className="text-center text-xs text-text-muted mt-6">
+          By continuing you agree to our{' '}
+          <Link href="/terms" className="hover:text-accent transition-colors">Terms</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="hover:text-accent transition-colors">Privacy Policy</Link>
         </p>
       </div>
     </div>
