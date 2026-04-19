@@ -10,15 +10,15 @@ import {
 } from 'lucide-react'
 
 const FREE_FEATURES = [
-  'Interactive 3D globe',
-  'Top 3 country matches',
-  'Basic country info',
-  'Salary calculator',
+  'Explore 25 countries on the globe',
+  'Compare salaries across job roles',
+  'See your top 3 country matches',
+  'Cost of living breakdowns',
   'Career guides by role',
 ]
 
 const PRO_FEATURES = [
-  { text: 'All 25 countries ranked — not just top 3', bold: 'All 25 countries' },
+  { text: 'All 25 countries ranked ~ not just top 3', bold: 'All 25 countries' },
   { text: 'Unlimited Find My Country runs', bold: null },
   { text: 'Full country deep-dives', bold: null },
   { text: 'Side-by-side comparison', bold: null },
@@ -143,7 +143,7 @@ export default function ProPage() {
             <button onClick={handleUpgrade} disabled={loading}
               className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 disabled:opacity-50">
               <Zap className="w-4 h-4" />
-              {loading ? 'Redirecting…' : 'Upgrade to Pro — €5'}
+              {loading ? 'Redirecting…' : 'Upgrade to Pro ~ €5'}
             </button>
             <a href="#pricing"
               className="px-5 py-3 rounded-xl text-sm inline-flex items-center gap-2 border border-border hover:border-border-hover text-text-muted hover:text-text-primary transition-colors">
@@ -255,7 +255,7 @@ export default function ProPage() {
                 <button onClick={handleUpgrade} disabled={loading}
                   className="cta-button w-full py-3 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50">
                   <Lock className="w-4 h-4" />
-                  {loading ? 'Redirecting…' : 'Unlock all 25 — €5'}
+                  {loading ? 'Redirecting…' : 'Unlock all 25 ~ €5'}
                 </button>
                 <p className="mt-3 text-xs text-text-muted text-center">One-time payment · Never charged again</p>
               </div>
@@ -370,7 +370,7 @@ export default function ProPage() {
                 <button onClick={handleUpgrade} disabled={loading}
                   className="cta-button w-full py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-50">
                   <Zap className="w-4 h-4" />
-                  {loading ? 'Redirecting…' : 'Upgrade to Pro — €5'}
+                  {loading ? 'Redirecting…' : 'Upgrade to Pro ~ €5'}
                 </button>
                 <p className="text-xs text-text-muted text-center mt-3 flex items-center justify-center gap-1.5">
                   <Shield className="w-3 h-3" /> Secure payment via Stripe
@@ -433,7 +433,7 @@ export default function ProPage() {
             <button onClick={handleUpgrade} disabled={loading}
               className="cta-button px-8 py-3.5 rounded-xl text-sm inline-flex items-center gap-2 disabled:opacity-50">
               <Zap className="w-4 h-4" />
-              {loading ? 'Redirecting…' : 'Unlock all 25 — €5'}
+              {loading ? 'Redirecting…' : 'Unlock all 25 ~ €5'}
             </button>
           </div>
         </div>
