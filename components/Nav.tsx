@@ -80,7 +80,6 @@ export default function Nav({ countries, onCountrySelect, onSearchOpen }: NavPro
             >
               <Search className="w-4 h-4" />
               <span>Search countries...</span>
-              <kbd className="ml-4 px-1.5 py-0.5 text-[10px] rounded bg-bg-elevated border border-border text-text-muted">⌘K</kbd>
             </button>
 
             <Link href="/guides" className="text-sm text-text-muted hover:text-text-primary transition-colors">

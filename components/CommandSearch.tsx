@@ -57,8 +57,8 @@ const QUICK_FILTERS: QuickFilter[] = [
     id: "tax",
     label: "Lowest tax",
     icon: Receipt,
-    description: "Most tax-efficient countries",
-    sort: (a, b) => a.visaDifficulty - b.visaDifficulty, // proxy — moveScore inversely weights tax
+    description: "Lowest income tax rate (mid bracket)",
+    sort: (a, b) => a.incomeTaxRateMid - b.incomeTaxRateMid,
   },
   {
     id: "quality",
@@ -221,9 +221,6 @@ export default function CommandSearch({ countries, onCountrySelect, open, onClos
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-bg-elevated border border-border text-text-muted">
-            ESC
-          </kbd>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto" ref={listRef}>
