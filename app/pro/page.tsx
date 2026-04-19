@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import {
   Zap, Check, Lock, Globe2, Sparkles, ArrowRight,
@@ -82,7 +81,6 @@ function getMatchLabel(pct: number): { label: string; color: string } {
 
 export default function ProPage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -91,32 +89,42 @@ export default function ProPage() {
   const [wizardMatches, setWizardMatches] = useState<TopCountry[] | null>(null)
   const [wizardLoading, setWizardLoading] = useState(true)
 
-  // Redirect already-pro users
+  // On mount: check session directly — no useAuth race condition
   useEffect(() => {
-    if (authLoading) return
-    if (user) {
-      supabase.from('profiles').select('is_pro').eq('id', user.id).single()
-        .then(({ data }) => { if (data?.is_pro) router.replace('/profile') })
-    }
-  }, [user, authLoading, router])
-
-  // Fetch wizard results if signed in
-  useEffect(() => {
-    if (authLoading) return
-    if (!user) { setWizardLoading(false); return }
-
-    supabase
-      .from('wizard_results')
-      .select('top_countries')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.top_countries?.length) {
-          setWizardMatches(data.top_countries as TopCountry[])
-        }
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) {
+        // Not signed in — show page normally, no redirect
         setWizardLoading(false)
-      })
-  }, [user, authLoading])
+        return
+      }
+
+      const userId = session.user.id
+
+      // Check if already pro — redirect if so
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', userId)
+        .single()
+
+      if (profile?.is_pro) {
+        router.replace('/profile')
+        return
+      }
+
+      // Fetch wizard results for personalised preview
+      const { data: wizardData } = await supabase
+        .from('wizard_results')
+        .select('top_countries')
+        .eq('user_id', userId)
+        .single()
+
+      if (wizardData?.top_countries?.length) {
+        setWizardMatches(wizardData.top_countries as TopCountry[])
+      }
+      setWizardLoading(false)
+    })
+  }, [router])
 
   const handleUpgrade = async () => {
     setLoading(true)
@@ -156,7 +164,7 @@ export default function ProPage() {
       })
     : FALLBACK_MATCHES
 
-  if (authLoading) return (
+  if (wizardLoading) return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center">
       <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
     </div>

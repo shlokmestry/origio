@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
   ArrowRight, ArrowRightLeft, RefreshCw, Download,
@@ -168,7 +169,7 @@ function TabButton({ label, active, badge, onClick }: { label: string; active: b
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<import('@supabase/supabase-js').User | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
