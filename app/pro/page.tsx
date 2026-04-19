@@ -41,11 +41,11 @@ const LOCKED_MATCHES = [
 const FAQS = [
   {
     q: 'Is this really a one-time payment?',
-    a: 'Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no auto-renewal — we\'ll never charge your card again.',
+    a: 'Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no auto-renewal ~ we\'ll never charge your card again.',
   },
   {
     q: 'What payment methods are accepted?',
-    a: 'All major credit and debit cards, plus Apple Pay and Google Pay — processed securely via Stripe. We never see your card details.',
+    a: 'All major credit and debit cards, plus Apple Pay and Google Pay ~ processed securely via Stripe. We never see your card details.',
   },
   {
     q: 'Can I get a refund?',
@@ -53,11 +53,11 @@ const FAQS = [
   },
   {
     q: 'Do I need an account?',
-    a: 'Yes — Pro features are tied to your account so they work across devices and stay active forever. You can browse the free globe without one.',
+    a: 'Yes, Pro features are tied to your account so they work across devices and stay active forever. You can browse the free globe without one.',
   },
   {
     q: 'What if I already ran Find My Country as a free user?',
-    a: 'Just run it again after upgrading. Your answers are saved — the next run will instantly show all 25 countries with full deep-dives.',
+    a: 'Just run it again after upgrading. Your answers are saved, the next run will instantly show all 25 countries with full deep dives.',
   },
 ]
 
@@ -133,7 +133,7 @@ export default function ProPage() {
 
           {/* Subhead */}
           <p className="text-text-muted text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-8">
-            Free shows your top 3 country matches. Pro ranks all 25 — with deep-dives,
+            Free shows your top 3 country matches. Pro ranks all 25 ~ with deep dives,
             visa routes, and side-by-side comparison.{' '}
             <span className="text-text-primary">Pay once. Yours forever.</span>
           </p>

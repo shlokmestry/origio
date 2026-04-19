@@ -1,13 +1,17 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
-import Nav from '@/components/Nav'
 import {
-  Globe2, LogOut, Trash2, Sparkles, Pencil,
-  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X
+  Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
+  ArrowRight, ArrowRightLeft, RefreshCw, Download,
+  MapPin, Briefcase, Shield, ChevronRight, Heart, Clock,
+  BarChart3, AlertTriangle, Search, Plus
 } from 'lucide-react'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type CountryInfo = { flag_emoji: string; name: string }
 type SavedCountry = {
@@ -16,8 +20,9 @@ type SavedCountry = {
   created_at: string
   countries?: CountryInfo | CountryInfo[] | null
 }
+type TopCountry = { slug: string; name: string; flagEmoji: string; matchPercent: number }
 type WizardResult = {
-  top_countries: { slug: string; name: string; flagEmoji: string; matchPercent: number }[]
+  top_countries: TopCountry[]
   answers: { role: string }
   created_at: string
 }
@@ -28,88 +33,140 @@ type Profile = {
   is_pro: boolean
 }
 
-const PASSPORT_FLAGS: Record<string, { flag: string; name: string }> = {
-  'united-states': { flag: '🇺🇸', name: 'United States' },
-  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom' },
-  'canada': { flag: '🇨🇦', name: 'Canada' },
-  'australia': { flag: '🇦🇺', name: 'Australia' },
-  'germany': { flag: '🇩🇪', name: 'Germany' },
-  'france': { flag: '🇫🇷', name: 'France' },
-  'netherlands': { flag: '🇳🇱', name: 'Netherlands' },
-  'sweden': { flag: '🇸🇪', name: 'Sweden' },
-  'norway': { flag: '🇳🇴', name: 'Norway' },
-  'denmark': { flag: '🇩🇰', name: 'Denmark' },
-  'finland': { flag: '🇫🇮', name: 'Finland' },
-  'switzerland': { flag: '🇨🇭', name: 'Switzerland' },
-  'singapore': { flag: '🇸🇬', name: 'Singapore' },
-  'japan': { flag: '🇯🇵', name: 'Japan' },
-  'south-korea': { flag: '🇰🇷', name: 'South Korea' },
-  'new-zealand': { flag: '🇳🇿', name: 'New Zealand' },
-  'ireland': { flag: '🇮🇪', name: 'Ireland' },
-  'portugal': { flag: '🇵🇹', name: 'Portugal' },
-  'spain': { flag: '🇪🇸', name: 'Spain' },
-  'italy': { flag: '🇮🇹', name: 'Italy' },
-  'austria': { flag: '🇦🇹', name: 'Austria' },
-  'india': { flag: '🇮🇳', name: 'India' },
-  'brazil': { flag: '🇧🇷', name: 'Brazil' },
-  'uae': { flag: '🇦🇪', name: 'UAE' },
-  'mexico': { flag: '🇲🇽', name: 'Mexico' },
-  'china': { flag: '🇨🇳', name: 'China' },
-  'pakistan': { flag: '🇵🇰', name: 'Pakistan' },
-  'nigeria': { flag: '🇳🇬', name: 'Nigeria' },
-  'south-africa': { flag: '🇿🇦', name: 'South Africa' },
-  'philippines': { flag: '🇵🇭', name: 'Philippines' },
-  'malaysia': { flag: '🇲🇾', name: 'Malaysia' },
-  'turkey': { flag: '🇹🇷', name: 'Turkey' },
-  'poland': { flag: '🇵🇱', name: 'Poland' },
-  'ukraine': { flag: '🇺🇦', name: 'Ukraine' },
-  'ghana': { flag: '🇬🇭', name: 'Ghana' },
+// ─── Passport data ────────────────────────────────────────────────────────────
+
+const PASSPORT_FLAGS: Record<string, { flag: string; name: string; henleyRank?: number; visaFree?: number }> = {
+  'united-states':  { flag: '🇺🇸', name: 'United States',  henleyRank: 8,  visaFree: 186 },
+  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom', henleyRank: 6,  visaFree: 189 },
+  'canada':         { flag: '🇨🇦', name: 'Canada',         henleyRank: 7,  visaFree: 188 },
+  'australia':      { flag: '🇦🇺', name: 'Australia',      henleyRank: 9,  visaFree: 185 },
+  'germany':        { flag: '🇩🇪', name: 'Germany',        henleyRank: 2,  visaFree: 192 },
+  'france':         { flag: '🇫🇷', name: 'France',         henleyRank: 3,  visaFree: 191 },
+  'netherlands':    { flag: '🇳🇱', name: 'Netherlands',    henleyRank: 3,  visaFree: 191 },
+  'sweden':         { flag: '🇸🇪', name: 'Sweden',         henleyRank: 3,  visaFree: 191 },
+  'norway':         { flag: '🇳🇴', name: 'Norway',         henleyRank: 5,  visaFree: 190 },
+  'denmark':        { flag: '🇩🇰', name: 'Denmark',        henleyRank: 4,  visaFree: 191 },
+  'finland':        { flag: '🇫🇮', name: 'Finland',        henleyRank: 3,  visaFree: 191 },
+  'switzerland':    { flag: '🇨🇭', name: 'Switzerland',    henleyRank: 3,  visaFree: 191 },
+  'singapore':      { flag: '🇸🇬', name: 'Singapore',      henleyRank: 1,  visaFree: 195 },
+  'japan':          { flag: '🇯🇵', name: 'Japan',          henleyRank: 1,  visaFree: 193 },
+  'south-korea':    { flag: '🇰🇷', name: 'South Korea',    henleyRank: 2,  visaFree: 192 },
+  'new-zealand':    { flag: '🇳🇿', name: 'New Zealand',    henleyRank: 10, visaFree: 184 },
+  'ireland':        { flag: '🇮🇪', name: 'Ireland',        henleyRank: 6,  visaFree: 188 },
+  'portugal':       { flag: '🇵🇹', name: 'Portugal',       henleyRank: 3,  visaFree: 191 },
+  'spain':          { flag: '🇪🇸', name: 'Spain',          henleyRank: 3,  visaFree: 191 },
+  'italy':          { flag: '🇮🇹', name: 'Italy',          henleyRank: 3,  visaFree: 191 },
+  'austria':        { flag: '🇦🇹', name: 'Austria',        henleyRank: 3,  visaFree: 191 },
+  'india':          { flag: '🇮🇳', name: 'India',          henleyRank: 82, visaFree: 58  },
+  'brazil':         { flag: '🇧🇷', name: 'Brazil',         henleyRank: 20, visaFree: 171 },
+  'uae':            { flag: '🇦🇪', name: 'UAE',            henleyRank: 15, visaFree: 179 },
+  'mexico':         { flag: '🇲🇽', name: 'Mexico',         henleyRank: 25, visaFree: 162 },
+  'china':          { flag: '🇨🇳', name: 'China',          henleyRank: 62, visaFree: 85  },
+  'pakistan':       { flag: '🇵🇰', name: 'Pakistan',       henleyRank: 101,visaFree: 33  },
+  'nigeria':        { flag: '🇳🇬', name: 'Nigeria',        henleyRank: 93, visaFree: 46  },
+  'south-africa':   { flag: '🇿🇦', name: 'South Africa',   henleyRank: 55, visaFree: 107 },
+  'philippines':    { flag: '🇵🇭', name: 'Philippines',    henleyRank: 76, visaFree: 67  },
+  'malaysia':       { flag: '🇲🇾', name: 'Malaysia',       henleyRank: 12, visaFree: 181 },
+  'turkey':         { flag: '🇹🇷', name: 'Turkey',         henleyRank: 53, visaFree: 110 },
+  'poland':         { flag: '🇵🇱', name: 'Poland',         henleyRank: 3,  visaFree: 191 },
+  'ukraine':        { flag: '🇺🇦', name: 'Ukraine',        henleyRank: 35, visaFree: 148 },
+  'ghana':          { flag: '🇬🇭', name: 'Ghana',          henleyRank: 80, visaFree: 68  },
 }
 
 const PASSPORT_LIST = Object.entries(PASSPORT_FLAGS).map(([slug, d]) => ({ slug, ...d }))
 
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function getCountryInfo(c: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
   if (!c) return null
   return Array.isArray(c) ? (c[0] ?? null) : c
 }
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+function formatRelative(d: string) {
+  const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days}d ago`
+  if (days < 30) return `${Math.floor(days / 7)}w ago`
+  return `${Math.floor(days / 30)}mo ago`
+}
 function capPercent(n: number) { return Math.min(n, 99) }
-function formatRole(r: string) {
-  return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
+function getMatchColor(pct: number) {
+  if (pct >= 85) return '#00d4c8'
+  if (pct >= 70) return '#fbbf24'
+  return '#f87171'
+}
+function getMatchLabel(pct: number) {
+  if (pct >= 85) return 'Excellent'
+  if (pct >= 70) return 'Strong'
+  return 'Fair'
+}
+const RANK_COLORS = ['#fbbf24', '#00d4c8', '#a78bfa']
+
+// ─── Subcomponents ────────────────────────────────────────────────────────────
+
+function StatCard({ label, value, sub, bar }: { label: string; value: string; sub?: string; bar?: number }) {
+  return (
+    <div className="glass-panel rounded-2xl p-5 tile">
+      <p className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em] mb-2">{label}</p>
+      <div className="flex items-baseline gap-1.5">
+        <span className="font-heading text-3xl font-extrabold text-text-primary">{value}</span>
+        {sub && <span className="text-xs text-text-muted">{sub}</span>}
+      </div>
+      {bar !== undefined && (
+        <div className="mt-3 h-1 bg-bg-elevated rounded-full overflow-hidden">
+          <div className="h-full bg-accent rounded-full transition-all duration-700" style={{ width: `${bar}%` }} />
+        </div>
+      )}
+    </div>
+  )
 }
 
-const MATCH_COLORS = ['#fbbf24', '#00d4c8', '#a78bfa']
-const MATCH_LABELS = ['Best Match', '2nd', '3rd']
+function TabButton({ label, active, badge, onClick }: { label: string; active: boolean; badge?: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative text-sm pb-0.5 transition-colors ${active ? 'text-text-primary font-semibold' : 'text-text-muted hover:text-text-primary'}`}
+    >
+      {label}
+      {badge !== undefined && (
+        <span className="ml-1 text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">{badge}</span>
+      )}
+      {active && (
+        <span className="absolute left-0 right-0 -bottom-[13px] h-[2px] bg-accent rounded-full" />
+      )}
+    </button>
+  )
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
+  const [activeTab, setActiveTab] = useState<'atlas' | 'saved' | 'history' | 'account'>('atlas')
 
-  // Local display state — updates instantly on save
   const [displayName, setDisplayName] = useState('')
-
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editJobTitle, setEditJobTitle] = useState('')
   const [editPassport, setEditPassport] = useState<string | null>(null)
   const [passportSearch, setPassportSearch] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { setLoading(false); setLoadError(true); return }
+    if (!user) { router.push('/'); return }
 
     const userId = user.id
     const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
@@ -117,7 +174,6 @@ export default function ProfilePage() {
     setEditName(initialName)
 
     async function loadData() {
-      await new Promise(r => setTimeout(r, 300))
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
@@ -143,436 +199,834 @@ export default function ProfilePage() {
           setEditPassport(p.passport_slug)
         }
         if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
-      } catch { setLoadError(true) }
+      } catch {}
       setLoading(false)
     }
-
     loadData()
   }, [user, authLoading, router])
 
-  const openEdit = () => {
-    setEditName(displayName)
-    setEditJobTitle(profile?.job_title ?? '')
-    setEditPassport(profile?.passport_slug ?? null)
-    setPassportSearch('')
-    setSaveError('')
-    setEditing(true)
-  }
-
-  const saveEdit = async () => {
-    if (!user) {
-      setSaveError('Not logged in')
-      return
-    }
+  const handleSaveProfile = async () => {
+    if (!user) return
     setSaving(true)
-    setSaveError('')
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('No session')
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          job_title: editJobTitle.trim() || null,
-          passport_slug: editPassport,
-        })
-        .eq('id', user.id)
-
-      if (profileError) throw profileError
-
-      if (editName.trim()) {
-        try {
-          await Promise.race([
-            supabase.auth.updateUser({ data: { full_name: editName.trim() } }),
-            new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 3000))
-          ])
-        } catch (e) {
-          console.error('Name update failed or timed out:', e)
-        }
-      }
-
-      // Update all local display state instantly — no refresh needed
-      setDisplayName(editName.trim() || displayName)
-      setProfile(prev => prev ? {
-        ...prev,
-        job_title: editJobTitle.trim() || null,
-        passport_slug: editPassport,
-      } : prev)
-
-      setEditing(false)
-    } catch (err: any) {
-      setSaveError(err?.message || 'Failed to save. Please try again.')
-    } finally {
-      setSaving(false)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      await supabase.auth.updateUser({ data: { full_name: editName } })
     }
+    await supabase.from('profiles').update({
+      job_title: editJobTitle || null,
+      passport_slug: editPassport,
+    }).eq('id', user.id)
+    setDisplayName(editName)
+    setProfile(p => p ? { ...p, job_title: editJobTitle || null, passport_slug: editPassport } : p)
+    setSaving(false)
+    setEditing(false)
   }
 
-  const removeSave = async (id: string) => {
-    await supabase.from('saved_countries').delete().eq('id', id)
-    setSavedCountries(prev => prev.filter(s => s.id !== id))
-  }
-
-  const signOut = async () => {
+  const handleSignOut = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
+    router.push('/')
   }
 
-  const deleteAccount = async () => {
+  const handleDeleteAccount = async () => {
     if (!user) return
     setDeleteLoading(true)
-    setDeleteError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setDeleteError('Session expired.'); setDeleteLoading(false); return }
+      if (!session) { setDeleteLoading(false); return }
       const res = await fetch('/api/delete-account', {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       })
-      if (!res.ok) {
-        const data = await res.json()
-        setDeleteError(data.error ?? 'Something went wrong.')
-        setDeleteLoading(false)
-        return
+      if (res.ok) {
+        await supabase.auth.signOut()
+        window.location.href = '/'
       }
-      await supabase.auth.signOut()
-      window.location.href = '/'
-    } catch {
-      setDeleteError('Network error. Please try again.')
-      setDeleteLoading(false)
-    }
+    } catch {}
+    setDeleteLoading(false)
   }
 
-  const formatSlug = (slug: string) =>
-    slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  const handleUnsave = async (id: string) => {
+    await supabase.from('saved_countries').delete().eq('id', id)
+    setSavedCountries(prev => prev.filter(s => s.id !== id))
+  }
 
+  const handleExport = () => {
+    if (!wizardResult) return
+    const lines = [
+      `Origio — Country Matches`,
+      `Run: ${formatDate(wizardResult.created_at)}`,
+      ``,
+      ...wizardResult.top_countries.map((c, i) =>
+        `${i + 1}. ${c.flagEmoji} ${c.name} — ${capPercent(c.matchPercent)}%`
+      ),
+    ]
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'origio-matches.txt'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // ── Derived state ───────────────────────────────────────────────────────────
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
   const isPro = profile?.is_pro ?? false
   const topMatch = wizardResult?.top_countries?.[0]
-  const memberSince = user?.created_at ? formatDate(user.created_at) : null
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
   const filteredPassports = PASSPORT_LIST.filter(p =>
     p.name.toLowerCase().includes(passportSearch.toLowerCase())
   )
 
+  // ── Loading / auth states ───────────────────────────────────────────────────
   if (loading || authLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>
   )
 
-  if (loadError) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary gap-4">
-      <p className="text-text-muted text-sm">Something went wrong loading your profile.</p>
-      <button onClick={() => window.location.reload()}
-        className="px-4 py-2 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
-        Try again
-      </button>
-    </div>
-  )
-
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      <Nav countries={[]} onCountrySelect={() => {}} />
+    <div className="min-h-screen bg-bg-primary noise-overlay">
 
-      {/* ── Header ── */}
-      <div className="border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 pt-24 pb-8">
-          <div className="flex items-start gap-5">
-            {user.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} alt="avatar"
-                className="w-16 h-16 rounded-2xl border border-border flex-shrink-0"
-                referrerPolicy="no-referrer" />
-            ) : (
-              <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-2xl font-bold text-accent flex-shrink-0">
-                {(displayName || user.email || 'U')[0].toUpperCase()}
-              </div>
+      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Globe2 className="w-5 h-5 text-accent" />
+            <span className="font-heading text-xl font-extrabold tracking-tight text-text-primary">Origio</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            {isPro && (
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/25 text-accent text-xs font-bold">
+                <Sparkles className="w-3 h-3" /> Pro
+              </span>
             )}
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h1 className="font-heading text-xl font-extrabold text-text-primary truncate">
-                  {displayName || user.email?.split('@')[0] || 'You'}
-                </h1>
-                <button onClick={openEdit}
-                  className="p-1 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors flex-shrink-0">
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <p className="text-sm text-text-muted mb-3 truncate">{user.email}</p>
-
-              <div className="flex flex-wrap gap-1.5">
-                {isPro && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold">
-                    <Sparkles className="w-3 h-3" /> Pro
-                  </span>
-                )}
-                {passportData && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
-                    {passportData.flag} {passportData.name}
-                  </span>
-                )}
-                {profile?.job_title && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
-                    <Briefcase className="w-3 h-3" /> {profile.job_title}
-                  </span>
-                )}
-                {memberSince && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
-                    Member since {memberSince}
-                  </span>
-                )}
-              </div>
-            </div>
+            <Link href="/" className="text-sm text-text-muted hover:text-text-primary transition-colors">Globe</Link>
+            <Link href="/wizard" className="text-sm text-text-muted hover:text-text-primary transition-colors">Quiz</Link>
           </div>
-
-          {!isPro && (
-            <div className="mt-5 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-bg-elevated">
-              <p className="text-xs text-text-muted">
-                <span className="text-accent font-semibold">Origio Pro</span> — unlock all 25 countries, unlimited matches · €5 one-time
-              </p>
-              <a href="/pro" className="text-xs text-accent font-semibold hover:underline whitespace-nowrap flex items-center gap-1">
-                Upgrade <ArrowRight className="w-3 h-3" />
-              </a>
-            </div>
-          )}
         </div>
-      </div>
+      </nav>
 
-      {/* ── Content ── */}
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-5">
+      <main className="relative pt-16">
 
-        <div className="grid md:grid-cols-2 gap-5">
+        {/* ── Hero identity section ────────────────────────────────────────── */}
+        <section className="relative border-b border-border overflow-hidden">
+          {/* Background grid */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundSize: '56px 56px',
+            maskImage: 'radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%)',
+          }} />
+          {/* Ambient color wash */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'radial-gradient(40% 60% at 15% 30%, rgba(251,191,36,0.1), transparent 70%), radial-gradient(50% 70% at 80% 10%, rgba(0,212,200,0.12), transparent 70%)',
+          }} />
 
-          {/* Top Match */}
-          <div className="glass-panel rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <h2 className="font-heading text-sm font-bold text-text-primary">Your Top Match</h2>
-              <a href="/wizard" className="text-xs text-accent hover:underline flex items-center gap-1">
-                Retake <ArrowRight className="w-3 h-3" />
-              </a>
-            </div>
+          <div className="relative max-w-7xl mx-auto px-6 pt-12 pb-0">
 
-            {!wizardResult ? (
-              <div className="text-center py-10 px-5">
-                <div className="text-4xl mb-3">🌍</div>
-                <p className="text-sm text-text-muted mb-4">No results yet</p>
-                <a href="/wizard" className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-2">
-                  <Zap className="w-3.5 h-3.5" /> Find My Country
-                </a>
-              </div>
-            ) : (
-              <div>
-                <div className="px-5 pb-4">
-                  <div className="rounded-xl p-5 text-center"
-                    style={{ background: `linear-gradient(135deg, ${MATCH_COLORS[0]}15, ${MATCH_COLORS[0]}05)`, border: `1px solid ${MATCH_COLORS[0]}30` }}>
-                    <div className="text-4xl mb-1.5">{topMatch?.flagEmoji}</div>
-                    <p className="font-heading text-lg font-extrabold text-text-primary">{topMatch?.name}</p>
-                    <p className="font-heading text-2xl font-extrabold" style={{ color: MATCH_COLORS[0] }}>
-                      {capPercent(topMatch?.matchPercent ?? 0)}%
-                    </p>
-                    <p className="text-xs text-text-muted">match</p>
+            {/* Identity row */}
+            <div className="grid lg:grid-cols-[auto,1fr,auto] gap-6 lg:gap-10 items-start mb-10">
+
+              {/* Avatar + identity */}
+              <div className="flex items-start gap-5">
+                <div style={{
+                  background: 'conic-gradient(from 180deg, #00d4c8 0deg, #fbbf24 120deg, #a78bfa 240deg, #00d4c8 360deg)',
+                  padding: '2px',
+                  borderRadius: '22px',
+                }}>
+                  <div className="w-20 h-20 rounded-[20px] bg-bg-elevated flex items-center justify-center font-heading text-2xl font-extrabold text-text-primary">
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full rounded-[20px] object-cover" />
+                    ) : initials}
                   </div>
                 </div>
-                <div className="border-t border-border">
-                  {wizardResult.top_countries.slice(1).map((c, i) => (
-                    <div key={c.slug} className="flex items-center gap-3 px-5 py-2.5 border-b border-border last:border-0">
-                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{ color: MATCH_COLORS[i + 1], background: MATCH_COLORS[i + 1] + '20' }}>
-                        {MATCH_LABELS[i + 1]}
-                      </span>
-                      <span className="text-base">{c.flagEmoji}</span>
-                      <span className="text-sm text-text-primary flex-1">{c.name}</span>
-                      <span className="text-xs font-semibold" style={{ color: MATCH_COLORS[i + 1] }}>
-                        {capPercent(c.matchPercent)}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-5 py-2.5 border-t border-border">
-                  <p className="text-xs text-text-muted">
-                    {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
+
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    {editing ? (
+                      <input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        className="font-heading text-2xl font-extrabold bg-bg-elevated border border-accent/30 rounded-xl px-3 py-1 text-text-primary focus:outline-none focus:border-accent/60"
+                        autoFocus
+                      />
+                    ) : (
+                      <h1 className="font-heading text-3xl font-extrabold tracking-tight text-text-primary">{displayName}</h1>
+                    )}
+                    <button
+                      onClick={() => setEditing(e => !e)}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-text-muted mb-4">
+                    {user.email}
+                    {user.created_at && ` · Member since ${formatDate(user.created_at)}`}
                   </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {isPro && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/25 text-accent text-xs font-bold">
+                        <Sparkles className="w-3 h-3" /> Pro
+                      </span>
+                    )}
+                    {passportData && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
+                        {passportData.flag} {passportData.name} passport
+                      </span>
+                    )}
+                    {profile?.job_title && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-muted text-xs">
+                        <Briefcase className="w-3 h-3" /> {profile.job_title}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Saved Countries */}
-          <div className="glass-panel rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <h2 className="font-heading text-sm font-bold text-text-primary">
-                Saved Countries
-                {savedCountries.length > 0 && (
-                  <span className="ml-2 text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">
-                    {savedCountries.length}
-                  </span>
-                )}
-              </h2>
-              <a href="/" className="text-xs text-accent hover:underline flex items-center gap-1">
-                Explore <ArrowRight className="w-3 h-3" />
-              </a>
-            </div>
-
-            {savedCountries.length === 0 ? (
-              <div className="text-center py-10 px-5">
-                <div className="text-4xl mb-3">📌</div>
-                <p className="text-sm text-text-muted mb-3">No saved countries yet</p>
-                <a href="/" className="text-xs text-accent hover:underline">Start exploring →</a>
-              </div>
-            ) : (
-              <div>
-                {savedCountries.slice(0, 6).map(s => {
-                  const info = getCountryInfo(s.countries)
-                  return (
-                    <div key={s.id} className="flex items-center gap-3 px-5 py-2.5 border-b border-border last:border-0 group">
-                      <span className="text-lg flex-shrink-0">{info?.flag_emoji ?? '🌍'}</span>
-                      <a href={`/country/${s.country_slug}`}
-                        className="text-sm text-text-primary hover:text-accent transition-colors flex-1 truncate">
-                        {info?.name ?? formatSlug(s.country_slug)}
-                      </a>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <a href={`/country/${s.country_slug}`} className="text-xs text-accent hover:underline">View</a>
-                        <button onClick={() => removeSave(s.id)} className="text-xs text-text-muted hover:text-rose-400 transition-colors">
-                          Remove
-                        </button>
+              {/* Top match hero card */}
+              {topMatch && (
+                <div className="lg:col-start-2 relative glass-panel rounded-3xl overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: 'radial-gradient(70% 80% at 100% 50%, rgba(251,191,36,0.15), transparent 60%), radial-gradient(60% 80% at 0% 100%, rgba(0,212,200,0.10), transparent 70%)',
+                  }} />
+                  <div className="relative p-7 grid grid-cols-[1fr,auto] gap-6 items-center">
+                    <div>
+                      <p className="text-[11px] font-bold text-text-muted uppercase tracking-[0.2em] mb-2">Your top match</p>
+                      <div className="flex items-baseline gap-3 mb-2">
+                        <span className="text-4xl">{topMatch.flagEmoji}</span>
+                        <h2 className="font-heading text-4xl font-extrabold tracking-tight text-text-primary">{topMatch.name}</h2>
+                      </div>
+                      <p className="text-sm text-text-muted mb-5 max-w-sm">
+                        Based on your quiz answers · {wizardResult?.created_at ? formatRelative(wizardResult.created_at) : ''}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Link href={`/country/${topMatch.slug}`} className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-2">
+                          View deep-dive <ArrowRight className="w-3 h-3" />
+                        </Link>
+                        <Link href="/wizard" className="px-4 py-2 rounded-xl border border-border text-xs text-text-muted hover:text-text-primary hover:border-accent/30 transition-colors inline-flex items-center gap-2">
+                          <RefreshCw className="w-3 h-3" /> Retake quiz
+                        </Link>
                       </div>
                     </div>
-                  )
-                })}
-                {savedCountries.length > 6 && (
-                  <div className="px-5 py-2.5 text-xs text-text-muted">
-                    +{savedCountries.length - 6} more saved
+                    {/* Score ring */}
+                    <div className="relative w-36 h-36 flex items-center justify-center flex-shrink-0">
+                      <svg className="absolute inset-0 w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="72" cy="72" r="62" stroke="rgba(255,255,255,0.06)" strokeWidth="5" fill="none" />
+                        <circle
+                          cx="72" cy="72" r="62"
+                          stroke="url(#matchGrad)" strokeWidth="5" fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray="390"
+                          strokeDashoffset={390 - (390 * capPercent(topMatch.matchPercent) / 100)}
+                          style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.5))' }}
+                        />
+                        <defs>
+                          <linearGradient id="matchGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#fbbf24" />
+                            <stop offset="100%" stopColor="#00d4c8" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div className="relative text-center">
+                        <div className="font-heading text-[44px] font-extrabold leading-none tracking-tight text-text-primary">
+                          {capPercent(topMatch.matchPercent)}<span className="text-xl text-text-muted font-bold">%</span>
+                        </div>
+                        <div className="text-[10px] font-bold text-accent uppercase tracking-[0.2em] mt-1">
+                          {getMatchLabel(topMatch.matchPercent)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* No quiz yet */}
+              {!topMatch && (
+                <div className="lg:col-start-2 glass-panel rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-4 min-h-[180px]">
+                  <Globe2 className="w-10 h-10 text-text-muted" />
+                  <div>
+                    <p className="font-heading font-bold text-text-primary mb-1">No quiz results yet</p>
+                    <p className="text-sm text-text-muted">Answer 8 questions to find your best country matches</p>
+                  </div>
+                  <Link href="/wizard" className="cta-button px-5 py-2 rounded-xl text-sm inline-flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Find My Country
+                  </Link>
+                </div>
+              )}
+
+              {/* Quick actions */}
+              <div className="flex flex-col gap-2 lg:col-start-3">
+                <button onClick={() => router.push('/wizard')} className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border hover:border-accent/30 text-xs text-text-muted hover:text-text-primary transition-colors whitespace-nowrap">
+                  <RefreshCw className="w-3.5 h-3.5" /> Re-run quiz
+                </button>
+                <button onClick={handleExport} disabled={!wizardResult} className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border hover:border-accent/30 text-xs text-text-muted hover:text-text-primary transition-colors whitespace-nowrap disabled:opacity-40">
+                  <Download className="w-3.5 h-3.5" /> Export results
+                </button>
+                <Link href="/compare" className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border hover:border-accent/30 text-xs text-text-muted hover:text-text-primary transition-colors whitespace-nowrap">
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Compare countries
+                </Link>
+              </div>
+            </div>
+
+            {/* Stat ribbon */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-0">
+              <StatCard
+                label="Countries explored"
+                value={`${Math.min(savedCountries.length * 3, 25)}`}
+                sub="/25"
+                bar={Math.min(savedCountries.length * 12, 100)}
+              />
+              <StatCard
+                label="Saved countries"
+                value={`${savedCountries.length}`}
+                sub="shortlist"
+              />
+              <StatCard
+                label="Top match score"
+                value={topMatch ? `${capPercent(topMatch.matchPercent)}%` : '—'}
+              />
+              <StatCard
+                label="Passport reach"
+                value={passportData?.visaFree ? `${passportData.visaFree}` : '—'}
+                sub={passportData?.henleyRank ? `Henley #${passportData.henleyRank}` : 'visa-free'}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Tabs ─────────────────────────────────────────────────────────── */}
+        <div className="sticky top-16 z-40 glass-panel border-b border-border">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center gap-7 h-12 text-sm">
+              <TabButton label="Atlas" active={activeTab === 'atlas'} onClick={() => setActiveTab('atlas')} />
+              <TabButton label="Saved" active={activeTab === 'saved'} badge={savedCountries.length || undefined} onClick={() => setActiveTab('saved')} />
+              <TabButton label="History" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
+              <TabButton label="Account" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Tab content ───────────────────────────────────────────────────── */}
+        <section className="py-10">
+          <div className="max-w-7xl mx-auto px-6">
+
+            {/* ── ATLAS TAB ── */}
+            {activeTab === 'atlas' && (
+              <div className="grid lg:grid-cols-[1fr,340px] gap-6">
+
+                {/* Left: ranked list */}
+                <div className="space-y-6">
+                  <div className="glass-panel rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+                      <div>
+                        <h3 className="font-heading text-sm font-bold text-text-primary">
+                          {wizardResult ? 'Your country ranking' : 'No ranking yet'}
+                        </h3>
+                        <p className="text-xs text-text-muted mt-0.5">
+                          {wizardResult
+                            ? `Last quiz run ${formatRelative(wizardResult.created_at)}`
+                            : 'Take the quiz to get personalised rankings'}
+                        </p>
+                      </div>
+                      <Link href="/wizard" className="text-xs text-accent hover:underline flex items-center gap-1">
+                        {wizardResult ? 'Re-run' : 'Take quiz'} <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+
+                    {wizardResult?.top_countries?.length ? (
+                      <>
+                        {/* Podium */}
+                        <div className="grid md:grid-cols-3 gap-px bg-border">
+                          {wizardResult.top_countries.slice(0, 3).map((c, i) => (
+                            <Link href={`/country/${c.slug}`} key={c.slug} className="block bg-bg-surface p-5 relative hover:bg-white/[0.02] transition-colors group">
+                              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
+                                background: `linear-gradient(90deg, transparent, ${RANK_COLORS[i]}, transparent)`
+                              }} />
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="font-heading text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: RANK_COLORS[i] }}>
+                                  0{i + 1} · {['Gold', 'Silver', 'Bronze'][i]}
+                                </span>
+                              </div>
+                              <div className="flex items-baseline gap-3 mb-3">
+                                <span className="text-3xl">{c.flagEmoji}</span>
+                                <div>
+                                  <p className="font-heading font-bold text-text-primary">{c.name}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-baseline justify-between">
+                                <span className="font-heading text-2xl font-extrabold" style={{ color: RANK_COLORS[i] }}>
+                                  {capPercent(c.matchPercent)}%
+                                </span>
+                                <ChevronRight className="w-4 h-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+
+                        {/* Ranked rows — show all if pro, else top 10 teaser */}
+                        <div>
+                          {wizardResult.top_countries.slice(3).map((c, i) => {
+                            const rank = i + 4
+                            const pct = capPercent(c.matchPercent)
+                            const color = getMatchColor(pct)
+                            return (
+                              <Link href={`/country/${c.slug}`} key={c.slug}
+                                className="flex items-center px-6 py-3 border-t border-border hover:bg-white/[0.02] transition-colors group"
+                              >
+                                <span className="font-heading text-[11px] font-bold text-text-muted w-8">0{rank}</span>
+                                <span className="text-lg mr-3">{c.flagEmoji}</span>
+                                <span className="text-sm flex-1 text-text-primary">{c.name}</span>
+                                <div className="w-24 mr-4 h-1 bg-bg-elevated rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+                                </div>
+                                <span className="font-heading text-sm font-bold text-text-primary w-10 text-right">{pct}%</span>
+                                <ChevronRight className="w-4 h-4 text-text-muted ml-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </Link>
+                            )
+                          })}
+                        </div>
+
+                        {!isPro && (
+                          <div className="px-6 py-5 border-t border-border bg-bg-elevated/40 flex items-center justify-between gap-4">
+                            <p className="text-xs text-text-muted">Showing top 3 · Pro unlocks all 25 ranked countries</p>
+                            <Link href="/pro" className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5" /> Upgrade — €5
+                            </Link>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="px-6 py-12 text-center">
+                        <Globe2 className="w-10 h-10 text-text-muted mx-auto mb-3" />
+                        <p className="text-sm text-text-muted mb-4">Take the quiz to see your personalised country ranking</p>
+                        <Link href="/wizard" className="cta-button px-5 py-2 rounded-xl text-sm inline-flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" /> Find My Country
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right sidebar */}
+                <aside className="space-y-5">
+
+                  {/* Passport card */}
+                  <div className="glass-panel rounded-2xl p-5 relative overflow-hidden">
+                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10 pointer-events-none" style={{ background: 'radial-gradient(circle, #00d4c8, transparent)' }} />
+                    <p className="text-[11px] font-bold text-text-muted uppercase tracking-[0.2em] mb-4">Passport</p>
+                    {passportData ? (
+                      <>
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-3xl">{passportData.flag}</span>
+                          <div>
+                            <p className="font-heading font-bold text-text-primary">{passportData.name}</p>
+                            {passportData.henleyRank && (
+                              <p className="text-[11px] text-text-muted">Henley rank #{passportData.henleyRank}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="text-center p-3 rounded-xl bg-bg-elevated border border-border">
+                            <div className="font-heading text-sm font-bold text-score-high">{passportData.visaFree ?? '—'}</div>
+                            <div className="text-[10px] text-text-muted">Visa-free</div>
+                          </div>
+                          <div className="text-center p-3 rounded-xl bg-bg-elevated border border-border">
+                            <div className="font-heading text-sm font-bold text-text-primary">#{passportData.henleyRank ?? '—'}</div>
+                            <div className="text-[10px] text-text-muted">Global rank</div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-text-muted mb-3">No passport set</p>
+                        <button onClick={() => { setActiveTab('account'); setEditing(true) }}
+                          className="text-xs text-accent hover:underline">
+                          Add passport →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Next actions */}
+                  <div className="glass-panel rounded-2xl p-5">
+                    <p className="text-[11px] font-bold text-text-muted uppercase tracking-[0.2em] mb-4">Quick actions</p>
+                    <div className="space-y-1">
+                      {[
+                        { icon: RefreshCw, label: 'Re-run quiz', sub: 'Update your matches', href: '/wizard' },
+                        { icon: ArrowRightLeft, label: 'Compare countries', sub: 'Side-by-side view', href: '/compare' },
+                        { icon: BarChart3, label: 'Explore all countries', sub: 'Browse the globe', href: '/' },
+                      ].map(({ icon: Icon, label, sub, href }) => (
+                        <Link key={href} href={href}
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.02] border border-transparent hover:border-border transition-all group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                            <Icon className="w-3.5 h-3.5 text-accent" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-text-primary">{label}</p>
+                            <p className="text-[11px] text-text-muted">{sub}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-accent transition-colors" />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Upgrade nudge (non-pro only) */}
+                  {!isPro && (
+                    <div className="glass-panel rounded-2xl p-5 relative overflow-hidden" style={{
+                      background: 'linear-gradient(135deg, rgba(0,212,200,0.05) 0%, rgba(0,0,0,0) 60%)',
+                      border: '1px solid rgba(0,212,200,0.2)',
+                    }}>
+                      <Sparkles className="w-5 h-5 text-accent mb-3" />
+                      <p className="font-heading font-bold text-text-primary text-sm mb-1">Upgrade to Pro</p>
+                      <p className="text-[11px] text-text-muted mb-4 leading-relaxed">
+                        All 25 countries ranked, unlimited quiz runs, full country deep-dives, comparison tool.
+                      </p>
+                      <Link href="/pro" className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-2 w-full justify-center">
+                        <Sparkles className="w-3.5 h-3.5" /> Get Pro — one-time €5
+                      </Link>
+                    </div>
+                  )}
+                </aside>
+              </div>
+            )}
+
+            {/* ── SAVED TAB ── */}
+            {activeTab === 'saved' && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="font-heading text-lg font-bold text-text-primary">Shortlist</h2>
+                    <p className="text-sm text-text-muted">{savedCountries.length} countries saved for deeper research</p>
+                  </div>
+                  {savedCountries.length >= 2 && (
+                    <Link href="/compare" className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border hover:border-accent/30 text-sm text-text-muted hover:text-text-primary transition-colors">
+                      <ArrowRightLeft className="w-4 h-4" /> Compare side-by-side
+                    </Link>
+                  )}
+                </div>
+
+                {savedCountries.length === 0 ? (
+                  <div className="glass-panel rounded-2xl py-16 flex flex-col items-center gap-4 text-center">
+                    <Heart className="w-10 h-10 text-text-muted" />
+                    <div>
+                      <p className="font-heading font-bold text-text-primary mb-1">No saved countries yet</p>
+                      <p className="text-sm text-text-muted">Click the heart on any country to add it to your shortlist</p>
+                    </div>
+                    <Link href="/" className="cta-button px-5 py-2 rounded-xl text-sm inline-flex items-center gap-2">
+                      <Globe2 className="w-4 h-4" /> Browse countries
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {savedCountries.map(sc => {
+                      const info = getCountryInfo(sc.countries)
+                      const matched = wizardResult?.top_countries?.find(t => t.slug === sc.country_slug)
+                      return (
+                        <div key={sc.id} className="glass-panel rounded-2xl p-4 tile relative group">
+                          <button
+                            onClick={() => handleUnsave(sc.id)}
+                            className="absolute top-3 right-3 p-1.5 rounded-lg text-rose-400/60 hover:text-rose-400 hover:bg-rose-400/10 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          <Link href={`/country/${sc.country_slug}`} className="block">
+                            <span className="text-3xl mb-3 block">
+                              {info?.flag_emoji ?? '🌍'}
+                            </span>
+                            <p className="font-semibold text-sm text-text-primary">
+                              {info?.name ?? sc.country_slug}
+                            </p>
+                            {matched ? (
+                              <p className="text-[11px] mt-1" style={{ color: getMatchColor(matched.matchPercent) }}>
+                                {capPercent(matched.matchPercent)}% match
+                              </p>
+                            ) : (
+                              <p className="text-[11px] text-text-muted mt-1">{formatRelative(sc.created_at)}</p>
+                            )}
+                          </Link>
+                        </div>
+                      )
+                    })}
+                    <Link href="/" className="glass-panel rounded-2xl p-4 flex flex-col items-center justify-center text-text-muted hover:text-accent hover:border-accent/20 transition-colors border-2 border-dashed border-transparent min-h-[110px]">
+                      <Plus className="w-5 h-5 mb-1.5" />
+                      <p className="text-xs">Add country</p>
+                    </Link>
                   </div>
                 )}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Account row */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 rounded-xl border border-border">
-          <p className="text-xs text-text-muted">{user.email}</p>
-          <div className="flex gap-2">
-            <button onClick={signOut}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary transition-colors whitespace-nowrap">
-              <LogOut className="w-3 h-3" /> Sign out
-            </button>
-            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/5 transition-colors whitespace-nowrap">
-              <Trash2 className="w-3 h-3" /> Delete account
-            </button>
-          </div>
-        </div>
+            {/* ── HISTORY TAB ── */}
+            {activeTab === 'history' && (
+              <div className="max-w-2xl">
+                <div className="mb-6">
+                  <h2 className="font-heading text-lg font-bold text-text-primary">Quiz history</h2>
+                  <p className="text-sm text-text-muted">Your Find My Country quiz runs</p>
+                </div>
 
-      </div>
+                {!wizardResult ? (
+                  <div className="glass-panel rounded-2xl py-16 flex flex-col items-center gap-4 text-center">
+                    <Clock className="w-10 h-10 text-text-muted" />
+                    <div>
+                      <p className="font-heading font-bold text-text-primary mb-1">No quiz history yet</p>
+                      <p className="text-sm text-text-muted">Take the quiz to see your results saved here</p>
+                    </div>
+                    <Link href="/wizard" className="cta-button px-5 py-2 rounded-xl text-sm inline-flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" /> Find My Country
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="glass-panel rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+                      <div>
+                        <p className="font-heading text-sm font-bold text-text-primary">Latest run</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">{formatDate(wizardResult.created_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:border-accent/30 text-xs text-text-muted hover:text-text-primary transition-colors">
+                          <Download className="w-3 h-3" /> Export
+                        </button>
+                        <Link href="/wizard" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs text-accent hover:bg-accent/20 transition-colors">
+                          <RefreshCw className="w-3 h-3" /> Re-run
+                        </Link>
+                      </div>
+                    </div>
 
-      {/* ── Edit modal ── */}
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-panel rounded-2xl p-6 w-full max-w-md border border-border">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-heading text-lg font-bold text-text-primary">Edit profile</h3>
-              <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+                    {/* Podium */}
+                    <div className="grid grid-cols-3 gap-px bg-border">
+                      {wizardResult.top_countries.slice(0, 3).map((c, i) => (
+                        <Link href={`/country/${c.slug}`} key={c.slug} className="block bg-bg-surface p-5 hover:bg-white/[0.02] transition-colors">
+                          <div className="text-2xl mb-2">{c.flagEmoji}</div>
+                          <p className="font-heading font-bold text-sm text-text-primary">{c.name}</p>
+                          <p className="font-heading text-lg font-extrabold mt-1" style={{ color: RANK_COLORS[i] }}>
+                            {capPercent(c.matchPercent)}%
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Display name</label>
-                <input value={editName} onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary focus:border-accent/40 focus:outline-none transition-colors" />
-              </div>
-
-              <div>
-                <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Job title</label>
-                <input value={editJobTitle} onChange={e => setEditJobTitle(e.target.value)}
-                  placeholder="e.g. Software Engineer, Nurse, Student..."
-                  className="w-full px-3 py-2.5 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none transition-colors" />
-              </div>
-
-              <div>
-                <label className="text-xs text-text-muted uppercase tracking-wider mb-1.5 block">Passport</label>
-                {editPassport && (
-                  <div className="flex items-center justify-between mb-2 px-3 py-2 rounded-lg bg-accent/5 border border-accent/20">
-                    <span className="text-sm text-text-primary">
-                      {PASSPORT_FLAGS[editPassport]?.flag} {PASSPORT_FLAGS[editPassport]?.name}
-                    </span>
-                    <button onClick={() => setEditPassport(null)} className="text-xs text-text-muted hover:text-rose-400 transition-colors">
-                      Clear
-                    </button>
+                    <div className="px-6 py-4 bg-bg-elevated/40 flex items-center justify-between">
+                      <p className="text-xs text-text-muted">
+                        {wizardResult.answers?.role ? `Role: ${wizardResult.answers.role}` : 'Custom preferences'}
+                      </p>
+                      <Link href="/wizard/results" className="text-xs text-accent hover:underline flex items-center gap-1">
+                        View full results <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </div>
                 )}
-                <div className="relative mb-2">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
-                  <input placeholder="Search passport..."
-                    value={passportSearch} onChange={e => setPassportSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:border-accent/40 focus:outline-none transition-colors" />
+
+                {!isPro && (
+                  <div className="mt-4 flex items-center gap-3 px-5 py-4 rounded-2xl border border-accent/20 bg-accent/5">
+                    <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
+                    <p className="text-sm text-text-muted flex-1">
+                      Pro stores unlimited quiz history and lets you compare results over time.
+                    </p>
+                    <Link href="/pro" className="text-xs text-accent font-semibold hover:underline whitespace-nowrap">
+                      Upgrade →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── ACCOUNT TAB ── */}
+            {activeTab === 'account' && (
+              <div className="max-w-2xl space-y-6">
+
+                {/* Edit profile */}
+                <div className="glass-panel rounded-2xl overflow-hidden">
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+                    <h3 className="font-heading text-sm font-bold text-text-primary">Profile</h3>
+                    {!editing ? (
+                      <button onClick={() => setEditing(true)}
+                        className="flex items-center gap-1.5 text-xs text-accent hover:underline">
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/[0.02] transition-colors">
+                          <X className="w-4 h-4" />
+                        </button>
+                        <button onClick={handleSaveProfile} disabled={saving}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent text-bg-primary text-xs font-bold hover:bg-accent/90 transition-colors disabled:opacity-60">
+                          {saving ? 'Saving...' : <><Check className="w-3.5 h-3.5" /> Save</>}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-6 space-y-5">
+                    <div>
+                      <label className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em] mb-2 block">Name</label>
+                      {editing ? (
+                        <input
+                          value={editName}
+                          onChange={e => setEditName(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary transition-colors"
+                        />
+                      ) : (
+                        <p className="text-sm text-text-primary">{displayName || '—'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em] mb-2 block">Email</label>
+                      <p className="text-sm text-text-muted">{user.email}</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em] mb-2 block">Job title</label>
+                      {editing ? (
+                        <input
+                          value={editJobTitle}
+                          onChange={e => setEditJobTitle(e.target.value)}
+                          placeholder="e.g. Software Engineer"
+                          className="w-full px-4 py-2.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary transition-colors"
+                        />
+                      ) : (
+                        <p className="text-sm text-text-primary">{profile?.job_title || <span className="text-text-muted">Not set</span>}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em] mb-2 block">Passport</label>
+                      {editing ? (
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+                            <input
+                              value={passportSearch}
+                              onChange={e => setPassportSearch(e.target.value)}
+                              placeholder="Search passports..."
+                              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-sm text-text-primary transition-colors"
+                            />
+                          </div>
+                          <div className="max-h-48 overflow-y-auto rounded-xl border border-border bg-bg-elevated">
+                            {filteredPassports.map(p => (
+                              <button
+                                key={p.slug}
+                                onClick={() => { setEditPassport(p.slug); setPassportSearch('') }}
+                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-white/[0.03] transition-colors text-left ${editPassport === p.slug ? 'text-accent' : 'text-text-primary'}`}
+                              >
+                                <span>{p.flag}</span>
+                                <span className="flex-1">{p.name}</span>
+                                {editPassport === p.slug && <Check className="w-3.5 h-3.5" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-text-primary">
+                          {passportData ? `${passportData.flag} ${passportData.name}` : <span className="text-text-muted">Not set</span>}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="max-h-36 overflow-y-auto space-y-0.5">
-                  {filteredPassports.slice(0, 20).map(p => (
-                    <button key={p.slug} onClick={() => { setEditPassport(p.slug); setPassportSearch('') }}
-                      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-left transition-colors ${
-                        editPassport === p.slug
-                          ? 'bg-accent/10 text-text-primary'
-                          : 'hover:bg-bg-elevated text-text-muted hover:text-text-primary'
-                      }`}>
-                      <span>{p.flag}</span>
-                      <span className="flex-1">{p.name}</span>
-                      {editPassport === p.slug && <Check className="w-3.5 h-3.5 text-accent" />}
+
+                {/* Subscription */}
+                <div className="glass-panel rounded-2xl overflow-hidden">
+                  <div className="px-6 py-5 border-b border-border">
+                    <h3 className="font-heading text-sm font-bold text-text-primary">Subscription</h3>
+                  </div>
+                  <div className="p-6">
+                    {isPro ? (
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="w-5 h-5 text-accent" />
+                        </div>
+                        <div>
+                          <p className="font-heading font-bold text-text-primary">Origio Pro</p>
+                          <p className="text-[11px] text-text-muted">One-time purchase · Active forever</p>
+                        </div>
+                        <span className="ml-auto text-xs px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent font-bold">Active</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-bg-elevated border border-border flex items-center justify-center flex-shrink-0">
+                          <Globe2 className="w-5 h-5 text-text-muted" />
+                        </div>
+                        <div>
+                          <p className="font-heading font-bold text-text-primary">Free plan</p>
+                          <p className="text-[11px] text-text-muted">Top 3 results · Basic features</p>
+                        </div>
+                        <Link href="/pro" className="ml-auto cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" /> Upgrade — €5
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Danger zone */}
+                <div className="glass-panel rounded-2xl overflow-hidden border border-rose-500/10">
+                  <div className="px-6 py-5 border-b border-rose-500/10">
+                    <h3 className="font-heading text-sm font-bold text-rose-400">Danger zone</h3>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <button onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-text-muted hover:text-text-primary hover:bg-white/[0.02] border border-transparent hover:border-border transition-all"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign out
                     </button>
-                  ))}
+
+                    {!showDeleteConfirm ? (
+                      <button onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-rose-400 hover:bg-rose-500/5 border border-transparent hover:border-rose-500/20 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete account
+                      </button>
+                    ) : (
+                      <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+                        <div className="flex items-start gap-3 mb-4">
+                          <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-rose-400">Delete account permanently?</p>
+                            <p className="text-[11px] text-text-muted mt-1">All your data, saved countries, and quiz results will be deleted. This cannot be undone.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setShowDeleteConfirm(false)}
+                            className="flex-1 py-2 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors">
+                            Cancel
+                          </button>
+                          <button onClick={handleDeleteAccount} disabled={deleteLoading}
+                            className="flex-1 py-2 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 transition-colors disabled:opacity-60">
+                            {deleteLoading ? 'Deleting...' : 'Yes, delete'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {saveError && <p className="text-xs text-rose-400 mt-3">{saveError}</p>}
+          </div>
+        </section>
+      </main>
 
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditing(false)} disabled={saving}
-                className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors disabled:opacity-50">
-                Cancel
-              </button>
-              <button onClick={saveEdit} disabled={saving}
-                className="flex-1 py-2.5 rounded-xl cta-button text-sm disabled:opacity-50">
-                {saving ? 'Saving...' : 'Save changes'}
-              </button>
-            </div>
+      {/* ── Footer ─────────────────────────────────────────────────────────── */}
+      <footer className="border-t border-border mt-10">
+        <div className="max-w-7xl mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Globe2 className="w-4 h-4 text-accent" />
+            <span className="font-heading text-sm font-bold text-text-primary">Origio</span>
+            <span className="text-text-muted text-xs ml-2">© 2026</span>
+          </div>
+          <div className="flex items-center gap-5 text-xs text-text-muted">
+            <Link href="/about" className="hover:text-text-primary transition-colors">About</Link>
+            <Link href="/faq" className="hover:text-text-primary transition-colors">FAQ</Link>
+            <a href="mailto:hello@findorigio.com" className="hover:text-text-primary transition-colors">Contact</a>
           </div>
         </div>
-      )}
-
-      {/* ── Delete confirm ── */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-panel rounded-2xl p-6 max-w-sm w-full border border-rose-500/20">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-rose-400" />
-              </div>
-              <div>
-                <h3 className="font-heading text-lg font-bold text-text-primary">Delete account?</h3>
-                <p className="text-xs text-text-muted">This cannot be undone</p>
-              </div>
-            </div>
-            <p className="text-sm text-text-muted mb-4">
-              All your saved countries, country matches, and profile data will be permanently deleted.
-            </p>
-            {deleteError && <p className="text-xs text-rose-400 mb-4">{deleteError}</p>}
-            <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} disabled={deleteLoading}
-                className="flex-1 py-2.5 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary transition-colors disabled:opacity-50">
-                Cancel
-              </button>
-              <button onClick={deleteAccount} disabled={deleteLoading}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-sm text-rose-400 font-medium transition-colors disabled:opacity-50">
-                {deleteLoading ? 'Deleting...' : 'Yes, delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </footer>
     </div>
   )
 }
