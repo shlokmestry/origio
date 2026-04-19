@@ -13,12 +13,40 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type CountryInfo = { flag_emoji: string; name: string }
 type SavedCountry = {
   id: string
   country_slug: string
   created_at: string
-  countries?: CountryInfo | CountryInfo[] | null
+}
+
+// Slug → { flag, name } lookup — sourced from countries.json slugs
+// No DB join needed; saved_countries has no FK to a countries table
+const COUNTRY_LOOKUP: Record<string, { flag: string; name: string }> = {
+  'australia':      { flag: '🇦🇺', name: 'Australia' },
+  'austria':        { flag: '🇦🇹', name: 'Austria' },
+  'belgium':        { flag: '🇧🇪', name: 'Belgium' },
+  'brazil':         { flag: '🇧🇷', name: 'Brazil' },
+  'canada':         { flag: '🇨🇦', name: 'Canada' },
+  'denmark':        { flag: '🇩🇰', name: 'Denmark' },
+  'finland':        { flag: '🇫🇮', name: 'Finland' },
+  'france':         { flag: '🇫🇷', name: 'France' },
+  'germany':        { flag: '🇩🇪', name: 'Germany' },
+  'india':          { flag: '🇮🇳', name: 'India' },
+  'ireland':        { flag: '🇮🇪', name: 'Ireland' },
+  'italy':          { flag: '🇮🇹', name: 'Italy' },
+  'japan':          { flag: '🇯🇵', name: 'Japan' },
+  'malaysia':       { flag: '🇲🇾', name: 'Malaysia' },
+  'netherlands':    { flag: '🇳🇱', name: 'Netherlands' },
+  'new-zealand':    { flag: '🇳🇿', name: 'New Zealand' },
+  'norway':         { flag: '🇳🇴', name: 'Norway' },
+  'portugal':       { flag: '🇵🇹', name: 'Portugal' },
+  'singapore':      { flag: '🇸🇬', name: 'Singapore' },
+  'spain':          { flag: '🇪🇸', name: 'Spain' },
+  'sweden':         { flag: '🇸🇪', name: 'Sweden' },
+  'switzerland':    { flag: '🇨🇭', name: 'Switzerland' },
+  'uae':            { flag: '🇦🇪', name: 'UAE' },
+  'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom' },
+  'usa':            { flag: '🇺🇸', name: 'USA' },
 }
 type TopCountry = { slug: string; name: string; flagEmoji: string; matchPercent: number }
 type WizardResult = {
@@ -77,10 +105,6 @@ const PASSPORT_LIST = Object.entries(PASSPORT_FLAGS).map(([slug, d]) => ({ slug,
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getCountryInfo(c: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
-  if (!c) return null
-  return Array.isArray(c) ? (c[0] ?? null) : c
-}
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -177,7 +201,7 @@ export default function ProfilePage() {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
-            .select('id, country_slug, created_at, countries(flag_emoji, name)')
+            .select('id, country_slug, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
@@ -724,7 +748,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {savedCountries.map(sc => {
-                      const info = getCountryInfo(sc.countries)
+                      const info = COUNTRY_LOOKUP[sc.country_slug]
                       const matched = wizardResult?.top_countries?.find(t => t.slug === sc.country_slug)
                       return (
                         <div key={sc.id} className="glass-panel rounded-2xl p-4 tile relative group">
@@ -736,7 +760,7 @@ export default function ProfilePage() {
                           </button>
                           <Link href={`/country/${sc.country_slug}`} className="block">
                             <span className="text-3xl mb-3 block">
-                              {info?.flag_emoji ?? '🌍'}
+                              {info?.flag ?? '🌍'}
                             </span>
                             <p className="font-semibold text-sm text-text-primary">
                               {info?.name ?? sc.country_slug}
