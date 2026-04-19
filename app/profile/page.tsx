@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -981,7 +982,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-sm text-text-primary">Change your password</p>
-                        <p className="text-[11px] text-text-muted mt-0.5">We'll send a reset link to {user.email}</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">We&apos;ll send a reset link to {user.email}</p>
                       </div>
                       {passwordEmailSent ? (
                         <span className="flex items-center gap-1.5 text-xs text-accent font-medium flex-shrink-0">
