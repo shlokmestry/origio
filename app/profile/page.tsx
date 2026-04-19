@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import { useAuth } from '@/lib/useAuth'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
   ArrowRight, ArrowRightLeft, RefreshCw, Download,
@@ -169,7 +169,7 @@ function TabButton({ label, active, badge, onClick }: { label: string; active: b
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
@@ -188,20 +188,21 @@ export default function ProfilePage() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
-    // Use getSession directly — reads from cookie, always reliable,
-    // no race condition with useAuth's onAuthStateChange listener
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session?.user) {
-        router.push('/')
-        return
-      }
+    // Wait for useAuth to resolve
+    if (authLoading) return
 
-      setUser(session.user)
-      const userId = session.user.id
-      const initialName = session.user.user_metadata?.full_name ?? session.user.email?.split('@')[0] ?? ''
-      setDisplayName(initialName)
-      setEditName(initialName)
+    // Not signed in — redirect
+    if (!user) {
+      router.push('/')
+      return
+    }
 
+    const userId = user.id
+    const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
+    setDisplayName(initialName)
+    setEditName(initialName)
+
+    async function loadData() {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
@@ -229,8 +230,9 @@ export default function ProfilePage() {
         if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
       } catch {}
       finally { setLoading(false) }
-    })
-  }, [router])
+    }
+    loadData()
+  }, [user, authLoading, router])
 
   const handleSaveProfile = async () => {
     if (!user) return
@@ -304,7 +306,7 @@ export default function ProfilePage() {
   )
 
   // ── Loading / auth states ───────────────────────────────────────────────────
-  if (loading) return (
+  if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>
