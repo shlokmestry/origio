@@ -6,10 +6,22 @@ import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
+import CommandSearch from "@/components/CommandSearch";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { MapPin, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
+import { Search, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
+
+// ─── Placeholder rotation for hero search ────────────────────────────────────
+
+const HERO_PLACEHOLDERS = [
+  "Search for Denmark...",
+  "Try Singapore...",
+  "Explore UAE...",
+  "Find Portugal...",
+  "Discover Norway...",
+  "Search for Canada...",
+];
 
 export default function Home() {
   const router = useRouter();
@@ -21,16 +33,17 @@ export default function Home() {
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [heroPlaceholder, setHeroPlaceholder] = useState(HERO_PLACEHOLDERS[0]);
   const fetchedRef = useRef(false);
 
-  // Lock body scroll while on homepage, restore on unmount
+  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, []);
 
+  // Fetch countries
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -40,7 +53,7 @@ export default function Home() {
       .catch((err) => console.error("Failed to fetch countries:", err));
   }, []);
 
-  // Load saved countries for pink pin highlighting
+  // Saved countries for pin highlighting
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
@@ -56,6 +69,7 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Wizard highlights from session
   useEffect(() => {
     const raw = sessionStorage.getItem("highlightedCountries");
     const matchesRaw = sessionStorage.getItem("wizardMatches");
@@ -64,43 +78,61 @@ export default function Home() {
       setHighlightedSlugs(slugs);
       setShowHero(false);
       sessionStorage.removeItem("highlightedCountries");
-      if (matchesRaw) {
-        setWizardMatches(JSON.parse(matchesRaw));
-      }
+      if (matchesRaw) setWizardMatches(JSON.parse(matchesRaw));
       if (slugs[0]) {
         setTimeout(() => {
           const country = allCountries.find((c) => c.slug === slugs[0]);
-          if (country) {
-            setSelectedSlug(slugs[0]);
-            setSelectedCountry(country);
-          }
+          if (country) { setSelectedSlug(slugs[0]); setSelectedCountry(country); }
         }, 1000);
       }
     }
   }, [allCountries]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "Escape") {
+        handleClosePanel();
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  // Hero placeholder rotation
+  useEffect(() => {
+    if (!showHero) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % HERO_PLACEHOLDERS.length;
+      setHeroPlaceholder(HERO_PLACEHOLDERS[i]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [showHero]);
+
   const globeCountries = useMemo<GlobeCountry[]>(
-    () =>
-      allCountries.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        flagEmoji: c.flagEmoji,
-        lat: c.lat,
-        lng: c.lng,
-        moveScore: c.data.moveScore,
-        salarySoftwareEngineer: c.data.salarySoftwareEngineer,
-        costRentCityCentre: c.data.costRentCityCentre,
-        scoreQualityOfLife: c.data.scoreQualityOfLife,
-        visaDifficulty: c.data.visaDifficulty,
-      })),
+    () => allCountries.map((c) => ({
+      slug: c.slug,
+      name: c.name,
+      flagEmoji: c.flagEmoji,
+      lat: c.lat,
+      lng: c.lng,
+      moveScore: c.data.moveScore,
+      salarySoftwareEngineer: c.data.salarySoftwareEngineer,
+      costRentCityCentre: c.data.costRentCityCentre,
+      scoreQualityOfLife: c.data.scoreQualityOfLife,
+      visaDifficulty: c.data.visaDifficulty,
+    })),
     [allCountries]
   );
 
   const trendingCountries = useMemo(
-    () =>
-      [...allCountries]
-        .sort((a, b) => b.data.moveScore - a.data.moveScore)
-        .slice(0, 5),
+    () => [...allCountries].sort((a, b) => b.data.moveScore - a.data.moveScore).slice(0, 5),
     [allCountries]
   );
 
@@ -108,10 +140,7 @@ export default function Home() {
     (slug: string) => {
       setSelectedSlug(slug);
       const country = allCountries.find((c) => c.slug === slug);
-      if (country) {
-        setSelectedCountry(country);
-        setShowHero(false);
-      }
+      if (country) { setSelectedCountry(country); setShowHero(false); }
     },
     [allCountries]
   );
@@ -120,15 +149,6 @@ export default function Home() {
     setSelectedSlug(null);
     setSelectedCountry(null);
   }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") e.preventDefault();
-      if (e.key === "Escape") handleClosePanel();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleClosePanel]);
 
   return (
     <main className="fixed inset-0 bg-bg-primary overflow-hidden">
@@ -146,8 +166,23 @@ export default function Home() {
 
       {/* Nav */}
       <div className="relative z-50">
-        <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+        <Nav
+          countries={globeCountries}
+          onCountrySelect={handleCountrySelect}
+          onSearchOpen={() => setSearchOpen(true)}
+        />
       </div>
+
+      {/* Command search modal */}
+      <CommandSearch
+        countries={globeCountries}
+        onCountrySelect={(slug) => {
+          handleCountrySelect(slug);
+          setSearchOpen(false);
+        }}
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
 
       {/* Hero overlay */}
       {showHero && (
@@ -156,112 +191,111 @@ export default function Home() {
             className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
             style={{
               zIndex: 5,
-              background:
-                "linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 40%, transparent 100%)",
+              background: "linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 40%, transparent 100%)",
             }}
           />
+          <div className="fixed bottom-0 left-0 right-0 z-10 px-6 pb-8 sm:pb-12 max-w-2xl">
 
-          <div
-            className="fixed bottom-0 left-0 right-0 z-10 px-5 pb-8 sm:px-10 sm:pb-12 lg:px-16 lg:pb-16"
-            style={{ pointerEvents: "none" }}
-          >
-            <div className="max-w-2xl">
-              {/* Badge */}
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4 animate-fade-up"
-                style={{ animationDelay: "0.1s", opacity: 0 }}
-              >
-                <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span>
-                  Real data across {allCountries.length} countries · 20 job roles · trusted by expats
-                </span>
+            <div
+              className="mb-5 animate-fade-up"
+              style={{ opacity: 0, animationDelay: "0.1s", animationFillMode: "forwards" }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-4">
+                <Globe2 className="w-3 h-3" />
+                Real data across 25 countries · 20 job roles · trusted by expats
               </div>
 
-              {/* Headline */}
-              <h1
-                className="font-heading text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight mb-4 animate-fade-up"
-                style={{ animationDelay: "0.2s", opacity: 0 }}
-              >
-                Find Where
-                <br />
-                <span className="gradient-text">You Belong</span>
+              <h1 className="font-heading text-5xl sm:text-6xl font-extrabold tracking-tight leading-[0.95] text-text-primary mb-3">
+                Find Where<br />
+                You <span className="gradient-text">Belong</span>
               </h1>
-
-              {/* Subtext */}
-              <p
-                className="text-base sm:text-xl text-text-muted max-w-lg leading-relaxed mb-6 animate-fade-up"
-                style={{ animationDelay: "0.4s", opacity: 0 }}
-              >
-                Salaries, visas, cost of living and quality of life —{" "}
+              <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed">
+                Salaries, visas, cost of living and quality of life —<br className="hidden sm:block" />
                 personalised to your job and passport.
               </p>
+            </div>
 
-              {/* CTA */}
-              <div
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 animate-fade-up"
-                style={{ animationDelay: "0.6s", opacity: 0, pointerEvents: "auto" }}
+            {/* ── Hero Search Bar ── */}
+            <div
+              className="mb-5 animate-fade-up"
+              style={{ opacity: 0, animationDelay: "0.35s", animationFillMode: "forwards" }}
+            >
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-full max-w-md flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-white/10 hover:border-accent/30 transition-all text-left group"
+                style={{ background: "rgba(17,17,24,0.85)", backdropFilter: "blur(24px)" }}
               >
-                <button
-                  onClick={() => router.push("/wizard")}
-                  className="cta-button px-10 py-4 rounded-2xl text-base sm:text-lg tracking-wide animate-pulse-glow flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Find My Country
-                </button>
-              </div>
-
-              {/* Trending */}
-              {trendingCountries.length > 0 && (
-                <div
-                  className="mb-5 animate-fade-up"
-                  style={{ animationDelay: "0.7s", opacity: 0, pointerEvents: "auto" }}
-                >
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5 text-xs text-text-muted flex-shrink-0">
-                      <TrendingUp className="w-3 h-3" />
-                      <span>Trending</span>
-                    </div>
-                    {trendingCountries.map((country) => (
-                      <button
-                        key={country.slug}
-                        onClick={() => handleCountrySelect(country.slug)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-elevated border border-border hover:border-accent/30 hover:bg-accent/5 transition-all group"
-                      >
-                        <span className="text-sm">{country.flagEmoji}</span>
-                        <span className="text-xs text-text-muted group-hover:text-text-primary transition-colors">
-                          {country.name}
-                        </span>
-                        <span className="text-xs font-bold text-accent">
-                          {country.data.moveScore}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                <Search className="w-4 h-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
+                <span className="text-sm text-text-muted flex-1 transition-all">
+                  {heroPlaceholder}
+                </span>
+                <div className="hidden sm:flex items-center gap-1 text-[10px] text-text-muted flex-shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded bg-bg-elevated border border-border">⌘</kbd>
+                  <kbd className="px-1.5 py-0.5 rounded bg-bg-elevated border border-border">K</kbd>
                 </div>
-              )}
+              </button>
+            </div>
 
-              {/* Step hints */}
-              <div
-                className="hidden sm:flex flex-wrap items-center gap-3 animate-fade-up"
-                style={{ animationDelay: "0.8s", opacity: 0 }}
+            {/* CTA */}
+            <div
+              className="mb-6 animate-fade-up"
+              style={{ opacity: 0, animationDelay: "0.5s", animationFillMode: "forwards" }}
+            >
+              <button
+                onClick={() => router.push("/wizard")}
+                className="cta-button px-6 py-3 rounded-xl text-sm font-medium inline-flex items-center gap-2"
               >
-                {[
-                  { icon: Sparkles, label: "Take the quiz" },
-                  { icon: Globe2, label: "See your matches" },
-                  { icon: Briefcase, label: "Plan your move" },
-                  { icon: FileText, label: "Get your report" },
-                ].map((item, i) => (
-                  <>
-                    {i > 0 && <div key={`sep-${i}`} className="w-4 h-px bg-border flex-shrink-0" />}
-                    <div key={item.label} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-3.5 h-3.5 text-accent" />
-                      </div>
-                      <span className="text-xs text-text-muted">{item.label}</span>
-                    </div>
-                  </>
-                ))}
+                <Sparkles className="w-4 h-4" />
+                Find My Country
+              </button>
+            </div>
+
+            {/* Trending */}
+            {trendingCountries.length > 0 && (
+              <div
+                className="animate-fade-up"
+                style={{ opacity: 0, animationDelay: "0.65s", animationFillMode: "forwards" }}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-text-muted flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> Trending
+                  </span>
+                  {trendingCountries.map((country) => (
+                    <button
+                      key={country.slug}
+                      onClick={() => handleCountrySelect(country.slug)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bg-elevated/60 border border-border hover:border-accent/30 text-xs transition-all group"
+                    >
+                      <span>{country.flagEmoji}</span>
+                      <span className="text-text-muted group-hover:text-text-primary transition-colors">{country.name}</span>
+                      <span className="text-accent font-bold">{country.data.moveScore}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Step hints */}
+            <div
+              className="hidden sm:flex flex-wrap items-center gap-3 mt-5 animate-fade-up"
+              style={{ animationDelay: "0.8s", opacity: 0, animationFillMode: "forwards" }}
+            >
+              {[
+                { icon: Sparkles, label: "Take the quiz" },
+                { icon: Globe2, label: "See your matches" },
+                { icon: Briefcase, label: "Plan your move" },
+                { icon: FileText, label: "Get your report" },
+              ].map((item, i) => (
+                <>
+                  {i > 0 && <div key={`sep-${i}`} className="w-4 h-px bg-border flex-shrink-0" />}
+                  <div key={item.label} className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-3.5 h-3.5 text-accent" />
+                    </div>
+                    <span className="text-xs text-text-muted">{item.label}</span>
+                  </div>
+                </>
+              ))}
             </div>
           </div>
         </>
@@ -302,9 +336,7 @@ export default function Home() {
           <div className="glass-panel rounded-full px-6 py-3 flex items-center gap-3 shadow-xl shadow-black/30">
             <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-sm text-text-muted">
-              {highlightedSlugs.length > 0
-                ? "Your matched countries are highlighted"
-                : "Click a country to explore"}
+              {highlightedSlugs.length > 0 ? "Your matched countries are highlighted" : "Click a country to explore"}
             </span>
           </div>
         </div>
