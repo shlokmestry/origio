@@ -186,6 +186,8 @@ export default function ProfilePage() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [passwordEmailLoading, setPasswordEmailLoading] = useState(false)
+  const [passwordEmailSent, setPasswordEmailSent] = useState(false)
 
   useEffect(() => {
     // Wait for useAuth to resolve
@@ -254,6 +256,17 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
+  }
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return
+    setPasswordEmailLoading(true)
+    await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    })
+    setPasswordEmailLoading(false)
+    setPasswordEmailSent(true)
+    setTimeout(() => setPasswordEmailSent(false), 5000)
   }
 
   const handleDeleteAccount = async () => {
@@ -954,6 +967,34 @@ export default function ProfilePage() {
                         <p className="text-sm text-text-primary">
                           {passportData ? `${passportData.flag} ${passportData.name}` : <span className="text-text-muted">Not set</span>}
                         </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Change password */}
+                <div className="glass-panel rounded-2xl overflow-hidden">
+                  <div className="px-6 py-5 border-b border-border">
+                    <h3 className="font-heading text-sm font-bold text-text-primary">Password</h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-text-primary">Change your password</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">We'll send a reset link to {user.email}</p>
+                      </div>
+                      {passwordEmailSent ? (
+                        <span className="flex items-center gap-1.5 text-xs text-accent font-medium flex-shrink-0">
+                          <Check className="w-3.5 h-3.5" /> Email sent
+                        </span>
+                      ) : (
+                        <button
+                          onClick={handleChangePassword}
+                          disabled={passwordEmailLoading}
+                          className="flex-shrink-0 px-4 py-2 rounded-xl border border-border text-xs text-text-muted hover:text-text-primary hover:border-accent/30 transition-all disabled:opacity-50"
+                        >
+                          {passwordEmailLoading ? 'Sending...' : 'Send reset email'}
+                        </button>
                       )}
                     </div>
                   </div>
