@@ -181,10 +181,14 @@ export default function ProfilePage() {
       if (profileError) throw profileError
 
       if (editName.trim()) {
-        const nameUpdatePromise = supabase.auth.updateUser({
-          data: { full_name: editName.trim() }
-        })
-        if (nameError) console.error('Name update failed:', nameError)
+        try {
+          await Promise.race([
+            supabase.auth.updateUser({ data: { full_name: editName.trim() } }),
+            new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 3000))
+          ])
+        } catch (e) {
+          console.error('Name update failed or timed out:', e)
+        }
       }
 
       // Update all local display state instantly — no refresh needed
