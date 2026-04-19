@@ -10,18 +10,7 @@ import CommandSearch from "@/components/CommandSearch";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { Search, Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
-
-// ─── Placeholder rotation for hero search ────────────────────────────────────
-
-const HERO_PLACEHOLDERS = [
-  "Search for Denmark...",
-  "Try Singapore...",
-  "Explore UAE...",
-  "Find Portugal...",
-  "Discover Norway...",
-  "Search for Canada...",
-];
+import { Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -34,7 +23,6 @@ export default function Home() {
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [heroPlaceholder, setHeroPlaceholder] = useState(HERO_PLACEHOLDERS[0]);
   const fetchedRef = useRef(false);
 
   // Lock body scroll
@@ -104,17 +92,6 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Hero placeholder rotation
-  useEffect(() => {
-    if (!showHero) return;
-    let i = 0;
-    const interval = setInterval(() => {
-      i = (i + 1) % HERO_PLACEHOLDERS.length;
-      setHeroPlaceholder(HERO_PLACEHOLDERS[i]);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [showHero]);
-
   const globeCountries = useMemo<GlobeCountry[]>(
     () => allCountries.map((c) => ({
       slug: c.slug,
@@ -127,6 +104,7 @@ export default function Home() {
       costRentCityCentre: c.data.costRentCityCentre,
       scoreQualityOfLife: c.data.scoreQualityOfLife,
       visaDifficulty: c.data.visaDifficulty,
+      incomeTaxRateMid: c.data.incomeTaxRateMid,
     })),
     [allCountries]
   );
@@ -213,27 +191,6 @@ export default function Home() {
                 Salaries, visas, cost of living and quality of life —<br className="hidden sm:block" />
                 personalised to your job and passport.
               </p>
-            </div>
-
-            {/* ── Hero Search Bar ── */}
-            <div
-              className="mb-5 animate-fade-up"
-              style={{ opacity: 0, animationDelay: "0.35s", animationFillMode: "forwards" }}
-            >
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="w-full max-w-md flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-white/10 hover:border-accent/30 transition-all text-left group"
-                style={{ background: "rgba(17,17,24,0.85)", backdropFilter: "blur(24px)" }}
-              >
-                <Search className="w-4 h-4 text-text-muted group-hover:text-accent transition-colors flex-shrink-0" />
-                <span className="text-sm text-text-muted flex-1 transition-all">
-                  {heroPlaceholder}
-                </span>
-                <div className="hidden sm:flex items-center gap-1 text-[10px] text-text-muted flex-shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded bg-bg-elevated border border-border">⌘</kbd>
-                  <kbd className="px-1.5 py-0.5 rounded bg-bg-elevated border border-border">K</kbd>
-                </div>
-              </button>
             </div>
 
             {/* CTA */}
