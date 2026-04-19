@@ -7,18 +7,38 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get session immediately from cookie — synchronous, no race condition
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
+    let mounted = true
+
+    // onAuthStateChange fires INITIAL_SESSION first — this is the
+    // most reliable way to get the session on both hard refresh AND
+    // client-side navigation, because it reads from the in-memory
+    // token store which persists across Next.js route transitions.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setLoading(false)
+      }
     })
 
-    // Keep in sync with auth changes (sign in/out)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+    // Fallback: if INITIAL_SESSION never fires within 2s, force resolve
+    const fallback = setTimeout(() => {
+      if (!mounted) return
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!mounted) return
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
+    }, 2000)
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+      clearTimeout(fallback)
+    }
   }, [])
 
   return { user, loading }
