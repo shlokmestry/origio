@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Globe2, ArrowLeft, Mail } from 'lucide-react'
+import { Globe2, ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'About — Origio',
@@ -102,26 +102,10 @@ export default function AboutPage() {
                 Every relocation decision involves dozens of variables — salary, tax, visa difficulty, cost of living, healthcare, safety, language. I wanted a tool that pulled all of that together in one place and made it easy to explore. So I built it.
               </p>
               <p>
-                Origio is a solo project, built entirely in the open. If you find a data error, have a suggestion, or just want to say hello — drop me an email.
+                Origio is a solo project. If you find a data error, have a suggestion, or just want to say hello —{' '}
+                <Link href="/contact" className="text-accent hover:underline">get in touch</Link>.
               </p>
             </div>
-          </div>
-        </section>
-
-        {/* Contact */}
-        <section className="mb-12">
-          <h2 className="font-heading text-2xl font-bold text-text-primary mb-4">Contact</h2>
-          <div className="glass-panel rounded-2xl p-6 border border-border">
-            <p className="text-text-muted text-sm mb-4 leading-relaxed">
-              For data corrections, payment issues, feature requests, or anything else — email is the best way to reach me. I read and respond to every message.
-            </p>
-            <a
-              href="mailto:notshlokmestry@gmail.com"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border hover:border-accent/30 hover:bg-accent/5 text-sm text-text-muted hover:text-text-primary transition-all"
-            >
-              <Mail className="w-4 h-4 text-accent" />
-              notshlokmestry@gmail.com
-            </a>
           </div>
         </section>
 
@@ -143,6 +127,21 @@ export default function AboutPage() {
         </div>
 
       </div>
+
+      <footer className="border-t border-border mt-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Globe2 className="w-4 h-4 text-accent" />
+            <span className="font-heading text-sm font-bold text-text-primary">Origio</span>
+            <span className="text-text-muted text-xs ml-2">© 2026</span>
+          </div>
+          <div className="flex items-center gap-5 text-xs text-text-muted">
+            <Link href="/faq" className="hover:text-text-primary transition-colors">FAQ</Link>
+            <Link href="/about" className="hover:text-text-primary transition-colors">About</Link>
+            <Link href="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
