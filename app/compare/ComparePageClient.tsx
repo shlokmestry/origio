@@ -438,12 +438,16 @@ export default function ComparePageClient() {
       </main>
 
       <footer className="border-t border-border mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Globe2 className="w-4 h-4 text-accent" />
             <span className="font-heading text-sm font-bold text-text-primary">Origio</span>
           </div>
-          <p className="text-xs text-text-muted">Compare countries side by side</p>
+          <div className="flex items-center gap-5 text-xs text-text-muted">
+            <a href="/faq" className="hover:text-text-primary transition-colors">FAQ</a>
+            <a href="/about" className="hover:text-text-primary transition-colors">About</a>
+            <a href="/contact" className="hover:text-text-primary transition-colors">Contact</a>
+          </div>
         </div>
       </footer>
     </div>

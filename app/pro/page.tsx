@@ -20,7 +20,7 @@ const FREE_FEATURES = [
 ]
 
 const PRO_FEATURES = [
-  { text: 'All 25 countries ranked ~ not just top 3', bold: 'All 25 countries' },
+  { text: 'All 25 countries ranked — not just top 3', bold: 'All 25 countries' },
   { text: 'Unlimited Find My Country runs', bold: null },
   { text: 'Full country deep-dives', bold: null },
   { text: 'Side-by-side comparison', bold: null },
@@ -43,11 +43,11 @@ const LOCKED_MATCHES = [
 const FAQS = [
   {
     q: 'Is this really a one-time payment?',
-    a: "Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no auto-renewal ~ we'll never charge your card again.",
+    a: "Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no auto-renewal — we'll never charge your card again.",
   },
   {
     q: 'What payment methods are accepted?',
-    a: "All major credit and debit cards, plus Apple Pay and Google Pay ~ processed securely via Stripe. We never see your card details.",
+    a: "All major credit and debit cards, plus Apple Pay and Google Pay — processed securely via Stripe. We never see your card details.",
   },
   {
     q: 'Can I get a refund?',
@@ -55,7 +55,7 @@ const FAQS = [
   },
   {
     q: 'Do I need an account?',
-    a: "Yes, Pro features are tied to your account so they work across devices and stay active forever. You can browse the free globe without one.",
+    a: "Yes — Pro features are tied to your account so they work across devices and stay active forever. You can browse the free globe without one.",
   },
   {
     q: 'What if I already ran Find My Country as a free user?',
@@ -465,9 +465,10 @@ export default function ProPage() {
             <span className="font-heading text-sm font-bold text-text-primary">Origio</span>
             <span className="text-text-muted text-xs ml-2">© 2026</span>
           </div>
-          <div className="flex items-center gap-5 text-xs text-text-muted">
-            <Link href="/about" className="hover:text-text-primary transition-colors">About</Link>
+          <div className="flex items-center gap-6 text-xs text-text-muted">
             <Link href="/faq" className="hover:text-text-primary transition-colors">FAQ</Link>
+            <Link href="/about" className="hover:text-text-primary transition-colors">About</Link>
+            <Link href="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

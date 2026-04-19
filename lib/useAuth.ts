@@ -8,69 +8,39 @@ export function useAuth() {
 
   useEffect(() => {
     let mounted = true
-    let attempts = 0
-    let started = false
 
-    async function checkAuthWithRetry() {
-      if (!mounted || started) return
-      started = true
-      
-      await new Promise(resolve => setTimeout(resolve, 200))
-      if (!mounted) return
-      
-      attempts++
-      
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!mounted) return
-      
-      if (session?.user) {
-        setUser(session.user)
-        setLoading(false)
-        return
-      }
-
-      if (attempts < 5) {
-        started = false
-        await new Promise(resolve => setTimeout(resolve, 300))
-        if (mounted) {
-          checkAuthWithRetry()
-        }
-      } else {
-        setLoading(false)
-      }
-    }
-
+    // onAuthStateChange fires INITIAL_SESSION synchronously from the cookie
+    // on page load — this is the single source of truth. No need for
+    // getSession() polling or retry loops on top of it.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
 
-      if (
-        event === 'INITIAL_SESSION' ||
-        event === 'SIGNED_IN' ||
-        event === 'USER_UPDATED'
-      ) {
-        if (session?.user) {
-          setUser(session.user)
-        }
+      if (event === 'INITIAL_SESSION') {
+        // Always fires first — sets definitive initial state
+        setUser(session?.user ?? null)
         setLoading(false)
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setLoading(false)
       }
     })
 
-    checkAuthWithRetry()
-
-    const timeout = setTimeout(() => {
-      if (mounted) {
-        setLoading(false)
-      }
-    }, 10000)
+    // Safety net: if INITIAL_SESSION never fires (edge case / cold start)
+    // fall back to getSession after 3s
+    const fallback = setTimeout(async () => {
+      if (!mounted || !loading) return
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!mounted) return
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }, 3000)
 
     return () => {
       mounted = false
       subscription.unsubscribe()
-      clearTimeout(timeout)
+      clearTimeout(fallback)
     }
   }, [])
 

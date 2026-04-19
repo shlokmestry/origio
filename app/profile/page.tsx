@@ -190,7 +190,17 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/'); return }
+    if (!user) {
+      // Don't redirect immediately — do a direct session check first
+      // to guard against useAuth race conditions
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.user) {
+          router.push('/')
+        }
+        // If session exists, useAuth will update user shortly — just wait
+      })
+      return
+    }
 
     const userId = user.id
     const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
@@ -224,7 +234,7 @@ export default function ProfilePage() {
         }
         if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
       } catch {}
-      setLoading(false)
+      finally { setLoading(false) }
     }
     loadData()
   }, [user, authLoading, router])
@@ -1047,7 +1057,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-5 text-xs text-text-muted">
             <Link href="/about" className="hover:text-text-primary transition-colors">About</Link>
             <Link href="/faq" className="hover:text-text-primary transition-colors">FAQ</Link>
-            <a href="mailto:hello@findorigio.com" className="hover:text-text-primary transition-colors">Contact</a>
+            <Link href="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
