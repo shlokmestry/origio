@@ -88,15 +88,19 @@ export default function ProPage() {
   // Wizard result state
   const [wizardMatches, setWizardMatches] = useState<TopCountry[] | null>(null)
   const [wizardLoading, setWizardLoading] = useState(true)
+  const [isSignedIn, setIsSignedIn] = useState(false)
 
   // On mount: check session directly — no useAuth race condition
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) {
         // Not signed in — show page normally, no redirect
+        setIsSignedIn(false)
         setWizardLoading(false)
         return
       }
+
+      setIsSignedIn(true)
 
       const userId = session.user.id
 
@@ -253,7 +257,7 @@ export default function ProPage() {
               </div>
 
               {/* No quiz nudge — shown when signed in but no wizard results */}
-              {showFallback && user && (
+              {showFallback && isSignedIn && (
                 <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-accent/5">
                   <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                   <p className="text-xs text-text-muted flex-1">
@@ -267,7 +271,7 @@ export default function ProPage() {
               )}
 
               {/* No quiz nudge — signed out */}
-              {showFallback && !user && (
+              {showFallback && !isSignedIn && (
                 <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-accent/5">
                   <Sparkles className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                   <p className="text-xs text-text-muted flex-1">
