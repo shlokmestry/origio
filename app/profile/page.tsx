@@ -194,22 +194,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let mounted = true
+    // Guard against double-init from both getSession() and onAuthStateChange
+    // firing concurrently (e.g. getSession resolves at the same time as TOKEN_REFRESHED)
+    let initialized = false
 
-    async function init() {
-      // Use getSession() directly — works on both hard refresh AND
-      // client-side navigation. Never hangs unlike INITIAL_SESSION event.
-      const { data: { session } } = await supabase.auth.getSession()
+    async function loadProfileData(currentUser: User) {
+      if (initialized || !mounted) return
+      initialized = true
 
-      if (!mounted) return
-
-      if (!session?.user) {
-        router.push('/')
-        return
-      }
-
-      const currentUser = session.user
       setUser(currentUser)
-
       const initialName = currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? ''
       setDisplayName(initialName)
       setEditName(initialName)
@@ -254,13 +247,35 @@ export default function ProfilePage() {
       if (mounted) setLoading(false)
     }
 
-    init()
-
-    // Listen for sign-out while on this page
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // onAuthStateChange as primary mechanism for client-side navigation:
+    // when the middleware refreshes the cookie during navigation, Supabase
+    // fires TOKEN_REFRESHED (or SIGNED_IN) with the valid session — this
+    // catches the case where getSession() is blocked waiting on the same
+    // internal refresh lock and never resolves.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
       if (event === 'SIGNED_OUT') {
         router.push('/')
+        return
       }
+      if (session?.user && !initialized) {
+        loadProfileData(session.user)
+      }
+    })
+
+    // getSession() as the fast path on hard refresh and when there is no
+    // concurrent token refresh (session already stable in memory/cookies).
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted || initialized) return
+      if (session?.user) {
+        loadProfileData(session.user)
+      } else {
+        router.push('/')
+      }
+    }).catch(() => {
+      // If getSession() itself errors, onAuthStateChange above will still
+      // fire and recover. Only redirect if nothing else initialized us.
+      if (mounted && !initialized) router.push('/')
     })
 
     return () => {
