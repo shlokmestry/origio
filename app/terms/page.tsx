@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Globe2, ArrowLeft } from 'lucide-react'
@@ -76,7 +77,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="font-heading text-xl font-bold text-text-primary mb-3">7. Disclaimer of warranties</h2>
-            <p>Origio is provided "as is" without warranties of any kind. We do not guarantee that the service will be available at all times, error-free, or that the information is accurate or complete. Use of Origio is at your own risk.</p>
+            <p>Origio is provided &ldquo;as is&rdquo; without warranties of any kind. We do not guarantee that the service will be available at all times, error-free, or that the information is accurate or complete. Use of Origio is at your own risk.</p>
           </section>
 
           <section>

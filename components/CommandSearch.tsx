@@ -158,7 +158,10 @@ export default function CommandSearch({ countries, onCountrySelect, open, onClos
   const showResults = results.length > 0;
   const showRecent = !query && !activeFilter && recentCountries.length > 0;
   const showFilters = !query || activeFilter;
-  const allItems = showResults ? results : showRecent ? recentCountries : [];
+  const allItems = useMemo(
+    () => showResults ? results : showRecent ? recentCountries : [],
+    [showResults, results, showRecent, recentCountries]
+  );
 
   const select = useCallback((slug: string) => {
     addRecent(slug);

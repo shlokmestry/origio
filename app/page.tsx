@@ -76,22 +76,6 @@ export default function Home() {
     }
   }, [allCountries]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-      if (e.key === "Escape") {
-        handleClosePanel();
-        setSearchOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
   const globeCountries = useMemo<GlobeCountry[]>(
     () => allCountries.map((c) => ({
       slug: c.slug,
@@ -127,6 +111,22 @@ export default function Home() {
     setSelectedSlug(null);
     setSelectedCountry(null);
   }, []);
+
+  // Keyboard shortcuts — after handleClosePanel is declared
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "Escape") {
+        handleClosePanel();
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleClosePanel]);
 
   return (
     <main className="fixed inset-0 bg-bg-primary overflow-hidden">
