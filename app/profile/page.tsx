@@ -1,16 +1,16 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/useAuth'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil, Check, X,
   ArrowRight, ArrowRightLeft, RefreshCw, Download,
   MapPin, Briefcase, Shield, ChevronRight, Heart, Clock,
   BarChart3, AlertTriangle, Search, Plus
 } from 'lucide-react'
+import type { User } from '@supabase/supabase-js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,8 +20,6 @@ type SavedCountry = {
   created_at: string
 }
 
-// Slug → { flag, name } lookup — sourced from countries.json slugs
-// No DB join needed; saved_countries has no FK to a countries table
 const COUNTRY_LOOKUP: Record<string, { flag: string; name: string }> = {
   'australia':      { flag: '🇦🇺', name: 'Australia' },
   'austria':        { flag: '🇦🇹', name: 'Austria' },
@@ -49,6 +47,7 @@ const COUNTRY_LOOKUP: Record<string, { flag: string; name: string }> = {
   'united-kingdom': { flag: '🇬🇧', name: 'United Kingdom' },
   'usa':            { flag: '🇺🇸', name: 'USA' },
 }
+
 type TopCountry = { slug: string; name: string; flagEmoji: string; matchPercent: number }
 type WizardResult = {
   top_countries: TopCountry[]
@@ -170,9 +169,12 @@ function TabButton({ label, active, badge, onClick }: { label: string; active: b
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
-  const [profile, setProfile] = useState<Profile | null>(null)
+
+  // Single loading state — no useAuth, just direct getSession()
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
   const [activeTab, setActiveTab] = useState<'atlas' | 'saved' | 'history' | 'account'>('atlas')
@@ -191,51 +193,81 @@ export default function ProfilePage() {
   const [passwordEmailSent, setPasswordEmailSent] = useState(false)
 
   useEffect(() => {
-    // Wait for useAuth to resolve
-    if (authLoading) return
+    let mounted = true
 
-    // Not signed in — redirect
-    if (!user) {
-      router.push('/')
-      return
-    }
+    async function init() {
+      // Use getSession() directly — works on both hard refresh AND
+      // client-side navigation. Never hangs unlike INITIAL_SESSION event.
+      const { data: { session } } = await supabase.auth.getSession()
 
-    const userId = user.id
-    const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
-    setDisplayName(initialName)
-    setEditName(initialName)
+      if (!mounted) return
 
-    async function loadData() {
+      if (!session?.user) {
+        router.push('/')
+        return
+      }
+
+      const currentUser = session.user
+      setUser(currentUser)
+
+      const initialName = currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? ''
+      setDisplayName(initialName)
+      setEditName(initialName)
+
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at')
-            .eq('user_id', userId)
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', userId)
+            .eq('user_id', currentUser.id)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', userId)
+            .eq('id', currentUser.id)
             .single(),
         ])
 
+        if (!mounted) return
+
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
+
         const p = profileRes.data ?? null
         setProfile(p)
+
         if (p) {
           setEditJobTitle(p.job_title ?? '')
           setEditPassport(p.passport_slug)
         }
-        if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
-      } catch {}
-      finally { setLoading(false) }
+
+        if (p && !p.onboarded) {
+          window.location.href = '/onboarding'
+          return
+        }
+      } catch (err) {
+        console.error('Profile load error:', err)
+      }
+
+      if (mounted) setLoading(false)
     }
-    loadData()
-  }, [user, authLoading, router])
+
+    init()
+
+    // Listen for sign-out while on this page
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        router.push('/')
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [router])
 
   const handleSaveProfile = async () => {
     if (!user) return
@@ -319,8 +351,8 @@ export default function ProfilePage() {
     p.name.toLowerCase().includes(passportSearch.toLowerCase())
   )
 
-  // ── Loading / auth states ───────────────────────────────────────────────────
-  if (authLoading || loading) return (
+  // ── Loading state ───────────────────────────────────────────────────────────
+  if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>
@@ -354,13 +386,11 @@ export default function ProfilePage() {
 
         {/* ── Hero identity section ────────────────────────────────────────── */}
         <section className="relative border-b border-border overflow-hidden">
-          {/* Background grid */}
           <div className="absolute inset-0 pointer-events-none" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
             maskImage: 'radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%)',
           }} />
-          {/* Ambient color wash */}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: 'radial-gradient(40% 60% at 15% 30%, rgba(251,191,36,0.1), transparent 70%), radial-gradient(50% 70% at 80% 10%, rgba(0,212,200,0.12), transparent 70%)',
           }} />
@@ -609,7 +639,7 @@ export default function ProfilePage() {
                           ))}
                         </div>
 
-                        {/* Ranked rows — show all if pro, else top 10 teaser */}
+                        {/* Ranked rows */}
                         <div>
                           {wizardResult.top_countries.slice(3).map((c, i) => {
                             const rank = i + 4
@@ -718,7 +748,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Upgrade nudge (non-pro only) */}
+                  {/* Upgrade nudge */}
                   {!isPro && (
                     <div className="glass-panel rounded-2xl p-5 relative overflow-hidden" style={{
                       background: 'linear-gradient(135deg, rgba(0,212,200,0.05) 0%, rgba(0,0,0,0) 60%)',
@@ -778,12 +808,8 @@ export default function ProfilePage() {
                             <X className="w-3 h-3" />
                           </button>
                           <Link href={`/country/${sc.country_slug}`} className="block">
-                            <span className="text-3xl mb-3 block">
-                              {info?.flag ?? '🌍'}
-                            </span>
-                            <p className="font-semibold text-sm text-text-primary">
-                              {info?.name ?? sc.country_slug}
-                            </p>
+                            <span className="text-3xl mb-3 block">{info?.flag ?? '🌍'}</span>
+                            <p className="font-semibold text-sm text-text-primary">{info?.name ?? sc.country_slug}</p>
                             {matched ? (
                               <p className="text-[11px] mt-1" style={{ color: getMatchColor(matched.matchPercent) }}>
                                 {capPercent(matched.matchPercent)}% match
@@ -840,7 +866,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* Podium */}
                     <div className="grid grid-cols-3 gap-px bg-border">
                       {wizardResult.top_countries.slice(0, 3).map((c, i) => (
                         <Link href={`/country/${c.slug}`} key={c.slug} className="block bg-bg-surface p-5 hover:bg-white/[0.02] transition-colors">
@@ -982,7 +1007,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-sm text-text-primary">Change your password</p>
-                        <p className="text-[11px] text-text-muted mt-0.5">We&apos;ll send a reset link to {user.email}</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">We'll send a reset link to {user.email}</p>
                       </div>
                       {passwordEmailSent ? (
                         <span className="flex items-center gap-1.5 text-xs text-accent font-medium flex-shrink-0">
