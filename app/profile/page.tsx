@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil,
-  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X
+  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock
 } from 'lucide-react'
 
 type CountryInfo = { flag_emoji: string; name: string }
@@ -126,11 +126,11 @@ export default function ProfilePage() {
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', userId)
-            .single(),
+            .maybeSingle(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
             .eq('id', userId)
-            .single(),
+            .maybeSingle(),
         ])
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
@@ -413,7 +413,11 @@ export default function ProfilePage() {
         {/* Account row */}
         <div className="border-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <p className="text-xs font-bold text-text-muted">{user.email}</p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <a href="/auth/forgot-password"
+              className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
+              <Lock className="w-3 h-3" /> Reset password
+            </a>
             <button onClick={signOut}
               className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
               <LogOut className="w-3 h-3" /> Sign out

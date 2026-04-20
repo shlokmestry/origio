@@ -65,6 +65,49 @@ export default function WizardResultsPage() {
     return () => clearInterval(interval);
   }, [router]);
 
+  // Save wizard results to Supabase when loaded
+  useEffect(() => {
+    if (!isLoading && matches.length > 0 && user) {
+      const saveToSupabase = async () => {
+        try {
+          // Prepare top countries data
+          const topCountries = matches.slice(0, 10).map(m => ({
+            slug: m.country.slug,
+            name: m.country.name,
+            flagEmoji: m.country.flagEmoji,
+            matchPercent: m.matchPercent
+          }));
+
+          // Check if we already have a result for this user
+          const { data: existing } = await supabase.from('wizard_results')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (existing) {
+            // Update existing record
+            await supabase.from('wizard_results').update({
+              top_countries: topCountries,
+              answers: answers,
+              created_at: new Date().toISOString()
+            }).eq('id', existing.id);
+          } else {
+            // Insert new record
+            await supabase.from('wizard_results').insert({
+              user_id: user.id,
+              top_countries: topCountries,
+              answers: answers,
+              created_at: new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.error('Failed to save wizard results:', err);
+        }
+      };
+      saveToSupabase();
+    }
+  }, [isLoading, matches, user, answers]);
+
   const handleViewOnGlobe = () => {
     // CountryMatch shape: { country: CountryWithData, matchScore, matchPercent, reasons }
     const slugs = matches.slice(0, 3).map((m) => m.country.slug);
