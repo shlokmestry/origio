@@ -105,12 +105,6 @@ export default function ProfilePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
-  const [showResetPassword, setShowResetPassword] = useState(false)
-  const [resetNewPassword, setResetNewPassword] = useState('')
-  const [resetConfirmPassword, setResetConfirmPassword] = useState('')
-  const [resetLoading, setResetLoading] = useState(false)
-  const [resetError, setResetError] = useState('')
-  const [resetSuccess, setResetSuccess] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -191,23 +185,6 @@ export default function ProfilePage() {
   }
 
   const signOut = async () => { await supabase.auth.signOut(); window.location.href = '/' }
-
-  const openResetPassword = () => {
-    setResetNewPassword('')
-    setResetConfirmPassword('')
-    setResetError('')
-    setResetSuccess(false)
-    setShowResetPassword(true)
-  }
-
-  const handleResetPassword = async () => {
-    if (resetNewPassword !== resetConfirmPassword) { setResetError("Passwords don't match"); return }
-    if (resetNewPassword.length < 6) { setResetError('Password must be at least 6 characters'); return }
-    setResetLoading(true); setResetError('')
-    const { error } = await supabase.auth.updateUser({ password: resetNewPassword })
-    if (error) { setResetError(error.message); setResetLoading(false) }
-    else { setResetSuccess(true); setResetLoading(false); setTimeout(() => setShowResetPassword(false), 2000) }
-  }
 
   const deleteAccount = async () => {
     if (!user) return
@@ -439,12 +416,8 @@ export default function ProfilePage() {
           <div className="flex gap-2 flex-wrap">
             <a href="/auth/forgot-password"
               className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
-              <Lock className="w-3 h-3" /> Forgot password
-            </a>
-            <button onClick={openResetPassword}
-              className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
               <Lock className="w-3 h-3" /> Reset password
-            </button>
+            </a>
             <button onClick={signOut}
               className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
               <LogOut className="w-3 h-3" /> Sign out
@@ -526,60 +499,6 @@ export default function ProfilePage() {
                 {saving ? 'Saving...' : 'Save changes'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Password modal */}
-      {showResetPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-          <div className="bg-[#111111] border-2 border-[#f0f0e8] p-6 w-full max-w-sm" style={{ boxShadow: '6px 6px 0 #f0f0e8' }}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-heading text-lg font-extrabold uppercase tracking-tight">Reset Password</h3>
-              <button onClick={() => setShowResetPassword(false)} className="p-1.5 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors">
-                <X className="w-4 h-4 text-text-muted" />
-              </button>
-            </div>
-            {resetSuccess ? (
-              <div className="text-center py-4">
-                <p className="text-accent font-bold text-sm uppercase tracking-wide">✓ Password updated!</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">New password</label>
-                  <input
-                    type="password"
-                    value={resetNewPassword}
-                    onChange={e => setResetNewPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium placeholder:text-text-muted outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Confirm new password</label>
-                  <input
-                    type="password"
-                    value={resetConfirmPassword}
-                    onChange={e => setResetConfirmPassword(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
-                    placeholder="Repeat new password"
-                    className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium placeholder:text-text-muted outline-none transition-colors"
-                  />
-                </div>
-                {resetError && <p className="text-xs font-bold text-rose-400">{resetError}</p>}
-                <div className="flex gap-3 pt-1">
-                  <button onClick={() => setShowResetPassword(false)} disabled={resetLoading}
-                    className="ghost-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50">
-                    Cancel
-                  </button>
-                  <button onClick={handleResetPassword} disabled={resetLoading || !resetNewPassword || !resetConfirmPassword}
-                    className="cta-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50 disabled:transform-none disabled:shadow-none">
-                    {resetLoading ? 'Updating...' : 'Update'}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
