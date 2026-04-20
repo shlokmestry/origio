@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  // Increase timeout for static page generation — Supabase calls at build time
+  // can be slow on cold starts, and the default 60s caused /about to timeout.
+  staticPageGenerationTimeout: 120,
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: "canvas" }];
     return config;

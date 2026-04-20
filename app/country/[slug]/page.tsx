@@ -1,14 +1,24 @@
 // app/country/[slug]/page.tsx
 import { Metadata } from "next";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { mapRowToCountry } from "@/lib/mappers";
 import { CountryWithData } from "@/types";
 import CountryPageClient from "./CountryPageClient";
+
+// Use the plain server-side client (not createBrowserClient) so it works
+// correctly at build time during static generation — no browser APIs needed.
+function getServerSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 
 
 
 async function getAllCountries(): Promise<CountryWithData[]> {
+  const supabase = getServerSupabase();
   const { data: countries } = await supabase.from('countries').select('*')
   const { data: countryData } = await supabase.from('country_data').select('*')
   if (!countries || !countryData) return []
@@ -19,6 +29,7 @@ async function getAllCountries(): Promise<CountryWithData[]> {
 }
 
 async function getCountry(slug: string): Promise<CountryWithData | null> {
+  const supabase = getServerSupabase();
   const { data: c } = await supabase
     .from('countries').select('*').eq('slug', slug).single()
   if (!c) return null
@@ -29,6 +40,7 @@ async function getCountry(slug: string): Promise<CountryWithData | null> {
 }
 
 export async function generateStaticParams() {
+  const supabase = getServerSupabase();
   const { data: countries } = await supabase.from('countries').select('slug')
   return (countries ?? []).map((c) => ({ slug: c.slug }))
 }
