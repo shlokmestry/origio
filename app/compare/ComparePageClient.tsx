@@ -146,7 +146,8 @@ export default function ComparePageClient() {
                 <ScoreCard label="Quality of Life" valueA={countryA.data.scoreQualityOfLife} valueB={countryB.data.scoreQualityOfLife} icon={Heart} />
                 <ScoreCard label="Safety" valueA={countryA.data.scoreSafety} valueB={countryB.data.scoreSafety} icon={Shield} />
                 <ScoreCard label="Healthcare" valueA={countryA.data.scoreHealthcare} valueB={countryB.data.scoreHealthcare} icon={Heart} />
-                <ScoreCard label="Internet" valueA={countryA.data.scoreInternet} valueB={countryB.data.scoreInternet} icon={Wifi} />
+                <ScoreCard label="Internet" valueA={countryA.data.scoreInternetSpeed} valueB={countryB.data.scoreInternetSpeed} icon={Wifi} />
+
               </div>
             </div>
 
