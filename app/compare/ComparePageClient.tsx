@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRightLeft, Globe2, DollarSign, Home, Shield, Wifi, Heart } from "lucide-react";
+import { ArrowRightLeft, Shield, Wifi, Heart, TrendingUp } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
-import { getScoreBreakdown } from "@/lib/utils";
+import { getVisaLabel } from "@/lib/utils";
 import Nav from "@/components/Nav";
 
 function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ", NOK: "kr ", SEK: "kr " };
+  const symbols: Record<string, string> = {
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+    NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ", NOK: "kr ", SEK: "kr ",
+  };
   return symbols[currency] ?? currency + " ";
 }
 
@@ -27,14 +30,22 @@ function CompareBar({ label, valueA, valueB, format, nameA, nameB, higherIsBette
     <div className="space-y-2 p-4 border-b border-[#1a1a1a] last:border-0">
       <p className="text-xs font-bold text-text-muted uppercase tracking-widest">{label}</p>
       <div className="space-y-1.5">
-        {[{ name: nameA, val: valueA, width: widthA, wins: aWins, color: "#00ffd5" },
-          { name: nameB, val: valueB, width: widthB, wins: bWins, color: "#a78bfa" }].map((item) => (
+        {[
+          { name: nameA, val: valueA, width: widthA, wins: aWins, color: "#00ffd5" },
+          { name: nameB, val: valueB, width: widthB, wins: bWins, color: "#a78bfa" },
+        ].map((item) => (
           <div key={item.name} className="flex items-center gap-3">
             <span className="text-xs text-text-muted w-20 text-right truncate font-medium">{item.name}</span>
             <div className="flex-1 h-5 bg-[#0a0a0a] border border-[#2a2a2a] overflow-hidden">
               <div className="h-full flex items-center justify-end px-2 transition-all duration-500"
-                style={{ width: Math.max(widthA, widthB) > 0 ? item.width + "%" : "40px", background: item.wins && !tie ? item.color : "#2a2a2a", minWidth: "32px" }}>
-                <span className="text-[10px] font-bold" style={{ color: item.wins && !tie ? "#0a0a0a" : "#666" }}>{format(item.val)}</span>
+                style={{
+                  width: Math.max(widthA, widthB) > 0 ? item.width + "%" : "40px",
+                  background: item.wins && !tie ? item.color : "#2a2a2a",
+                  minWidth: "32px",
+                }}>
+                <span className="text-[10px] font-bold" style={{ color: item.wins && !tie ? "#0a0a0a" : "#666" }}>
+                  {format(item.val)}
+                </span>
               </div>
             </div>
           </div>
@@ -44,8 +55,11 @@ function CompareBar({ label, valueA, valueB, format, nameA, nameB, higherIsBette
   );
 }
 
-function ScoreCard({ label, valueA, valueB, icon: Icon }: { label: string; valueA: number; valueB: number; icon: any }) {
-  const aWins = valueA > valueB; const bWins = valueB > valueA;
+function ScoreCard({ label, valueA, valueB, icon: Icon }: {
+  label: string; valueA: number; valueB: number; icon: any;
+}) {
+  const aWins = valueA > valueB;
+  const bWins = valueB > valueA;
   return (
     <div className="p-4 border-r border-[#2a2a2a] last:border-0">
       <div className="flex items-center gap-1.5 mb-2">
@@ -72,17 +86,17 @@ export default function ComparePageClient() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch('/api/countries')
+    fetch("/api/countries")
       .then((res) => res.json())
       .then((data: CountryWithData[]) => {
         setAllCountries(data);
-        const paramA = searchParams.get('a');
-        const paramB = searchParams.get('b');
+        const paramA = searchParams.get("a");
+        const paramB = searchParams.get("b");
         const validSlugs = data.map((c) => c.slug);
-        setSlugA(paramA && validSlugs.includes(paramA) ? paramA : 'canada');
-        setSlugB(paramB && validSlugs.includes(paramB) ? paramB : 'germany');
+        setSlugA(paramA && validSlugs.includes(paramA) ? paramA : "canada");
+        setSlugB(paramB && validSlugs.includes(paramB) ? paramB : "germany");
       })
-      .catch((err) => console.error('Failed to fetch countries:', err));
+      .catch((err) => console.error("Failed to fetch countries:", err));
   }, [searchParams]);
 
   const countryA = allCountries.find((c) => c.slug === slugA) || null;
@@ -92,9 +106,19 @@ export default function ComparePageClient() {
   const symB = countryB ? getCurrencySymbol(countryB.currency) : "€";
   const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
 
+  const globeCountries = allCountries.map((c) => ({
+    slug: c.slug, name: c.name, flagEmoji: c.flagEmoji,
+    lat: c.lat, lng: c.lng, moveScore: c.data.moveScore,
+    salarySoftwareEngineer: c.data.salarySoftwareEngineer,
+    costRentCityCentre: c.data.costRentCityCentre,
+    scoreQualityOfLife: c.data.scoreQualityOfLife,
+    visaDifficulty: c.data.visaDifficulty,
+    incomeTaxRateMid: c.data.incomeTaxRateMid,
+  }));
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-text-primary">
-      <Nav countries={allCountries.map(c => ({ slug: c.slug, name: c.name, flagEmoji: c.flagEmoji, lat: c.lat, lng: c.lng, moveScore: c.data.moveScore, salarySoftwareEngineer: c.data.salarySoftwareEngineer, costRentCityCentre: c.data.costRentCityCentre, scoreQualityOfLife: c.data.scoreQualityOfLife, visaDifficulty: c.data.visaDifficulty, incomeTaxRateMid: c.data.incomeTaxRateMid }))} onCountrySelect={() => {}} />
+      <Nav countries={globeCountries} onCountrySelect={() => {}} />
 
       {/* Country selectors */}
       <div className="border-b-2 border-[#2a2a2a] bg-[#0f0f0f]">
@@ -131,7 +155,8 @@ export default function ComparePageClient() {
             {/* Flag headers */}
             <div className="grid grid-cols-2 gap-4">
               {[{ country: countryA, color: "#00ffd5" }, { country: countryB, color: "#a78bfa" }].map(({ country, color }) => (
-                <div key={country.slug} className="border-2 p-5 text-center" style={{ borderColor: color, boxShadow: "4px 4px 0 " + color }}>
+                <div key={country.slug} className="border-2 p-5 text-center"
+                  style={{ borderColor: color, boxShadow: "4px 4px 0 " + color }}>
                   <div className="text-5xl mb-2">{country.flagEmoji}</div>
                   <h2 className="font-heading text-2xl font-extrabold uppercase tracking-tight text-text-primary">{country.name}</h2>
                   <p className="text-xs font-bold mt-1 uppercase tracking-widest" style={{ color }}>Move Score: {country.data.moveScore}/10</p>
@@ -145,9 +170,8 @@ export default function ComparePageClient() {
               <div className="grid grid-cols-2 sm:grid-cols-4">
                 <ScoreCard label="Quality of Life" valueA={countryA.data.scoreQualityOfLife} valueB={countryB.data.scoreQualityOfLife} icon={Heart} />
                 <ScoreCard label="Safety" valueA={countryA.data.scoreSafety} valueB={countryB.data.scoreSafety} icon={Shield} />
-                <ScoreCard label="Healthcare" valueA={countryA.data.scoreHealthcare} valueB={countryB.data.scoreHealthcare} icon={Heart} />
+                <ScoreCard label="Healthcare" valueA={countryA.data.scoreHealthcare} valueB={countryB.data.scoreHealthcare} icon={TrendingUp} />
                 <ScoreCard label="Internet" valueA={countryA.data.scoreInternetSpeed} valueB={countryB.data.scoreInternetSpeed} icon={Wifi} />
-
               </div>
             </div>
 
@@ -160,18 +184,20 @@ export default function ComparePageClient() {
                 valueA={countryA.data[currentRole.salaryKey] as number}
                 valueB={countryB.data[currentRole.salaryKey] as number}
                 format={(v) => v.toLocaleString()}
-                nameA={countryA.name} nameB={countryB.name} higherIsBetter={true}
-              />
+                nameA={countryA.name} nameB={countryB.name} higherIsBetter={true} />
             </div>
 
-            {/* Cost of living */}
+            {/* Cost of living — correct field names */}
             <div className="border-2 border-[#2a2a2a]">
               <p className="px-4 py-3 text-[10px] font-bold text-text-muted uppercase tracking-widest border-b-2 border-[#2a2a2a]">Cost of Living</p>
-              <CompareBar label="Rent / month" valueA={countryA.data.costRentCityCentre} valueB={countryB.data.costRentCityCentre}
+              <CompareBar label="Rent / month"
+                valueA={countryA.data.costRentCityCentre} valueB={countryB.data.costRentCityCentre}
                 format={(v) => v.toLocaleString()} nameA={countryA.name} nameB={countryB.name} higherIsBetter={false} />
-              <CompareBar label="Groceries / month" valueA={countryA.data.costGroceries} valueB={countryB.data.costGroceries}
+              <CompareBar label="Groceries / month"
+                valueA={countryA.data.costGroceriesMonthly} valueB={countryB.data.costGroceriesMonthly}
                 format={(v) => v.toLocaleString()} nameA={countryA.name} nameB={countryB.name} higherIsBetter={false} />
-              <CompareBar label="Income tax (mid)" valueA={countryA.data.incomeTaxRateMid} valueB={countryB.data.incomeTaxRateMid}
+              <CompareBar label="Income tax (mid)"
+                valueA={countryA.data.incomeTaxRateMid} valueB={countryB.data.incomeTaxRateMid}
                 format={(v) => v + "%"} nameA={countryA.name} nameB={countryB.name} higherIsBetter={false} />
             </div>
 
@@ -184,7 +210,8 @@ export default function ComparePageClient() {
                   <p className="text-xs text-text-muted leading-relaxed mb-3">{country.data.visaNotes}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {country.data.visaPopularRoutes?.map((route) => (
-                      <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 uppercase" style={{ borderColor: color, color }}>{route}</span>
+                      <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 uppercase"
+                        style={{ borderColor: color, color }}>{route}</span>
                     ))}
                   </div>
                 </div>
@@ -193,10 +220,12 @@ export default function ComparePageClient() {
 
             {/* View full pages */}
             <div className="grid sm:grid-cols-2 gap-4 pb-8">
-              <a href={"/country/" + countryA.slug} className="ghost-button py-3 text-sm font-bold uppercase tracking-wide text-center block">
+              <a href={"/country/" + countryA.slug}
+                className="ghost-button py-3 text-sm font-bold uppercase tracking-wide text-center block">
                 Full {countryA.name} report →
               </a>
-              <a href={"/country/" + countryB.slug} className="ghost-button py-3 text-sm font-bold uppercase tracking-wide text-center block">
+              <a href={"/country/" + countryB.slug}
+                className="ghost-button py-3 text-sm font-bold uppercase tracking-wide text-center block">
                 Full {countryB.name} report →
               </a>
             </div>
