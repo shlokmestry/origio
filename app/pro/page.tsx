@@ -8,26 +8,26 @@ import { useAuth } from '@/lib/useAuth'
 import Link from 'next/link'
 
 const FREE_FEATURES = [
-  'Interactive 3D globe',
-  'Top 3 country matches',
-  'Basic country stats',
-  'Salary by role',
+  'Top 3 personalised country matches',
+  'Salary insights by role & country',
+  'Basic cost of living & visa overview',
+  'Unlimited relocation quiz runs',
 ]
 
 const PRO_FEATURES_LIST = [
-  { icon: Sparkles, title: 'Unlimited Find My Country', desc: 'Run the quiz as many times as you want. Tweak your answers, explore different roles, compare scenarios.' },
-  { icon: FileText, title: 'Full country deep-dives', desc: 'Unlock the complete country report — all salary roles, full cost breakdown, visa details, and quality of life data.' },
-  { icon: ArrowRightLeft, title: 'Side-by-side comparison', desc: 'Pick any two countries and compare them across every metric on one screen.' },
-  { icon: Bookmark, title: 'Save your matches', desc: 'Bookmark countries you\'re interested in. Access your saved list from any device, any time.' },
-  { icon: Globe2, title: 'Full top-25 ranking', desc: 'See all 25 countries ranked for you — not just the top 3.' },
+  { icon: Sparkles, title: 'Full top-25 ranked country results', desc: 'Run the quiz as many times as you want. Tweak your answers, explore different roles, compare scenarios.' },
+  { icon: FileText, title: 'Complete country deep-dives (salary, visa, lifestyle, healthcare)', desc: 'Unlock the complete country report all salary roles, full cost breakdown, visa details, and quality of life data.' },
+  { icon: ArrowRightLeft, title: 'Side-by-side country comparison', desc: 'Pick any two countries and compare them across every metric on one screen.' },
+  { icon: Bookmark, title: 'Save & revisit your matches', desc: 'Bookmark countries you\'re interested in. Access your saved list from any device, any time.' },
+  { icon: Globe2, title: 'Unlimited relocation quiz runs', desc: 'See all 25 countries ranked for you, not just the top 3.' },
 ]
 
 const FAQS = [
-  { q: 'Is this really a one-time payment?', a: 'Yes — €5 once, Pro forever. No subscription, no renewal, no surprise charges.' },
+  { q: 'Is this really a one-time payment?', a: 'Yes, €5 once, Pro forever. No subscription, no renewal, no surprise charges.' },
   { q: 'What payment methods are accepted?', a: 'All major credit and debit cards via Stripe. We never see your card details.' },
   { q: 'Can I get a refund?', a: 'If something isn\'t right, email us and we\'ll sort it out. We stand behind the product.' },
-  { q: 'Do I need an account?', a: 'Yes — Pro features are tied to your account so they work across devices and stay active forever.' },
-  { q: 'What if I already ran Find My Country as a free user?', a: 'Just run it again after upgrading. Your answers are saved — the next run will instantly show all 25 countries.' },
+  { q: 'Do I need an account?', a: 'Yes, Pro features are tied to your account so they work across devices and stay active forever.' },
+  { q: 'What if I already ran Find My Country as a free user?', a: 'Just run it again after upgrading. Your answers are saved the next run will instantly show all 25 countries.' },
 ]
 
 export default function ProPage() {
@@ -96,7 +96,7 @@ export default function ProPage() {
             <button onClick={handleUpgrade} disabled={loading}
               className="cta-button px-8 py-4 text-base font-bold uppercase tracking-wide disabled:opacity-50 disabled:transform-none disabled:shadow-none">
               <Zap className="w-4 h-4 mr-2" />
-              {loading ? 'Redirecting…' : 'Upgrade to Pro — €5'}
+              {loading ? 'Redirecting…' : 'Upgrade to Pro ~ €5'}
             </button>
             <a href="#pricing"
               className="ghost-button px-6 py-4 text-sm font-bold uppercase tracking-wide inline-flex items-center gap-2">
@@ -211,7 +211,7 @@ export default function ProPage() {
           <button onClick={handleUpgrade} disabled={loading}
             className="cta-button w-full py-4 text-sm font-bold uppercase tracking-wide disabled:opacity-50 disabled:transform-none disabled:shadow-none">
             <Zap className="w-4 h-4 mr-2" />
-            {loading ? 'Redirecting…' : 'Upgrade to Pro — €5'}
+            {loading ? 'Redirecting…' : 'Upgrade to Pro ~ €5'}
           </button>
           <p className="text-xs font-bold text-text-muted uppercase tracking-wide">Secure · One-time · Stripe</p>
         </div>

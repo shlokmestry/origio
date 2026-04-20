@@ -185,7 +185,7 @@ export default function WizardResultsPage() {
                     <p className="font-heading font-bold text-text-primary uppercase text-sm">See all 25 countries ranked</p>
                     <p className="text-xs text-text-muted">Upgrade to Pro to unlock the full ranking.</p>
                     <Link href="/pro" className="cta-button px-6 py-2.5 text-xs font-bold inline-flex items-center gap-2 uppercase tracking-wide">
-                      <Sparkles className="w-3 h-3" /> Upgrade to Pro — €5
+                      <Sparkles className="w-3 h-3" /> Upgrade to Pro ~ €5
                     </Link>
                   </div>
                 </div>

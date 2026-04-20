@@ -64,7 +64,7 @@ export default function ContactPage() {
         {/* Email card */}
         <section className="mb-12">
           <a
-            href="mailto:helloorigio@protonmail.com"
+            href="mailto:hello@findorigio.com"
             className="glass-panel rounded-2xl p-7 border border-border flex items-center gap-5 hover:border-accent/30 transition-all group"
             style={{ textDecoration: 'none' }}
           >
@@ -74,7 +74,7 @@ export default function ContactPage() {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Email</p>
               <p className="font-heading text-lg font-bold text-text-primary group-hover:text-accent transition-colors">
-                helloorigio@protonmail.com
+                hello@findorigio.com
               </p>
               <p className="text-sm text-text-muted mt-1">Typical response within 24–48 hours</p>
             </div>
@@ -89,7 +89,7 @@ export default function ContactPage() {
             {TOPICS.map(({ icon: Icon, title, description }) => (
               <a
                 key={title}
-                href={`mailto:helloorigio@protonmail.com?subject=${encodeURIComponent(title)}`}
+                href={`mailto:hello@findorigio.com?subject=${encodeURIComponent(title)}`}
                 className="glass-panel rounded-2xl p-5 border border-border hover:border-accent/30 transition-all group"
                 style={{ textDecoration: 'none' }}
               >

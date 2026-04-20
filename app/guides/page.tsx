@@ -68,7 +68,7 @@ export default function GuidesPage() {
             Not sure which country fits you?
           </h3>
           <p className="text-text-muted text-sm mb-6 max-w-sm mx-auto">
-            Answer 8 quick questions and get a personalised ranking across all 25 countries — based on your role, passport, and priorities.
+            Answer 8 quick questions and get a personalised ranking across all 25 countries ~ based on your role, passport, and priorities.
           </p>
           <Link href="/wizard" className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2">
             Find My Country

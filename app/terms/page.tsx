@@ -54,7 +54,7 @@ export default function TermsPage() {
           <section>
             <h2 className="font-heading text-xl font-bold text-text-primary mb-3">4. Pro subscription</h2>
             <p>Origio Pro is a one-time payment that grants lifetime access to Pro features. There is no recurring charge. The features included in Pro are described on the pricing page and may expand over time — we will not remove core features from Pro after purchase.</p>
-            <p className="mt-3">Refunds are considered on a case-by-case basis. If you have a problem with your purchase, contact us at <a href="mailto:helloorigio@protonmail.com" className="text-accent hover:underline">helloorigio@protonmail.com</a>.</p>
+            <p className="mt-3">Refunds are considered on a case-by-case basis. If you have a problem with your purchase, contact us at <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a>.</p>
           </section>
 
           <section>
@@ -97,7 +97,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="font-heading text-xl font-bold text-text-primary mb-3">11. Contact</h2>
-            <p>Questions about these terms: <a href="mailto:helloorigio@protonmail.com" className="text-accent hover:underline">helloorigio@protonmail.com</a></p>
+            <p>Questions about these terms: <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a></p>
           </section>
 
         </div>

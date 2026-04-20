@@ -17,10 +17,10 @@ export default function UpgradeBanner({ compact = false }: { compact?: boolean }
         <h3 className="font-heading text-base font-extrabold text-text-primary uppercase tracking-tight mb-1">
           Origio Pro feature
         </h3>
-        <p className="text-xs text-text-muted mb-4">Upgrade for €5 — one time, no subscription.</p>
+        <p className="text-xs text-text-muted mb-4">Upgrade for €5 ~ one time, no subscription.</p>
         <Link href="/pro" className="cta-button px-6 py-2.5 text-xs font-bold inline-flex items-center gap-2 uppercase tracking-wide">
           <Sparkles className="w-3.5 h-3.5" />
-          Upgrade to Pro — €5
+          Upgrade to Pro ~ €5
         </Link>
       </div>
     )
