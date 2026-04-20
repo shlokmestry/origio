@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { getAllPosts } from "@/lib/posts";
 
 const BASE = "https://findorigio.com";
 const NOW = new Date().toISOString();
@@ -16,18 +17,8 @@ const ROLE_SLUGS = [
   "nurses","teachers","accountants","marketing-managers",
 ];
 
-function getBlogPosts() {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getAllPosts } = require("@/lib/posts");
-    return getAllPosts() as { slug: string; date: string }[];
-  } catch {
-    return [];
-  }
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const blogPosts = getBlogPosts();
+  const blogPosts = getAllPosts();
 
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },
