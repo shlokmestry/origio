@@ -28,13 +28,13 @@ export default function AboutPage() {
           <h2 className="font-heading text-lg font-extrabold text-text-primary uppercase tracking-tight mb-5 border-l-2 border-accent pl-3">The story</h2>
           <div className="space-y-4 text-text-muted text-sm leading-relaxed border-2 border-[#2a2a2a] p-6">
             <p>
-              Origio was built by Shlok Mestry after spending weeks manually researching countries to move to — and realising there was no single place that had all the information needed to make a proper decision.
+              Origio was built by Shlok Mestry after spending weeks manually researching countries to move to and realising there was no single place that had all the information needed to make a proper decision.
             </p>
             <p>
-              The core feature is the interactive 3D globe — click any country to instantly see how it stacks up across every dimension that matters. No more bouncing between Numbeo, Expatistan, and government visa websites trying to piece together a picture.
+              The core feature is the interactive 3D globe ~ click any country to instantly see how it stacks up across every dimension that matters. No more bouncing between Numbeo, Expatistan, and government visa websites trying to piece together a picture.
             </p>
             <p>
-              If  you&apos;re not sure where to start, the Find My Country quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 25 countries and gives you a personalised ranked list.
+              If  you&apos;re not sure where to start, the Find My Country quiz asks 8 questions about your priorities, job, passport, and budget then scores all 25 countries and gives you a personalised ranked list.
             </p>
           </div>
         </section>
@@ -68,26 +68,12 @@ export default function AboutPage() {
               Data is reviewed and updated regularly. Each country page shows the last verified date so you always know how recent the information is.
             </p>
             <div className="border-l-2 border-accent pl-4 text-xs text-text-muted mt-4">
-              All salary figures are in local currency unless otherwise stated. Origio is not financial or legal advice — always verify with official sources before making decisions.
+              All salary figures are in local currency unless otherwise stated. Origio is not financial or legal advice always verify with official sources before making decisions.
             </div>
           </div>
         </section>
 
-        {/* Contact */}
-        <section className="mb-12">
-          <h2 className="font-heading text-lg font-extrabold text-text-primary uppercase tracking-tight mb-5 border-l-2 border-accent pl-3">Contact</h2>
-          <div className="border-2 border-[#2a2a2a] p-6">
-            <p className="text-text-muted text-sm mb-5 leading-relaxed">
-              For data corrections, payment issues, feature requests, or anything else — email is the best way to reach me. I read and respond to every message.
-            </p>
-            <a href="mailto:notshlokmestry@gmail.com"
-              className="ghost-button inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wide">
-              <Mail className="w-4 h-4" />
-              notshlokmestry@gmail.com
-            </a>
-          </div>
-        </section>
-
+       
         {/* CTA */}
         <div className="border-2 border-accent p-8 text-center" style={{ boxShadow: "6px 6px 0 #00ffd5" }}>
           <h3 className="font-heading text-xl font-extrabold text-text-primary uppercase tracking-tight mb-2">Ready to find your country?</h3>

@@ -6,7 +6,7 @@ import { AuthProvider } from "@/lib/AuthProvider"
 
 export const metadata: Metadata = {
   title: {
-    default: "Origio — Find Where You Belong",
+    default: "Origio ~ Find Where You Belong",
     template: "%s | Origio",
   },
   description:
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
   openGraph: {
-    title: "Origio — Find Where You Belong",
+    title: "Origio ~ Find Where You Belong",
     description: "Explore opportunities, salaries, visas and life quality across every country.",
     type: "website",
     url: "https://findorigio.com",

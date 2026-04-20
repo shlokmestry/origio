@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Who we are</h2>
             <p>Origio is a relocation research tool operated by Shlok Mestry, based in Ireland. We help people compare salaries, visas, cost of living and quality of life across 25 countries.</p>
-            <p className="mt-3">Contact: <a href="mailto:helloorigio@protonmail.com" className="text-accent hover:underline">helloorigio@protonmail.com</a></p>
+            <p className="mt-3">Contact: <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a></p>
           </section>
 
           <section>
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
               <li><strong className="text-text-primary">Portability</strong> — receive your data in a machine-readable format</li>
               <li><strong className="text-text-primary">Objection</strong> — object to processing based on legitimate interests</li>
             </ul>
-            <p className="mt-4">To exercise any of these rights, email <a href="mailto:helloorigio@protonmail.com" className="text-accent hover:underline">helloorigio@protonmail.com</a>. You can also delete your account directly from your profile settings — this immediately removes all your personal data.</p>
+            <p className="mt-4">To exercise any of these rights, email <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a>. You can also delete your account directly from your profile settings — this immediately removes all your personal data.</p>
             <p className="mt-3">You have the right to lodge a complaint with the Data Protection Commission (Ireland) at <a href="https://www.dataprotection.ie" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">dataprotection.ie</a>.</p>
           </section>
 
@@ -149,7 +149,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Contact</h2>
-            <p>Questions about this policy: <a href="mailto:helloorigio@protonmail.com" className="text-accent hover:underline">helloorigio@protonmail.com</a></p>
+            <p>Questions about this policy: <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a></p>
           </section>
 
         </div>
