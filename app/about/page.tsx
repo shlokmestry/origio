@@ -1,4 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
+"use client";
+
 import { Mail } from "lucide-react";
 import Nav from "@/components/Nav";
 import Link from "next/link";
