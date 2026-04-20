@@ -17,9 +17,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let resolved = false
 
-    function resolve(u: User | null) {
+    function resolve(source: string, u: User | null) {
+      console.log(`🔑 AUTH [${source}]: user=${!!u} | already resolved=${resolved}`)
       if (resolved) {
-        // After initial resolve, still update user on auth changes
         setUser(u)
         return
       }
@@ -28,16 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
 
-    // onAuthStateChange — reliable on client-side navigation
-    // fires INITIAL_SESSION immediately with in-memory session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      resolve(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(`🔑 onAuthStateChange event: ${event} | user: ${!!session?.user}`)
+      resolve('onAuthStateChange', session?.user ?? null)
     })
 
-    // getSession — reliable on cold page load (new tab, hard refresh)
-    // races with onAuthStateChange, whichever wins sets the user first
     supabase.auth.getSession().then(({ data: { session } }) => {
-      resolve(session?.user ?? null)
+      console.log(`🔑 getSession resolved: user=${!!session?.user}`)
+      resolve('getSession', session?.user ?? null)
     })
 
     return () => subscription.unsubscribe()
