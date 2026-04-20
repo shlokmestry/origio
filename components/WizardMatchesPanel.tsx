@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Sparkles, DollarSign, Home, Heart, Plane } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { CountryMatch } from "@/lib/wizard";
@@ -48,6 +48,7 @@ export default function WizardMatchesPanel({
 
   return (
     <div className={panelClasses} style={{ boxShadow: "6px 0 0 #f0f0e8" }}>
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#0f0f0f] border-b-2 border-[#2a2a2a] p-5">
         <div className="flex items-center justify-between mb-1">
@@ -64,7 +65,8 @@ export default function WizardMatchesPanel({
 
       <div className="p-4 space-y-3">
         {matches.slice(0, 3).map((match, index) => {
-          const country = allCountries.find((c) => c.slug === match.slug);
+          // CountryMatch shape: { country: CountryWithData, matchScore, matchPercent, reasons }
+          const country = match.country;
           if (!country) return null;
           const currencySymbol = getCurrencySymbol(country.currency);
           const salary = country.data[currentRole.salaryKey] as number;
@@ -72,8 +74,8 @@ export default function WizardMatchesPanel({
 
           return (
             <button
-              key={match.slug}
-              onClick={() => onCountrySelect(match.slug)}
+              key={country.slug}
+              onClick={() => onCountrySelect(country.slug)}
               className="w-full text-left border-2 bg-[#111111] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px]"
               style={{ borderColor: rankColor, boxShadow: "4px 4px 0 " + rankColor }}
             >
@@ -103,11 +105,23 @@ export default function WizardMatchesPanel({
                   <p className="text-sm font-bold text-text-primary">{currencySymbol}{country.data.costRentCityCentre.toLocaleString()}</p>
                 </div>
               </div>
+
+              {/* Reasons */}
+              {match.reasons.length > 0 && (
+                <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                  {match.reasons.slice(0, 2).map((reason) => (
+                    <span key={reason} className="text-[10px] font-bold px-2 py-0.5 border uppercase"
+                      style={{ borderColor: rankColor + "60", color: rankColor }}>
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              )}
             </button>
           );
         })}
 
-        {/* Upgrade prompt for more */}
+        {/* Upgrade prompt */}
         <div className="border-2 border-[#2a2a2a] p-5 text-center mt-4" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
           <Sparkles className="w-5 h-5 text-accent mx-auto mb-2" />
           <p className="font-heading font-bold text-text-primary text-sm uppercase mb-1">See all rankings</p>
