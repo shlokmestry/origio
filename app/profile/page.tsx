@@ -199,6 +199,7 @@ export default function ProfilePage() {
     if (authLoading) return
     if (!authUser) { router.push('/signin?next=/profile'); return }
 
+    setLoading(true)
     const currentUser = authUser
     setUser(currentUser)
     const initialName = currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? ''
