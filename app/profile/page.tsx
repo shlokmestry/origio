@@ -11,6 +11,7 @@ import {
   BarChart3, AlertTriangle, Search, Plus
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
+import { useAuth } from '@/lib/AuthProvider'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -192,94 +193,52 @@ export default function ProfilePage() {
   const [passwordEmailLoading, setPasswordEmailLoading] = useState(false)
   const [passwordEmailSent, setPasswordEmailSent] = useState(false)
 
+  const { user: authUser, loading: authLoading } = useAuth()
+
   useEffect(() => {
+    if (authLoading) return
+    if (!authUser) { router.push('/signin?next=/profile'); return }
+
+    setUser(authUser)
+    const initialName = authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? ''
+    setDisplayName(initialName)
+    setEditName(initialName)
+
     let mounted = true
-    // Guard against double-init from both getSession() and onAuthStateChange
-    // firing concurrently (e.g. getSession resolves at the same time as TOKEN_REFRESHED)
-    let initialized = false
-
-    async function loadProfileData(currentUser: User) {
-      if (initialized || !mounted) return
-      initialized = true
-
-      setUser(currentUser)
-      const initialName = currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? ''
-      setDisplayName(initialName)
-      setEditName(initialName)
-
+    async function loadData() {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at')
-            .eq('user_id', currentUser.id)
+            .eq('user_id', authUser.id)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', currentUser.id)
+            .eq('user_id', authUser.id)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', currentUser.id)
+            .eq('id', authUser.id)
             .single(),
         ])
-
         if (!mounted) return
-
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
-
         const p = profileRes.data ?? null
         setProfile(p)
-
         if (p) {
           setEditJobTitle(p.job_title ?? '')
           setEditPassport(p.passport_slug)
         }
-
-        if (p && !p.onboarded) {
-          window.location.href = '/onboarding'
-          return
-        }
+        if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
       } catch (err) {
         console.error('Profile load error:', err)
       }
-
       if (mounted) setLoading(false)
     }
-
-    // onAuthStateChange as primary mechanism for client-side navigation:
-    // when the middleware refreshes the cookie during navigation, Supabase
-    // fires TOKEN_REFRESHED (or SIGNED_IN) with the valid session — this
-    // catches the case where getSession() is blocked waiting on the same
-    // internal refresh lock and never resolves.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return
-      if (event === 'SIGNED_OUT') {
-        router.push('/')
-        return
-      }
-      if (session?.user && !initialized) {
-        loadProfileData(session.user)
-      }
-    })
-
-    // getSession() as the fast path on hard refresh and when there is no
-    // concurrent token refresh (session already stable in memory/cookies).
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted || initialized) return
-      if (session?.user) {
-        loadProfileData(session.user)
-      }
-      // No redirect here — onAuthStateChange handles unauthenticated state
-    }).catch(() => {
-      // Silent — onAuthStateChange will recover
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [router])
+    loadData()
+    return () => { mounted = false }
+  }, [authUser, authLoading, router])
 
   const handleSaveProfile = async () => {
     if (!user) return
@@ -364,7 +323,7 @@ export default function ProfilePage() {
   )
 
   // ── Loading state ───────────────────────────────────────────────────────────
-  if (loading) return (
+  if (authLoading || loading) return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">
       <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
     </div>

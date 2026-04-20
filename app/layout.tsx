@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
+import { AuthProvider } from "@/lib/AuthProvider"
 
 export const metadata: Metadata = {
   title: {
@@ -58,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-bg-primary text-text-primary font-body antialiased noise-overlay">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
 
         {/* Vercel Analytics */}
         <Analytics />
