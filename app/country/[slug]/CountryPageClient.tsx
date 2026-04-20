@@ -173,7 +173,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           <p className="text-text-muted text-sm mb-6">Annual salary across 20 job roles · {country.currency}</p>
           <div className="p-6 rounded-2xl bg-bg-surface border border-border">
             <div className="w-full h-96 min-h-[384px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={384}>
                 <BarChart data={salaryData} margin={{ top: 5, right: 5, left: -10, bottom: 60 }}>
                   <XAxis dataKey="role" tick={{ fill: "#8888a0", fontSize: 10 }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} angle={-45} textAnchor="end" interval={0} />
                   <YAxis tick={{ fill: "#8888a0", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => Math.round(v / 1000) + "k"} />
