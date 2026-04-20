@@ -15,10 +15,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    let resolved = false
+
+    function resolve(u: User | null) {
+      if (resolved) {
+        // After initial resolve, still update user on auth changes
+        setUser(u)
+        return
+      }
+      resolved = true
+      setUser(u)
       setLoading(false)
+    }
+
+    // onAuthStateChange — reliable on client-side navigation
+    // fires INITIAL_SESSION immediately with in-memory session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      resolve(session?.user ?? null)
     })
+
+    // getSession — reliable on cold page load (new tab, hard refresh)
+    // races with onAuthStateChange, whichever wins sets the user first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      resolve(session?.user ?? null)
+    })
+
     return () => subscription.unsubscribe()
   }, [])
 
