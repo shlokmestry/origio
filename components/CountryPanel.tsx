@@ -1,31 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  X,
-  DollarSign,
-  Home,
-  Shield,
-  Wifi,
-  Heart,
-  Plane,
-  TrendingUp,
-  Receipt,
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  ArrowRightLeft,
-  ExternalLink,
-  Lock,
-  Sparkles,
+  X, DollarSign, Home, Shield, Wifi, Heart, Plane,
+  TrendingUp, Receipt, ChevronDown, ChevronUp, FileText, ArrowRightLeft, ExternalLink,
 } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
 import ScoreCard from "./ScoreCard";
 import SalaryChart from "./SalaryChart";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 
 interface CountryPanelProps {
   country: CountryWithData | null;
@@ -44,49 +28,14 @@ function getCurrencySymbol(currency: string): string {
   return symbols[currency] ?? currency + " ";
 }
 
-function VisaLink(props: { url: string }) {
-  if (!props.url) return null;
-  return (
-    <a
-      href={props.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors"
-    >
-      <ExternalLink className="w-3 h-3" />
-      Official immigration site
-    </a>
-  );
-}
-
 export default function CountryPanel({ country, onClose, selectedRole, onRoleChange }: CountryPanelProps) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [costsExpanded, setCostsExpanded] = useState(false);
-  const [isPro, setIsPro] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  // Check pro status once on mount
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_pro')
-          .eq('id', session.user.id)
-          .single();
-        setIsPro(profile?.is_pro ?? false);
-      }
-      setAuthChecked(true);
-    });
-  }, []);
 
   useEffect(() => {
-    if (country) {
-      requestAnimationFrame(() => setIsVisible(true));
-    } else {
-      setIsVisible(false);
-    }
+    if (country) requestAnimationFrame(() => setIsVisible(true));
+    else setIsVisible(false);
   }, [country]);
 
   if (!country) return null;
@@ -94,264 +43,194 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   const { data } = country;
   const currencySymbol = getCurrencySymbol(country.currency);
   const scoreBreakdown = getScoreBreakdown(data);
-
   const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
   const currentSalary = data[currentRole.salaryKey] as number;
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 400);
-  };
-
-  const handleCompare = () => {
-    router.push("/compare?a=" + country.slug);
-  };
-
-  const handleFullReport = () => {
-    router.push("/country/" + country.slug);
-  };
+  const handleClose = () => { setIsVisible(false); setTimeout(onClose, 400); };
+  const handleCompare = () => router.push("/compare?a=" + country.slug);
+  const handleFullReport = () => router.push("/country/" + country.slug);
 
   const panelClasses = [
-    "fixed top-16 right-0 z-40 w-full sm:max-w-md",
-    "glass-panel-strong shadow-2xl shadow-black/50",
-    "transform transition-transform duration-500",
+    "fixed top-14 right-0 z-40 w-full sm:max-w-md",
+    "bg-[#0f0f0f] border-l-2 border-[#f0f0e8]",
+    "transform transition-transform duration-400",
     "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto overscroll-contain",
     isVisible ? "translate-x-0" : "translate-x-full",
   ].join(" ");
 
   const backdropClasses = [
-    "fixed inset-0 bg-black/50 z-30",
+    "fixed inset-0 bg-black/60 z-30",
     "transition-opacity duration-300",
     isVisible ? "opacity-100" : "opacity-0 pointer-events-none",
   ].join(" ");
 
-  // height: calc(100vh - 64px)
-  const panelStyle = { height: "calc(100vh - 64px)" };
-
-  const visaDifficultyColor = [
-    "#4ade80", "#4ade80", "#fbbf24", "#f87171", "#ef4444"
-  ][Math.min((data.visaDifficulty ?? 1) - 1, 4)] ?? "#fbbf24";
+  const moveScoreColor = getScoreColor(data.moveScore);
 
   return (
-    <>
+    <div>
       <div className={backdropClasses} onClick={handleClose} />
-      <div className={panelClasses} style={panelStyle}>
-        <div className="p-5 space-y-6">
+      <div className={panelClasses} style={{ height: "calc(100vh - 3.5rem)" }}>
 
-          {/* Header */}
-          <div className="flex items-start justify-between">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-[#0f0f0f] border-b-2 border-[#2a2a2a]">
+          <div className="flex items-center justify-between p-5">
             <div className="flex items-center gap-3">
-              <span className="text-4xl">{country.flagEmoji}</span>
+              <span className="text-3xl">{country.flagEmoji}</span>
               <div>
-                <h2 className="font-heading text-2xl font-extrabold text-text-primary">{country.name}</h2>
-                <p className="text-sm text-text-muted">{country.continent} · {country.language}</p>
+                <h2 className="font-heading text-2xl font-extrabold text-text-primary uppercase tracking-tight">
+                  {country.name}
+                </h2>
+                <p className="text-xs font-bold text-text-muted uppercase tracking-wide">
+                  {country.continent} · {country.language}
+                </p>
               </div>
             </div>
-            <button onClick={handleClose} className="p-2 rounded-xl hover:bg-white/5 text-text-muted hover:text-text-primary transition-colors">
-              <X className="w-5 h-5" />
+            <button onClick={handleClose} className="p-2 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors">
+              <X className="w-4 h-4 text-text-muted" />
             </button>
           </div>
 
-          {/* Move score */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-bg-primary/50 border border-border">
-            <div className="flex-1">
-              <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Move Score</p>
-              <div className="flex items-baseline gap-1">
-                <span className="font-heading text-3xl font-extrabold" style={{ color: getScoreColor(data.moveScore) }}>
-                  {data.moveScore.toFixed(1)}
-                </span>
-                <span className="text-text-muted text-sm">/10</span>
+          {/* Move Score */}
+          <div className="mx-5 mb-5 p-4 border-2 flex items-center gap-4" style={{ borderColor: moveScoreColor, boxShadow: "4px 4px 0 " + moveScoreColor }}>
+            <div className="w-14 h-14 border-2 flex items-center justify-center font-heading text-2xl font-extrabold flex-shrink-0"
+              style={{ borderColor: moveScoreColor, color: moveScoreColor }}>
+              {data.moveScore}
+            </div>
+            <div>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">Move Score</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {scoreBreakdown.slice(0, 3).map((s) => (
+                  <span key={s.label} className="text-[10px] font-bold uppercase px-2 py-0.5 border" style={{ borderColor: s.color, color: s.color }}>
+                    {s.label}
+                  </span>
+                ))}
               </div>
             </div>
-            <div className="w-16 h-16">
-              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-                <circle
-                  cx="18" cy="18" r="15.9" fill="none"
-                  stroke={getScoreColor(data.moveScore)} strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(data.moveScore / 10) * 100} 100`}
-                />
-              </svg>
-            </div>
           </div>
+        </div>
+
+        <div className="p-5 space-y-5">
 
           {/* Role selector */}
-          <div className="space-y-2">
-            <p className="text-xs text-text-muted uppercase tracking-wider">Salary for your role</p>
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Job Role</p>
             <select
               value={selectedRole}
               onChange={(e) => onRoleChange(e.target.value as JobRole)}
-              className="w-full px-3 py-2 rounded-xl bg-bg-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-accent/40 transition-colors"
+              className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium outline-none appearance-none cursor-pointer transition-colors"
             >
               {JOB_ROLES.map((r) => (
-                <option key={r.key} value={r.key} className="bg-bg-elevated">
-                  {r.emoji} {r.label}
-                </option>
+                <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
               ))}
             </select>
-            <div className="flex items-baseline gap-2">
-              <span className="font-heading text-3xl font-extrabold text-text-primary">
-                {currencySymbol}{currentSalary.toLocaleString()}
-              </span>
-              <span className="text-text-muted text-sm">/ year</span>
-            </div>
+          </div>
+
+          {/* Salary */}
+          <div className="p-4 border-2 border-[#2a2a2a]" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">
+              {currentRole.label} Salary
+            </p>
+            <p className="font-heading text-2xl font-extrabold text-text-primary">
+              {currencySymbol}{currentSalary.toLocaleString()}
+            </p>
+            <p className="text-xs text-text-muted font-medium mt-0.5">per year · {country.currency}</p>
           </div>
 
           {/* Score breakdown */}
-          <div className="grid grid-cols-2 gap-2">
-            <ScoreCard icon={Heart} label="Quality of Life" value={data.scoreQualityOfLife + "/10"} scoreValue={data.scoreQualityOfLife} />
-            <ScoreCard icon={Shield} label="Safety" value={data.scoreSafety + "/10"} scoreValue={data.scoreSafety} />
-            <ScoreCard icon={Wifi} label="Internet" value={data.scoreInternetSpeed + "/10"} scoreValue={data.scoreInternetSpeed} />
-            <ScoreCard icon={TrendingUp} label="Healthcare" value={data.scoreHealthcare + "/10"} scoreValue={data.scoreHealthcare} />
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Score Breakdown</p>
+            <div className="space-y-0 border-2 border-[#2a2a2a]">
+              {scoreBreakdown.map((item, i) => (
+                <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
+                  <div className="flex items-center gap-2">
+                    <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-20 h-1.5 bg-[#1a1a1a]">
+                      <div className="h-full transition-all" style={{ width: `${(item.score / 10) * 100}%`, background: item.color }} />
+                    </div>
+                    <span className="text-xs font-bold w-6 text-right" style={{ color: item.color }}>{item.score}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Score bars */}
-          <div className="space-y-2.5">
-            {scoreBreakdown.map((item) => (
-              <div key={item.label} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-text-muted">{item.label}</span>
-                  <span className="font-medium" style={{ color: item.color }}>
-                    {Math.round(item.value * 10) / 10}/10
-                  </span>
-                </div>
-                <div className="h-1.5 bg-bg-primary rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{
-                      width: (item.value / item.maxValue) * 100 + "%",
-                      background: "linear-gradient(90deg, " + item.color + "cc, " + item.color + ")",
-                    }}
-                  />
-                </div>
+          {/* Visa */}
+          <div className="p-4 border-2 border-[#2a2a2a]">
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Visa</p>
+            <p className="text-sm font-bold text-text-primary mb-1">{getVisaLabel(data.visaDifficulty)}</p>
+            <p className="text-xs text-text-muted leading-relaxed">{data.visaNotes}</p>
+            {data.visaPopularRoutes?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {data.visaPopularRoutes.map((route) => (
+                  <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 border-accent text-accent uppercase">{route}</span>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           {/* Cost of living */}
-          <div className="space-y-3">
+          <div>
             <button
               onClick={() => setCostsExpanded(!costsExpanded)}
-              className="w-full flex items-center justify-between text-left"
+              className="w-full flex items-center justify-between px-4 py-3 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors"
             >
-              <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">Cost of Living</h3>
+              <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Cost of Living</span>
               {costsExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
             </button>
             {costsExpanded && (
-              <div className="space-y-2">
+              <div className="border-2 border-[#2a2a2a] border-t-0 space-y-0">
                 {[
-                  { label: "Rent (city centre)", value: data.costRentCityCentre },
-                  { label: "Rent (outside centre)", value: data.costRentOutside },
-                  { label: "Groceries/month", value: data.costGroceriesMonthly },
-                  { label: "Transport/month", value: data.costTransportMonthly },
-                  { label: "Utilities/month", value: data.costUtilitiesMonthly },
-                  { label: "Eating out (meal)", value: data.costEatingOut },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                    <span className="text-sm text-text-muted">{item.label}</span>
-                    <span className="text-sm font-semibold text-text-primary">
-                      {currencySymbol}{item.value.toLocaleString()}
-                    </span>
+                  { label: "Rent (city centre)", value: currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo" },
+                  { label: "Groceries", value: currencySymbol + data.costGroceries.toLocaleString() + "/mo" },
+                  { label: "Transport", value: currencySymbol + data.costTransport.toLocaleString() + "/mo" },
+                  { label: "Dining out", value: currencySymbol + data.costDining.toLocaleString() + "/meal" },
+                  { label: "Income tax (mid)", value: data.incomeTaxRateMid + "%" },
+                ].map((item, i, arr) => (
+                  <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
+                    <span className="text-xs font-medium text-text-muted">{item.label}</span>
+                    <span className="text-xs font-bold text-text-primary">{item.value}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* ── Visa Information — Pro gated ── */}
-          <div className="space-y-3">
-            <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-text-muted">
-              Visa Information
-            </h3>
-
-            {isPro ? (
-              // Full visa info for pro users
-              <div className="p-4 rounded-2xl bg-bg-primary/50 border border-border space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-muted">Difficulty:</span>
-                  <span
-                    className="px-2 py-0.5 text-xs font-medium rounded-full"
-                    style={{ color: visaDifficultyColor, background: visaDifficultyColor + "15", border: "1px solid " + visaDifficultyColor + "33" }}
-                  >
-                    {getVisaLabel(data.visaDifficulty)}
-                  </span>
-                </div>
-                <p className="text-sm text-text-muted leading-relaxed">{data.visaNotes}</p>
-                <div className="flex flex-wrap gap-2">
-                  {data.visaPopularRoutes.map((route) => (
-                    <span
-                      key={route}
-                      className="px-3 py-1 text-xs rounded-full border border-accent/20 text-accent bg-accent/5"
-                    >
-                      {route}
-                    </span>
-                  ))}
-                </div>
-                <VisaLink url={data.visaOfficialUrl} />
-              </div>
-            ) : authChecked ? (
-              // Pro upsell for non-pro users
-              <div className="relative rounded-2xl border border-accent/20 overflow-hidden">
-                {/* Blurred preview */}
-                <div className="p-4 space-y-3 select-none" style={{ filter: 'blur(4px)', opacity: 0.4, pointerEvents: 'none' }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-muted">Difficulty:</span>
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-accent/10 text-accent border border-accent/20">
-                      Moderate
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-muted leading-relaxed">
-                    Skilled worker visa requires employer sponsorship with specific salary thresholds and documentation.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {["Skilled Worker Visa", "Global Talent", "Scale-Up Visa"].map((r) => (
-                      <span key={r} className="px-3 py-1 text-xs rounded-full border border-accent/20 text-accent bg-accent/5">{r}</span>
-                    ))}
-                  </div>
-                </div>
-                {/* Overlay CTA */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4"
-                  style={{ background: 'rgba(10,10,15,0.7)', backdropFilter: 'blur(2px)' }}>
-                  <Lock className="w-5 h-5 text-accent" />
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-text-primary mb-0.5">Pro feature</p>
-                    <p className="text-xs text-text-muted">Visa routes, difficulty ratings & official links</p>
-                  </div>
-                  <Link
-                    href="/pro"
-                    className="cta-button px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 font-bold"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Upgrade — €5
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              // Loading state — show nothing yet to avoid flash
-              <div className="h-24 rounded-2xl bg-bg-elevated animate-pulse" />
-            )}
+          {/* Salary chart */}
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Salary by Role</p>
+            <div className="border-2 border-[#2a2a2a] p-3">
+              <SalaryChart country={country} selectedRole={selectedRole} />
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="space-y-3 pb-8">
+          {/* CTAs */}
+          <div className="space-y-3 pb-6">
             <button
               onClick={handleFullReport}
-              className="cta-button w-full py-3.5 rounded-2xl text-base flex items-center justify-center gap-2"
+              className="cta-button w-full py-3.5 text-sm font-bold"
             >
-              <FileText className="w-4 h-4" />
-              View Full Country Page
+              <FileText className="w-4 h-4 mr-2" />
+              Get Full Report
             </button>
             <button
               onClick={handleCompare}
-              className="w-full py-3 rounded-2xl text-sm border border-border hover:border-accent/30 transition-colors flex items-center justify-center gap-2 text-text-muted hover:text-text-primary"
+              className="ghost-button w-full py-3 text-sm flex items-center justify-center gap-2"
             >
               <ArrowRightLeft className="w-4 h-4" />
-              Compare with another country
+              Compare Countries
             </button>
+            <a
+              href={"/country/" + country.slug}
+              className="block text-center text-xs font-bold text-text-muted hover:text-accent transition-colors py-1 uppercase tracking-wide"
+            >
+              View full country page →
+            </a>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

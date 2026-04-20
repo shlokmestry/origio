@@ -5,17 +5,17 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-surface: #111118;
-  --bg-elevated: #1a1a24;
-  --accent: #00d4c8;
-  --accent-dim: rgba(0, 212, 200, 0.15);
-  --accent-glow: rgba(0, 212, 200, 0.4);
-  --text-primary: #f0f0f5;
-  --text-muted: #8888a0;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --score-high: #4ade80;
+  --bg-primary: #0a0a0a;
+  --bg-surface: #111111;
+  --bg-elevated: #1a1a1a;
+  --accent: #00ffd5;
+  --accent-dim: rgba(0, 255, 213, 0.12);
+  --accent-glow: rgba(0, 255, 213, 0.3);
+  --text-primary: #f0f0e8;
+  --text-muted: #666660;
+  --border: #2a2a2a;
+  --border-hover: #444440;
+  --score-high: #00ffd5;
   --score-mid: #facc15;
   --score-low: #f87171;
 }
@@ -34,11 +34,10 @@ body {
   font-family: "Satoshi", sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  /* NO overflow:hidden here — other pages need to scroll */
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -46,128 +45,239 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: #2a2a2a;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #444440;
 }
 
-/* Globe container: fills parent — positioning owned by page.tsx */
+/* Globe container */
 .globe-container {
   width: 100%;
   height: 100%;
 }
 
-/* touch-action:none lets Three.js capture drag + pinch on mobile */
 .globe-container canvas {
   width: 100% !important;
   height: 100% !important;
   touch-action: none;
 }
 
+/* ─── Neo-brutalist panel (replaces glass-panel) ─── */
 .glass-panel {
-  background: rgba(17, 17, 24, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  background: #111111;
+  border: 2px solid #2a2a2a;
 }
 
 .glass-panel-strong {
-  background: rgba(17, 17, 24, 0.92);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  border: 1px solid var(--border);
+  background: #0f0f0f;
+  border: 2px solid var(--text-primary);
 }
 
+/* ─── Brutalist card shadow ─── */
+.brutal-shadow {
+  box-shadow: 4px 4px 0 var(--text-primary);
+}
+
+.brutal-shadow-accent {
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
+.brutal-shadow-sm {
+  box-shadow: 3px 3px 0 var(--text-primary);
+}
+
+/* ─── Score utilities (kept for colour logic) ─── */
 .accent-glow {
-  box-shadow: 0 0 20px var(--accent-glow), 0 0 60px rgba(0, 212, 200, 0.1);
+  border: 2px solid var(--accent);
 }
 
 .accent-border-glow {
-  border: 1px solid rgba(0, 212, 200, 0.3);
-  box-shadow: inset 0 0 20px rgba(0, 212, 200, 0.05),
-    0 0 15px rgba(0, 212, 200, 0.1);
+  border: 2px solid var(--accent);
 }
 
 .score-high {
   color: var(--score-high);
-  border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.08);
+  border-color: var(--score-high);
+  background: rgba(0, 255, 213, 0.08);
 }
 
 .score-mid {
   color: var(--score-mid);
-  border-color: rgba(250, 204, 21, 0.3);
+  border-color: var(--score-mid);
   background: rgba(250, 204, 21, 0.08);
 }
 
 .score-low {
   color: var(--score-low);
-  border-color: rgba(248, 113, 113, 0.3);
+  border-color: var(--score-low);
   background: rgba(248, 113, 113, 0.08);
 }
 
+/* ─── Stat card ─── */
 .stat-card {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid #2a2a2a;
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
 }
 
 .stat-card:hover {
-  border-color: rgba(0, 212, 200, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 212, 200, 0.08);
+  border-color: var(--accent);
+  box-shadow: 4px 4px 0 var(--accent);
+  transform: translate(-2px, -2px);
 }
 
+/* ─── CTA button ─── */
 .cta-button {
   background: var(--accent);
-  color: var(--bg-primary);
+  color: #0a0a0a;
   font-family: "Cabinet Grotesk", sans-serif;
   font-weight: 700;
-  transition: all 0.3s ease;
+  border: 2px solid var(--text-primary);
+  box-shadow: 4px 4px 0 var(--text-primary);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
   position: relative;
-  overflow: hidden;
-}
-
-.cta-button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.cta-button:hover::before {
-  transform: translateX(100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0 !important;
 }
 
 .cta-button:hover {
-  box-shadow: 0 0 25px rgba(0, 212, 200, 0.4), 0 0 60px rgba(0, 212, 200, 0.15), 0 4px 20px rgba(0, 0, 0, 0.3);
-  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--text-primary);
+  transform: translate(2px, 2px);
 }
 
+.cta-button:active {
+  box-shadow: 0 0 0 var(--text-primary);
+  transform: translate(4px, 4px);
+}
+
+/* ─── Ghost button ─── */
+.ghost-button {
+  background: transparent;
+  color: var(--text-primary);
+  font-family: "Cabinet Grotesk", sans-serif;
+  font-weight: 700;
+  border: 2px solid #2a2a2a;
+  box-shadow: 3px 3px 0 #2a2a2a;
+  transition: box-shadow 0.1s ease, transform 0.1s ease, border-color 0.1s ease;
+  cursor: pointer;
+  border-radius: 0 !important;
+}
+
+.ghost-button:hover {
+  border-color: var(--text-primary);
+  box-shadow: 3px 3px 0 var(--text-primary);
+}
+
+.ghost-button:active {
+  box-shadow: 0 0 0;
+  transform: translate(3px, 3px);
+}
+
+/* ─── Gradient text → now just accent underline ─── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
 }
 
-.noise-overlay::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  opacity: 0.015;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+/* ─── Input fields ─── */
+.brutal-input {
+  background: #111111;
+  border: 2px solid #2a2a2a;
+  color: var(--text-primary);
+  border-radius: 0;
+  transition: border-color 0.1s ease;
+  outline: none;
+  font-family: "Satoshi", sans-serif;
 }
+
+.brutal-input:focus {
+  border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+
+.brutal-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ─── Select ─── */
+select.brutal-input {
+  appearance: none;
+  cursor: pointer;
+}
+
+/* ─── Badge / pill ─── */
+.brutal-badge {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-family: "Cabinet Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Noise overlay removed ─── */
+.noise-overlay::after {
+  display: none;
+}
+
+/* ─── Card accent top border ─── */
 .card-accent-top {
-  border-top: 2px solid var(--accent) !important;
+  border-top: 3px solid var(--accent) !important;
+}
+
+/* ─── Progress bar ─── */
+.brutal-progress {
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  height: 8px;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.brutal-progress-bar {
+  background: var(--accent);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+/* ─── Separator ─── */
+.brutal-divider {
+  border: none;
+  border-top: 2px solid #2a2a2a;
+}
+
+/* ─── Tag / trending pill ─── */
+.brutal-tag {
+  border: 2px solid #2a2a2a;
+  color: #888880;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s;
+  background: transparent;
+  font-family: "Satoshi", sans-serif;
+}
+
+.brutal-tag:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
