@@ -66,7 +66,8 @@ export default function WizardResultsPage() {
   }, [router]);
 
   const handleViewOnGlobe = () => {
-    const slugs = matches.slice(0, 3).map((m) => m.slug);
+    // CountryMatch shape: { country: CountryWithData, matchScore, matchPercent, reasons }
+    const slugs = matches.slice(0, 3).map((m) => m.country.slug);
     sessionStorage.setItem("highlightedCountries", JSON.stringify(slugs));
     sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
     router.push("/");
@@ -123,9 +124,9 @@ export default function WizardResultsPage() {
           <div className="inline-flex items-center gap-2 border-2 border-accent text-accent text-xs font-bold px-3 py-1.5 uppercase tracking-widest">
             <Star className="w-3 h-3" /> Your top match
           </div>
-          <div className="text-7xl">{top.flagEmoji}</div>
+          <div className="text-7xl">{top.country.flagEmoji}</div>
           <div>
-            <h1 className="font-heading text-5xl font-extrabold uppercase tracking-tight text-text-primary">{top.name}</h1>
+            <h1 className="font-heading text-5xl font-extrabold uppercase tracking-tight text-text-primary">{top.country.name}</h1>
             <p className="text-accent font-bold text-xl mt-1">{top.matchPercent}% match</p>
           </div>
           {top.reasons.length > 0 && (
@@ -136,7 +137,7 @@ export default function WizardResultsPage() {
             </div>
           )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Link href={"/country/" + top.slug} className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
+            <Link href={"/country/" + top.country.slug} className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
               View Full Report
             </Link>
             <button onClick={handleViewOnGlobe} className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
@@ -152,14 +153,14 @@ export default function WizardResultsPage() {
           </p>
           <div className="space-y-2">
             {visibleMatches.map((match, i) => (
-              <Link key={match.slug} href={"/country/" + match.slug}
+              <Link key={match.country.slug} href={"/country/" + match.country.slug}
                 className="flex items-center gap-4 p-4 border-2 border-[#2a2a2a] bg-[#111111] hover:border-text-primary transition-all group"
                 style={i < 3 ? { boxShadow: "3px 3px 0 " + RANK_COLORS[i] } : {}}>
                 <span className="font-heading font-extrabold text-lg w-7 text-right flex-shrink-0" style={{ color: i < 3 ? RANK_COLORS[i] : "#444" }}>
                   {i + 1}
                 </span>
-                <span className="text-2xl">{match.flagEmoji}</span>
-                <span className="font-heading font-bold text-text-primary uppercase tracking-tight flex-1">{match.name}</span>
+                <span className="text-2xl">{match.country.flagEmoji}</span>
+                <span className="font-heading font-bold text-text-primary uppercase tracking-tight flex-1">{match.country.name}</span>
                 <span className="font-bold text-sm" style={{ color: i < 3 ? RANK_COLORS[i] : "#666" }}>{match.matchPercent}%</span>
               </Link>
             ))}
@@ -168,7 +169,6 @@ export default function WizardResultsPage() {
           {/* Upgrade gate */}
           {!isPro && (
             <div className="mt-4 border-2 border-[#2a2a2a] overflow-hidden" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-              {/* Blurred rows */}
               <div className="relative">
                 <div className="opacity-30 pointer-events-none space-y-0">
                   {[11, 12, 13].map((n) => (
