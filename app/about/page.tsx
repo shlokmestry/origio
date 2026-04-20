@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Mail } from "lucide-react";
 import Nav from "@/components/Nav";
 import Link from "next/link";
@@ -31,7 +32,7 @@ export default function AboutPage() {
               The core feature is the interactive 3D globe — click any country to instantly see how it stacks up across every dimension that matters. No more bouncing between Numbeo, Expatistan, and government visa websites trying to piece together a picture.
             </p>
             <p>
-              If you're not sure where to start, the Find My Country quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 25 countries and gives you a personalised ranked list.
+              If  you&apos;re not sure where to start, the Find My Country quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 25 countries and gives you a personalised ranked list.
             </p>
           </div>
         </section>
