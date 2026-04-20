@@ -18,7 +18,7 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
           .select('id')
           .eq('user_id', session.user.id)
           .eq('country_slug', countrySlug)
-          .single()
+          .maybeSingle()
         setSaved(!!data)
         setLoading(false)
       }
