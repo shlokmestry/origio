@@ -12,190 +12,80 @@ import { CountryWithData } from "@/types";
 const TOTAL_STEPS = 8;
 
 const PASSPORTS = [
-  "Ireland", "United Kingdom", "Germany", "France", "Netherlands", "Spain",
-  "Portugal", "Sweden", "Norway", "Switzerland", "Australia", "New Zealand",
-  "Canada", "USA", "Singapore", "UAE", "India", "China", "Brazil", "South Africa",
-  "Nigeria", "Kenya", "Philippines", "Italy", "Poland", "Romania", "Other"
+  "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
+  "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
+  "Canada","USA","Singapore","UAE","India","China","Brazil","South Africa",
+  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other"
 ];
 
-// Rent budgets shown in user's home currency with local context
 function getRentBudgets(passport: string) {
   const p = passport.toLowerCase();
-
-  if (p === "india") {
-    return {
-      note: "Shown in Indian Rupees — typical rent abroad converted to INR for perspective",
-      options: [
-        { key: "under800", label: "Under ₹65,000/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "usa") {
-    return {
-      note: "Shown in US Dollars — your familiar frame of reference",
-      options: [
-        { key: "under800", label: "Under $800/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "canada") {
-    return {
-      note: "Shown in Canadian Dollars — converted for your perspective",
-      options: [
-        { key: "under800", label: "Under CA$1,100/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "CA$1,100 – CA$2,000/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "CA$2,000 – CA$3,400/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "united kingdom") {
-    return {
-      note: "Shown in Pounds Sterling — your familiar frame of reference",
-      options: [
-        { key: "under800", label: "Under £650/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "£650 – £1,200/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "£1,200 – £2,000/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "australia" || p === "new zealand") {
-    return {
-      note: "Shown in Australian Dollars — converted for your perspective",
-      options: [
-        { key: "under800", label: "Under A$1,200/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "A$1,200 – A$2,200/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "A$2,200 – A$3,800/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "uae") {
-    return {
-      note: "Shown in UAE Dirhams — your familiar frame of reference",
-      options: [
-        { key: "under800", label: "Under AED 3,000/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "AED 3,000 – AED 5,500/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "AED 5,500 – AED 9,000/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "china") {
-    return {
-      note: "Shown in Chinese Yuan — converted for your perspective",
-      options: [
-        { key: "under800", label: "Under ¥5,800/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "¥5,800 – ¥11,000/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "¥11,000 – ¥18,000/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "brazil") {
-    return {
-      note: "Shown in Brazilian Reais — converted for your perspective",
-      options: [
-        { key: "under800", label: "Under R$4,000/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "R$4,000 – R$7,500/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "R$7,500 – R$12,500/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "singapore") {
-    return {
-      note: "Shown in Singapore Dollars — your familiar frame of reference",
-      options: [
-        { key: "under800", label: "Under S$1,100/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "S$1,100 – S$2,000/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "S$2,000 – S$3,400/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  if (p === "nigeria" || p === "kenya" || p === "south africa" || p === "ghana") {
-    return {
-      note: "Shown in Euros — international standard for your destination countries",
-      options: [
-        { key: "under800", label: "Under €800/mo", sub: "Budget-conscious move" },
-        { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable abroad" },
-        { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible budget" },
-        { key: "any", label: "Money isn't a concern", sub: "No limit" },
-      ]
-    };
-  }
-
-  // Default EUR — European passports and others
-  return {
-    note: "Shown in Euros — standard for most European destinations",
+  if (p === "india") return {
+    note: "Shown in Indian Rupees — typical rent abroad converted to INR",
     options: [
-      { key: "under800", label: "Under €800/mo", sub: "Budget-conscious move" },
-      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable abroad" },
-      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible budget" },
+      { key: "under800", label: "Under ₹65,000/mo", sub: "Budget-conscious" },
+      { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ]
+  };
+  if (p === "usa") return {
+    note: "Shown in US Dollars",
+    options: [
+      { key: "under800", label: "Under $800/mo", sub: "Budget-conscious" },
+      { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible" },
+      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+    ]
+  };
+  return {
+    note: "Shown in Euros — average city-centre rent abroad",
+    options: [
+      { key: "under800", label: "Under €800/mo", sub: "Budget-conscious" },
+      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
+      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
       { key: "any", label: "Money isn't a concern", sub: "No limit" },
     ]
   };
 }
 
 const MOVE_REASONS = [
-  { key: "job", label: "I have a job offer", emoji: "💼" },
-  { key: "looking", label: "I'm looking for better opportunities", emoji: "🔍" },
-  { key: "lifestyle", label: "I want a better quality of life", emoji: "🌅" },
-  { key: "partner", label: "I'm following my partner", emoji: "❤️" },
-  { key: "study", label: "I'm going to study", emoji: "🎓" },
-  { key: "financial", label: "I want lower taxes or cost of living", emoji: "💰" },
+  { key: "job", emoji: "💼", label: "I have a job offer" },
+  { key: "career", emoji: "🚀", label: "Career growth" },
+  { key: "lifestyle", emoji: "🌴", label: "Better lifestyle" },
+  { key: "cost", emoji: "💰", label: "Lower cost of living" },
+  { key: "family", emoji: "👨‍👩‍👧", label: "Family or relationship" },
+  { key: "explore", emoji: "🌍", label: "Just exploring" },
 ];
 
 const PRIORITIES = [
-  { key: "salary", label: "High salary", emoji: "💰" },
-  { key: "affordability", label: "Low cost of living", emoji: "🏠" },
-  { key: "quality", label: "Quality of life", emoji: "✨" },
-  { key: "safety", label: "Safety & stability", emoji: "🛡️" },
-  { key: "visa", label: "Easy visa process", emoji: "✈️" },
-  { key: "tax", label: "Low taxes", emoji: "📊" },
+  { key: "salary", emoji: "💵", label: "High salary" },
+  { key: "tax", emoji: "📊", label: "Low taxes" },
+  { key: "cost", emoji: "🏠", label: "Affordable living" },
+  { key: "visa", emoji: "✈️", label: "Easy visa" },
+  { key: "safety", emoji: "🛡️", label: "Safety & stability" },
+  { key: "quality", emoji: "🌿", label: "Quality of life" },
+  { key: "tech", emoji: "💻", label: "Tech scene" },
+  { key: "weather", emoji: "☀️", label: "Good weather" },
 ];
 
 const CITY_VIBES = [
-  { key: "bigcity", label: "Buzzing metropolis", sub: "Think London, Singapore, NYC" },
-  { key: "midcity", label: "Mid-size city", sub: "Good balance of work and life" },
-  { key: "quiet", label: "Quiet and affordable", sub: "Suburbs, smaller towns" },
-  { key: "any", label: "I'm open to anything", sub: "Surprise me" },
+  { key: "metro", emoji: "🏙️", label: "Big city energy", sub: "NYC, London, Tokyo" },
+  { key: "mid", emoji: "🌆", label: "Mid-size city", sub: "Balanced pace" },
+  { key: "beach", emoji: "🏖️", label: "Coastal / beach", sub: "Warm & relaxed" },
+  { key: "nature", emoji: "🏔️", label: "Close to nature", sub: "Outdoors & quiet" },
+  { key: "any", emoji: "🎲", label: "I'm open to anything", sub: "Surprise me" },
 ];
 
 const LANGUAGES = [
-  { key: "german", label: "German" },
-  { key: "french", label: "French" },
-  { key: "spanish", label: "Spanish" },
-  { key: "portuguese", label: "Portuguese" },
-  { key: "arabic", label: "Arabic" },
-  { key: "mandarin", label: "Mandarin" },
-  { key: "hindi", label: "Hindi" },
-  { key: "italian", label: "Italian" },
-  { key: "dutch", label: "Dutch" },
-  { key: "swedish", label: "Swedish" },
-  { key: "norwegian", label: "Norwegian" },
-  { key: "japanese", label: "Japanese" },
-  { key: "korean", label: "Korean" },
-  { key: "tagalog", label: "Tagalog" },
-  { key: "turkish", label: "Turkish" },
-  { key: "polish", label: "Polish" },
+  { key: "german", label: "German" }, { key: "french", label: "French" },
+  { key: "spanish", label: "Spanish" }, { key: "portuguese", label: "Portuguese" },
+  { key: "arabic", label: "Arabic" }, { key: "mandarin", label: "Mandarin" },
+  { key: "hindi", label: "Hindi" }, { key: "italian", label: "Italian" },
+  { key: "dutch", label: "Dutch" }, { key: "swedish", label: "Swedish" },
+  { key: "norwegian", label: "Norwegian" }, { key: "japanese", label: "Japanese" },
+  { key: "korean", label: "Korean" }, { key: "tagalog", label: "Tagalog" },
+  { key: "turkish", label: "Turkish" }, { key: "polish", label: "Polish" },
   { key: "none", label: "English only" },
 ];
 
@@ -208,72 +98,24 @@ const DEAL_BREAKERS = [
   { key: "none", label: "No deal breakers" },
 ];
 
+// Shared button styles
+const optionBase = "w-full flex items-center gap-3 p-4 border-2 text-left transition-all font-medium text-sm";
+const optionSelected = "border-accent bg-accent/10 text-text-primary";
+const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-text-primary hover:text-text-primary";
+
 export default function WizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState<Partial<WizardAnswers>>({
-    priorities: [],
-    languages: [],
-    dealBreakers: [],
-  });
+  const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
   const isJobOffer = answers.moveReason === "job";
 
-  const getNextStep = (current: number) => {
-    if (current === 2 && isJobOffer) return 3;
-    if (current === 3 && isJobOffer) return 7;
-    return current + 1;
-  };
-
-  const getPrevStep = (current: number) => {
-    if (current === 7 && isJobOffer) return 3;
-    if (current === 3 && isJobOffer) return 2;
-    return current - 1;
-  };
-
+  const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
+  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
-  const getEffectiveStep = () => {
-    if (!isJobOffer) return step;
-    if (step <= 3) return step;
-    if (step >= 7) return step - 3;
-    return step;
-  };
-
+  const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
   const progress = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
-
-  const handleNext = () => {
-    const next = getNextStep(step);
-    if (next <= TOTAL_STEPS) {
-      setStep(next);
-    } else {
-      handleSubmit();
-    }
-  };
-
-  const handleBack = () => {
-    if (step === 1) {
-      router.push("/");
-    } else {
-      setStep(getPrevStep(step));
-    }
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/countries");
-      const countries: CountryWithData[] = await res.json();
-      const matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
-      sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
-      sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
-      router.push("/wizard/results");
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
-  };
-
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
 
   const canProceed = () => {
@@ -288,31 +130,43 @@ export default function WizardPage() {
     return false;
   };
 
+  const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
+  const handleBack = () => { if (step === 1) router.push("/"); else setStep(getPrevStep(step)); };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/countries");
+      const countries: CountryWithData[] = await res.json();
+      const matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
+      sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
+      sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
+      router.push("/wizard/results");
+    } catch (err) { console.error(err); setLoading(false); }
+  };
+
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
 
   return (
-    <div className="min-h-screen bg-bg-primary flex flex-col">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-        <button onClick={handleBack} className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Back
+      <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#2a2a2a]">
+        <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Globe2 className="w-5 h-5 text-accent" />
-          <span className="font-heading font-extrabold">Origio</span>
+          <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
+          <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
         </a>
-        <span className="text-sm text-text-muted">
-          {getEffectiveStep()} of {getEffectiveTotalSteps()}
+        <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
+          {getEffectiveStep()} / {getEffectiveTotalSteps()}
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-bg-elevated">
-        <div
-          className="h-full bg-accent transition-all duration-500 ease-out"
-          style={{ width: progress + "%" }}
-        />
+      {/* Progress */}
+      <div className="h-1.5 bg-[#1a1a1a] border-b-2 border-[#2a2a2a]">
+        <div className="h-full bg-accent transition-all duration-500 ease-out" style={{ width: progress + "%" }} />
       </div>
 
       {/* Content */}
@@ -323,19 +177,14 @@ export default function WizardPage() {
           {step === 1 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Let's get started</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">Where are you from?</h2>
-                <p className="text-text-muted">Your passport affects which countries are easiest to move to.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Let's get started</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Where are you from?</h2>
+                <p className="text-text-muted text-sm">Your passport affects which countries are easiest to move to.</p>
               </div>
-              <select
-                value={answers.passport ?? ""}
-                onChange={(e) => setAnswers({ ...answers, passport: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-text-primary text-sm appearance-none cursor-pointer"
-              >
+              <select value={answers.passport ?? ""} onChange={(e) => setAnswers({ ...answers, passport: e.target.value })}
+                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors">
                 <option value="">Select your country...</option>
-                {PASSPORTS.map((p) => (
-                  <option key={p} value={p.toLowerCase()}>{p}</option>
-                ))}
+                {PASSPORTS.map((p) => <option key={p} value={p.toLowerCase()}>{p}</option>)}
               </select>
             </div>
           )}
@@ -344,30 +193,23 @@ export default function WizardPage() {
           {step === 2 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Your situation</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">Why are you planning to move?</h2>
-                <p className="text-text-muted">This helps us understand what matters most for your move.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your situation</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Why are you moving?</h2>
+                <p className="text-text-muted text-sm">This helps us understand what matters most.</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {MOVE_REASONS.map((r) => (
-                  <button
-                    key={r.key}
-                    onClick={() => setAnswers({ ...answers, moveReason: r.key })}
-                    className={[
-                      "flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
-                      answers.moveReason === r.key
-                        ? "border-accent bg-accent/10 text-text-primary"
-                        : "border-border bg-bg-elevated text-text-muted hover:border-accent/30 hover:text-text-primary",
-                    ].join(" ")}
-                  >
+                  <button key={r.key} onClick={() => setAnswers({ ...answers, moveReason: r.key })}
+                    className={`${optionBase} ${answers.moveReason === r.key ? optionSelected : optionIdle}`}
+                    style={answers.moveReason === r.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                     <span className="text-xl">{r.emoji}</span>
-                    <span className="text-sm font-medium">{r.label}</span>
+                    <span>{r.label}</span>
                   </button>
                 ))}
               </div>
               {isJobOffer && (
-                <div className="p-3 rounded-xl bg-accent/5 border border-accent/20">
-                  <p className="text-xs text-accent">Since you have a job offer, we'll skip some questions and focus on what matters most for your move.</p>
+                <div className="p-3 border-2 border-accent/40 bg-accent/5">
+                  <p className="text-xs font-bold text-accent">Since you have a job offer, we'll skip some questions and focus on what matters most.</p>
                 </div>
               )}
             </div>
@@ -377,19 +219,14 @@ export default function WizardPage() {
           {step === 3 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Your work</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">What do you do?</h2>
-                <p className="text-text-muted">We'll show you salaries specific to your field in each country.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your work</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What do you do?</h2>
+                <p className="text-text-muted text-sm">We'll show you salaries specific to your field.</p>
               </div>
-              <select
-                value={answers.jobRole ?? ""}
-                onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl bg-bg-elevated border border-border focus:border-accent/40 focus:outline-none text-text-primary text-sm appearance-none cursor-pointer"
-              >
+              <select value={answers.jobRole ?? ""} onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
+                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors">
                 <option value="">Select your job role...</option>
-                {JOB_ROLES.map((r) => (
-                  <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
-                ))}
+                {JOB_ROLES.map((r) => <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>)}
               </select>
             </div>
           )}
@@ -398,47 +235,30 @@ export default function WizardPage() {
           {step === 4 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">What matters to you</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">Pick your top 3 priorities</h2>
-                <p className="text-text-muted">Select exactly 3 — we'll weight your matches accordingly.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">What matters to you</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Pick your top 3</h2>
+                <p className="text-text-muted text-sm">Select exactly 3 — we'll weight your matches accordingly.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {PRIORITIES.map((p) => {
                   const selected = answers.priorities?.includes(p.key);
                   const maxReached = (answers.priorities?.length ?? 0) >= 3 && !selected;
                   return (
-                    <button
-                      key={p.key}
-                      disabled={maxReached}
+                    <button key={p.key} disabled={maxReached}
                       onClick={() => {
-                        const current = answers.priorities ?? [];
-                        if (selected) {
-                          setAnswers({ ...answers, priorities: current.filter((x) => x !== p.key) });
-                        } else if (current.length < 3) {
-                          setAnswers({ ...answers, priorities: [...current, p.key] });
-                        }
+                        const cur = answers.priorities ?? [];
+                        if (selected) setAnswers({ ...answers, priorities: cur.filter((x) => x !== p.key) });
+                        else if (cur.length < 3) setAnswers({ ...answers, priorities: [...cur, p.key] });
                       }}
-                      className={[
-                        "flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
-                        selected ? "border-accent bg-accent/10 text-text-primary" : "",
-                        !selected && !maxReached ? "border-border bg-bg-elevated text-text-muted hover:border-accent/30 hover:text-text-primary" : "",
-                        maxReached ? "border-border bg-bg-elevated text-text-muted/40 cursor-not-allowed" : "",
-                      ].join(" ")}
-                    >
+                      className={`${optionBase} ${selected ? optionSelected : maxReached ? "border-[#2a2a2a] bg-[#111] text-text-muted/30 cursor-not-allowed" : optionIdle}`}
+                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                       <span className="text-xl">{p.emoji}</span>
-                      <span className="text-sm font-medium">{p.label}</span>
-                      {selected && (
-                        <span className="ml-auto text-xs text-accent font-bold">
-                          #{(answers.priorities?.indexOf(p.key) ?? 0) + 1}
-                        </span>
-                      )}
+                      <span>{p.label}</span>
+                      {selected && <span className="ml-auto text-xs font-bold text-accent">#{(answers.priorities?.indexOf(p.key) ?? 0) + 1}</span>}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs text-text-muted text-center">
-                {answers.priorities?.length ?? 0}/3 selected
-              </p>
             </div>
           )}
 
@@ -446,29 +266,20 @@ export default function WizardPage() {
           {step === 5 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Your lifestyle</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">What kind of place do you want to live in?</h2>
-                <p className="text-text-muted">There's no wrong answer here.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your lifestyle</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What's your vibe?</h2>
+                <p className="text-text-muted text-sm">What kind of place do you want to live in?</p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {CITY_VIBES.map((v) => (
-                  <button
-                    key={v.key}
-                    onClick={() => setAnswers({ ...answers, cityVibe: v.key })}
-                    className={[
-                      "w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all",
-                      answers.cityVibe === v.key
-                        ? "border-accent bg-accent/10"
-                        : "border-border bg-bg-elevated hover:border-accent/30",
-                    ].join(" ")}
-                  >
+                  <button key={v.key} onClick={() => setAnswers({ ...answers, cityVibe: v.key })}
+                    className={`${optionBase} ${answers.cityVibe === v.key ? optionSelected : optionIdle}`}
+                    style={answers.cityVibe === v.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
+                    <span className="text-xl">{v.emoji}</span>
                     <div>
-                      <p className={["text-sm font-medium", answers.cityVibe === v.key ? "text-text-primary" : "text-text-muted"].join(" ")}>{v.label}</p>
+                      <p>{v.label}</p>
                       <p className="text-xs text-text-muted mt-0.5">{v.sub}</p>
                     </div>
-                    {answers.cityVibe === v.key && (
-                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                    )}
                   </button>
                 ))}
               </div>
@@ -477,38 +288,21 @@ export default function WizardPage() {
 
           {/* Step 6 — Rent budget */}
           {step === 6 && (
-            <div className="space-y-6 animate-fade-up">
+            <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Your budget</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">What's your monthly rent budget?</h2>
-                <p className="text-text-muted">We'll filter out countries that would stretch you too thin.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your budget</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Max rent budget?</h2>
+                <p className="text-text-muted text-sm">{rentNote}</p>
               </div>
-
-              {/* Currency context note */}
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-bg-elevated border border-border">
-                <span className="text-base mt-0.5">💡</span>
-                <p className="text-xs text-text-muted leading-relaxed">{rentNote}</p>
-              </div>
-
-              <div className="space-y-3">
-                {rentOptions.map((b) => (
-                  <button
-                    key={b.key}
-                    onClick={() => setAnswers({ ...answers, rentBudget: b.key })}
-                    className={[
-                      "w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all",
-                      answers.rentBudget === b.key
-                        ? "border-accent bg-accent/10"
-                        : "border-border bg-bg-elevated hover:border-accent/30",
-                    ].join(" ")}
-                  >
+              <div className="space-y-2">
+                {rentOptions.map((o) => (
+                  <button key={o.key} onClick={() => setAnswers({ ...answers, rentBudget: o.key })}
+                    className={`${optionBase} ${answers.rentBudget === o.key ? optionSelected : optionIdle}`}
+                    style={answers.rentBudget === o.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                     <div>
-                      <p className={["text-sm font-medium", answers.rentBudget === b.key ? "text-text-primary" : "text-text-muted"].join(" ")}>{b.label}</p>
-                      <p className="text-xs text-text-muted mt-0.5">{b.sub}</p>
+                      <p>{o.label}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{o.sub}</p>
                     </div>
-                    {answers.rentBudget === b.key && (
-                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                    )}
                   </button>
                 ))}
               </div>
@@ -519,37 +313,23 @@ export default function WizardPage() {
           {step === 7 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Your skills</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">Do you speak any other languages?</h2>
-                <p className="text-text-muted">Speaking the local language can give you a real edge — we'll factor it in.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Languages</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Languages you speak?</h2>
+                <p className="text-text-muted text-sm">Select all that apply — or English only.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {LANGUAGES.map((l) => {
                   const selected = answers.languages?.includes(l.key);
                   return (
-                    <button
-                      key={l.key}
+                    <button key={l.key}
                       onClick={() => {
-                        const current = answers.languages ?? [];
-                        if (l.key === "none") {
-                          setAnswers({ ...answers, languages: ["none"] });
-                        } else {
-                          const withoutNone = current.filter((x) => x !== "none");
-                          if (selected) {
-                            setAnswers({ ...answers, languages: withoutNone.filter((x) => x !== l.key) });
-                          } else {
-                            setAnswers({ ...answers, languages: [...withoutNone, l.key] });
-                          }
-                        }
+                        const cur = answers.languages ?? [];
+                        if (selected) setAnswers({ ...answers, languages: cur.filter((x) => x !== l.key) });
+                        else setAnswers({ ...answers, languages: [...cur, l.key] });
                       }}
-                      className={[
-                        "flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
-                        selected
-                          ? "border-accent bg-accent/10 text-text-primary"
-                          : "border-border bg-bg-elevated text-text-muted hover:border-accent/30 hover:text-text-primary",
-                      ].join(" ")}
-                    >
-                      <span className="text-sm font-medium">{l.label}</span>
+                      className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
+                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
+                      <span>{l.label}</span>
                     </button>
                   );
                 })}
@@ -561,37 +341,25 @@ export default function WizardPage() {
           {step === 8 && (
             <div className="space-y-8 animate-fade-up">
               <div>
-                <p className="text-accent text-sm font-medium mb-2">Almost there</p>
-                <h2 className="font-heading text-3xl font-extrabold mb-3">Any deal breakers?</h2>
-                <p className="text-text-muted">We'll remove countries that don't fit. Select all that apply.</p>
+                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Almost there</p>
+                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Any deal breakers?</h2>
+                <p className="text-text-muted text-sm">We'll remove countries that don't fit. Select all that apply.</p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {DEAL_BREAKERS.map((d) => {
                   const selected = answers.dealBreakers?.includes(d.key);
                   return (
-                    <button
-                      key={d.key}
+                    <button key={d.key}
                       onClick={() => {
-                        const current = answers.dealBreakers ?? [];
-                        if (d.key === "none") {
-                          setAnswers({ ...answers, dealBreakers: ["none"] });
-                        } else {
-                          const withoutNone = current.filter((x) => x !== "none");
-                          if (selected) {
-                            setAnswers({ ...answers, dealBreakers: withoutNone.filter((x) => x !== d.key) });
-                          } else {
-                            setAnswers({ ...answers, dealBreakers: [...withoutNone, d.key] });
-                          }
-                        }
+                        const cur = answers.dealBreakers ?? [];
+                        if (d.key === "none") { setAnswers({ ...answers, dealBreakers: ["none"] }); return; }
+                        const withoutNone = cur.filter((x) => x !== "none");
+                        if (selected) setAnswers({ ...answers, dealBreakers: withoutNone.filter((x) => x !== d.key) });
+                        else setAnswers({ ...answers, dealBreakers: [...withoutNone, d.key] });
                       }}
-                      className={[
-                        "w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
-                        selected
-                          ? "border-accent bg-accent/10 text-text-primary"
-                          : "border-border bg-bg-elevated text-text-muted hover:border-accent/30 hover:text-text-primary",
-                      ].join(" ")}
-                    >
-                      <span className="text-sm font-medium">{d.label}</span>
+                      className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
+                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
+                      <span>{d.label}</span>
                     </button>
                   );
                 })}
@@ -599,35 +367,18 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Navigation */}
+          {/* Nav buttons */}
           <div className="flex items-center justify-between mt-10">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl border border-border text-sm text-text-muted hover:text-text-primary hover:border-accent/30 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
+            <button onClick={handleBack}
+              className="ghost-button flex items-center gap-2 px-5 py-3 text-sm font-bold uppercase tracking-wide">
+              <ArrowLeft className="w-4 h-4" /> Back
             </button>
-            <button
-              onClick={handleNext}
-              disabled={!canProceed() || loading}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-bg-primary text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-accent/90 transition-colors"
-            >
-              {loading ? (
-                <>Finding your matches...</>
-              ) : isLastStep ? (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Find My Country
-                </>
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+            <button onClick={handleNext} disabled={!canProceed() || loading}
+              className="cta-button flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wide disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+              {loading ? "Finding matches..." : isLastStep ? "Find My Country" : <>Next <ArrowRight className="w-4 h-4" /></>}
             </button>
           </div>
+
         </div>
       </div>
     </div>
