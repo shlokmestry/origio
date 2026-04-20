@@ -10,7 +10,7 @@ import CommandSearch from "@/components/CommandSearch";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { Sparkles, Briefcase, Globe2, FileText, TrendingUp } from "lucide-react";
+import { Briefcase, Globe2, FileText, TrendingUp, Sparkles } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -200,9 +200,8 @@ export default function Home() {
             >
               <button
                 onClick={() => router.push("/wizard")}
-                className="cta-button px-6 py-3 rounded-xl text-sm font-medium inline-flex items-center gap-2"
+                className="cta-button px-6 py-3 rounded-xl text-sm font-medium"
               >
-                <Sparkles className="w-4 h-4" />
                 Find My Country
               </button>
             </div>
