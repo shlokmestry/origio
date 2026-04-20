@@ -17,7 +17,19 @@ const GUIDES = [
   { slug: "marketing-managers", title: "Marketing Managers", emoji: "📣", desc: "Marketing salaries, language requirements, and opportunities." },
 ];
 
+function getBlogPosts() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getAllPosts } = require("@/lib/posts");
+    return (getAllPosts() as { slug: string; title: string; description: string; date: string }[]).slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
 export default function GuidesPage() {
+  const recentPosts = getBlogPosts();
+
   return (
     <main className="min-h-screen bg-bg-primary">
       <nav className="sticky top-0 z-50 glass-panel border-b border-border">
@@ -34,6 +46,8 @@ export default function GuidesPage() {
       </nav>
 
       <section className="max-w-5xl mx-auto px-4 py-12 md:py-16">
+
+        {/* Role guides grid */}
         <div className="max-w-2xl mb-12">
           <p className="text-sm text-accent font-semibold mb-3 uppercase tracking-wider">Career relocation guides</p>
           <h1 className="font-heading text-4xl md:text-5xl font-extrabold text-text-primary mb-4">
@@ -63,6 +77,48 @@ export default function GuidesPage() {
           ))}
         </div>
 
+        {/* Blog articles section */}
+        {recentPosts.length > 0 && (
+          <div className="mt-20">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-sm text-accent font-semibold mb-1 uppercase tracking-wider">From the blog</p>
+                <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-text-primary">
+                  Latest articles
+                </h2>
+              </div>
+              <Link
+                href="/blog"
+                className="flex items-center gap-1 text-sm text-accent font-medium hover:underline"
+              >
+                View all <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="glass-panel rounded-2xl p-6 border border-border hover:border-accent/30 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <p className="text-xs text-text-muted uppercase tracking-wider mb-3">{post.date}</p>
+                    <h3 className="font-heading text-base font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
+                      {post.title}
+                    </h3>
+                    <p className="text-text-muted text-sm leading-relaxed">{post.description}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-accent font-medium mt-4">
+                    Read article <ArrowRight className="w-3 h-3" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Wizard CTA */}
         <div className="mt-16 glass-panel rounded-2xl p-8 border border-accent/20 text-center">
           <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
             Not sure which country fits you?
@@ -74,6 +130,7 @@ export default function GuidesPage() {
             Find My Country
           </Link>
         </div>
+
       </section>
     </main>
   );
