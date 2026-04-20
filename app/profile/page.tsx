@@ -269,13 +269,10 @@ export default function ProfilePage() {
       if (!mounted || initialized) return
       if (session?.user) {
         loadProfileData(session.user)
-      } else {
-        router.push('/')
       }
+      // No redirect here — onAuthStateChange handles unauthenticated state
     }).catch(() => {
-      // If getSession() itself errors, onAuthStateChange above will still
-      // fire and recover. Only redirect if nothing else initialized us.
-      if (mounted && !initialized) router.push('/')
+      // Silent — onAuthStateChange will recover
     })
 
     return () => {
