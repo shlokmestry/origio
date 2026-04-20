@@ -199,8 +199,9 @@ export default function ProfilePage() {
     if (authLoading) return
     if (!authUser) { router.push('/signin?next=/profile'); return }
 
-    setUser(authUser)
-    const initialName = authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? ''
+    const currentUser = authUser
+    setUser(currentUser)
+    const initialName = currentUser.user_metadata?.full_name ?? currentUser.email?.split('@')[0] ?? ''
     setDisplayName(initialName)
     setEditName(initialName)
 
@@ -210,15 +211,15 @@ export default function ProfilePage() {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at')
-            .eq('user_id', authUser.id)
+            .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
-            .eq('user_id', authUser.id)
+            .eq('user_id', currentUser.id)
             .single(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
-            .eq('id', authUser.id)
+            .eq('id', currentUser.id)
             .single(),
         ])
         if (!mounted) return
