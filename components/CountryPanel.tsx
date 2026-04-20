@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from "react";
 import {
   X, DollarSign, Home, Shield, Wifi, Heart, Plane,
-  TrendingUp, Receipt, ChevronDown, ChevronUp, FileText, ArrowRightLeft, ExternalLink,
+  TrendingUp, Receipt, ChevronDown, ChevronUp, FileText, ArrowRightLeft,
 } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
-import ScoreCard from "./ScoreCard";
 import SalaryChart from "./SalaryChart";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +26,16 @@ function getCurrencySymbol(currency: string): string {
   };
   return symbols[currency] ?? currency + " ";
 }
+
+// ScoreBreakdown has no icon field — map icons by label
+const SCORE_ICONS: Record<string, any> = {
+  Salary: DollarSign,
+  Affordability: Home,
+  "Quality of Life": Heart,
+  Safety: Shield,
+  "Visa Access": Plane,
+  "Tax Efficiency": Receipt,
+};
 
 export default function CountryPanel({ country, onClose, selectedRole, onRoleChange }: CountryPanelProps) {
   const router = useRouter();
@@ -91,7 +100,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           </div>
 
           {/* Move Score */}
-          <div className="mx-5 mb-5 p-4 border-2 flex items-center gap-4" style={{ borderColor: moveScoreColor, boxShadow: "4px 4px 0 " + moveScoreColor }}>
+          <div className="mx-5 mb-5 p-4 border-2 flex items-center gap-4"
+            style={{ borderColor: moveScoreColor, boxShadow: "4px 4px 0 " + moveScoreColor }}>
             <div className="w-14 h-14 border-2 flex items-center justify-center font-heading text-2xl font-extrabold flex-shrink-0"
               style={{ borderColor: moveScoreColor, color: moveScoreColor }}>
               {data.moveScore}
@@ -100,7 +110,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
               <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">Move Score</p>
               <div className="flex gap-1.5 flex-wrap">
                 {scoreBreakdown.slice(0, 3).map((s) => (
-                  <span key={s.label} className="text-[10px] font-bold uppercase px-2 py-0.5 border" style={{ borderColor: s.color, color: s.color }}>
+                  <span key={s.label} className="text-[10px] font-bold uppercase px-2 py-0.5 border"
+                    style={{ borderColor: s.color, color: s.color }}>
                     {s.label}
                   </span>
                 ))}
@@ -136,24 +147,30 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             <p className="text-xs text-text-muted font-medium mt-0.5">per year · {country.currency}</p>
           </div>
 
-          {/* Score breakdown */}
+          {/* Score breakdown — uses item.value / item.maxValue, icon looked up by label */}
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Score Breakdown</p>
             <div className="space-y-0 border-2 border-[#2a2a2a]">
-              {scoreBreakdown.map((item, i) => (
-                <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
-                  <div className="flex items-center gap-2">
-                    <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
-                    <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 h-1.5 bg-[#1a1a1a]">
-                      <div className="h-full transition-all" style={{ width: `${(item.score / 10) * 100}%`, background: item.color }} />
+              {scoreBreakdown.map((item, i) => {
+                const Icon = SCORE_ICONS[item.label] ?? TrendingUp;
+                return (
+                  <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                      <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
                     </div>
-                    <span className="text-xs font-bold w-6 text-right" style={{ color: item.color }}>{item.score}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-1.5 bg-[#1a1a1a]">
+                        <div className="h-full transition-all"
+                          style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} />
+                      </div>
+                      <span className="text-xs font-bold w-6 text-right" style={{ color: item.color }}>
+                        {Math.round(item.value * 10) / 10}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -165,28 +182,33 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             {data.visaPopularRoutes?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {data.visaPopularRoutes.map((route) => (
-                  <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 border-accent text-accent uppercase">{route}</span>
+                  <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 border-accent text-accent uppercase">
+                    {route}
+                  </span>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Cost of living */}
+          {/* Cost of living — correct field names from CountryData */}
           <div>
             <button
               onClick={() => setCostsExpanded(!costsExpanded)}
               className="w-full flex items-center justify-between px-4 py-3 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors"
             >
               <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Cost of Living</span>
-              {costsExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+              {costsExpanded
+                ? <ChevronUp className="w-4 h-4 text-text-muted" />
+                : <ChevronDown className="w-4 h-4 text-text-muted" />}
             </button>
             {costsExpanded && (
               <div className="border-2 border-[#2a2a2a] border-t-0 space-y-0">
                 {[
                   { label: "Rent (city centre)", value: currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo" },
-                  { label: "Groceries", value: currencySymbol + data.costGroceries.toLocaleString() + "/mo" },
-                  { label: "Transport", value: currencySymbol + data.costTransport.toLocaleString() + "/mo" },
-                  { label: "Dining out", value: currencySymbol + data.costDining.toLocaleString() + "/meal" },
+                  { label: "Groceries", value: currencySymbol + data.costGroceriesMonthly.toLocaleString() + "/mo" },
+                  { label: "Transport", value: currencySymbol + data.costTransportMonthly.toLocaleString() + "/mo" },
+                  { label: "Dining out", value: currencySymbol + data.costEatingOut.toLocaleString() + "/meal" },
+                  { label: "Utilities", value: currencySymbol + data.costUtilitiesMonthly.toLocaleString() + "/mo" },
                   { label: "Income tax (mid)", value: data.incomeTaxRateMid + "%" },
                 ].map((item, i, arr) => (
                   <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
@@ -198,34 +220,26 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             )}
           </div>
 
-          {/* Salary chart */}
+          {/* Salary chart — SalaryChart takes data + currency props */}
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Salary by Role</p>
             <div className="border-2 border-[#2a2a2a] p-3">
-              <SalaryChart country={country} selectedRole={selectedRole} />
+              <SalaryChart data={data} currency={country.currency} />
             </div>
           </div>
 
           {/* CTAs */}
           <div className="space-y-3 pb-6">
-            <button
-              onClick={handleFullReport}
-              className="cta-button w-full py-3.5 text-sm font-bold"
-            >
-              <FileText className="w-4 h-4 mr-2" />
+            <button onClick={handleFullReport} className="cta-button w-full py-3.5 text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2">
+              <FileText className="w-4 h-4" />
               Get Full Report
             </button>
-            <button
-              onClick={handleCompare}
-              className="ghost-button w-full py-3 text-sm flex items-center justify-center gap-2"
-            >
+            <button onClick={handleCompare} className="ghost-button w-full py-3 text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2">
               <ArrowRightLeft className="w-4 h-4" />
               Compare Countries
             </button>
-            <a
-              href={"/country/" + country.slug}
-              className="block text-center text-xs font-bold text-text-muted hover:text-accent transition-colors py-1 uppercase tracking-wide"
-            >
+            <a href={"/country/" + country.slug}
+              className="block text-center text-xs font-bold text-text-muted hover:text-accent transition-colors py-1 uppercase tracking-wide">
               View full country page →
             </a>
           </div>

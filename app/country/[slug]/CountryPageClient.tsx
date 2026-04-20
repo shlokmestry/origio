@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import {
   DollarSign, Home, Shield, Wifi, Heart, Plane,
   TrendingUp, Receipt, ExternalLink, ArrowLeft,
-  Globe2, MapPin, Languages, Banknote, FileText, Loader2,
+  Languages, Banknote, FileText, Loader2,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -28,17 +28,15 @@ interface Props {
   otherCountries: CountryWithData[];
 }
 
-function StatBox({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
-  return (
-    <div className="p-5 border-2 border-[#2a2a2a] stat-card bg-[#111111]">
-      <div className="w-9 h-9 border-2 flex items-center justify-center mb-3 flex-shrink-0" style={{ borderColor: color }}>
-        <Icon className="w-4 h-4" style={{ color }} />
-      </div>
-      <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-xl font-heading font-extrabold text-text-primary">{value}</p>
-    </div>
-  );
-}
+// ScoreBreakdown has no icon field — map by label
+const SCORE_ICONS: Record<string, any> = {
+  Salary: DollarSign,
+  Affordability: Home,
+  "Quality of Life": Heart,
+  Safety: Shield,
+  "Visa Access": Plane,
+  "Tax Efficiency": Receipt,
+};
 
 export default function CountryPageClient({ country, otherCountries }: Props) {
   const { data } = country;
@@ -49,6 +47,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
+  // Only use fields that exist on CountryData
   const salaryData = [
     { role: "Software Eng.", salary: data.salarySoftwareEngineer, color: "#00ffd5" },
     { role: "Doctor", salary: data.salaryDoctor, color: "#4ade80" },
@@ -68,22 +67,26 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
     { role: "HR Manager", salary: data.salaryHRManager, color: "#f472b6" },
     { role: "Sales Mgr.", salary: data.salarySalesManager, color: "#60a5fa" },
     { role: "Marketing Mgr.", salary: data.salaryMarketingManager, color: "#c084fc" },
-    { role: "Operations Mgr.", salary: data.salaryOperationsManager, color: "#86efac" },
-    { role: "Graphic Designer", salary: data.salaryGraphicDesigner, color: "#fda4af" },
+    { role: "Electrician", salary: data.salaryElectrician, color: "#86efac" },
+    { role: "Chef", salary: data.salaryChef, color: "#fda4af" },
   ];
 
+  // Use actual CountryData field names: costGroceriesMonthly, costTransportMonthly, costUtilitiesMonthly, costEatingOut
   const costItems = [
     { label: "Rent (city centre)", value: data.costRentCityCentre },
-    { label: "Groceries", value: data.costGroceries },
-    { label: "Transport", value: data.costTransport },
-    { label: "Dining out", value: data.costDining },
-    { label: "Utilities", value: data.costUtilities },
-    { label: "Entertainment", value: data.costEntertainment },
+    { label: "Groceries", value: data.costGroceriesMonthly },
+    { label: "Transport", value: data.costTransportMonthly },
+    { label: "Dining out", value: data.costEatingOut },
+    { label: "Utilities", value: data.costUtilitiesMonthly },
+    { label: "Rent (outside)", value: data.costRentOutside },
   ];
 
   const totalMonthlyCost =
-    data.costRentCityCentre + data.costGroceries + data.costTransport +
-    data.costDining + data.costUtilities + data.costEntertainment;
+    data.costRentCityCentre +
+    data.costGroceriesMonthly +
+    data.costTransportMonthly +
+    data.costEatingOut +
+    data.costUtilitiesMonthly;
 
   const handleGetReport = async () => {
     setGeneratingPDF(true);
@@ -132,7 +135,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-text-muted uppercase tracking-wide">
-                  <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3" />{country.capital}</span>
+                
                   <span className="border-l-2 border-[#2a2a2a] pl-3 flex items-center gap-1.5"><Languages className="w-3 h-3" />{country.language}</span>
                   <span className="border-l-2 border-[#2a2a2a] pl-3 flex items-center gap-1.5"><Banknote className="w-3 h-3" />{country.currency}</span>
                 </div>
@@ -175,24 +178,29 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
             </div>
           </section>
 
-          {/* Score breakdown */}
+          {/* Score breakdown — uses item.value and item.maxValue (not item.score) */}
           <section>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-4 border-l-2 border-accent pl-3">Score breakdown</p>
             <div className="border-2 border-[#2a2a2a]">
-              {scoreBreakdown.map((item, i) => (
-                <div key={item.label} className={`flex items-center justify-between px-5 py-4 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
-                    <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-28 h-1.5 bg-[#1a1a1a]">
-                      <div className="h-full transition-all" style={{ width: `${(item.score / 10) * 100}%`, background: item.color }} />
+              {scoreBreakdown.map((item, i) => {
+                const Icon = SCORE_ICONS[item.label] ?? TrendingUp;
+                return (
+                  <div key={item.label} className={`flex items-center justify-between px-5 py-4 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                      <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
                     </div>
-                    <span className="text-sm font-bold w-8 text-right" style={{ color: item.color }}>{item.score}</span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-28 h-1.5 bg-[#1a1a1a]">
+                        <div className="h-full transition-all" style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} />
+                      </div>
+                      <span className="text-sm font-bold w-8 text-right" style={{ color: item.color }}>
+                        {Math.round(item.value * 10) / 10}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
