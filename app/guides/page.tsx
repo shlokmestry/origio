@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Globe2, ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { getAllPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Career Relocation Guides — Origio",
@@ -17,18 +18,8 @@ const GUIDES = [
   { slug: "marketing-managers", title: "Marketing Managers", emoji: "📣", desc: "Marketing salaries, language requirements, and opportunities." },
 ];
 
-function getBlogPosts() {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getAllPosts } = require("@/lib/posts");
-    return (getAllPosts() as { slug: string; title: string; description: string; date: string }[]).slice(0, 3);
-  } catch {
-    return [];
-  }
-}
-
 export default function GuidesPage() {
-  const recentPosts = getBlogPosts();
+  const recentPosts = getAllPosts().slice(0, 3);
 
   return (
     <main className="min-h-screen bg-bg-primary">
