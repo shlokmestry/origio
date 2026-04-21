@@ -83,6 +83,9 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             <Link href="/guides" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
               Guides
             </Link>
+            <Link href="/blog" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
+  Blog
+</Link>
 
             <Link href="/about" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
               About

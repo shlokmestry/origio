@@ -47,5 +47,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+
+    { url: `${BASE}/blog`, lastModified: NOW, changeFrequency: "weekly", priority: 0.8 },
+{ url: `${BASE}/blog/software-engineer-salary-germany`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
+{ url: `${BASE}/blog/us-h1b-visa-guide`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
+{ url: `${BASE}/blog/cost-of-living-dublin-vs-berlin`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
   ];
 }
