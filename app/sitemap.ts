@@ -1,5 +1,4 @@
 import { MetadataRoute } from "next";
-import { getAllPosts } from "@/lib/posts";
 
 const BASE = "https://findorigio.com";
 const NOW = new Date().toISOString();
@@ -17,9 +16,13 @@ const ROLE_SLUGS = [
   "nurses","teachers","accountants","marketing-managers",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const blogPosts = getAllPosts();
+const BLOG_SLUGS = [
+  "software-engineer-salary-germany",
+  "us-h1b-visa-guide",
+  "cost-of-living-dublin-vs-berlin",
+];
 
+export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/wizard`, lastModified: NOW, changeFrequency: "monthly", priority: 0.9 },
@@ -41,16 +44,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.9,
     })),
-    ...blogPosts.map(post => ({
-      url: `${BASE}/blog/${post.slug}`,
-      lastModified: post.date ? new Date(post.date).toISOString() : NOW,
+    ...BLOG_SLUGS.map(slug => ({
+      url: `${BASE}/blog/${slug}`,
+      lastModified: NOW,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
-
-    { url: `${BASE}/blog`, lastModified: NOW, changeFrequency: "weekly", priority: 0.8 },
-{ url: `${BASE}/blog/software-engineer-salary-germany`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
-{ url: `${BASE}/blog/us-h1b-visa-guide`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
-{ url: `${BASE}/blog/cost-of-living-dublin-vs-berlin`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
   ];
 }
