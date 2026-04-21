@@ -115,6 +115,21 @@ export default async function RoleSeoPage({ params }: Props) {
           </div>
         )}
 
+        {/* Related Articles */}
+<div className="mt-16 glass-panel rounded-2xl p-8 border border-border">
+  <h3 className="font-heading text-xl font-bold text-text-primary mb-6">Related Articles</h3>
+  <div className="grid sm:grid-cols-2 gap-4">
+    <Link href="/blog/software-engineer-salary-germany" className="p-4 border border-border rounded-xl hover:border-accent/30 transition-all group">
+      <p className="font-semibold text-text-primary group-hover:text-accent transition-colors text-sm">Software Engineer Salaries in Germany: Full Breakdown</p>
+      <p className="text-text-muted text-xs mt-1">Tax, take-home pay, and cost of living explained.</p>
+    </Link>
+    <Link href="/blog/us-h1b-visa-guide" className="p-4 border border-border rounded-xl hover:border-accent/30 transition-all group">
+      <p className="font-semibold text-text-primary group-hover:text-accent transition-colors text-sm">H1B Visa Guide for Software Engineers 2026</p>
+      <p className="text-text-muted text-xs mt-1">Steps, timelines, and alternatives explained.</p>
+    </Link>
+  </div>
+</div>
+
         {/* Bottom CTA */}
         <div className="mt-16 glass-panel rounded-2xl p-8 border border-accent/20 text-center">
           <h3 className="font-heading text-xl font-bold text-text-primary mb-2">Find your perfect country</h3>

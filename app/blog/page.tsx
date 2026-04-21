@@ -1,29 +1,38 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { Globe2, ArrowLeft, ArrowRight } from "lucide-react";
-import { getAllPosts } from "@/lib/posts";
+import { Globe2, ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Relocation Blog — Origio",
-  description: "Salary guides, visa tips, and cost of living comparisons for people moving abroad.",
-  alternates: { canonical: "https://findorigio.com/blog" },
-  openGraph: {
-    title: "Relocation Blog — Origio",
-    description: "Salary guides, visa tips, and cost of living comparisons for people moving abroad.",
-    url: "https://findorigio.com/blog",
-    siteName: "Origio",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Relocation Blog — Origio",
-    description: "Salary guides, visa tips, and cost of living comparisons for people moving abroad.",
-  },
+  title: "Relocation Insights & Guides — Origio Blog",
+  description: "In-depth guides on salaries, visas, cost of living, and relocation strategies for professionals moving abroad.",
 };
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+// Hardcoded posts for now - you can make this dynamic later with MDX
+const POSTS = [
+  {
+    slug: "software-engineer-salary-germany",
+    title: "Software Engineer Salaries in Germany: Full Breakdown 2026",
+    description: "Tax, take-home pay, and cost of living explained with real numbers.",
+    date: "2026-04-15",
+    category: "Salary Guides",
+  },
+  {
+    slug: "us-h1b-visa-guide",
+    title: "H1B Visa Guide for Software Engineers 2026",
+    description: "Steps, timelines, lottery odds, and alternatives explained.",
+    date: "2026-04-10",
+    category: "Visa Guides",
+  },
+  {
+    slug: "cost-of-living-dublin-vs-berlin",
+    title: "Dublin vs Berlin: Cost of Living Compared",
+    description: "Rent, groceries, transport, and lifestyle costs side by side.",
+    date: "2026-04-08",
+    category: "City Comparisons",
+  },
+];
 
+export default function BlogPage() {
   return (
     <main className="min-h-screen bg-bg-primary">
       <nav className="sticky top-0 z-50 glass-panel border-b border-border">
@@ -41,53 +50,32 @@ export default function BlogPage() {
 
       <section className="max-w-5xl mx-auto px-4 py-12 md:py-16">
         <div className="max-w-2xl mb-12">
-          <p className="text-sm text-accent font-semibold mb-3 uppercase tracking-wider">Relocation blog</p>
+          <p className="text-sm text-accent font-semibold mb-3 uppercase tracking-wider">Relocation Insights</p>
           <h1 className="font-heading text-4xl md:text-5xl font-extrabold text-text-primary mb-4">
-            Guides & Articles
+            Blog
           </h1>
           <p className="text-text-muted text-base md:text-lg leading-7">
-            Salary breakdowns, visa walkthroughs, and cost of living comparisons to help you move with confidence.
+            Deep-dive guides on salaries, visas, cost of living, and relocation strategies — everything you need to move abroad with confidence.
           </p>
         </div>
 
-        {posts.length === 0 ? (
-          <div className="glass-panel rounded-2xl p-10 border border-border text-center">
-            <p className="text-text-muted text-sm">No articles yet — check back soon.</p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {posts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="glass-panel rounded-2xl p-6 border border-border hover:border-accent/30 transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  <p className="text-xs text-text-muted uppercase tracking-wider mb-3">{post.date}</p>
-                  <h2 className="font-heading text-lg font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
-                    {post.title}
-                  </h2>
-                  <p className="text-text-muted text-sm leading-relaxed">{post.description}</p>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-accent font-medium mt-4">
-                  Read article <ArrowRight className="w-3 h-3" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Bottom CTA */}
-        <div className="mt-16 glass-panel rounded-2xl p-8 border border-accent/20 text-center">
-          <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
-            Not sure which country fits you?
-          </h3>
-          <p className="text-text-muted text-sm mb-6 max-w-sm mx-auto">
-            Answer 8 quick questions and get a personalised ranking based on your salary, visa, and lifestyle priorities.
-          </p>
-          <Link href="/wizard" className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2">
-            Find My Country
-          </Link>
+        <div className="grid gap-4">
+          {POSTS.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="glass-panel rounded-2xl p-6 border border-border hover:border-accent/30 transition-all group"
+            >
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <span className="text-xs text-accent font-semibold uppercase tracking-wider">{post.category}</span>
+                <span className="text-xs text-text-muted">{new Date(post.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              <h2 className="font-heading text-xl font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
+                {post.title}
+              </h2>
+              <p className="text-text-muted text-sm leading-relaxed">{post.description}</p>
+            </Link>
+          ))}
         </div>
       </section>
     </main>
