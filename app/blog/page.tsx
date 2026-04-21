@@ -1,36 +1,55 @@
+/* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
-import { Globe2, ArrowLeft } from "lucide-react";
+import { Globe2, ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Relocation Insights & Guides — Origio Blog",
   description: "In-depth guides on salaries, visas, cost of living, and relocation strategies for professionals moving abroad.",
+  alternates: { canonical: "https://findorigio.com/blog" },
+  openGraph: {
+    title: "Relocation Insights & Guides — Origio Blog",
+    description: "In-depth guides on salaries, visas, cost of living, and relocation strategies for professionals moving abroad.",
+    url: "https://findorigio.com/blog",
+    siteName: "Origio",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Relocation Insights & Guides — Origio Blog",
+    description: "In-depth guides on salaries, visas, cost of living, and relocation strategies for professionals moving abroad.",
+  },
 };
 
-// Hardcoded posts for now - you can make this dynamic later with MDX
 const POSTS = [
   {
     slug: "software-engineer-salary-germany",
     title: "Software Engineer Salaries in Germany: Full Breakdown 2026",
-    description: "Tax, take-home pay, and cost of living explained with real numbers.",
+    description: "Junior to senior salary ranges, exact tax deductions, take-home pay, and whether Germany is worth it compared to the UK and Netherlands.",
     date: "2026-04-15",
     category: "Salary Guides",
   },
   {
     slug: "us-h1b-visa-guide",
     title: "H1B Visa Guide for Software Engineers 2026",
-    description: "Steps, timelines, lottery odds, and alternatives explained.",
+    description: "Lottery odds, full timeline, what happens if you don't get selected, and the 4 best backup routes into the US tech industry.",
     date: "2026-04-10",
     category: "Visa Guides",
   },
   {
     slug: "cost-of-living-dublin-vs-berlin",
-    title: "Dublin vs Berlin: Cost of Living Compared",
-    description: "Rent, groceries, transport, and lifestyle costs side by side.",
+    title: "Dublin vs Berlin: Cost of Living for Tech Workers in 2026",
+    description: "Full monthly cost comparison — rent, groceries, transport, healthcare — plus which city gives you more disposable income on a tech salary.",
     date: "2026-04-08",
     category: "City Comparisons",
   },
 ];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Salary Guides": "text-green-400",
+  "Visa Guides": "text-blue-400",
+  "City Comparisons": "text-purple-400",
+};
 
 export default function BlogPage() {
   return (
@@ -59,23 +78,45 @@ export default function BlogPage() {
           </p>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
           {POSTS.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="glass-panel rounded-2xl p-6 border border-border hover:border-accent/30 transition-all group"
+              className="glass-panel rounded-2xl p-6 border border-border hover:border-accent/30 transition-all group flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <span className="text-xs text-accent font-semibold uppercase tracking-wider">{post.category}</span>
-                <span className="text-xs text-text-muted">{new Date(post.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              <div>
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <span className={`text-xs font-semibold uppercase tracking-wider ${CATEGORY_COLORS[post.category] ?? "text-accent"}`}>
+                    {post.category}
+                  </span>
+                  <span className="text-xs text-text-muted">
+                    {new Date(post.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+                <h2 className="font-heading text-lg font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
+                  {post.title}
+                </h2>
+                <p className="text-text-muted text-sm leading-relaxed">{post.description}</p>
               </div>
-              <h2 className="font-heading text-xl font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
-                {post.title}
-              </h2>
-              <p className="text-text-muted text-sm leading-relaxed">{post.description}</p>
+              <div className="flex items-center gap-1 text-xs text-accent font-medium mt-4">
+                Read article <ArrowRight className="w-3 h-3" />
+              </div>
             </Link>
           ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="glass-panel rounded-2xl p-8 border border-accent/20 text-center">
+          <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
+            Not sure which country fits you?
+          </h3>
+          <p className="text-text-muted text-sm mb-6 max-w-sm mx-auto">
+            Answer 8 quick questions and get a personalised ranking across all 25 countries based on your role, passport, and priorities.
+          </p>
+          <Link href="/wizard" className="cta-button px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2">
+            Find My Country
+          </Link>
         </div>
       </section>
     </main>
