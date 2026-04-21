@@ -22,10 +22,10 @@ const POSTS: Record<string, {
     category: "Salary Guides",
     content: (
       <div className="prose prose-invert max-w-none">
-        <p className="lead">Germany consistently ranks as one of Europe's top destinations for software engineers — but the headline salaries can be misleading once you factor in Germany's notoriously high tax and social security system. This guide breaks down real numbers so you know exactly what lands in your bank account.</p>
+        <p className="lead">Germany consistently ranks as one of Europe's top destinations for software engineers but the headline salaries can be misleading once you factor in Germany's notoriously high tax and social security system. This guide breaks down real numbers so you know exactly what lands in your bank account.</p>
 
         <h2>Salary Ranges by Experience (2026)</h2>
-        <p>These figures are based on current market data from Berlin, Munich, and Hamburg — the three dominant tech hubs:</p>
+        <p>These figures are based on current market data from Berlin, Munich, and Hamburg the three dominant tech hubs:</p>
         <ul>
           <li><strong>Junior (0–2 years):</strong> €42,000 – €55,000</li>
           <li><strong>Mid-level (3–5 years):</strong> €58,000 – €80,000</li>
@@ -47,7 +47,7 @@ const POSTS: Record<string, {
           <li><strong>Long-term care insurance (~1.7%):</strong> –€1,190</li>
           <li><strong>Net take-home:</strong> ~€43,330/year (€3,611/month)</li>
         </ul>
-        <p>The effective total deduction is around 38%, which is high but includes full health insurance — unlike the US where you pay separately for that.</p>
+        <p>The effective total deduction is around 38%, which is high but includes full health insurance unlike the US where you pay separately for that.</p>
 
         <h2>What Does €3,611/Month Actually Cover?</h2>
         <p>Here is a realistic monthly budget for a single person living in Berlin:</p>
@@ -64,7 +64,7 @@ const POSTS: Record<string, {
         <h2>Germany vs Netherlands vs UK</h2>
         <p>How does Germany compare to the other popular European tech destinations?</p>
         <ul>
-          <li><strong>Netherlands:</strong> Similar gross salaries, slightly lower tax on mid-range incomes. The 30% ruling for expats exempts 30% of your salary from tax for 5 years — a massive advantage.</li>
+          <li><strong>Netherlands:</strong> Similar gross salaries, slightly lower tax on mid-range incomes. The 30% ruling for expats exempts 30% of your salary from tax for 5 years a massive advantage.</li>
           <li><strong>United Kingdom:</strong> Higher gross salaries in London, but London rent easily hits £2,000+/month. Net result is roughly similar disposable income to Germany.</li>
           <li><strong>Germany wins on:</strong> job security, work-life balance, long-term residency path, and quality of life outside major cities.</li>
         </ul>
@@ -78,7 +78,7 @@ const POSTS: Record<string, {
         </ul>
 
         <h2>Is Germany Worth It?</h2>
-        <p>Germany is an excellent choice if you value stability, work-life balance, and a clear path to permanent residency. It is not the right move if you are chasing maximum take-home pay — the US and Switzerland beat Germany significantly on that front. But for a sustainable, high-quality life in Europe with strong employment protection, Germany remains one of the best options in 2026.</p>
+        <p>Germany is an excellent choice if you value stability, work-life balance, and a clear path to permanent residency. It is not the right move if you are chasing maximum take-home pay the US and Switzerland beat Germany significantly on that front. But for a sustainable, high-quality life in Europe with strong employment protection, Germany remains one of the best options in 2026.</p>
 
         <div className="mt-8 flex flex-col gap-3 not-prose">
           <Link href="/best-countries-for/software-engineers" className="text-accent hover:underline text-sm">See best countries for software engineers →</Link>
@@ -96,10 +96,10 @@ const POSTS: Record<string, {
     category: "Visa Guides",
     content: (
       <div className="prose prose-invert max-w-none">
-        <p className="lead">The H1B is the most sought-after work visa in the world — and also one of the most frustrating. With lottery odds sitting around 14–18%, most software engineers who apply do not get selected. This guide covers the full process, real odds, and the best alternatives if the lottery does not go your way.</p>
+        <p className="lead">The H1B is the most sought-after work visa in the world and also one of the most frustrating. With lottery odds sitting around 14–18%, most software engineers who apply do not get selected. This guide covers the full process, real odds, and the best alternatives if the lottery does not go your way.</p>
 
         <h2>What Is the H1B Visa?</h2>
-        <p>The H1B is a non-immigrant US work visa for speciality occupations — which includes almost all software engineering roles. It is employer-sponsored, meaning a US company must file on your behalf. You cannot apply independently.</p>
+        <p>The H1B is a non-immigrant US work visa for speciality occupations which includes almost all software engineering roles. It is employer-sponsored, meaning a US company must file on your behalf. You cannot apply independently.</p>
         <ul>
           <li><strong>Annual cap:</strong> 85,000 visas (65,000 general + 20,000 for US master's degree holders)</li>
           <li><strong>2026 registrations:</strong> approximately 470,000</li>
@@ -122,20 +122,20 @@ const POSTS: Record<string, {
         <p>Most people are not selected. Here are the four most realistic alternatives:</p>
         <ul>
           <li><strong>L-1 Intracompany Transfer:</strong> Work for a multinational outside the US for 1 year, then transfer to the US office. No cap, no lottery. This is the cleanest path for engineers already at large companies.</li>
-          <li><strong>O-1A Extraordinary Ability:</strong> For engineers with notable achievements — open source contributions, patents, conference talks, or significant industry recognition. No cap and no lottery but requires strong documentation.</li>
+          <li><strong>O-1A Extraordinary Ability:</strong> For engineers with notable achievements open source contributions, patents, conference talks, or significant industry recognition. No cap and no lottery but requires strong documentation.</li>
           <li><strong>Canada PR then TN Visa:</strong> Get Canadian permanent residency via Express Entry (6–12 months if your score is high), then use the TN visa to work in the US as a Canadian resident. Increasingly popular strategy.</li>
           <li><strong>Re-register next year:</strong> If not selected, you can try again the following year — many employers will keep you on a remote basis in the meantime.</li>
         </ul>
 
         <h2>Premium Processing — Is It Worth It?</h2>
-        <p>Premium processing ($2,805 in 2026) guarantees USCIS will act on your petition within 15 business days. It does not increase your chances of approval — it only speeds up the decision. Most employers at larger tech companies will cover this cost. For time-sensitive situations it is absolutely worth it.</p>
+        <p>Premium processing ($2,805 in 2026) guarantees USCIS will act on your petition within 15 business days. It does not increase your chances of approval it only speeds up the decision. Most employers at larger tech companies will cover this cost. For time-sensitive situations it is absolutely worth it.</p>
 
         <h2>H1B vs Other US Visa Routes</h2>
         <ul>
           <li><strong>H1B:</strong> Most common, lottery-based, employer-sponsored</li>
           <li><strong>L-1:</strong> No lottery, requires prior employment at same company abroad</li>
           <li><strong>O-1:</strong> No lottery, high bar for eligibility, strong for senior engineers</li>
-          <li><strong>EB-1C:</strong> Green card directly for multinational managers — bypasses the H1B entirely</li>
+          <li><strong>EB-1C:</strong> Green card directly for multinational managers bypasses the H1B entirely</li>
         </ul>
 
         <div className="mt-8 flex flex-col gap-3 not-prose">
@@ -149,12 +149,12 @@ const POSTS: Record<string, {
 
   "cost-of-living-dublin-vs-berlin": {
     title: "Dublin vs Berlin: Cost of Living for Tech Workers in 2026",
-    description: "Full monthly cost comparison — rent, groceries, transport, healthcare — plus which city gives you more disposable income on a tech salary.",
+    description: "Full monthly cost comparison rent, groceries, transport, healthcare plus which city gives you more disposable income on a tech salary.",
     date: "2026-04-08",
     category: "City Comparisons",
     content: (
       <div className="prose prose-invert max-w-none">
-        <p className="lead">Dublin and Berlin are both thriving tech hubs with strong hiring markets, English-friendly environments, and access to major European companies. But the cost of living difference between them is enormous — and it directly affects how much of your salary you actually keep.</p>
+        <p className="lead">Dublin and Berlin are both thriving tech hubs with strong hiring markets, English-friendly environments, and access to major European companies. But the cost of living difference between them is enormous and it directly affects how much of your salary you actually keep.</p>
 
         <h2>Monthly Cost Breakdown (Single Person, 2026)</h2>
         <table>
@@ -187,14 +187,14 @@ const POSTS: Record<string, {
         <h2>Quality of Life Differences</h2>
         <ul>
           <li><strong>Space:</strong> Berlin apartments are significantly larger for the same price. A €1,400/month flat in Berlin is a 2-bedroom; in Dublin it is a small studio.</li>
-          <li><strong>Work culture:</strong> Germany has stronger worker protections — 30 days annual leave is standard, working beyond contracted hours is uncommon.</li>
+          <li><strong>Work culture:</strong> Germany has stronger worker protections 30 days annual leave is standard, working beyond contracted hours is uncommon.</li>
           <li><strong>Language:</strong> Both cities are English-friendly in tech, but Berlin daily life increasingly requires German for bureaucracy, landlords, and local services.</li>
           <li><strong>Weather:</strong> Both cities have cold grey winters. Dublin is milder but wetter. Berlin has warmer summers.</li>
           <li><strong>Visa:</strong> Non-EU workers find Germany slightly easier to navigate long-term due to the EU Blue Card route.</li>
         </ul>
 
         <h2>Verdict</h2>
-        <p>If maximising take-home pay matters most, Dublin edges ahead for high earners — particularly at senior level where Irish salaries pull significantly above German ones. But for overall quality of life, space, and disposable income at mid-level, Berlin is the stronger choice in 2026.</p>
+        <p>If maximising take-home pay matters most, Dublin edges ahead for high earners particularly at senior level where Irish salaries pull significantly above German ones. But for overall quality of life, space, and disposable income at mid-level, Berlin is the stronger choice in 2026.</p>
 
         <div className="mt-8 flex flex-col gap-3 not-prose">
           <Link href="/compare?a=ireland&b=germany" className="text-accent hover:underline text-sm">Full Ireland vs Germany comparison →</Link>
