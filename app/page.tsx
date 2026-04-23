@@ -147,23 +147,7 @@ export default function Home() {
 
           <div className="fixed bottom-0 left-0 right-0 z-10 px-6 pb-8 sm:pb-10 max-w-2xl">
 
-            {/* Step row */}
-            <div
-              className="hidden sm:flex items-stretch border-2 border-[#2a2a2a] mb-6 animate-fade-up"
-              style={{ opacity: 0, animationDelay: "0.05s", animationFillMode: "forwards" }}
-            >
-              {[
-                { num: "01", label: "Take the quiz" },
-                { num: "02", label: "See your matches" },
-                { num: "03", label: "Plan your move" },
-                { num: "04", label: "Get your report" },
-              ].map((item, i) => (
-                <div key={item.num} className={`flex items-center gap-2.5 px-4 py-2.5 ${i < 3 ? "border-r-2 border-[#2a2a2a]" : ""}`}>
-                  <span className="w-5 h-5 border-2 border-accent text-accent font-heading font-bold text-[10px] flex items-center justify-center flex-shrink-0">{item.num}</span>
-                  <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
-                </div>
-              ))}
-            </div>
+       
 
             <div
               className="animate-fade-up"
@@ -182,7 +166,7 @@ export default function Home() {
               </h1>
 
               <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed mb-6">
-                Salaries, visas, cost of living and quality of life —<br className="hidden sm:block" />
+                Salaries, visas, cost of living and quality of life <br className="hidden sm:block" />
                 personalised to your job and passport.
               </p>
 
