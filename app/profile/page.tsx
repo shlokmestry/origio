@@ -9,12 +9,10 @@ import {
   AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock
 } from 'lucide-react'
 
-type CountryInfo = { flag_emoji: string; name: string }
 type SavedCountry = {
   id: string
   country_slug: string
   created_at: string
-  countries?: CountryInfo | CountryInfo[] | null
 }
 type WizardResult = {
   top_countries: { slug: string; name: string; flagEmoji: string; matchPercent: number }[]
@@ -71,10 +69,6 @@ const PASSPORT_LIST = Object.entries(PASSPORT_FLAGS).map(([slug, d]) => ({ slug,
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
-function getCountryInfo(c: CountryInfo | CountryInfo[] | null | undefined): CountryInfo | null {
-  if (!c) return null
-  return Array.isArray(c) ? (c[0] ?? null) : c
-}
 function capPercent(n: number) { return Math.min(n, 99) }
 function formatRole(r: string) {
   return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
@@ -120,7 +114,7 @@ export default function ProfilePage() {
       try {
         const [savesRes, wizardRes, profileRes] = await Promise.all([
           supabase.from('saved_countries')
-            .select('id, country_slug, created_at, countries(flag_emoji, name)')
+            .select('id, country_slug, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: false }),
           supabase.from('wizard_results')
@@ -132,6 +126,7 @@ export default function ProfilePage() {
             .eq('id', userId)
             .maybeSingle(),
         ])
+        if (savesRes.error) console.error('saved_countries error:', savesRes.error)
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResult(wizardRes.data ?? null)
         const p = profileRes.data ?? null
@@ -385,13 +380,13 @@ export default function ProfilePage() {
             ) : (
               <div>
                 {savedCountries.slice(0, 6).map(s => {
-                  const info = getCountryInfo(s.countries)
+                  const countryData = PASSPORT_FLAGS[s.country_slug]
                   return (
                     <div key={s.id} className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1a1a] last:border-0 group">
-                      <span className="text-lg flex-shrink-0">{info?.flag_emoji ?? '🌍'}</span>
+                      <span className="text-lg flex-shrink-0">{countryData?.flag ?? '🌍'}</span>
                       <a href={`/country/${s.country_slug}`}
                         className="text-sm font-medium text-text-primary hover:text-accent transition-colors flex-1 truncate uppercase tracking-tight">
-                        {info?.name ?? formatSlug(s.country_slug)}
+                        {countryData?.name ?? formatSlug(s.country_slug)}
                       </a>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a href={`/country/${s.country_slug}`} className="text-xs font-bold text-accent hover:opacity-80 uppercase">View</a>
