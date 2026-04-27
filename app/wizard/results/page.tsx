@@ -304,39 +304,38 @@ export default function WizardResultsPage() {
           <div className="grid sm:grid-cols-2 gap-px bg-[#1a1a1a]">
             {[
               {
-                label: "Best salary",
+                label: "Best salary among your top 3",
                 value: (() => {
                   if (!jobRoleDef) return "—";
-                  const best = [...matches].sort((a, b) =>
+                  const best = [...matches.slice(0, 3)].sort((a, b) =>
                     (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number)
                   )[0];
                   const bcs = getCurrencySymbol(best.country.currency);
-                  return `${bcs}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()} in ${best.country.name}`;
+                  return `${best.country.flagEmoji} ${best.country.name} · ${bcs}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr`;
                 })(),
               },
               {
-                label: "Easiest visa",
+                label: "Easiest visa among your top 3",
                 value: (() => {
-                  const easiest = [...matches].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
-                  return `${easiest.country.name} · ${getVisaLabel(easiest.country.data.visaDifficulty)}`;
+                  const easiest = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
+                  return `${easiest.country.flagEmoji} ${easiest.country.name} · ${getVisaLabel(easiest.country.data.visaDifficulty)}`;
                 })(),
               },
               {
-                label: "Lowest rent",
+                label: "Lowest rent among your top 3",
                 value: (() => {
-                  const cheapest = [...matches].sort((a, b) => {
-                    const toEur = (c: CountryMatch) => c.country.data.costRentCityCentre;
-                    return toEur(a) - toEur(b);
-                  })[0];
+                  const cheapest = [...matches.slice(0, 3)].sort((a, b) =>
+                    a.country.data.costRentCityCentre - b.country.data.costRentCityCentre
+                  )[0];
                   const lcs = getCurrencySymbol(cheapest.country.currency);
-                  return `${lcs}${cheapest.country.data.costRentCityCentre.toLocaleString()}/mo in ${cheapest.country.name}`;
+                  return `${cheapest.country.flagEmoji} ${cheapest.country.name} · ${lcs}${cheapest.country.data.costRentCityCentre.toLocaleString()}/mo`;
                 })(),
               },
               {
-                label: "Safest country",
+                label: "Safest among your top 3",
                 value: (() => {
-                  const safest = [...matches].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
-                  return `${safest.country.name} · ${safest.country.data.scoreSafety}/10`;
+                  const safest = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
+                  return `${safest.country.flagEmoji} ${safest.country.name} · ${safest.country.data.scoreSafety}/10`;
                 })(),
               },
             ].map(item => (
