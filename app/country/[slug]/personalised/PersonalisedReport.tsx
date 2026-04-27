@@ -29,6 +29,10 @@ const TO_USD: Record<string, number> = {
   JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
 };
 
+// PPP-adjusted $500 USD threshold for "tight savings"
+// If disposable in USD < 500, show the "tight" sentence
+const PPP_TIGHT_USD = 500;
+
 const RENT_MAX: Record<string, number> = {
   under800: 800, "800to1500": 1500, "1500to2500": 2500, any: 99999,
 };
@@ -42,6 +46,8 @@ const ENGLISH_COUNTRIES = [
   "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore",
 ];
 
+const HIGH_TAX_COUNTRIES = ["sweden", "denmark", "finland", "belgium"];
+
 const SCORE_ICONS: Record<string, any> = {
   Salary: DollarSign, Affordability: Home, "Quality of Life": Heart,
   Safety: Shield, "Visa Access": Plane, "Tax Efficiency": Receipt,
@@ -53,10 +59,96 @@ function scoreColor(v: number) {
   return "#f87171";
 }
 
-// Simple take-home estimate: gross * (1 - taxRate/100) * (1 - ssRate/100)
 function calcTakeHome(gross: number, taxRate: number, ssRate: number) {
   const net = gross * (1 - taxRate / 100) * (1 - ssRate / 100);
   return { annual: Math.round(net), monthly: Math.round(net / 12) };
+}
+
+// ── narrative sentence logic ───────────────────────────────────────────────
+
+interface NarrativeArgs {
+  slug: string;
+  name: string;
+  currency: string;
+  cs: string;
+  grossSalary: number;
+  takeHomeMonthly: number;
+  disposable: number;
+  disposableUSD: number;
+  taxRate: number;
+  ssRate: number;
+  safetyScore: number;
+  internetSpeed: number;
+  qolScore: number;
+  rent: number;
+  visaDifficulty: number;
+  isEnglish: boolean;
+}
+
+function getNarrative(a: NarrativeArgs): string {
+  const g = `${a.cs}${a.grossSalary.toLocaleString()}`;
+  const th = `${a.cs}${a.takeHomeMonthly.toLocaleString()}`;
+  const disp = `${a.cs}${Math.abs(a.disposable).toLocaleString()}`;
+  const r = `${a.cs}${a.rent.toLocaleString()}`;
+  const isTight = a.disposableUSD < PPP_TIGHT_USD;
+
+  // UAE — tax = 0
+  if (a.slug === "uae") {
+    return `Zero income tax. Zero social security deductions. What you earn — ${g} — is almost exactly what you keep. The UAE is one of the few places where that sentence is literally true.`;
+  }
+
+  // Japan — its own world
+  if (a.slug === "japan") {
+    return `${g} gross, a work culture unlike anywhere in Europe, and a language that takes years. Japan also scores ${a.safetyScore}/10 on safety — the highest in the index — and surprises almost everyone who actually moves there.`;
+  }
+
+  // Safety flag — low safety countries
+  if (a.safetyScore < 6) {
+    return `The salary-to-cost ratio looks promising — ${g} gross, ${disp} left over. But safety scores ${a.safetyScore}/10 here. That affects where you live, how you move, and what the good neighbourhoods cost.`;
+  }
+
+  // High tax welfare states
+  if (HIGH_TAX_COUNTRIES.includes(a.slug) || a.taxRate > 45) {
+    return `${a.name} takes ${a.taxRate}% of your salary in tax. What you get back — free healthcare, free education, world-class parental leave — is harder to put a number on.`;
+  }
+
+  // Singapore / high internet + English
+  if (a.internetSpeed >= 8.5 && a.isEnglish && a.slug === "singapore") {
+    return `${a.internetSpeed}/10 internet speed, world-class infrastructure, English everywhere. If your income is remote, Singapore removes every friction point. You keep ${disp}/mo after costs — you just pay for the privilege.`;
+  }
+
+  // UK — high rent warning
+  if (a.slug === "united-kingdom") {
+    return `The salary looks strong until ${r}/mo rent and National Insurance hit. London gives and London takes — your ${disp} monthly surplus is what's left.`;
+  }
+
+  // Australia / Canada / NZ — wealth builders (low SS + decent disposable)
+  if (["australia", "canada", "new-zealand"].includes(a.slug) && a.ssRate < 10 && !isTight) {
+    return `${g} gross, a minimal social security hit, and ${disp} left after costs. ${a.name} is one of the few countries where a mid-career professional can genuinely build wealth.`;
+  }
+
+  // Ireland — English + easy visa
+  if (a.slug === "ireland") {
+    return `No language barrier, no culture shock. Ireland is the smoothest landing pad for English-speaking professionals — you pay for that in ${r}/mo rent.`;
+  }
+
+  // High saver — disposable > 1000 USD
+  if (a.disposableUSD >= 1000) {
+    return `Strong salary — ${g} gross — manageable costs, and ${disp} left every month. Not many countries let you do that. ${a.name} is one of them.`;
+  }
+
+  // Quality of life play — decent QoL but tight savings
+  if (a.qolScore >= 7.5 && isTight) {
+    return `The weather's good, the food is great, and ${disp}/mo surplus won't make you rich. ${a.name} is a quality of life play, not a wealth-building one.`;
+  }
+
+  // Low saver fallback — tight savings in any other country
+  if (isTight) {
+    return `The salary is real — ${g} gross, ${th}/mo in hand. But ${a.name} isn't cheap anymore. You'd have ${disp} left after costs. Enough to live, not enough to save fast.`;
+  }
+
+  // Generic good outcome
+  return `Strong salary — ${g} gross — manageable costs, and ${disp} left every month. Not many countries let you do that. ${a.name} is one of them.`;
 }
 
 // ── types ──────────────────────────────────────────────────────────────────
@@ -82,7 +174,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
 
   useEffect(() => {
     async function load() {
-      // sessionStorage first
       let ans: Partial<WizardAnswers> | null = null;
       const rawA = sessionStorage.getItem("wizardAnswers");
       if (rawA) ans = JSON.parse(rawA);
@@ -95,7 +186,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 2));
       }
 
-      // Supabase override
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const { data: profile } = await supabase
@@ -130,7 +220,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     load();
   }, [country.slug, allCountries]);
 
-  // If no wizard answers → redirect to wizard
   useEffect(() => {
     if (!loading && !answers) router.replace("/wizard");
   }, [loading, answers, router]);
@@ -160,6 +249,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     data.costRentCityCentre + data.costGroceriesMonthly +
     data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
   const disposable = takeHomeMonthly - monthlyTotal;
+  const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
 
   const isEU = EU_PASSPORTS.includes((answers.passport ?? "").toLowerCase());
   const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
@@ -168,7 +258,29 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const hasHighTaxFlag = dealBreakers.includes("lowtax") && data.incomeTaxRateMid > 30;
   const hasCrimeFlag = dealBreakers.includes("lowcrime") && (data.scoreCrimeRate ?? 0) < 7;
 
-  // Wins list
+  // ── narrative ─────────────────────────────────────────────────────────────
+
+  const narrative = getNarrative({
+    slug: country.slug,
+    name: country.name,
+    currency: country.currency,
+    cs,
+    grossSalary,
+    takeHomeMonthly,
+    disposable,
+    disposableUSD,
+    taxRate: data.incomeTaxRateMid,
+    ssRate: data.socialSecurityRate,
+    safetyScore: data.scoreSafety,
+    internetSpeed: data.scoreInternetSpeed,
+    qolScore: data.scoreQualityOfLife,
+    rent: data.costRentCityCentre,
+    visaDifficulty: data.visaDifficulty,
+    isEnglish,
+  });
+
+  // ── wins + warnings ───────────────────────────────────────────────────────
+
   const wins: { title: string; sub: string }[] = [];
   if (grossSalary > 0) wins.push({
     title: `${userRole.label} salary: ${cs}${grossSalary.toLocaleString()}/yr`,
@@ -202,7 +314,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     sub: "High-quality public or private healthcare system.",
   });
 
-  // Warnings
   const warnings: { title: string; sub: string }[] = [];
   if (!rentFits && answers.rentBudget !== "any") warnings.push({
     title: "Rent is above your budget",
@@ -226,8 +337,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   });
 
   const visaColor = getVisaColor(data.visaDifficulty);
-
-  // Priority scores for "Scored against your priorities"
   const priorities = answers.priorities ?? [];
   const priorityLabelMap: Record<string, string> = {
     salary: "Salary", affordability: "Affordability", quality: "Quality of Life",
@@ -244,11 +353,9 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
             <div className="w-3.5 h-3.5 bg-accent border-2 border-[#f0f0e8]" />
             <span className="font-heading text-base font-extrabold uppercase tracking-tight">Origio</span>
           </Link>
-          <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest text-[#888880]">
-            <button onClick={() => router.back()} className="flex items-center gap-1.5 hover:text-[#f0f0e8] transition-colors">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-          </div>
+          <button onClick={() => router.back()} className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#888880] hover:text-[#f0f0e8] transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
         </div>
       </nav>
 
@@ -277,18 +384,14 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
             )}
           </div>
 
-          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-6">
             {country.name} · {userRole.label}{answers.passport ? ` · ${answers.passport} passport` : ""}
           </p>
 
-          <h1 className="font-heading text-[40px] sm:text-[56px] leading-[1.0] font-extrabold tracking-[-0.02em] mb-4">
-            {disposable > 0
-              ? <>{cs}<span className="text-accent">{grossSalary.toLocaleString()}</span> gross.<br />
-                  {cs}{takeHomeMonthly.toLocaleString()}/mo in hand.<br />
-                  <span className="text-accent">{cs}{disposable.toLocaleString()}</span> left after costs.</>
-              : <>{cs}<span className="text-accent">{grossSalary.toLocaleString()}</span> gross —<br />costs eat most of it.</>
-            }
-          </h1>
+          {/* Narrative sentence — unique per country + conditions */}
+          <p className="font-heading text-[28px] sm:text-[38px] leading-[1.15] font-extrabold tracking-[-0.01em] max-w-3xl mx-auto mb-8">
+            {narrative}
+          </p>
 
           {match?.reasons && match.reasons.length > 0 && (
             <div className="flex flex-wrap gap-2 justify-center mb-8">
@@ -319,7 +422,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-5 mb-6">
-            {/* Gross */}
+            {/* Gross — always visible */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">Gross salary</p>
               <p className="font-heading text-4xl font-extrabold leading-none">{cs}{grossSalary.toLocaleString()}</p>
@@ -384,7 +487,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                     <div style={{ width: tPct + "%", background: "#facc15" }} className="border-l-2 border-[#0a0a0a]" />
                     <div style={{ width: uPct + "%", background: "#a78bfa" }} className="border-l-2 border-[#0a0a0a]" />
                     <div style={{ width: freePct + "%", background: "#1a1a1a" }} className="border-l-2 border-[#0a0a0a] flex items-center justify-center text-[9px] font-extrabold text-[#f0f0e8] uppercase overflow-hidden px-1">
-                      {freePct > 10 ? `Free ${cs}${disposable.toLocaleString()}` : ""}
+                      {freePct > 10 ? `Free ${cs}${Math.abs(disposable).toLocaleString()}` : ""}
                     </div>
                   </>
                 );
@@ -412,14 +515,11 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">What fits, what doesn't</h2>
 
           <div className="grid lg:grid-cols-2 gap-5">
-            {/* Wins */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
                 <p className="text-[10px] font-bold text-[#4ade80] uppercase tracking-widest">Fits · {wins.length}</p>
               </div>
-              {wins.length === 0 && (
-                <p className="px-5 py-4 text-sm text-[#888880]">No strong matches found for your criteria.</p>
-              )}
+              {wins.length === 0 && <p className="px-5 py-4 text-sm text-[#888880]">No strong matches found for your criteria.</p>}
               {wins.map((w, i) => (
                 <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < wins.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
                   <Check className="w-4 h-4 text-[#4ade80] flex-shrink-0 mt-0.5" />
@@ -431,16 +531,11 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               ))}
             </div>
 
-            {/* Warnings */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
                 <p className="text-[10px] font-bold text-[#f87171] uppercase tracking-widest">Watch out · {warnings.length}</p>
               </div>
-              {warnings.length === 0 && (
-                <div className="px-5 py-4">
-                  <p className="text-sm text-[#888880]">No deal-breakers flagged.</p>
-                </div>
-              )}
+              {warnings.length === 0 && <div className="px-5 py-4"><p className="text-sm text-[#888880]">No deal-breakers flagged.</p></div>}
               {warnings.map((w, i) => (
                 <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < warnings.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
                   <X className="w-4 h-4 text-[#f87171] flex-shrink-0 mt-0.5" />
@@ -495,7 +590,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
 
             <div className="p-6">
               <p className="text-xs text-[#888880] leading-relaxed mb-5">{data.visaNotes}</p>
-
               {data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-5">
                   {data.visaPopularRoutes.map((r) => (
@@ -503,7 +597,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                   ))}
                 </div>
               )}
-
               <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer"
                 className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">
                 Official immigration site →
@@ -525,6 +618,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Est.</p>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Status</p>
             </div>
+
+            {/* Line items — Pro only */}
             <div className="relative">
               <div style={{ filter: isPro ? "none" : "blur(6px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
                 {[
@@ -556,6 +651,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Total — always visible */}
             <div className="grid grid-cols-[1fr_120px_100px] px-5 py-4 bg-[#0a0a0a] items-center border-t-2 border-[#2a2a2a]">
               <p className="font-heading text-sm font-extrabold uppercase tracking-tight">Total monthly</p>
               <p className="font-heading text-xl font-extrabold text-accent text-right">{cs}{monthlyTotal.toLocaleString()}</p>
@@ -575,7 +672,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </h2>
 
           <div className="grid md:grid-cols-2 gap-5">
-            {/* Breakdown */}
+            {/* Score breakdown — scores always visible, ★ You badges Pro only */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="px-5 py-3 border-b-2 border-[#2a2a2a]">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Score breakdown</p>
@@ -606,7 +703,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               })}
             </div>
 
-            {/* Priorities context — Pro */}
+            {/* Priorities panel — Pro only */}
             <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-6 flex flex-col overflow-hidden">
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-4">Your priorities</p>
               <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
@@ -649,7 +746,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         <section id="compare" className="py-14 border-t-2 border-[#2a2a2a]">
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">Your other matches</h2>
 
-          {/* Free: #2 and #3 */}
           <div className="grid md:grid-cols-2 gap-5 mb-8">
             {otherMatches.slice(0, 2).map((m, i) => (
               <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
@@ -681,7 +777,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               <p className="text-[10px] font-bold text-[#f0f0e8] uppercase tracking-widest">22 more countries · ranked for you</p>
               <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €5</span>
             </div>
-
             <div className="relative">
               <div style={{ filter: isPro ? "none" : "blur(4px) saturate(0.4)", opacity: isPro ? 1 : 0.5, pointerEvents: isPro ? "auto" : "none" }}>
                 {[4,5,6,7,8].map((n) => (
@@ -700,12 +795,11 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
                     <Lock className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries ~ Pro</span>
+                    <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries — Pro</span>
                   </div>
                 </div>
               )}
             </div>
-
             {!isPro && (
               <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
                 <div>
