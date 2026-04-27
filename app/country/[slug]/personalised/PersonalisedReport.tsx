@@ -854,7 +854,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
             <div className="px-5 py-4 border-b-2 border-[#2a2a2a] flex items-center justify-between">
               <p className="text-[10px] font-bold text-[#f0f0e8] uppercase tracking-widest">22 more countries · ranked for you</p>
-              <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €19</span>
+              <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €19.99</span>
             </div>
             {isPro ? (
               /* Pro — show real remaining matches */
@@ -908,7 +908,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
             {!isPro && (
               <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
                 <div>
-                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 — €19 once</p>
+                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 — €19.99 once</p>
                   <p className="text-[11px] text-[#888880] mt-0.5">Full ranking · salary calculator · visa checklist · 3-country compare</p>
                 </div>
                 <Link href="/pro" className="px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>
