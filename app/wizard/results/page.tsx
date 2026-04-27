@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe2, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe2, Sparkles, ArrowRight } from "lucide-react";
 import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -33,6 +33,14 @@ function getCurrencySymbol(currency: string): string {
     MYR: "RM ", DKK: "kr ",
   };
   return s[currency] ?? currency + " ";
+}
+
+function getVisaLabel(d: number) {
+  if (d <= 1) return "Easy";
+  if (d <= 2) return "Straightforward";
+  if (d <= 3) return "Moderate";
+  if (d <= 4) return "Difficult";
+  return "Very hard";
 }
 
 export default function WizardResultsPage() {
@@ -97,7 +105,7 @@ export default function WizardResultsPage() {
           } else {
             await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
           }
-        } catch (err) { console.error("Failed to save wizard results:", err); }
+        } catch (err) { console.error("Failed to save:", err); }
       };
       save();
     }
@@ -111,8 +119,11 @@ export default function WizardResultsPage() {
 
   const jobRoleDef = JOB_ROLES.find(r => r.key === answers.jobRole);
   const visibleMatches = isPro ? matches.slice(0, 25) : user ? matches.slice(0, 10) : matches.slice(0, 3);
+  const compareHref = matches.length >= 3
+    ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}`
+    : "/compare";
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
@@ -125,7 +136,7 @@ export default function WizardResultsPage() {
             <h2 className="font-heading text-2xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">Finding your country...</h2>
             <p key={loadingStep} className="text-[#888880] text-sm font-medium">{LOADING_STEPS[loadingStep]}</p>
           </div>
-          <div className="w-full h-1 bg-[#1a1a1a]">
+          <div className="w-full h-px bg-[#1a1a1a]">
             <div className="h-full bg-accent transition-all duration-100 ease-linear" style={{ width: loadingProgress + "%" }} />
           </div>
         </div>
@@ -134,11 +145,11 @@ export default function WizardResultsPage() {
   }
 
   if (matches.length === 0) return null;
+
   const top = matches[0];
   const pctColor = matchPercentColor(top.matchPercent);
-  const topCs = getCurrencySymbol(top.country.currency);
+  const cs = getCurrencySymbol(top.country.currency);
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
-  const compareHref = `/compare?a=${matches[0]?.country.slug}&b=${matches[1]?.country.slug}&c=${matches[2]?.country.slug}`;
 
   return (
     <div
@@ -161,25 +172,22 @@ export default function WizardResultsPage() {
         </button>
       </div>
 
-      {/* Two-column layout */}
-      <div className="max-w-6xl mx-auto px-6 py-12 lg:grid lg:grid-cols-[1fr_420px] lg:gap-16 lg:items-start space-y-12 lg:space-y-0">
+      <div className="max-w-3xl mx-auto px-6">
 
-        {/* ── LEFT: Hero ──────────────────────────────────────────────────── */}
-        <div>
-          {/* Eyebrow */}
-          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-6">
-            Your top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
+        {/* ── HERO ──────────────────────────────────────────────────────────── */}
+        <section className="pt-16 pb-14 border-b border-[#1a1a1a]">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">
+            Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
           </p>
 
-          {/* Flag + name */}
-          <div className="flex items-start gap-5 mb-5">
-            <span className="text-6xl leading-none flex-shrink-0">{top.country.flagEmoji}</span>
+          <div className="flex items-start gap-6 mb-6">
+            <span className="text-7xl leading-none flex-shrink-0">{top.country.flagEmoji}</span>
             <div>
-              <h1 className="font-heading text-[56px] sm:text-[72px] leading-[0.9] font-extrabold uppercase tracking-[-0.02em] text-[#f0f0e8]">
+              <h1 className="font-heading text-[64px] sm:text-[80px] leading-[0.88] font-extrabold uppercase tracking-[-0.02em]">
                 {top.country.name}
               </h1>
-              <div className="flex items-baseline gap-2 mt-3">
-                <span className="font-heading text-4xl font-extrabold" style={{ color: pctColor }}>
+              <div className="flex items-baseline gap-2.5 mt-4">
+                <span className="font-heading text-5xl font-extrabold" style={{ color: pctColor }}>
                   {top.matchPercent}%
                 </span>
                 <span className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">match</span>
@@ -187,203 +195,265 @@ export default function WizardResultsPage() {
             </div>
           </div>
 
-          {/* Key stat line */}
+          {/* Stat strip */}
           {topSalary && (
-            <p className="text-[13px] font-bold text-[#888880] mb-6 tracking-wide">
-              {topCs}{topSalary.toLocaleString()}/yr · {top.country.language} · Visa {top.country.data.visaDifficulty}/5
-            </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-1 mb-7 text-[12px] font-bold text-[#888880]">
+              <span>{cs}{topSalary.toLocaleString()}/yr</span>
+              <span>Visa {getVisaLabel(top.country.data.visaDifficulty)}</span>
+              <span>{cs}{top.country.data.costRentCityCentre.toLocaleString()}/mo rent</span>
+              <span>{top.country.language}</span>
+              <span>{top.country.data.incomeTaxRateMid}% tax</span>
+            </div>
           )}
 
           {/* Reason tags */}
           {top.reasons.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className="flex flex-wrap gap-2 mb-10">
               {top.reasons.map(r => (
                 <span key={r}
-                  className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest"
-                  style={{ border: `1px solid ${pctColor}60`, color: pctColor }}>
+                  className="text-[10px] font-bold px-3 py-1 uppercase tracking-widest"
+                  style={{ border: `1px solid ${pctColor}50`, color: pctColor }}>
                   {r}
                 </span>
               ))}
             </div>
           )}
 
-          {/* CTAs — no rounded corners, sharp, editorial */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-10">
+          {/* CTAs */}
+          <div className="flex flex-wrap items-center gap-4">
             <Link
               href={"/country/" + top.country.slug + "/personalised"}
-              className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
+              className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
               style={{ boxShadow: "3px 3px 0 #00aa90" }}
             >
               View full report
             </Link>
             <button
               onClick={handleViewOnGlobe}
-              className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] border border-[#2a2a2a] text-[#888880] hover:text-[#f0f0e8] hover:border-[#444] transition-colors"
+              className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] border border-[#2a2a2a] text-[#888880] hover:text-[#f0f0e8] hover:border-[#444] transition-colors"
             >
               See on globe
             </button>
+            <button
+              onClick={() => router.push("/wizard")}
+              className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest ml-auto"
+            >
+              Retake quiz →
+            </button>
           </div>
+        </section>
 
-          {/* Divider */}
-          <div className="border-t border-[#1a1a1a] pt-8">
-            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-4">Your top 3</p>
-            <div className="space-y-3">
-              {matches.slice(0, 3).map((m, i) => {
-                const cs = getCurrencySymbol(m.country.currency);
-                const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
-                return (
-                  <Link
-                    key={m.country.slug}
-                    href={"/country/" + m.country.slug + "/personalised"}
-                    className="flex items-center gap-4 py-3 border-b border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors group"
-                  >
-                    <span className="font-heading text-xs font-extrabold w-4 flex-shrink-0" style={{ color: RANK_COLORS[i] }}>
-                      {String(i + 1).padStart(2, "0")}
+        {/* ── TOP 3 CARDS ────────────────────────────────────────────────────── */}
+        <section className="py-14 border-b border-[#1a1a1a]">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">Your top 3</p>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {matches.slice(0, 3).map((m, i) => {
+              const mcs = getCurrencySymbol(m.country.currency);
+              const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
+              const mPct = matchPercentColor(m.matchPercent);
+              return (
+                <Link
+                  key={m.country.slug}
+                  href={"/country/" + m.country.slug + "/personalised"}
+                  className="block border border-[#1a1a1a] p-5 hover:border-[#2a2a2a] transition-colors group"
+                  style={{ borderTopColor: RANK_COLORS[i], borderTopWidth: "2px" }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-heading text-[10px] font-extrabold uppercase tracking-widest" style={{ color: RANK_COLORS[i] }}>
+                      #{i + 1}
                     </span>
-                    <span className="text-xl flex-shrink-0">{m.country.flagEmoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-heading text-sm font-extrabold uppercase tracking-tight text-[#f0f0e8]">{m.country.name}</p>
-                      {salary && (
-                        <p className="text-[10px] text-[#888880] font-medium mt-0.5">
-                          {cs}{salary.toLocaleString()}/yr · {m.country.language}
-                        </p>
-                      )}
-                    </div>
-                    <span className="font-heading text-base font-extrabold flex-shrink-0" style={{ color: matchPercentColor(m.matchPercent) }}>
+                    <span className="font-heading text-xl font-extrabold" style={{ color: mPct }}>
                       {m.matchPercent}%
                     </span>
-                  </Link>
-                );
-              })}
-            </div>
+                  </div>
+                  <div className="text-3xl mb-3">{m.country.flagEmoji}</div>
+                  <p className="font-heading text-lg font-extrabold uppercase tracking-tight mb-1">{m.country.name}</p>
+                  {salary && (
+                    <p className="text-[10px] text-[#888880] font-medium">
+                      {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa
+                    </p>
+                  )}
+                  <div className="mt-4 pt-3 border-t border-[#1a1a1a] flex items-center justify-between">
+                    <p className="text-[10px] text-[#888880]">
+                      {mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo rent
+                    </p>
+                    <span className="text-[10px] font-bold text-[#888880] group-hover:text-accent transition-colors uppercase tracking-widest">
+                      Report →
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
 
-            {/* Compare hint for Pro */}
-            {isPro && matches.length >= 3 && (
-              <Link
-                href={compareHref}
-                className="inline-block mt-4 text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest"
-              >
-                Compare top 3 →
+          {isPro && (
+            <div className="mt-6">
+              <Link href={compareHref}
+                className="inline-flex items-center gap-2 text-[11px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest">
+                Compare these 3 side by side <ArrowRight className="w-3 h-3" />
               </Link>
-            )}
+            </div>
+          )}
+        </section>
+
+        {/* ── WHAT THIS MEANS ─────────────────────────────────────────────── */}
+        <section className="py-14 border-b border-[#1a1a1a]">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">What this means</p>
+
+          <div className="grid sm:grid-cols-2 gap-px bg-[#1a1a1a]">
+            {[
+              {
+                label: "Best salary",
+                value: (() => {
+                  if (!jobRoleDef) return "—";
+                  const best = [...matches].sort((a, b) =>
+                    (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number)
+                  )[0];
+                  const bcs = getCurrencySymbol(best.country.currency);
+                  return `${bcs}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()} in ${best.country.name}`;
+                })(),
+              },
+              {
+                label: "Easiest visa",
+                value: (() => {
+                  const easiest = [...matches].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
+                  return `${easiest.country.name} · ${getVisaLabel(easiest.country.data.visaDifficulty)}`;
+                })(),
+              },
+              {
+                label: "Lowest rent",
+                value: (() => {
+                  const cheapest = [...matches].sort((a, b) => {
+                    const toEur = (c: CountryMatch) => c.country.data.costRentCityCentre;
+                    return toEur(a) - toEur(b);
+                  })[0];
+                  const lcs = getCurrencySymbol(cheapest.country.currency);
+                  return `${lcs}${cheapest.country.data.costRentCityCentre.toLocaleString()}/mo in ${cheapest.country.name}`;
+                })(),
+              },
+              {
+                label: "Safest country",
+                value: (() => {
+                  const safest = [...matches].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
+                  return `${safest.country.name} · ${safest.country.data.scoreSafety}/10`;
+                })(),
+              },
+            ].map(item => (
+              <div key={item.label} className="bg-[#0a0a0a] px-6 py-5">
+                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">{item.label}</p>
+                <p className="font-heading text-base font-extrabold text-[#f0f0e8]">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── FULL RANKING LIST ───────────────────────────────────────────── */}
+        <section className="py-14 pb-20">
+          <div className="flex items-baseline justify-between mb-8">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">
+              Full ranking{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
+            </p>
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">
+              {visibleMatches.length} of 25
+            </p>
           </div>
 
-          {/* Bottom links */}
-          <div className="mt-8 flex items-center gap-5">
-            <button onClick={() => router.push("/wizard")}
-              className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
-              Retake quiz
-            </button>
-            <button onClick={handleViewOnGlobe}
-              className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
-              View on globe
-            </button>
-          </div>
-        </div>
-
-        {/* ── RIGHT: Full ranking list ─────────────────────────────────────── */}
-        <div className="lg:border-l lg:border-[#1a1a1a] lg:pl-10">
-          {/* Header */}
-          <div className="flex items-baseline justify-between mb-5">
-            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">Full ranking</p>
-            {jobRoleDef && (
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(top.matchPercent) }}>
-                {jobRoleDef.label}
-              </p>
-            )}
-          </div>
-
-          {/* Rows */}
           <div>
             {visibleMatches.map((match, i) => {
-              const cs = getCurrencySymbol(match.country.currency);
+              const mcs = getCurrencySymbol(match.country.currency);
               const salary = jobRoleDef ? match.country.data[jobRoleDef.salaryKey] as number : null;
-              const pct = match.matchPercent;
               const isTop3 = i < 3;
               return (
                 <Link
                   key={match.country.slug}
                   href={"/country/" + match.country.slug + "/personalised"}
-                  className="flex items-center gap-3 py-3 border-b border-[#111111] hover:bg-[#0f0f0f] transition-colors px-2 -mx-2 group"
-                  style={isTop3 ? { borderLeft: `2px solid ${RANK_COLORS[i]}`, paddingLeft: "10px", marginLeft: "-2px" } : {}}
+                  className="flex items-center gap-4 py-4 border-b border-[#111111] hover:bg-[#0d0d0d] transition-colors px-3 -mx-3 group"
+                  style={isTop3 ? { borderLeftColor: RANK_COLORS[i], borderLeftWidth: "2px", paddingLeft: "14px", marginLeft: "-2px" } : {}}
                 >
                   <span
-                    className="font-heading text-[11px] font-extrabold w-6 flex-shrink-0 text-right"
-                    style={{ color: isTop3 ? RANK_COLORS[i] : "#333" }}
+                    className="font-heading text-[11px] font-extrabold w-6 text-right flex-shrink-0"
+                    style={{ color: isTop3 ? RANK_COLORS[i] : "#2a2a2a" }}
                   >
-                    {i + 1}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-lg flex-shrink-0">{match.country.flagEmoji}</span>
+                  <span className="text-xl flex-shrink-0">{match.country.flagEmoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-heading text-[13px] font-extrabold uppercase tracking-tight text-[#f0f0e8] truncate">
+                    <p className="font-heading text-[14px] font-extrabold uppercase tracking-tight text-[#f0f0e8] truncate">
                       {match.country.name}
                     </p>
                     {salary && (
-                      <p className="text-[10px] text-[#555] font-medium mt-0.5">
-                        {cs}{salary.toLocaleString()}/yr · Visa {match.country.data.visaDifficulty}/5 · {cs}{match.country.data.costRentCityCentre.toLocaleString()}/mo rent
+                      <p className="text-[10px] text-[#444] font-medium mt-0.5">
+                        {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(match.country.data.visaDifficulty)} visa · {mcs}{match.country.data.costRentCityCentre.toLocaleString()}/mo rent
                       </p>
                     )}
                   </div>
-                  <span className="font-heading text-[13px] font-extrabold flex-shrink-0" style={{ color: matchPercentColor(pct) }}>
-                    {pct}%
+                  <span
+                    className="font-heading text-[14px] font-extrabold flex-shrink-0"
+                    style={{ color: matchPercentColor(match.matchPercent) }}
+                  >
+                    {match.matchPercent}%
                   </span>
                 </Link>
               );
             })}
           </div>
 
-          {/* Upgrade gate — fade out style */}
+          {/* Upgrade gate */}
           {!isPro && (
-            <div className="mt-0 relative">
-              {/* Teaser rows — fading */}
-              <div className="relative overflow-hidden" style={{ height: "120px" }}>
-                {[
-                  { n: visibleMatches.length + 1, opacity: 0.5 },
-                  { n: visibleMatches.length + 2, opacity: 0.25 },
-                ].map(({ n, opacity }) => (
-                  <div key={n} className="flex items-center gap-3 py-3 border-b border-[#111111] px-2 -mx-2" style={{ opacity }}>
-                    <span className="font-heading text-[11px] font-extrabold w-6 text-right text-[#333]">{n}</span>
-                    <span className="text-lg">🌍</span>
+            <div className="mt-0">
+              {/* Fading teaser */}
+              <div className="relative overflow-hidden" style={{ height: 100 }}>
+                {[visibleMatches.length + 1, visibleMatches.length + 2].map((n, i) => (
+                  <div
+                    key={n}
+                    className="flex items-center gap-4 py-4 border-b border-[#111111] px-3"
+                    style={{ opacity: i === 0 ? 0.35 : 0.15 }}
+                  >
+                    <span className="font-heading text-[11px] font-extrabold w-6 text-right text-[#2a2a2a]">{String(n).padStart(2, "0")}</span>
+                    <span className="text-xl">🌍</span>
                     <div className="flex-1">
-                      <div className="h-3 w-24 bg-[#1a1a1a] rounded-sm" />
-                      <div className="h-2 w-36 bg-[#111] rounded-sm mt-1.5" />
+                      <div className="h-3 w-28 bg-[#1a1a1a]" />
+                      <div className="h-2 w-40 bg-[#111] mt-1.5" />
                     </div>
-                    <div className="h-3 w-8 bg-[#1a1a1a] rounded-sm" />
+                    <div className="h-3 w-8 bg-[#1a1a1a]" />
                   </div>
                 ))}
-                {/* Fade gradient */}
                 <div className="absolute inset-0 pointer-events-none"
-                  style={{ background: "linear-gradient(to bottom, transparent 0%, #0a0a0a 90%)" }} />
+                  style={{ background: "linear-gradient(to bottom, transparent 0%, #0a0a0a 85%)" }} />
               </div>
 
-              {/* Upgrade line */}
-              <div className="pt-4 flex items-center justify-between border-t border-[#1a1a1a]">
-                <p className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">
-                  {25 - visibleMatches.length} more countries ranked
-                </p>
+              {/* Upgrade strip */}
+              <div className="flex items-center justify-between pt-5 border-t border-[#1a1a1a]">
+                <div>
+                  <p className="font-heading text-sm font-extrabold uppercase tracking-tight">
+                    {25 - visibleMatches.length} more countries
+                  </p>
+                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €5 once</p>
+                </div>
                 <Link
                   href="/pro"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a]"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a]"
                   style={{ boxShadow: "2px 2px 0 #00aa90" }}
                 >
-                  <Sparkles className="w-3 h-3" /> Pro · €5
+                  <Sparkles className="w-3 h-3" /> Get Pro
                 </Link>
               </div>
             </div>
           )}
 
-          {/* Pro: compare hint */}
+          {/* Pro: compare */}
           {isPro && matches.length >= 3 && (
-            <div className="mt-6 pt-5 border-t border-[#1a1a1a]">
-              <Link
-                href={compareHref}
-                className="text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest"
-              >
-                Compare top 3 →
+            <div className="mt-8 pt-6 border-t border-[#1a1a1a] flex items-center justify-between">
+              <p className="text-[10px] text-[#888880] uppercase tracking-widest">All 25 countries ranked for you</p>
+              <Link href={compareHref}
+                className="inline-flex items-center gap-2 text-[11px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest">
+                Compare top 3 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           )}
-        </div>
+        </section>
+
       </div>
     </div>
   );
