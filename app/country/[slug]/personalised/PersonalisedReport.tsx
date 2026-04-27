@@ -266,39 +266,39 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
       <main className="max-w-6xl mx-auto px-6 pb-20 space-y-0">
 
         {/* ── HERO ─────────────────────────────────────────────────────────── */}
-        <section className="pt-10 pb-14">
-          <div className="flex items-center gap-4 mb-7">
-            <span className="text-5xl leading-none">{country.flagEmoji}</span>
-            <div>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">{country.name} · Personalised report</p>
-              <p className="text-xs text-[#888880] mt-0.5">
-                for {userRole.label}{answers.passport ? ` · ${answers.passport} passport` : ""}
-              </p>
-            </div>
+        <section className="pt-10 pb-14 text-center">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <span className="text-6xl leading-none">{country.flagEmoji}</span>
             {match && (
-              <span className="ml-auto flex items-center gap-2 px-3 py-1.5 border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
+              <span className="flex items-center gap-2 px-3 py-1.5 border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
                 <span className="font-heading text-lg font-extrabold text-accent">{match.percent}%</span>
                 <span className="text-[10px] font-bold text-accent uppercase tracking-widest">match</span>
               </span>
             )}
           </div>
 
-          <h1 className="font-heading text-[36px] sm:text-[52px] leading-[1.0] font-extrabold tracking-[-0.02em] max-w-3xl mb-5">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">
+            {country.name} · {userRole.label}{answers.passport ? ` · ${answers.passport} passport` : ""}
+          </p>
+
+          <h1 className="font-heading text-[40px] sm:text-[56px] leading-[1.0] font-extrabold tracking-[-0.02em] mb-4">
             {disposable > 0
-              ? <>You'd earn <span className="text-accent">{cs}{grossSalary.toLocaleString()}</span>, take home {cs}{takeHomeMonthly.toLocaleString()}/mo, and keep <span className="text-accent">{cs}{disposable.toLocaleString()}</span> after costs.</>
-              : <>You'd earn <span className="text-accent">{cs}{grossSalary.toLocaleString()}</span> as a {userRole.label} — but costs are tight.</>
+              ? <>{cs}<span className="text-accent">{grossSalary.toLocaleString()}</span> gross.<br />
+                  {cs}{takeHomeMonthly.toLocaleString()}/mo in hand.<br />
+                  <span className="text-accent">{cs}{disposable.toLocaleString()}</span> left after costs.</>
+              : <>{cs}<span className="text-accent">{grossSalary.toLocaleString()}</span> gross —<br />costs eat most of it.</>
             }
           </h1>
 
           {match?.reasons && match.reasons.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 justify-center mb-8">
               {match.reasons.map((r) => (
                 <span key={r} className="text-[11px] font-bold px-2.5 py-1 border-2 border-accent text-accent uppercase tracking-wide">{r}</span>
               ))}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-center">
             <a href="#visa" className="inline-block px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>
               View visa path →
             </a>
@@ -326,21 +326,39 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               <p className="text-xs text-[#888880] mt-2">/ year as {userRole.label}</p>
             </div>
 
-            {/* Take-home */}
-            <div className="border-2 border-accent bg-[#0f0f0f] p-5 relative" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-              <div className="absolute -top-2.5 left-3 bg-accent text-[#0a0a0a] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Take-home</div>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3 mt-1">After {data.incomeTaxRateMid}% tax + {data.socialSecurityRate}% SS</p>
-              <p className="font-heading text-4xl font-extrabold leading-none text-accent">{cs}{takeHomeAnnual.toLocaleString()}</p>
-              <p className="text-xs text-[#888880] mt-2">~ {cs}{takeHomeMonthly.toLocaleString()} / month</p>
+            {/* Take-home — Pro */}
+            <div className="relative border-2 bg-[#0f0f0f] p-5" style={{ borderColor: isPro ? "#00ffd5" : "#2a2a2a", boxShadow: isPro ? "3px 3px 0 #00ffd5" : "3px 3px 0 #2a2a2a" }}>
+              {isPro && <div className="absolute -top-2.5 left-3 bg-accent text-[#0a0a0a] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Take-home</div>}
+              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3 mt-1">After tax + social security</p>
+              <div style={{ filter: isPro ? "none" : "blur(8px)", userSelect: isPro ? "auto" : "none" }}>
+                <p className="font-heading text-4xl font-extrabold leading-none text-accent">{cs}{takeHomeAnnual.toLocaleString()}</p>
+                <p className="text-xs text-[#888880] mt-2">~ {cs}{takeHomeMonthly.toLocaleString()} / month</p>
+              </div>
+              {!isPro && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Link href="/pro" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a0a0a] border-2 border-accent text-[10px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "2px 2px 0 #00ffd5" }}>
+                    <Lock className="w-3 h-3" /> Pro
+                  </Link>
+                </div>
+              )}
             </div>
 
-            {/* Disposable */}
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
+            {/* Disposable — Pro */}
+            <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">After all costs</p>
-              <p className={`font-heading text-4xl font-extrabold leading-none ${disposable > 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}>
-                {disposable > 0 ? "+" : ""}{cs}{Math.abs(disposable).toLocaleString()}
-              </p>
-              <p className="text-xs text-[#888880] mt-2">/ month {disposable > 0 ? "free" : "shortfall"}</p>
+              <div style={{ filter: isPro ? "none" : "blur(8px)", userSelect: isPro ? "auto" : "none" }}>
+                <p className={`font-heading text-4xl font-extrabold leading-none ${disposable > 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}>
+                  {disposable > 0 ? "+" : ""}{cs}{Math.abs(disposable).toLocaleString()}
+                </p>
+                <p className="text-xs text-[#888880] mt-2">/ month {disposable > 0 ? "free" : "shortfall"}</p>
+              </div>
+              {!isPro && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Link href="/pro" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a0a0a] border-2 border-accent text-[10px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "2px 2px 0 #00ffd5" }}>
+                    <Lock className="w-3 h-3" /> Pro
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -507,26 +525,37 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Est.</p>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Status</p>
             </div>
-            {[
-              { label: "Rent (1-bed, city centre)", val: data.costRentCityCentre, budgetKey: "rent" },
-              { label: "Groceries", val: data.costGroceriesMonthly, budgetKey: "food" },
-              { label: "Transport", val: data.costTransportMonthly, budgetKey: "transport" },
-              { label: "Utilities", val: data.costUtilitiesMonthly, budgetKey: "utilities" },
-              { label: "Eating out (×20 meals)", val: data.costEatingOut * 20, budgetKey: "dining" },
-            ].map((item, i, arr) => (
-              <div key={item.label} className={`grid grid-cols-[1fr_120px_100px] px-5 py-3.5 items-center ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                <span className="text-sm font-bold">{item.label}</span>
-                <p className="font-heading text-sm font-extrabold text-right">{cs}{item.val.toLocaleString()}</p>
-                <div className="flex justify-end">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 border-2"
-                    style={item.budgetKey === "rent" && !rentFits
-                      ? { borderColor: "#f87171", color: "#f87171" }
-                      : { borderColor: "#4ade80", color: "#4ade80" }}>
-                    {item.budgetKey === "rent" && !rentFits ? `+${Math.abs(rentPct)}%` : "OK"}
-                  </span>
-                </div>
+            <div className="relative">
+              <div style={{ filter: isPro ? "none" : "blur(6px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
+                {[
+                  { label: "Rent (1-bed, city centre)", val: data.costRentCityCentre, budgetKey: "rent" },
+                  { label: "Groceries", val: data.costGroceriesMonthly, budgetKey: "food" },
+                  { label: "Transport", val: data.costTransportMonthly, budgetKey: "transport" },
+                  { label: "Utilities", val: data.costUtilitiesMonthly, budgetKey: "utilities" },
+                  { label: "Eating out (×20 meals)", val: data.costEatingOut * 20, budgetKey: "dining" },
+                ].map((item, i, arr) => (
+                  <div key={item.label} className={`grid grid-cols-[1fr_120px_100px] px-5 py-3.5 items-center ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
+                    <span className="text-sm font-bold">{item.label}</span>
+                    <p className="font-heading text-sm font-extrabold text-right">{cs}{item.val.toLocaleString()}</p>
+                    <div className="flex justify-end">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 border-2"
+                        style={item.budgetKey === "rent" && !rentFits
+                          ? { borderColor: "#f87171", color: "#f87171" }
+                          : { borderColor: "#4ade80", color: "#4ade80" }}>
+                        {item.budgetKey === "rent" && !rentFits ? `+${Math.abs(rentPct)}%` : "OK"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+              {!isPro && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
+                    <Lock className="w-3.5 h-3.5" /> Unlock breakdown — Pro
+                  </Link>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-[1fr_120px_100px] px-5 py-4 bg-[#0a0a0a] items-center border-t-2 border-[#2a2a2a]">
               <p className="font-heading text-sm font-extrabold uppercase tracking-tight">Total monthly</p>
               <p className="font-heading text-xl font-extrabold text-accent text-right">{cs}{monthlyTotal.toLocaleString()}</p>
@@ -566,39 +595,51 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                     <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: item.color }}>
                       {Math.round(item.value * 10) / 10}
                     </p>
-                    {isUserPriority && (
+                    {isUserPriority && isPro && (
                       <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-accent text-accent flex-shrink-0">★ You</span>
+                    )}
+                    {isUserPriority && !isPro && (
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-[#2a2a2a] text-[#2a2a2a] flex-shrink-0 select-none" style={{ filter: "blur(3px)" }}>★ You</span>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Priorities context */}
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-6 flex flex-col">
+            {/* Priorities context — Pro */}
+            <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-6 flex flex-col overflow-hidden">
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-4">Your priorities</p>
-              {priorities.length > 0 ? (
-                <ol className="space-y-3">
-                  {priorities.map((p, i) => {
-                    const label = priorityLabelMap[p] ?? p;
-                    const score = scoreBreakdown.find((s) => s.label === label);
-                    return (
-                      <li key={p} className="flex items-center gap-3">
-                        <span className="font-heading text-2xl font-extrabold text-accent w-8">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="flex-1 text-sm font-bold uppercase tracking-tight">{label}</span>
-                        {score && (
-                          <span className="text-xs font-bold" style={{ color: scoreColor(score.value) }}>
-                            {Math.round(score.value * 10) / 10}
+              <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
+                {priorities.length > 0 ? (
+                  <ol className="space-y-3">
+                    {priorities.map((p, i) => {
+                      const label = priorityLabelMap[p] ?? p;
+                      const score = scoreBreakdown.find((s) => s.label === label);
+                      return (
+                        <li key={p} className="flex items-center gap-3">
+                          <span className="font-heading text-2xl font-extrabold text-accent w-8">
+                            {String(i + 1).padStart(2, "0")}
                           </span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : (
-                <p className="text-sm text-[#888880]">No priorities selected in wizard.</p>
+                          <span className="flex-1 text-sm font-bold uppercase tracking-tight">{label}</span>
+                          {score && (
+                            <span className="text-xs font-bold" style={{ color: scoreColor(score.value) }}>
+                              {Math.round(score.value * 10) / 10}
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <p className="text-sm text-[#888880]">No priorities selected in wizard.</p>
+                )}
+              </div>
+              {!isPro && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]/60">
+                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
+                    <Lock className="w-3.5 h-3.5" /> Your priorities — Pro
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -659,7 +700,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
                     <Lock className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries — Pro</span>
+                    <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries ~ Pro</span>
                   </div>
                 </div>
               )}
