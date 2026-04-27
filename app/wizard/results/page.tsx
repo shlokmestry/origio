@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe2, Star, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Globe2, Star, Lock, Sparkles } from "lucide-react";
 import { CountryMatch } from "@/lib/wizard";
 import { WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
@@ -19,6 +19,16 @@ const LOADING_STEPS = [
 ];
 
 const RANK_COLORS = ["#00ffd5", "#facc15", "#a78bfa"];
+
+const ROLE_TO_GUIDE: Record<string, string> = {
+  softwareEngineer: "software-engineers",
+  productManager:   "product-managers",
+  uxDesigner:       "designers",
+  nurse:            "nurses",
+  teacher:          "teachers",
+  accountant:       "accountants",
+  marketingManager: "marketing-managers",
+};
 
 export default function WizardResultsPage() {
   const router = useRouter();
@@ -70,29 +80,26 @@ export default function WizardResultsPage() {
     if (!isLoading && matches.length > 0 && user) {
       const saveToSupabase = async () => {
         try {
-          // Prepare top countries data
           const topCountries = matches.slice(0, 10).map(m => ({
             slug: m.country.slug,
             name: m.country.name,
             flagEmoji: m.country.flagEmoji,
-            matchPercent: m.matchPercent
+            matchPercent: m.matchPercent,
+            reasons: m.reasons,
           }));
 
-          // Check if we already have a result for this user
           const { data: existing } = await supabase.from('wizard_results')
             .select('id')
             .eq('user_id', user.id)
             .maybeSingle();
 
           if (existing) {
-            // Update existing record
             await supabase.from('wizard_results').update({
               top_countries: topCountries,
               answers: answers,
               created_at: new Date().toISOString()
             }).eq('id', existing.id);
           } else {
-            // Insert new record
             await supabase.from('wizard_results').insert({
               user_id: user.id,
               top_countries: topCountries,
@@ -109,7 +116,6 @@ export default function WizardResultsPage() {
   }, [isLoading, matches, user, answers]);
 
   const handleViewOnGlobe = () => {
-    // CountryMatch shape: { country: CountryWithData, matchScore, matchPercent, reasons }
     const slugs = matches.slice(0, 3).map((m) => m.country.slug);
     sessionStorage.setItem("highlightedCountries", JSON.stringify(slugs));
     sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
@@ -142,6 +148,12 @@ export default function WizardResultsPage() {
 
   if (matches.length === 0) return null;
   const top = matches[0];
+
+  const guideSlug = answers.jobRole ? ROLE_TO_GUIDE[answers.jobRole] : null;
+  const guideHref = guideSlug ? `/guides/${guideSlug}` : `/country/${top.country.slug}`;
+  const guideLabel = guideSlug
+    ? `${jobRoleDef?.label ?? "Relocation"} Guide`
+    : `${top.country.name} Country Page`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]" style={{ opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
@@ -187,6 +199,16 @@ export default function WizardResultsPage() {
               See on Globe
             </button>
           </div>
+
+          {/* Next-step CTA */}
+          <Link
+            href={guideHref}
+            className="inline-flex items-center gap-2 text-sm font-bold text-text-muted hover:text-accent transition-colors group"
+          >
+            Ready to explore {top.country.name}?
+            <span className="text-accent group-hover:underline">{guideLabel}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-accent" />
+          </Link>
         </div>
 
         {/* Rankings list */}
