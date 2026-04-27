@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Search, Menu, X, User, Sparkles, Bookmark } from "lucide-react";
+import { Search, Menu, X, User, Sparkles } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -118,7 +118,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 className="flex items-center gap-2 px-3 py-1.5 border-2 border-[#2a2a2a] font-bold text-xs text-text-primary uppercase tracking-wide hover:border-text-primary transition-all"
                 style={{ boxShadow: "2px 2px 0 #2a2a2a" }}
               >
-                <Bookmark className="w-3 h-3" />
+                
                 Sign In
               </a>
             )}
@@ -186,7 +186,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 </a>
               ) : (
                 <a href="/signin" className="flex items-center justify-center gap-2 px-3 py-3 border-2 border-[#2a2a2a] text-sm font-bold text-text-primary uppercase" onClick={() => setMobileMenuOpen(false)}>
-                  <Bookmark className="w-4 h-4" /> Sign In
+                  Sign In
                 </a>
               )}
             </div>
