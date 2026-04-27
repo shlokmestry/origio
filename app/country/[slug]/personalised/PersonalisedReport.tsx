@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Lock, Check, X, Wifi,
-  DollarSign, Shield, Heart, Home, Plane, Receipt,
+  DollarSign, Shield, Heart, Home, Plane, Receipt, Calculator,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { WizardAnswers, CountryMatch } from "@/lib/wizard";
@@ -29,8 +29,6 @@ const TO_USD: Record<string, number> = {
   JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
 };
 
-// PPP-adjusted $500 USD threshold for "tight savings"
-// If disposable in USD < 500, show the "tight" sentence
 const PPP_TIGHT_USD = 500;
 
 const RENT_MAX: Record<string, number> = {
@@ -70,25 +68,137 @@ function calcTakeHome(gross: number, taxRate: number, ssRate: number) {
   return { annual: Math.round(net), monthly: Math.round(net / 12) };
 }
 
+// ── move timeline logic ───────────────────────────────────────────────────
+
+function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
+  months: string;
+  steps: { month: string; action: string }[];
+} {
+  const now = new Date();
+  const add = (m: number) => {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() + m);
+    return d.toLocaleString("default", { month: "short", year: "numeric" });
+  };
+
+  if (isEU) {
+    return {
+      months: "1–2 months",
+      steps: [
+        { month: add(0), action: "Start job search or confirm remote work arrangement" },
+        { month: add(1), action: "Register with local authorities on arrival" },
+        { month: add(2), action: "Sort local bank account, NIF/tax number" },
+        { month: add(2), action: "You're in. EU freedom of movement — no visa required." },
+      ],
+    };
+  }
+
+  if (visaDifficulty <= 2) {
+    return {
+      months: "3–6 months",
+      steps: [
+        { month: add(0), action: "Gather documents — passport, bank statements, proof of income" },
+        { month: add(1), action: "Submit visa application at consulate" },
+        { month: add(2), action: "Processing period (2–4 months typical)" },
+        { month: add(5), action: "Visa issued — book flights, sort accommodation" },
+        { month: add(6), action: "You're in." },
+      ],
+    };
+  }
+
+  if (visaDifficulty <= 3) {
+    return {
+      months: "6–12 months",
+      steps: [
+        { month: add(0), action: "Secure job offer or employer sponsor" },
+        { month: add(2), action: "Employer submits work permit application" },
+        { month: add(4), action: "Processing period (3–6 months)" },
+        { month: add(9), action: "Permit issued — arrange relocation" },
+        { month: add(11), action: "You're in." },
+      ],
+    };
+  }
+
+  return {
+    months: "12–18 months",
+    steps: [
+      { month: add(0), action: "Begin job search — employer sponsorship essential" },
+      { month: add(4), action: "Job offer secured" },
+      { month: add(5), action: "Visa application submitted with full documentation" },
+      { month: add(10), action: "Processing + possible interview or biometrics" },
+      { month: add(15), action: "Visa issued" },
+      { month: add(17), action: "You're in." },
+    ],
+  };
+}
+
+// ── visa checklist data ───────────────────────────────────────────────────
+
+const VISA_DOCS: Record<string, string[]> = {
+  default: [
+    "Valid passport (6+ months remaining)",
+    "Recent passport photographs",
+    "Criminal background check (apostilled)",
+    "Proof of health insurance",
+    "Proof of accommodation",
+    "Bank statements (last 3 months)",
+  ],
+  "portugal": [
+    "Valid passport (6+ months remaining)",
+    "Proof of passive income or remote income",
+    "NHR tax regime application",
+    "Proof of accommodation (rental contract)",
+    "Health insurance certificate",
+    "Criminal background check (apostilled)",
+    "NIF (Portuguese tax number) — apply at consulate",
+  ],
+  "germany": [
+    "Valid passport",
+    "Job offer or employment contract",
+    "Recognised qualification or degree certificate",
+    "Proof of German language skills (if applicable)",
+    "Biometric photographs",
+    "Health insurance proof",
+    "CV + professional references",
+  ],
+  "uae": [
+    "Valid passport (6+ months remaining)",
+    "Emirates ID application documents",
+    "Employment contract (employer-sponsored)",
+    "Medical fitness certificate",
+    "Biometric photographs",
+    "Educational certificates (attested)",
+  ],
+  "ireland": [
+    "Valid passport",
+    "Job offer from Irish employer",
+    "Critical Skills or General Work Permit application",
+    "Proof of qualifications",
+    "Proof of salary meeting threshold",
+    "Health insurance (if not covered by employer)",
+  ],
+  "united-kingdom": [
+    "Valid passport",
+    "Certificate of Sponsorship from employer",
+    "Proof of English language (B1 minimum)",
+    "Tuberculosis test results (some countries)",
+    "Biometric residence permit application",
+    "Healthcare surcharge payment",
+  ],
+};
+
+function getVisaChecklist(slug: string): string[] {
+  return VISA_DOCS[slug] ?? VISA_DOCS.default;
+}
+
 // ── narrative sentence logic ───────────────────────────────────────────────
 
 interface NarrativeArgs {
-  slug: string;
-  name: string;
-  currency: string;
-  cs: string;
-  grossSalary: number;
-  takeHomeMonthly: number;
-  disposable: number;
-  disposableUSD: number;
-  taxRate: number;
-  ssRate: number;
-  safetyScore: number;
-  internetSpeed: number;
-  qolScore: number;
-  rent: number;
-  visaDifficulty: number;
-  isEnglish: boolean;
+  slug: string; name: string; currency: string; cs: string;
+  grossSalary: number; takeHomeMonthly: number; disposable: number;
+  disposableUSD: number; taxRate: number; ssRate: number;
+  safetyScore: number; internetSpeed: number; qolScore: number;
+  rent: number; visaDifficulty: number; isEnglish: boolean;
 }
 
 function getNarrative(a: NarrativeArgs): string {
@@ -98,62 +208,17 @@ function getNarrative(a: NarrativeArgs): string {
   const r = `${a.cs}${a.rent.toLocaleString()}`;
   const isTight = a.disposableUSD < PPP_TIGHT_USD;
 
-  // UAE — tax = 0
-  if (a.slug === "uae") {
-    return `Zero tax. What you earn — ${g} — is what you keep. The UAE is one of the few places where that's literally true.`;
-  }
-
-  // Japan — its own world
-  if (a.slug === "japan") {
-    return `Modest salary, tough language, safety score of ${a.safetyScore}/10. Japan surprises almost everyone who actually moves there.`;
-  }
-
-  // Safety flag — low safety countries
-  if (a.safetyScore < 6) {
-    return `The numbers look fine on paper. Safety scores ${a.safetyScore}/10 here — that shapes where you can live and what it costs.`;
-  }
-
-  // High tax welfare states
-  if (HIGH_TAX_COUNTRIES.includes(a.slug) || a.taxRate > 45) {
-    return `${a.name} takes ${a.taxRate}% in tax. Free healthcare, free university, generous parental leave. Decide if that trade works for you.`;
-  }
-
-  // Singapore / high internet + English
-  if (a.internetSpeed >= 8.5 && a.isEnglish && a.slug === "singapore") {
-    return `${a.internetSpeed}/10 internet, English everywhere, ${disp}/mo left after costs. Singapore removes every friction point. You pay for the privilege.`;
-  }
-
-  // UK — high rent warning
-  if (a.slug === "united-kingdom") {
-    return `Strong salary until ${r}/mo rent and National Insurance land. London gives and takes. You're left with ${disp}/mo.`;
-  }
-
-  // Australia / Canada / NZ — wealth builders (low SS + decent disposable)
-  if (["australia", "canada", "new-zealand"].includes(a.slug) && a.ssRate < 10 && !isTight) {
-    return `${g} gross, minimal social security, ${disp} left over. ${a.name} is one of the few places you can actually build wealth.`;
-  }
-
-  // Ireland — English + easy visa
-  if (a.slug === "ireland") {
-    return `English, no visa lottery, straightforward process. Smoothest landing pad in Europe. Rent is ${r}/mo — that's where you feel it.`;
-  }
-
-  // High saver — disposable > 1000 USD
-  if (a.disposableUSD >= 1000) {
-    return `${g} gross, ${disp} left every month. Not many countries make that possible. ${a.name} is one of them.`;
-  }
-
-  // Quality of life play — decent QoL but tight savings
-  if (a.qolScore >= 7.5 && isTight) {
-    return `${disp}/mo surplus won't make you rich. ${a.name} is a quality of life move, not a wealth-building one.`;
-  }
-
-  // Low saver fallback — tight savings in any other country
-  if (isTight) {
-    return `${g} gross, ${th}/mo in hand, ${disp} left after costs. Enough to live. Not enough to save fast.`;
-  }
-
-  // Generic good outcome
+  if (a.slug === "uae") return `Zero tax. What you earn — ${g} — is what you keep. The UAE is one of the few places where that's literally true.`;
+  if (a.slug === "japan") return `Modest salary, tough language, safety score of ${a.safetyScore}/10. Japan surprises almost everyone who actually moves there.`;
+  if (a.safetyScore < 6) return `The numbers look fine on paper. Safety scores ${a.safetyScore}/10 here — that shapes where you can live and what it costs.`;
+  if (HIGH_TAX_COUNTRIES.includes(a.slug) || a.taxRate > 45) return `${a.name} takes ${a.taxRate}% in tax. Free healthcare, free university, generous parental leave. Decide if that trade works for you.`;
+  if (a.internetSpeed >= 8.5 && a.isEnglish && a.slug === "singapore") return `${a.internetSpeed}/10 internet, English everywhere, ${disp}/mo left after costs. Singapore removes every friction point. You pay for the privilege.`;
+  if (a.slug === "united-kingdom") return `Strong salary until ${r}/mo rent and National Insurance land. London gives and takes. You're left with ${disp}/mo.`;
+  if (["australia", "canada", "new-zealand"].includes(a.slug) && a.ssRate < 10 && !isTight) return `${g} gross, minimal social security, ${disp} left over. ${a.name} is one of the few places you can actually build wealth.`;
+  if (a.slug === "ireland") return `English, no visa lottery, straightforward process. Smoothest landing pad in Europe. Rent is ${r}/mo — that's where you feel it.`;
+  if (a.disposableUSD >= 1000) return `${g} gross, ${disp} left every month. Not many countries make that possible. ${a.name} is one of them.`;
+  if (a.qolScore >= 7.5 && isTight) return `${disp}/mo surplus won't make you rich. ${a.name} is a quality of life move, not a wealth-building one.`;
+  if (isTight) return `${g} gross, ${th}/mo in hand, ${disp} left after costs. Enough to live. Not enough to save fast.`;
   return `${g} gross, ${disp} left every month. Not many countries make that possible. ${a.name} is one of them.`;
 }
 
@@ -178,6 +243,10 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Salary calculator state (Pro)
+  const [customSalary, setCustomSalary] = useState<string>("");
+  const [useCustom, setUseCustom] = useState(false);
+
   useEffect(() => {
     async function load() {
       let ans: Partial<WizardAnswers> | null = null;
@@ -189,7 +258,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         const all: CountryMatch[] = JSON.parse(rawM);
         const m = all.find((x) => x.country.slug === country.slug);
         if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons });
-        setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 2));
+        setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 22));
       }
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -210,7 +279,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons ?? [] });
           const others = (result.top_countries as any[])
             .filter((c: any) => c.slug !== country.slug)
-            .slice(0, 2)
+            .slice(0, 22)
             .map((c: any) => {
               const full = allCountries.find((x) => x.slug === c.slug);
               return full ? { country: full, matchPercent: c.matchPercent, matchScore: 0, reasons: c.reasons ?? [] } : null;
@@ -241,7 +310,12 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   // ── derived data ──────────────────────────────────────────────────────────
 
   const userRole = JOB_ROLES.find((r) => r.key === answers.jobRole) ?? JOB_ROLES[0];
-  const grossSalary = data[userRole.salaryKey] as number;
+  const roleAvgSalary = data[userRole.salaryKey] as number;
+
+  // Use custom salary if Pro and user entered one, else role average
+  const parsedCustom = useCustom && customSalary ? parseInt(customSalary.replace(/[^0-9]/g, ""), 10) : 0;
+  const grossSalary = (isPro && useCustom && parsedCustom > 0) ? parsedCustom : roleAvgSalary;
+
   const { annual: takeHomeAnnual, monthly: takeHomeMonthly } = calcTakeHome(
     grossSalary, data.incomeTaxRateMid, data.socialSecurityRate
   );
@@ -264,83 +338,30 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const hasHighTaxFlag = dealBreakers.includes("lowtax") && data.incomeTaxRateMid > 30;
   const hasCrimeFlag = dealBreakers.includes("lowcrime") && (data.scoreCrimeRate ?? 0) < 7;
 
-  // ── narrative ─────────────────────────────────────────────────────────────
-
   const narrative = getNarrative({
-    slug: country.slug,
-    name: country.name,
-    currency: country.currency,
-    cs,
-    grossSalary,
-    takeHomeMonthly,
-    disposable,
-    disposableUSD,
-    taxRate: data.incomeTaxRateMid,
-    ssRate: data.socialSecurityRate,
-    safetyScore: data.scoreSafety,
-    internetSpeed: data.scoreInternetSpeed,
-    qolScore: data.scoreQualityOfLife,
-    rent: data.costRentCityCentre,
-    visaDifficulty: data.visaDifficulty,
-    isEnglish,
+    slug: country.slug, name: country.name, currency: country.currency, cs,
+    grossSalary, takeHomeMonthly, disposable, disposableUSD,
+    taxRate: data.incomeTaxRateMid, ssRate: data.socialSecurityRate,
+    safetyScore: data.scoreSafety, internetSpeed: data.scoreInternetSpeed,
+    qolScore: data.scoreQualityOfLife, rent: data.costRentCityCentre,
+    visaDifficulty: data.visaDifficulty, isEnglish,
   });
-
-  // ── wins + warnings ───────────────────────────────────────────────────────
 
   const wins: { title: string; sub: string }[] = [];
-  if (grossSalary > 0) wins.push({
-    title: `${userRole.label} salary: ${cs}${grossSalary.toLocaleString()}/yr`,
-    sub: `Take-home ~${cs}${takeHomeMonthly.toLocaleString()}/mo after ${data.incomeTaxRateMid}% tax`,
-  });
-  if (isEU && [
-    "germany","netherlands","portugal","spain","ireland","france","italy",
-    "sweden","switzerland","norway","austria","finland","belgium","denmark",
-  ].includes(country.slug)) wins.push({
-    title: "Your passport makes the visa straightforward",
-    sub: "EU/EFTA freedom of movement — no pre-approval needed in most cases.",
-  });
-  if (rentFits) wins.push({
-    title: "Rent fits your budget",
-    sub: `${cs}${data.costRentCityCentre.toLocaleString()}/mo city centre — within your range.`,
-  });
-  if (data.scoreSafety >= 8.5) wins.push({
-    title: `Safety score ${data.scoreSafety}/10`,
-    sub: answers.priorities?.includes("safety") ? "You ranked this as a priority." : "One of the safer countries in the index.",
-  });
-  if (data.scoreInternetSpeed >= 8 && answers.moveReason === "remote") wins.push({
-    title: `${data.scoreInternetSpeed}/10 internet speed`,
-    sub: "Strong infrastructure for remote work.",
-  });
-  if (isEnglish) wins.push({
-    title: "English spoken",
-    sub: "No language barrier for work or daily life.",
-  });
-  if (data.scoreHealthcare >= 8) wins.push({
-    title: `Healthcare ${data.scoreHealthcare}/10`,
-    sub: "High-quality public or private healthcare system.",
-  });
+  if (grossSalary > 0) wins.push({ title: `${userRole.label} salary: ${cs}${grossSalary.toLocaleString()}/yr`, sub: `Take-home ~${cs}${takeHomeMonthly.toLocaleString()}/mo after ${data.incomeTaxRateMid}% tax` });
+  if (isEU && ["germany","netherlands","portugal","spain","ireland","france","italy","sweden","switzerland","norway","austria","finland","belgium","denmark"].includes(country.slug)) wins.push({ title: "Your passport makes the visa straightforward", sub: "EU/EFTA freedom of movement — no pre-approval needed in most cases." });
+  if (rentFits) wins.push({ title: "Rent fits your budget", sub: `${cs}${data.costRentCityCentre.toLocaleString()}/mo city centre — within your range.` });
+  if (data.scoreSafety >= 8.5) wins.push({ title: `Safety score ${data.scoreSafety}/10`, sub: answers.priorities?.includes("safety") ? "You ranked this as a priority." : "One of the safer countries in the index." });
+  if (data.scoreInternetSpeed >= 8 && answers.moveReason === "remote") wins.push({ title: `${data.scoreInternetSpeed}/10 internet speed`, sub: "Strong infrastructure for remote work." });
+  if (isEnglish) wins.push({ title: "English spoken", sub: "No language barrier for work or daily life." });
+  if (data.scoreHealthcare >= 8) wins.push({ title: `Healthcare ${data.scoreHealthcare}/10`, sub: "High-quality public or private healthcare system." });
 
   const warnings: { title: string; sub: string }[] = [];
-  if (!rentFits && answers.rentBudget !== "any") warnings.push({
-    title: "Rent is above your budget",
-    sub: `${cs}${data.costRentCityCentre.toLocaleString()}/mo is ${Math.abs(rentPct)}% over your range. Consider outer suburbs.`,
-  });
-  if (hasEnglishFlag) warnings.push({
-    title: "Primary language is not English",
-    sub: "You flagged English as a must. Day-to-day life will require learning the local language.",
-  });
-  if (hasHighTaxFlag) warnings.push({
-    title: `Income tax ${data.incomeTaxRateMid}% is above your threshold`,
-    sub: "You flagged low taxes as a priority. This country sits above 30%.",
-  });
-  if (hasCrimeFlag) warnings.push({
-    title: "Crime rate below your threshold",
-    sub: "You flagged low crime as a deal breaker. Check neighbourhood-level data before deciding.",
-  });
-  if (data.visaDifficulty >= 4 && !isEU) warnings.push({
-    title: `Visa difficulty: ${data.visaDifficulty}/5`,
-    sub: "This country has restrictive immigration. Expect a longer, more expensive process.",
-  });
+  if (!rentFits && answers.rentBudget !== "any") warnings.push({ title: "Rent is above your budget", sub: `${cs}${data.costRentCityCentre.toLocaleString()}/mo is ${Math.abs(rentPct)}% over your range. Consider outer suburbs.` });
+  if (hasEnglishFlag) warnings.push({ title: "Primary language is not English", sub: "You flagged English as a must. Day-to-day life will require learning the local language." });
+  if (hasHighTaxFlag) warnings.push({ title: `Income tax ${data.incomeTaxRateMid}% is above your threshold`, sub: "You flagged low taxes as a priority. This country sits above 30%." });
+  if (hasCrimeFlag) warnings.push({ title: "Crime rate below your threshold", sub: "You flagged low crime as a deal breaker. Check neighbourhood-level data before deciding." });
+  if (data.visaDifficulty >= 4 && !isEU) warnings.push({ title: `Visa difficulty: ${data.visaDifficulty}/5`, sub: "This country has restrictive immigration. Expect a longer, more expensive process." });
 
   const visaColor = getVisaColor(data.visaDifficulty);
   const priorities = answers.priorities ?? [];
@@ -348,6 +369,9 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     salary: "Salary", affordability: "Affordability", quality: "Quality of Life",
     safety: "Safety", visa: "Visa Access", tax: "Tax Efficiency",
   };
+
+  const timeline = getMoveTimeline(data.visaDifficulty, isEU);
+  const visaDocs = getVisaChecklist(country.slug);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]" style={{ fontFamily: "var(--font-body, sans-serif)" }}>
@@ -378,27 +402,23 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
 
       <main className="max-w-6xl mx-auto px-6 pb-20 space-y-0">
 
-        {/* ── HERO ─────────────────────────────────────────────────────────── */}
+        {/* ── HERO ───────────────────────────────────────────────────────── */}
         <section className="pt-10 pb-14 text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
             <span className="text-6xl leading-none">{country.flagEmoji}</span>
             {match && (
-              <span className="flex items-center gap-2 px-3 py-1.5 border-2" style={{ borderColor: match ? matchPercentColor(match.percent) : "#00ffd5", boxShadow: `3px 3px 0 ${match ? matchPercentColor(match.percent) : "#00ffd5"}` }}>
+              <span className="flex items-center gap-2 px-3 py-1.5 border-2" style={{ borderColor: matchPercentColor(match.percent), boxShadow: `3px 3px 0 ${matchPercentColor(match.percent)}` }}>
                 <span className="font-heading text-lg font-extrabold" style={{ color: matchPercentColor(match.percent) }}>{match.percent}%</span>
                 <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(match.percent) }}>match</span>
               </span>
             )}
           </div>
-
           <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-6">
             {country.name} · {userRole.label}{answers.passport ? ` · ${answers.passport} passport` : ""}
           </p>
-
-          {/* Narrative sentence — unique per country + conditions */}
           <p className="font-heading text-[28px] sm:text-[38px] leading-[1.15] font-extrabold tracking-[-0.01em] max-w-3xl mx-auto mb-8">
             {narrative}
           </p>
-
           {match?.reasons && match.reasons.length > 0 && (
             <div className="flex flex-wrap gap-2 justify-center mb-8">
               {match.reasons.map((r) => (
@@ -406,7 +426,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               ))}
             </div>
           )}
-
           <div className="flex flex-wrap gap-3 justify-center">
             <a href="#visa" className="inline-block px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>
               View visa path →
@@ -420,19 +439,55 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
         </section>
 
-        {/* ── SALARY ───────────────────────────────────────────────────────── */}
+        {/* ── SALARY ─────────────────────────────────────────────────────── */}
         <section className="py-14 border-t-2 border-[#2a2a2a]">
           <div className="flex items-baseline justify-between mb-8">
             <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Salary</h2>
             <p className="text-xs text-[#888880] hidden md:block">{userRole.label} · {country.currency}</p>
           </div>
 
+          {/* Pro salary calculator */}
+          {isPro && (
+            <div className="mb-6 border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Calculator className="w-3.5 h-3.5 text-accent" />
+                <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Salary calculator</p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center border-2 border-[#2a2a2a] focus-within:border-accent transition-colors">
+                  <span className="px-3 text-[#888880] font-bold text-sm">{cs}</span>
+                  <input
+                    type="number"
+                    placeholder={roleAvgSalary.toLocaleString()}
+                    value={customSalary}
+                    onChange={e => { setCustomSalary(e.target.value); setUseCustom(true); }}
+                    className="w-36 px-2 py-2.5 bg-transparent text-[#f0f0e8] text-sm font-bold outline-none"
+                  />
+                  <span className="px-3 text-[#888880] text-xs font-bold">/yr</span>
+                </div>
+                <button
+                  onClick={() => { setUseCustom(false); setCustomSalary(""); }}
+                  className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest"
+                >
+                  Reset to average
+                </button>
+              </div>
+              {useCustom && parsedCustom > 0 && (
+                <p className="text-[11px] text-[#888880] mt-2">
+                  Showing results for {cs}{parsedCustom.toLocaleString()}/yr — role average is {cs}{roleAvgSalary.toLocaleString()}/yr
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-3 gap-5 mb-6">
-            {/* Gross — always visible */}
+            {/* Gross */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">Gross salary</p>
               <p className="font-heading text-4xl font-extrabold leading-none">{cs}{grossSalary.toLocaleString()}</p>
-              <p className="text-xs text-[#888880] mt-2">/ year as {userRole.label}</p>
+              <p className="text-xs text-[#888880] mt-2">
+                {isPro && useCustom && parsedCustom > 0 ? "your salary" : `/ year as ${userRole.label}`}
+              </p>
             </div>
 
             {/* Take-home — Pro */}
@@ -486,9 +541,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 const freePct = Math.max(0, 100 - rPct - gPct - tPct - uPct);
                 return (
                   <>
-                    <div style={{ width: rPct + "%", background: "#00ffd5" }} className="flex items-center justify-center text-[9px] font-extrabold text-[#0a0a0a] uppercase overflow-hidden px-1">
-                      {rPct > 8 ? "Rent" : ""}
-                    </div>
+                    <div style={{ width: rPct + "%", background: "#00ffd5" }} className="flex items-center justify-center text-[9px] font-extrabold text-[#0a0a0a] uppercase overflow-hidden px-1">{rPct > 8 ? "Rent" : ""}</div>
                     <div style={{ width: gPct + "%", background: "#4ade80" }} className="border-l-2 border-[#0a0a0a]" />
                     <div style={{ width: tPct + "%", background: "#facc15" }} className="border-l-2 border-[#0a0a0a]" />
                     <div style={{ width: uPct + "%", background: "#a78bfa" }} className="border-l-2 border-[#0a0a0a]" />
@@ -516,10 +569,9 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
         </section>
 
-        {/* ── FITS / DOESN'T FIT ────────────────────────────────────────────── */}
+        {/* ── FITS / DOESN'T FIT ─────────────────────────────────────────── */}
         <section className="py-14 border-t-2 border-[#2a2a2a]">
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">What fits, what doesn't</h2>
-
           <div className="grid lg:grid-cols-2 gap-5">
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
@@ -529,14 +581,10 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               {wins.map((w, i) => (
                 <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < wins.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
                   <Check className="w-4 h-4 text-[#4ade80] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold">{w.title}</p>
-                    <p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p>
-                  </div>
+                  <div><p className="text-sm font-bold">{w.title}</p><p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p></div>
                 </div>
               ))}
             </div>
-
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
                 <p className="text-[10px] font-bold text-[#f87171] uppercase tracking-widest">Watch out · {warnings.length}</p>
@@ -545,87 +593,144 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               {warnings.map((w, i) => (
                 <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < warnings.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
                   <X className="w-4 h-4 text-[#f87171] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold">{w.title}</p>
-                    <p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p>
-                  </div>
+                  <div><p className="text-sm font-bold">{w.title}</p><p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p></div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── VISA PATH ─────────────────────────────────────────────────────── */}
+        {/* ── VISA PATH ──────────────────────────────────────────────────── */}
         <section id="visa" className="py-14 border-t-2 border-[#2a2a2a]">
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">
-            Visa <span className="text-[#888880]">~ your route</span>
+            Visa <span className="text-[#888880]">— your route</span>
           </h2>
-
           <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
             <div className="grid grid-cols-3 border-b-2 border-[#2a2a2a]">
               <div className="p-5 border-r-2 border-[#2a2a2a]">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Top route</p>
-                <p className="font-heading text-lg font-extrabold text-accent leading-tight">
-                  {data.visaPopularRoutes?.[0] ?? "Work Permit"}
-                </p>
+                <p className="font-heading text-lg font-extrabold text-accent leading-tight">{data.visaPopularRoutes?.[0] ?? "Work Permit"}</p>
               </div>
               <div className="p-5 border-r-2 border-[#2a2a2a]">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Difficulty</p>
                 <div className="flex items-center gap-2">
-                  <p className="font-heading text-xl font-extrabold" style={{ color: visaColor }}>
-                    {data.visaDifficulty}<span className="text-[#888880] text-sm">/5</span>
-                  </p>
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map((n) => (
-                      <span key={n} className="w-1.5 h-5" style={{ background: n <= data.visaDifficulty ? visaColor : "#1a1a1a" }} />
-                    ))}
-                  </div>
+                  <p className="font-heading text-xl font-extrabold" style={{ color: visaColor }}>{data.visaDifficulty}<span className="text-[#888880] text-sm">/5</span></p>
+                  <div className="flex gap-0.5">{[1,2,3,4,5].map(n => <span key={n} className="w-1.5 h-5" style={{ background: n <= data.visaDifficulty ? visaColor : "#1a1a1a" }} />)}</div>
                 </div>
                 <p className="text-[11px] text-[#888880] mt-1">{getVisaLabel(data.visaDifficulty)}</p>
               </div>
               <div className="p-5">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Passport</p>
-                <p className="font-heading text-xl font-extrabold">
-                  {isEU ? <span className="text-[#4ade80]">EU ✓</span> : <span>{answers.passport ?? "—"}</span>}
-                </p>
-                <p className="text-[11px] text-[#888880] mt-1">
-                  {isEU ? "Freedom of movement" : "Work permit required"}
-                </p>
+                <p className="font-heading text-xl font-extrabold">{isEU ? <span className="text-[#4ade80]">EU ✓</span> : <span>{answers.passport ?? "—"}</span>}</p>
+                <p className="text-[11px] text-[#888880] mt-1">{isEU ? "Freedom of movement" : "Work permit required"}</p>
               </div>
             </div>
-
             <div className="p-6">
               <p className="text-xs text-[#888880] leading-relaxed mb-5">{data.visaNotes}</p>
               {data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {data.visaPopularRoutes.map((r) => (
-                    <span key={r} className="text-[10px] font-bold px-2 py-1 border-2 border-accent text-accent uppercase">{r}</span>
-                  ))}
+                  {data.visaPopularRoutes.map(r => <span key={r} className="text-[10px] font-bold px-2 py-1 border-2 border-accent text-accent uppercase">{r}</span>)}
                 </div>
               )}
-              <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer"
-                className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">
-                Official immigration site →
-              </a>
+              <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">Official immigration site →</a>
             </div>
           </div>
         </section>
 
-        {/* ── COST REALITY ──────────────────────────────────────────────────── */}
+        {/* ── VISA CHECKLIST ─────────────────────────────────────────────── */}
+        <section className="py-14 border-t-2 border-[#2a2a2a]">
+          <div className="flex items-baseline justify-between mb-8">
+            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Visa checklist</h2>
+            {!isPro && <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Pro — full list</span>}
+          </div>
+
+          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
+            <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
+              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Documents you'll need</p>
+            </div>
+
+            {/* Free: first 3 docs */}
+            {visaDocs.slice(0, 3).map((doc, i) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#1a1a1a]">
+                <div className="w-4 h-4 border-2 border-[#2a2a2a] flex-shrink-0" />
+                <p className="text-sm font-bold">{doc}</p>
+              </div>
+            ))}
+
+            {/* Pro: remaining docs */}
+            <div className="relative">
+              <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
+                {visaDocs.slice(3).map((doc, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#1a1a1a] last:border-0">
+                    <div className="w-4 h-4 border-2 border-[#2a2a2a] flex-shrink-0" />
+                    <p className="text-sm font-bold">{doc}</p>
+                  </div>
+                ))}
+              </div>
+              {!isPro && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
+                    <Lock className="w-3.5 h-3.5" /> Full checklist — Pro
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {isPro && (
+              <div className="px-5 py-3 border-t border-[#1a1a1a] bg-[#0a0a0a]">
+                <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">
+                  Official immigration site for full requirements →
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── MOVE TIMELINE (free) ───────────────────────────────────────── */}
+        <section className="py-14 border-t-2 border-[#2a2a2a]">
+          <div className="flex items-baseline justify-between mb-8">
+            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Move timeline</h2>
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">{timeline.months}</p>
+          </div>
+
+          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
+            <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
+              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">
+                Realistic path to {country.name} — based on {isEU ? "EU freedom of movement" : `visa difficulty ${data.visaDifficulty}/5`}
+              </p>
+            </div>
+            {timeline.steps.map((step, i) => (
+              <div key={i} className={`flex items-start gap-4 px-5 py-4 ${i < timeline.steps.length - 1 ? "border-b border-[#111]" : ""}`}>
+                <div className="flex-shrink-0 flex flex-col items-center">
+                  <div className={`w-2.5 h-2.5 rounded-full mt-1 ${i === timeline.steps.length - 1 ? "bg-accent" : "bg-[#2a2a2a]"}`} />
+                  {i < timeline.steps.length - 1 && <div className="w-px flex-1 bg-[#1a1a1a] mt-1 h-full min-h-[20px]" />}
+                </div>
+                <div className="pb-2">
+                  <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-1">{step.month}</p>
+                  <p className={`text-sm font-bold ${i === timeline.steps.length - 1 ? "text-accent" : "text-[#f0f0e8]"}`}>{step.action}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[10px] text-[#888880] mt-3 px-1">
+            Estimates based on typical processing times. Check official sources for current wait times.
+          </p>
+        </section>
+
+        {/* ── COST REALITY ───────────────────────────────────────────────── */}
         <section className="py-14 border-t-2 border-[#2a2a2a]">
           <div className="flex items-baseline justify-between mb-8">
             <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Monthly costs</h2>
             <p className="text-xs text-[#888880] hidden md:block">vs your budget</p>
           </div>
-
           <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
             <div className="grid grid-cols-[1fr_120px_100px] bg-[#0a0a0a] border-b-2 border-[#2a2a2a] px-5 py-3">
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Category</p>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Est.</p>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Status</p>
             </div>
-
-            {/* Line items — Pro only */}
             <div className="relative">
               <div style={{ filter: isPro ? "none" : "blur(6px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
                 {[
@@ -640,9 +745,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                     <p className="font-heading text-sm font-extrabold text-right">{cs}{item.val.toLocaleString()}</p>
                     <div className="flex justify-end">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 border-2"
-                        style={item.budgetKey === "rent" && !rentFits
-                          ? { borderColor: "#f87171", color: "#f87171" }
-                          : { borderColor: "#4ade80", color: "#4ade80" }}>
+                        style={item.budgetKey === "rent" && !rentFits ? { borderColor: "#f87171", color: "#f87171" } : { borderColor: "#4ade80", color: "#4ade80" }}>
                         {item.budgetKey === "rent" && !rentFits ? `+${Math.abs(rentPct)}%` : "OK"}
                       </span>
                     </div>
@@ -657,8 +760,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 </div>
               )}
             </div>
-
-            {/* Total — always visible */}
             <div className="grid grid-cols-[1fr_120px_100px] px-5 py-4 bg-[#0a0a0a] items-center border-t-2 border-[#2a2a2a]">
               <p className="font-heading text-sm font-extrabold uppercase tracking-tight">Total monthly</p>
               <p className="font-heading text-xl font-extrabold text-accent text-right">{cs}{monthlyTotal.toLocaleString()}</p>
@@ -671,45 +772,29 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
         </section>
 
-        {/* ── QUALITY SCORES ────────────────────────────────────────────────── */}
+        {/* ── QUALITY SCORES ─────────────────────────────────────────────── */}
         <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">
-            Scored against your priorities
-          </h2>
-
+          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">Scored against your priorities</h2>
           <div className="grid md:grid-cols-2 gap-5">
-            {/* Score breakdown — scores always visible, ★ You badges Pro only */}
             <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
               <div className="px-5 py-3 border-b-2 border-[#2a2a2a]">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Score breakdown</p>
               </div>
               {scoreBreakdown.map((item, i) => {
                 const Icon = SCORE_ICONS[item.label] ?? Wifi;
-                const isUserPriority = priorities.includes(
-                  Object.entries(priorityLabelMap).find(([, v]) => v === item.label)?.[0] ?? ""
-                );
+                const isUserPriority = priorities.includes(Object.entries(priorityLabelMap).find(([, v]) => v === item.label)?.[0] ?? "");
                 return (
                   <div key={item.label} className={`flex items-center gap-4 px-5 py-3 ${i < scoreBreakdown.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
                     <Icon className="w-4 h-4 flex-shrink-0" style={{ color: item.color }} />
                     <p className="text-xs font-bold uppercase tracking-wider text-[#888880] flex-1">{item.label}</p>
-                    <div className="w-28 h-1.5 bg-[#1a1a1a]">
-                      <div className="h-full" style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} />
-                    </div>
-                    <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: item.color }}>
-                      {Math.round(item.value * 10) / 10}
-                    </p>
-                    {isUserPriority && isPro && (
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-accent text-accent flex-shrink-0">★ You</span>
-                    )}
-                    {isUserPriority && !isPro && (
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-[#2a2a2a] text-[#2a2a2a] flex-shrink-0 select-none" style={{ filter: "blur(3px)" }}>★ You</span>
-                    )}
+                    <div className="w-28 h-1.5 bg-[#1a1a1a]"><div className="h-full" style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} /></div>
+                    <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: item.color }}>{Math.round(item.value * 10) / 10}</p>
+                    {isUserPriority && isPro && <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-accent text-accent flex-shrink-0">★ You</span>}
+                    {isUserPriority && !isPro && <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-[#2a2a2a] text-[#2a2a2a] flex-shrink-0 select-none" style={{ filter: "blur(3px)" }}>★ You</span>}
                   </div>
                 );
               })}
             </div>
-
-            {/* Priorities panel — Pro only */}
             <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-6 flex flex-col overflow-hidden">
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-4">Your priorities</p>
               <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
@@ -717,25 +802,17 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                   <ol className="space-y-3">
                     {priorities.map((p, i) => {
                       const label = priorityLabelMap[p] ?? p;
-                      const score = scoreBreakdown.find((s) => s.label === label);
+                      const score = scoreBreakdown.find(s => s.label === label);
                       return (
                         <li key={p} className="flex items-center gap-3">
-                          <span className="font-heading text-2xl font-extrabold text-accent w-8">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
+                          <span className="font-heading text-2xl font-extrabold text-accent w-8">{String(i + 1).padStart(2, "0")}</span>
                           <span className="flex-1 text-sm font-bold uppercase tracking-tight">{label}</span>
-                          {score && (
-                            <span className="text-xs font-bold" style={{ color: scoreColor(score.value) }}>
-                              {Math.round(score.value * 10) / 10}
-                            </span>
-                          )}
+                          {score && <span className="text-xs font-bold" style={{ color: scoreColor(score.value) }}>{Math.round(score.value * 10) / 10}</span>}
                         </li>
                       );
                     })}
                   </ol>
-                ) : (
-                  <p className="text-sm text-[#888880]">No priorities selected in wizard.</p>
-                )}
+                ) : <p className="text-sm text-[#888880]">No priorities selected in wizard.</p>}
               </div>
               {!isPro && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]/60">
@@ -748,15 +825,13 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
         </section>
 
-        {/* ── OTHER MATCHES ─────────────────────────────────────────────────── */}
+        {/* ── OTHER MATCHES ──────────────────────────────────────────────── */}
         <section id="compare" className="py-14 border-t-2 border-[#2a2a2a]">
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">Your other matches</h2>
-
           <div className="grid md:grid-cols-2 gap-5 mb-8">
             {otherMatches.slice(0, 2).map((m, i) => (
               <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
-                className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5 hover:border-accent transition-all group block"
-                style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
+                className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5 hover:border-accent transition-all group block" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-3xl">{m.country.flagEmoji}</span>
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#888880]">#{i + 2}</span>
@@ -768,9 +843,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                   <span className="text-[11px] text-[#888880]">match</span>
                 </div>
                 <div className="mt-4 pt-4 border-t border-[#2a2a2a] flex items-center justify-between">
-                  <span className="text-[11px] text-[#888880]">
-                    {sym(m.country.currency)}{(m.country.data[userRole.salaryKey] as number).toLocaleString()} · {getVisaLabel(m.country.data.visaDifficulty)}
-                  </span>
+                  <span className="text-[11px] text-[#888880]">{sym(m.country.currency)}{(m.country.data[userRole.salaryKey] as number).toLocaleString()} · {getVisaLabel(m.country.data.visaDifficulty)}</span>
                   <span className="text-[11px] font-bold text-accent uppercase tracking-wider group-hover:translate-x-1 transition-transform">View →</span>
                 </div>
               </Link>
@@ -781,36 +854,62 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
             <div className="px-5 py-4 border-b-2 border-[#2a2a2a] flex items-center justify-between">
               <p className="text-[10px] font-bold text-[#f0f0e8] uppercase tracking-widest">22 more countries · ranked for you</p>
-              <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €5</span>
+              <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €19</span>
             </div>
-            <div className="relative">
-              <div style={{ filter: isPro ? "none" : "blur(4px) saturate(0.4)", opacity: isPro ? 1 : 0.5, pointerEvents: isPro ? "auto" : "none" }}>
-                {[4,5,6,7,8].map((n) => (
-                  <div key={n} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a]">
-                    <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(n).padStart(2, "0")}</span>
-                    <span className="text-xl">🌍</span>
-                    <span className="text-sm font-bold flex-1">Country {n}</span>
-                    <div className="w-32 h-1.5 bg-[#1a1a1a]">
-                      <div className="h-full bg-[#4ade80]" style={{ width: `${90 - n * 4}%` }} />
-                    </div>
-                    <p className="font-heading text-sm font-extrabold w-10 text-right">{90 - n * 4}%</p>
+            {isPro ? (
+              /* Pro — show real remaining matches */
+              <div>
+                {otherMatches.slice(2).length === 0 ? (
+                  <div className="px-5 py-6 text-center">
+                    <p className="text-sm text-[#888880]">Run the wizard to generate your full ranking.</p>
+                    <Link href="/wizard" className="inline-block mt-3 text-[11px] font-bold text-accent uppercase tracking-widest hover:underline">
+                      Run quiz →
+                    </Link>
                   </div>
-                ))}
+                ) : (
+                  otherMatches.slice(2).map((m, i) => (
+                    <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
+                      className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a] hover:bg-[#0d0d0d] transition-colors last:border-0">
+                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(i + 4).padStart(2, "0")}</span>
+                      <span className="text-xl">{m.country.flagEmoji}</span>
+                      <span className="text-sm font-bold flex-1 uppercase tracking-tight">{m.country.name}</span>
+                      <div className="w-32 h-1.5 bg-[#1a1a1a]">
+                        <div className="h-full" style={{ width: `${m.matchPercent}%`, background: matchPercentColor(m.matchPercent) }} />
+                      </div>
+                      <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: matchPercentColor(m.matchPercent) }}>
+                        {m.matchPercent}%
+                      </p>
+                    </Link>
+                  ))
+                )}
               </div>
-              {!isPro && (
+            ) : (
+              /* Non-Pro — blurred fake rows */
+              <div className="relative">
+                <div style={{ filter: "blur(4px) saturate(0.4)", opacity: 0.5, pointerEvents: "none" }}>
+                  {[4,5,6,7,8].map(n => (
+                    <div key={n} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a]">
+                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(n).padStart(2, "0")}</span>
+                      <span className="text-xl">🌍</span>
+                      <span className="text-sm font-bold flex-1">———</span>
+                      <div className="w-32 h-1.5 bg-[#1a1a1a]"><div className="h-full bg-[#4ade80]" style={{ width: `${90 - n * 4}%` }} /></div>
+                      <p className="font-heading text-sm font-extrabold w-10 text-right">{90 - n * 4}%</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
                     <Lock className="w-3.5 h-3.5 text-accent" />
                     <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries — Pro</span>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             {!isPro && (
               <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
                 <div>
-                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 ~ €5 once</p>
-                  <p className="text-[11px] text-[#888880] mt-0.5">Full ranking · compare · take-home calculator · visa timelines</p>
+                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 — €19 once</p>
+                  <p className="text-[11px] text-[#888880] mt-0.5">Full ranking · salary calculator · visa checklist · 3-country compare</p>
                 </div>
                 <Link href="/pro" className="px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>
                   Upgrade
