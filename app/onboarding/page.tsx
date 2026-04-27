@@ -131,7 +131,7 @@ export default function OnboardingPage() {
           {/* Step 1 — Passport */}
           {step === 1 && (
             <div className="animate-fade-up" style={{ opacity: 0, animationFillMode: 'forwards' }}>
-              <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-3">Step 1 of 2</p>
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-3">step 1 of 2</p>
               <h1 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2">
                 Which passport do you hold?
               </h1>
@@ -183,7 +183,7 @@ export default function OnboardingPage() {
               <div className="flex items-center justify-between mt-8">
                 <button onClick={() => { setPassportSlug(null); setStep(2) }}
                   className="text-xs font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
-                  Skip for now
+                 I'll do this later
                 </button>
                 <button onClick={() => setStep(2)}
                   className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide flex items-center gap-2">
@@ -196,7 +196,7 @@ export default function OnboardingPage() {
           {/* Step 2 — Job */}
           {step === 2 && (
             <div className="animate-fade-up" style={{ opacity: 0, animationFillMode: 'forwards' }}>
-              <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-3">Step 2 of 2</p>
+             <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-3">step 2 of 2</p>
               <h1 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2">
                 What do you do?
               </h1>
