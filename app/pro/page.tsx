@@ -45,11 +45,11 @@ const PRO_FEATURES = [
 const FAQS = [
   {
     q: 'Is this really a one-time payment?',
-    a: '€19 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.',
+    a: '€19.99 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.',
   },
   {
-    q: 'Why €19 and not less?',
-    a: 'A single immigration lawyer consultation costs €200–500. Origio gives you the data to make that decision yourself. €19 is fair for what it does.',
+    q: 'Why €19.99 and not less?',
+    a: 'A single immigration lawyer consultation costs €200–500. Origio gives you the data to make that decision yourself. €19.99 is fair for what it does.',
   },
   {
     q: 'What payment methods are accepted?',
@@ -139,7 +139,7 @@ export default function ProPage() {
               style={{ boxShadow: loading ? 'none' : '3px 3px 0 #00aa90' }}
             >
               <Zap className="w-3.5 h-3.5 inline mr-2" />
-              {loading ? 'Redirecting…' : 'Get Pro — €19'}
+              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
             </button>
             <a href="#pricing"
               className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] border border-[#2a2a2a] text-[#888880] hover:text-[#f0f0e8] hover:border-[#444] transition-colors">
@@ -214,7 +214,7 @@ export default function ProPage() {
               </div>
               <p className="text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-4">Pro</p>
               <div className="flex items-baseline gap-2 mb-1">
-                <p className="font-heading text-5xl font-extrabold">€19</p>
+                <p className="font-heading text-5xl font-extrabold">€19.99</p>
               </div>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-8">One-time · Forever</p>
               <div className="space-y-3 mb-8">
@@ -233,7 +233,7 @@ export default function ProPage() {
                 className="w-full py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a] disabled:opacity-50"
                 style={{ boxShadow: loading ? 'none' : '2px 2px 0 #00aa90' }}
               >
-                {loading ? 'Redirecting…' : 'Get Pro — €19'}
+                {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
               </button>
             </div>
           </div>
@@ -282,7 +282,7 @@ export default function ProPage() {
               style={{ boxShadow: loading ? 'none' : '3px 3px 0 #00aa90' }}
             >
               <Zap className="w-3.5 h-3.5 inline mr-2" />
-              {loading ? 'Redirecting…' : 'Get Pro — €19'}
+              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
             </button>
             <Link href="/wizard"
               className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
