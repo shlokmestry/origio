@@ -19,6 +19,13 @@ const LOADING_STEPS = [
 
 const RANK_COLORS = ["#00ffd5", "#facc15", "#a78bfa"];
 
+// Match % color scale: green 90+, yellow 75-89, gray below
+function matchPercentColor(pct: number): string {
+  if (pct >= 90) return "#4ade80";
+  if (pct >= 75) return "#facc15";
+  return "#888880";
+}
+
 const ROLE_TO_GUIDE: Record<string, string> = {
   softwareEngineer: "software-engineers",
   productManager:   "product-managers",
@@ -178,7 +185,7 @@ export default function WizardResultsPage() {
           <div className="text-7xl">{top.country.flagEmoji}</div>
           <div>
             <h1 className="font-heading text-5xl font-extrabold uppercase tracking-tight text-text-primary">{top.country.name}</h1>
-            <p className="text-accent font-bold text-xl mt-1">{top.matchPercent}% match</p>
+            <p className="font-bold text-xl mt-1" style={{ color: matchPercentColor(top.matchPercent) }}>{top.matchPercent}% match</p>
           </div>
           {top.reasons.length > 0 && (
             <div className="flex flex-wrap gap-2 justify-center">
@@ -222,7 +229,7 @@ export default function WizardResultsPage() {
                 </span>
                 <span className="text-2xl">{match.country.flagEmoji}</span>
                 <span className="font-heading font-bold text-text-primary uppercase tracking-tight flex-1">{match.country.name}</span>
-                <span className="font-bold text-sm" style={{ color: i < 3 ? RANK_COLORS[i] : "#666" }}>{match.matchPercent}%</span>
+                <span className="font-bold text-sm" style={{ color: matchPercentColor(match.matchPercent) }}>{match.matchPercent}%</span>
               </Link>
             ))}
           </div>

@@ -76,8 +76,12 @@ function formatRole(r: string) {
 function formatSlug(slug: string) {
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
+function matchPercentColor(pct: number): string {
+  if (pct >= 90) return '#4ade80'
+  if (pct >= 75) return '#facc15'
+  return '#888880'
+}
 
-const MATCH_COLORS = ['#00ffd5', '#facc15', '#a78bfa']
 const MATCH_LABELS = ['Best Match', '2nd', '3rd']
 
 export default function ProfilePage() {
@@ -212,7 +216,6 @@ export default function ProfilePage() {
     p.name.toLowerCase().includes(passportSearch.toLowerCase())
   )
 
-  // Loading state
   if (loading || authLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
       <div className="w-8 h-8 border-2 border-[#2a2a2a] border-t-accent animate-spin" />
@@ -240,7 +243,6 @@ export default function ProfilePage() {
         <div className="max-w-5xl mx-auto px-6 pt-20 pb-8">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              {/* Avatar */}
               {user.user_metadata?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.user_metadata.avatar_url} alt="avatar"
@@ -278,7 +280,6 @@ export default function ProfilePage() {
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
 
-        {/* Pro upgrade banner */}
         {!isPro && (
           <div className="border-2 border-accent p-5 flex items-center justify-between gap-4 flex-wrap"
             style={{ boxShadow: '4px 4px 0 #00ffd5' }}>
@@ -325,27 +326,32 @@ export default function ProfilePage() {
                       <span className="text-3xl">{topMatch.flagEmoji}</span>
                       <div>
                         <p className="font-heading font-extrabold text-text-primary uppercase tracking-tight">{topMatch.name}</p>
-                        <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Best Match</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(capPercent(topMatch.matchPercent ?? 0)) }}>Best Match</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-heading text-2xl font-extrabold text-accent">{capPercent(topMatch.matchPercent ?? 0)}%</p>
+                      <p className="font-heading text-2xl font-extrabold" style={{ color: matchPercentColor(capPercent(topMatch.matchPercent ?? 0)) }}>
+                        {capPercent(topMatch.matchPercent ?? 0)}%
+                      </p>
                       <p className="text-[10px] font-bold text-text-muted uppercase">match</p>
                     </div>
                   </div>
                 )}
                 {/* Other matches */}
-                {wizardResult.top_countries.slice(1).map((c, i) => (
-                  <div key={c.slug} className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1a1a] last:border-0">
-                    <span className="border px-1.5 py-0.5 text-[10px] font-bold uppercase"
-                      style={{ borderColor: MATCH_COLORS[i + 1], color: MATCH_COLORS[i + 1] }}>
-                      {MATCH_LABELS[i + 1]}
-                    </span>
-                    <span className="text-lg">{c.flagEmoji}</span>
-                    <span className="text-sm font-medium text-text-primary flex-1">{c.name}</span>
-                    <span className="text-xs font-bold" style={{ color: MATCH_COLORS[i + 1] }}>{capPercent(c.matchPercent)}%</span>
-                  </div>
-                ))}
+                {wizardResult.top_countries.slice(1).map((c, i) => {
+                  const pctColor = matchPercentColor(capPercent(c.matchPercent))
+                  return (
+                    <div key={c.slug} className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1a1a] last:border-0">
+                      <span className="border px-1.5 py-0.5 text-[10px] font-bold uppercase"
+                        style={{ borderColor: pctColor, color: pctColor }}>
+                        {MATCH_LABELS[i + 1]}
+                      </span>
+                      <span className="text-lg">{c.flagEmoji}</span>
+                      <span className="text-sm font-medium text-text-primary flex-1">{c.name}</span>
+                      <span className="text-xs font-bold" style={{ color: pctColor }}>{capPercent(c.matchPercent)}%</span>
+                    </div>
+                  )
+                })}
                 <div className="px-5 py-2.5 border-t-2 border-[#2a2a2a]">
                   <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
                     {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
@@ -443,14 +449,12 @@ export default function ProfilePage() {
                 <input value={editName} onChange={e => setEditName(e.target.value)}
                   className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium outline-none transition-colors" />
               </div>
-
               <div>
                 <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Job title</label>
                 <input value={editJobTitle} onChange={e => setEditJobTitle(e.target.value)}
                   placeholder="e.g. Software Engineer, Nurse, Student..."
                   className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium placeholder:text-text-muted outline-none transition-colors" />
               </div>
-
               <div>
                 <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Passport</label>
                 {editPassport && (

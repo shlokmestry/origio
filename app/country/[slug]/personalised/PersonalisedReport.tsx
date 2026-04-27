@@ -59,6 +59,12 @@ function scoreColor(v: number) {
   return "#f87171";
 }
 
+function matchPercentColor(pct: number): string {
+  if (pct >= 90) return "#4ade80";
+  if (pct >= 75) return "#facc15";
+  return "#888880";
+}
+
 function calcTakeHome(gross: number, taxRate: number, ssRate: number) {
   const net = gross * (1 - taxRate / 100) * (1 - ssRate / 100);
   return { annual: Math.round(net), monthly: Math.round(net / 12) };
@@ -377,9 +383,9 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div className="flex items-center justify-center gap-3 mb-8">
             <span className="text-6xl leading-none">{country.flagEmoji}</span>
             {match && (
-              <span className="flex items-center gap-2 px-3 py-1.5 border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-                <span className="font-heading text-lg font-extrabold text-accent">{match.percent}%</span>
-                <span className="text-[10px] font-bold text-accent uppercase tracking-widest">match</span>
+              <span className="flex items-center gap-2 px-3 py-1.5 border-2" style={{ borderColor: match ? matchPercentColor(match.percent) : "#00ffd5", boxShadow: `3px 3px 0 ${match ? matchPercentColor(match.percent) : "#00ffd5"}` }}>
+                <span className="font-heading text-lg font-extrabold" style={{ color: matchPercentColor(match.percent) }}>{match.percent}%</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(match.percent) }}>match</span>
               </span>
             )}
           </div>
@@ -758,7 +764,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-1">{i + 2 === 2 ? "2nd" : "3rd"} best match</p>
                 <p className="font-heading text-2xl font-extrabold uppercase">{m.country.name}</p>
                 <div className="flex items-baseline gap-2 mt-3">
-                  <span className="font-heading text-3xl font-extrabold text-accent">{m.matchPercent}<span className="text-[#888880] text-base">%</span></span>
+                  <span className="font-heading text-3xl font-extrabold" style={{ color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}<span className="text-[#888880] text-base">%</span></span>
                   <span className="text-[11px] text-[#888880]">match</span>
                 </div>
                 <div className="mt-4 pt-4 border-t border-[#2a2a2a] flex items-center justify-between">
