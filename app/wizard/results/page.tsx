@@ -118,7 +118,7 @@ export default function WizardResultsPage() {
   };
 
   const jobRoleDef = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches = isPro ? matches.slice(0, 25) : user ? matches.slice(0, 10) : matches.slice(0, 3);
+  const visibleMatches = isPro ? matches.slice(0, 25) : matches.slice(0, 3);
   const compareHref = matches.length >= 3
     ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}`
     : "/compare";
