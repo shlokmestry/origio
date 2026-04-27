@@ -100,61 +100,61 @@ function getNarrative(a: NarrativeArgs): string {
 
   // UAE — tax = 0
   if (a.slug === "uae") {
-    return `Zero income tax and zero social security deductions. What you earn, ${g} a year, is almost exactly what you keep. The UAE is one of the very few places in the world where that sentence is literally true.`;
+    return `Zero tax. What you earn — ${g} — is what you keep. The UAE is one of the few places where that's literally true.`;
   }
 
   // Japan — its own world
   if (a.slug === "japan") {
-    return `You'd earn ${g} gross and step into a work culture unlike anything in Europe. The language takes years to pick up properly. But Japan scores ${a.safetyScore}/10 on safety and has a quality of life that quietly surprises almost everyone who actually makes the move.`;
+    return `Modest salary, tough language, safety score of ${a.safetyScore}/10. Japan surprises almost everyone who actually moves there.`;
   }
 
   // Safety flag — low safety countries
   if (a.safetyScore < 6) {
-    return `On paper, ${g} gross with ${disp} left over each month looks workable. The catch is that safety scores ${a.safetyScore}/10 here. That number shapes where you can afford to live, how freely you move around, and what the safer neighbourhoods actually cost.`;
+    return `The numbers look fine on paper. Safety scores ${a.safetyScore}/10 here — that shapes where you can live and what it costs.`;
   }
 
   // High tax welfare states
   if (HIGH_TAX_COUNTRIES.includes(a.slug) || a.taxRate > 45) {
-    return `${a.name} will take ${a.taxRate}% of your salary. What comes back is harder to put a number on: free healthcare for you and your family, free university education, and some of the most generous parental leave in the world. Whether that trade works for you is the real question.`;
+    return `${a.name} takes ${a.taxRate}% in tax. Free healthcare, free university, generous parental leave. Decide if that trade works for you.`;
   }
 
   // Singapore / high internet + English
   if (a.internetSpeed >= 8.5 && a.isEnglish && a.slug === "singapore") {
-    return `${a.internetSpeed} out of 10 for internet speed, infrastructure that actually works, and English spoken everywhere. If your income follows you remotely, Singapore removes almost every friction point. You keep ${disp} a month after costs. You just pay for the privilege of being there.`;
+    return `${a.internetSpeed}/10 internet, English everywhere, ${disp}/mo left after costs. Singapore removes every friction point. You pay for the privilege.`;
   }
 
   // UK — high rent warning
   if (a.slug === "united-kingdom") {
-    return `The salary looks strong on paper until ${r} a month in rent and a National Insurance bill land in the same week. London gives generously and takes back just as fast. After all of that, your monthly surplus sits at ${disp}.`;
+    return `Strong salary until ${r}/mo rent and National Insurance land. London gives and takes. You're left with ${disp}/mo.`;
   }
 
   // Australia / Canada / NZ — wealth builders (low SS + decent disposable)
   if (["australia", "canada", "new-zealand"].includes(a.slug) && a.ssRate < 10 && !isTight) {
-    return `${g} gross, a social security rate low enough that it barely registers, and ${disp} left after costs each month. ${a.name} is one of the few places where a mid-career professional can actually build wealth rather than just get by.`;
+    return `${g} gross, minimal social security, ${disp} left over. ${a.name} is one of the few places you can actually build wealth.`;
   }
 
   // Ireland — English + easy visa
   if (a.slug === "ireland") {
-    return `No language barrier, no culture shock, and a visa process that is more straightforward than most. Ireland is the smoothest landing pad for English-speaking professionals who want to stay in Europe. You do pay for that convenience though, and ${r} a month in rent is where you feel it most.`;
+    return `English, no visa lottery, straightforward process. Smoothest landing pad in Europe. Rent is ${r}/mo — that's where you feel it.`;
   }
 
   // High saver — disposable > 1000 USD
   if (a.disposableUSD >= 1000) {
-    return `${g} gross, manageable costs, and ${disp} left over every month. Not many countries make that combination possible for your role. ${a.name} is one of them.`;
+    return `${g} gross, ${disp} left every month. Not many countries make that possible. ${a.name} is one of them.`;
   }
 
   // Quality of life play — decent QoL but tight savings
   if (a.qolScore >= 7.5 && isTight) {
-    return `The weather is good, the food is genuinely great, and ${disp} a month in surplus is not going to make you rich anytime soon. ${a.name} is a quality of life move, not a wealth-building one. Whether that trade is worth it depends entirely on what you are actually optimising for.`;
+    return `${disp}/mo surplus won't make you rich. ${a.name} is a quality of life move, not a wealth-building one.`;
   }
 
   // Low saver fallback — tight savings in any other country
   if (isTight) {
-    return `The salary is real. ${g} gross, ${th} a month in hand. But ${a.name} is not as affordable as it used to be. After costs you would have ${disp} left. Enough to live comfortably, not enough to save at any meaningful pace.`;
+    return `${g} gross, ${th}/mo in hand, ${disp} left after costs. Enough to live. Not enough to save fast.`;
   }
 
   // Generic good outcome
-  return `${g} gross, manageable costs, and ${disp} left over every month. Not many countries make that combination possible for your role. ${a.name} is one of them.`;
+  return `${g} gross, ${disp} left every month. Not many countries make that possible. ${a.name} is one of them.`;
 }
 
 // ── types ──────────────────────────────────────────────────────────────────
@@ -558,7 +558,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         {/* ── VISA PATH ─────────────────────────────────────────────────────── */}
         <section id="visa" className="py-14 border-t-2 border-[#2a2a2a]">
           <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">
-            Visa <span className="text-[#888880]">— your route</span>
+            Visa <span className="text-[#888880]">~ your route</span>
           </h2>
 
           <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
@@ -809,7 +809,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
             {!isPro && (
               <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
                 <div>
-                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 — €5 once</p>
+                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 ~ €5 once</p>
                   <p className="text-[11px] text-[#888880] mt-0.5">Full ranking · compare · take-home calculator · visa timelines</p>
                 </div>
                 <Link href="/pro" className="px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>

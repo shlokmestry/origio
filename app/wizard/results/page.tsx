@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Globe2, Star, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe2, Sparkles } from "lucide-react";
 import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -19,22 +19,21 @@ const LOADING_STEPS = [
 
 const RANK_COLORS = ["#00ffd5", "#facc15", "#a78bfa"];
 
-// Match % color scale: green 90+, yellow 75-89, gray below
 function matchPercentColor(pct: number): string {
   if (pct >= 90) return "#4ade80";
   if (pct >= 75) return "#facc15";
   return "#888880";
 }
 
-const ROLE_TO_GUIDE: Record<string, string> = {
-  softwareEngineer: "software-engineers",
-  productManager:   "product-managers",
-  uxDesigner:       "designers",
-  nurse:            "nurses",
-  teacher:          "teachers",
-  accountant:       "accountants",
-  marketingManager: "marketing-managers",
-};
+function getCurrencySymbol(currency: string): string {
+  const s: Record<string, string> = {
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
+    NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ",
+    NOK: "kr ", SEK: "kr ", JPY: "¥", INR: "₹", BRL: "R$",
+    MYR: "RM ", DKK: "kr ",
+  };
+  return s[currency] ?? currency + " ";
+}
 
 export default function WizardResultsPage() {
   const router = useRouter();
@@ -83,7 +82,7 @@ export default function WizardResultsPage() {
 
   useEffect(() => {
     if (!isLoading && matches.length > 0 && user) {
-      const saveToSupabase = async () => {
+      const save = async () => {
         try {
           const topCountries = matches.slice(0, 10).map(m => ({
             slug: m.country.slug,
@@ -92,58 +91,43 @@ export default function WizardResultsPage() {
             matchPercent: m.matchPercent,
             reasons: m.reasons,
           }));
-
-          const { data: existing } = await supabase.from('wizard_results')
-            .select('id').eq('user_id', user.id).maybeSingle();
-
+          const { data: existing } = await supabase.from("wizard_results").select("id").eq("user_id", user.id).maybeSingle();
           if (existing) {
-            await supabase.from('wizard_results').update({
-              top_countries: topCountries,
-              answers: answers,
-              created_at: new Date().toISOString()
-            }).eq('id', existing.id);
+            await supabase.from("wizard_results").update({ top_countries: topCountries, answers, created_at: new Date().toISOString() }).eq("id", existing.id);
           } else {
-            await supabase.from('wizard_results').insert({
-              user_id: user.id,
-              top_countries: topCountries,
-              answers: answers,
-              created_at: new Date().toISOString()
-            });
+            await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
           }
-        } catch (err) {
-          console.error('Failed to save wizard results:', err);
-        }
+        } catch (err) { console.error("Failed to save wizard results:", err); }
       };
-      saveToSupabase();
+      save();
     }
   }, [isLoading, matches, user, answers]);
 
   const handleViewOnGlobe = () => {
-    const slugs = matches.slice(0, 3).map((m) => m.country.slug);
-    sessionStorage.setItem("highlightedCountries", JSON.stringify(slugs));
+    sessionStorage.setItem("highlightedCountries", JSON.stringify(matches.slice(0, 3).map(m => m.country.slug)));
     sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
     router.push("/");
   };
 
+  const jobRoleDef = JOB_ROLES.find(r => r.key === answers.jobRole);
   const visibleMatches = isPro ? matches.slice(0, 25) : user ? matches.slice(0, 10) : matches.slice(0, 3);
-  const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
 
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-sm text-center space-y-8">
+        <div className="w-full max-w-sm space-y-8">
           <div className="relative mx-auto w-20 h-20 border-2 border-[#2a2a2a] flex items-center justify-center">
             <Globe2 className="w-10 h-10 text-accent animate-spin" style={{ animationDuration: "3s" }} />
             <div className="absolute inset-0 border-2 border-accent animate-ping opacity-20" />
           </div>
-          <div className="space-y-2">
-            <h2 className="font-heading text-2xl font-extrabold text-text-primary uppercase tracking-tight">Finding your country...</h2>
-            <p key={loadingStep} className="text-text-muted text-sm animate-fade-up font-medium">{LOADING_STEPS[loadingStep]}</p>
+          <div className="space-y-1">
+            <h2 className="font-heading text-2xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">Finding your country...</h2>
+            <p key={loadingStep} className="text-[#888880] text-sm font-medium">{LOADING_STEPS[loadingStep]}</p>
           </div>
-          <div className="w-full h-2 bg-[#1a1a1a] border-2 border-[#2a2a2a]">
+          <div className="w-full h-1 bg-[#1a1a1a]">
             <div className="h-full bg-accent transition-all duration-100 ease-linear" style={{ width: loadingProgress + "%" }} />
           </div>
-          <p className="text-xs font-bold text-text-muted uppercase tracking-widest">{loadingProgress}%</p>
         </div>
       </div>
     );
@@ -151,125 +135,254 @@ export default function WizardResultsPage() {
 
   if (matches.length === 0) return null;
   const top = matches[0];
-
-  const guideSlug = answers.jobRole ? ROLE_TO_GUIDE[answers.jobRole] : null;
-  const guideHref = guideSlug ? `/guides/${guideSlug}` : `/country/${top.country.slug}/personalised`;
-  const guideLabel = guideSlug
-    ? `${jobRoleDef?.label ?? "Relocation"} Guide`
-    : `${top.country.name} Report`;
+  const pctColor = matchPercentColor(top.matchPercent);
+  const topCs = getCurrencySymbol(top.country.currency);
+  const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
+  const compareHref = `/compare?a=${matches[0]?.country.slug}&b=${matches[1]?.country.slug}&c=${matches[2]?.country.slug}`;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]" style={{ opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#2a2a2a]">
-        <button onClick={() => router.push("/wizard")} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
-          <ArrowLeft className="w-4 h-4" /> Retake
+    <div
+      className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]"
+      style={{ opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}
+    >
+      {/* Nav */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a]">
+        <button onClick={() => router.push("/wizard")}
+          className="flex items-center gap-1.5 text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
+          <ArrowLeft className="w-3.5 h-3.5" /> Retake
         </button>
-        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
-          <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
+        <a href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <div className="w-3 h-3 bg-accent border-2 border-[#f0f0e8]" />
+          <span className="font-heading font-extrabold uppercase tracking-tight text-sm">Origio</span>
         </a>
-        <button onClick={handleViewOnGlobe} className="text-sm font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">
-          View on Globe
+        <button onClick={handleViewOnGlobe}
+          className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
+          Globe
         </button>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
+      {/* Two-column layout */}
+      <div className="max-w-6xl mx-auto px-6 py-12 lg:grid lg:grid-cols-[1fr_420px] lg:gap-16 lg:items-start space-y-12 lg:space-y-0">
 
-        {/* Top match hero */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 border-2 border-accent text-accent text-xs font-bold px-3 py-1.5 uppercase tracking-widest">
-            <Star className="w-3 h-3" /> Your top match
+        {/* ── LEFT: Hero ──────────────────────────────────────────────────── */}
+        <div>
+          {/* Eyebrow */}
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-6">
+            Your top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
+          </p>
+
+          {/* Flag + name */}
+          <div className="flex items-start gap-5 mb-5">
+            <span className="text-6xl leading-none flex-shrink-0">{top.country.flagEmoji}</span>
+            <div>
+              <h1 className="font-heading text-[56px] sm:text-[72px] leading-[0.9] font-extrabold uppercase tracking-[-0.02em] text-[#f0f0e8]">
+                {top.country.name}
+              </h1>
+              <div className="flex items-baseline gap-2 mt-3">
+                <span className="font-heading text-4xl font-extrabold" style={{ color: pctColor }}>
+                  {top.matchPercent}%
+                </span>
+                <span className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">match</span>
+              </div>
+            </div>
           </div>
-          <div className="text-7xl">{top.country.flagEmoji}</div>
-          <div>
-            <h1 className="font-heading text-5xl font-extrabold uppercase tracking-tight text-text-primary">{top.country.name}</h1>
-            <p className="font-bold text-xl mt-1" style={{ color: matchPercentColor(top.matchPercent) }}>{top.matchPercent}% match</p>
-          </div>
+
+          {/* Key stat line */}
+          {topSalary && (
+            <p className="text-[13px] font-bold text-[#888880] mb-6 tracking-wide">
+              {topCs}{topSalary.toLocaleString()}/yr · {top.country.language} · Visa {top.country.data.visaDifficulty}/5
+            </p>
+          )}
+
+          {/* Reason tags */}
           {top.reasons.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center">
-              {top.reasons.map((r) => (
-                <span key={r} className="text-xs font-bold px-3 py-1 border-2 border-accent text-accent uppercase tracking-wide">{r}</span>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {top.reasons.map(r => (
+                <span key={r}
+                  className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest"
+                  style={{ border: `1px solid ${pctColor}60`, color: pctColor }}>
+                  {r}
+                </span>
               ))}
             </div>
           )}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Link href={"/country/" + top.country.slug + "/personalised"} className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
-              View Full Report
+
+          {/* CTAs — no rounded corners, sharp, editorial */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-10">
+            <Link
+              href={"/country/" + top.country.slug + "/personalised"}
+              className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
+              style={{ boxShadow: "3px 3px 0 #00aa90" }}
+            >
+              View full report
             </Link>
-            <button onClick={handleViewOnGlobe} className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
-              See on Globe
+            <button
+              onClick={handleViewOnGlobe}
+              className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] border border-[#2a2a2a] text-[#888880] hover:text-[#f0f0e8] hover:border-[#444] transition-colors"
+            >
+              See on globe
             </button>
           </div>
 
-          {/* Next-step CTA */}
-          <Link
-            href={guideHref}
-            className="inline-flex items-center gap-2 text-sm font-bold text-text-muted hover:text-accent transition-colors group"
-          >
-            Ready to explore {top.country.name}?
-            <span className="text-accent group-hover:underline">{guideLabel}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-accent" />
-          </Link>
-        </div>
+          {/* Divider */}
+          <div className="border-t border-[#1a1a1a] pt-8">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-4">Your top 3</p>
+            <div className="space-y-3">
+              {matches.slice(0, 3).map((m, i) => {
+                const cs = getCurrencySymbol(m.country.currency);
+                const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
+                return (
+                  <Link
+                    key={m.country.slug}
+                    href={"/country/" + m.country.slug + "/personalised"}
+                    className="flex items-center gap-4 py-3 border-b border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors group"
+                  >
+                    <span className="font-heading text-xs font-extrabold w-4 flex-shrink-0" style={{ color: RANK_COLORS[i] }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-xl flex-shrink-0">{m.country.flagEmoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-heading text-sm font-extrabold uppercase tracking-tight text-[#f0f0e8]">{m.country.name}</p>
+                      {salary && (
+                        <p className="text-[10px] text-[#888880] font-medium mt-0.5">
+                          {cs}{salary.toLocaleString()}/yr · {m.country.language}
+                        </p>
+                      )}
+                    </div>
+                    <span className="font-heading text-base font-extrabold flex-shrink-0" style={{ color: matchPercentColor(m.matchPercent) }}>
+                      {m.matchPercent}%
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
 
-        {/* Rankings list */}
-        <div>
-          <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-4">
-            Your full ranking {jobRoleDef ? `· ${jobRoleDef.label}` : ""}
-          </p>
-          <div className="space-y-2">
-            {visibleMatches.map((match, i) => (
-              <Link key={match.country.slug} href={"/country/" + match.country.slug + "/personalised"}
-                className="flex items-center gap-4 p-4 border-2 border-[#2a2a2a] bg-[#111111] hover:border-text-primary transition-all group"
-                style={i < 3 ? { boxShadow: "3px 3px 0 " + RANK_COLORS[i] } : {}}>
-                <span className="font-heading font-extrabold text-lg w-7 text-right flex-shrink-0" style={{ color: i < 3 ? RANK_COLORS[i] : "#444" }}>
-                  {i + 1}
-                </span>
-                <span className="text-2xl">{match.country.flagEmoji}</span>
-                <span className="font-heading font-bold text-text-primary uppercase tracking-tight flex-1">{match.country.name}</span>
-                <span className="font-bold text-sm" style={{ color: matchPercentColor(match.matchPercent) }}>{match.matchPercent}%</span>
+            {/* Compare hint for Pro */}
+            {isPro && matches.length >= 3 && (
+              <Link
+                href={compareHref}
+                className="inline-block mt-4 text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest"
+              >
+                Compare top 3 →
               </Link>
-            ))}
+            )}
           </div>
 
-          {/* Upgrade gate */}
-          {!isPro && (
-            <div className="mt-4 border-2 border-[#2a2a2a] overflow-hidden" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-              <div className="relative">
-                <div className="opacity-30 pointer-events-none space-y-0">
-                  {[11, 12, 13].map((n) => (
-                    <div key={n} className="flex items-center gap-4 p-4 border-b border-[#1a1a1a]">
-                      <span className="font-heading font-extrabold text-lg w-7 text-right text-text-muted">{n}</span>
-                      <span className="text-2xl">🌍</span>
-                      <div className="h-4 w-24 bg-[#2a2a2a]" />
-                    </div>
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]/80">
-                  <div className="text-center space-y-3 p-6">
-                    <Lock className="w-6 h-6 text-accent mx-auto" />
-                    <p className="font-heading font-bold text-text-primary uppercase text-sm">See all 25 countries ranked</p>
-                    <p className="text-xs text-text-muted">Upgrade to Pro to unlock the full ranking.</p>
-                    <Link href="/pro" className="cta-button px-6 py-2.5 text-xs font-bold inline-flex items-center gap-2 uppercase tracking-wide">
-                      <Sparkles className="w-3 h-3" /> Upgrade to Pro ~ €5
-                    </Link>
+          {/* Bottom links */}
+          <div className="mt-8 flex items-center gap-5">
+            <button onClick={() => router.push("/wizard")}
+              className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
+              Retake quiz
+            </button>
+            <button onClick={handleViewOnGlobe}
+              className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
+              View on globe
+            </button>
+          </div>
+        </div>
+
+        {/* ── RIGHT: Full ranking list ─────────────────────────────────────── */}
+        <div className="lg:border-l lg:border-[#1a1a1a] lg:pl-10">
+          {/* Header */}
+          <div className="flex items-baseline justify-between mb-5">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">Full ranking</p>
+            {jobRoleDef && (
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(top.matchPercent) }}>
+                {jobRoleDef.label}
+              </p>
+            )}
+          </div>
+
+          {/* Rows */}
+          <div>
+            {visibleMatches.map((match, i) => {
+              const cs = getCurrencySymbol(match.country.currency);
+              const salary = jobRoleDef ? match.country.data[jobRoleDef.salaryKey] as number : null;
+              const pct = match.matchPercent;
+              const isTop3 = i < 3;
+              return (
+                <Link
+                  key={match.country.slug}
+                  href={"/country/" + match.country.slug + "/personalised"}
+                  className="flex items-center gap-3 py-3 border-b border-[#111111] hover:bg-[#0f0f0f] transition-colors px-2 -mx-2 group"
+                  style={isTop3 ? { borderLeft: `2px solid ${RANK_COLORS[i]}`, paddingLeft: "10px", marginLeft: "-2px" } : {}}
+                >
+                  <span
+                    className="font-heading text-[11px] font-extrabold w-6 flex-shrink-0 text-right"
+                    style={{ color: isTop3 ? RANK_COLORS[i] : "#333" }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-lg flex-shrink-0">{match.country.flagEmoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-heading text-[13px] font-extrabold uppercase tracking-tight text-[#f0f0e8] truncate">
+                      {match.country.name}
+                    </p>
+                    {salary && (
+                      <p className="text-[10px] text-[#555] font-medium mt-0.5">
+                        {cs}{salary.toLocaleString()}/yr · Visa {match.country.data.visaDifficulty}/5 · {cs}{match.country.data.costRentCityCentre.toLocaleString()}/mo rent
+                      </p>
+                    )}
                   </div>
-                </div>
+                  <span className="font-heading text-[13px] font-extrabold flex-shrink-0" style={{ color: matchPercentColor(pct) }}>
+                    {pct}%
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Upgrade gate — fade out style */}
+          {!isPro && (
+            <div className="mt-0 relative">
+              {/* Teaser rows — fading */}
+              <div className="relative overflow-hidden" style={{ height: "120px" }}>
+                {[
+                  { n: visibleMatches.length + 1, opacity: 0.5 },
+                  { n: visibleMatches.length + 2, opacity: 0.25 },
+                ].map(({ n, opacity }) => (
+                  <div key={n} className="flex items-center gap-3 py-3 border-b border-[#111111] px-2 -mx-2" style={{ opacity }}>
+                    <span className="font-heading text-[11px] font-extrabold w-6 text-right text-[#333]">{n}</span>
+                    <span className="text-lg">🌍</span>
+                    <div className="flex-1">
+                      <div className="h-3 w-24 bg-[#1a1a1a] rounded-sm" />
+                      <div className="h-2 w-36 bg-[#111] rounded-sm mt-1.5" />
+                    </div>
+                    <div className="h-3 w-8 bg-[#1a1a1a] rounded-sm" />
+                  </div>
+                ))}
+                {/* Fade gradient */}
+                <div className="absolute inset-0 pointer-events-none"
+                  style={{ background: "linear-gradient(to bottom, transparent 0%, #0a0a0a 90%)" }} />
+              </div>
+
+              {/* Upgrade line */}
+              <div className="pt-4 flex items-center justify-between border-t border-[#1a1a1a]">
+                <p className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">
+                  {25 - visibleMatches.length} more countries ranked
+                </p>
+                <Link
+                  href="/pro"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a]"
+                  style={{ boxShadow: "2px 2px 0 #00aa90" }}
+                >
+                  <Sparkles className="w-3 h-3" /> Pro · €5
+                </Link>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Bottom CTAs */}
-        <div className="text-center space-y-3 pt-2 pb-8">
-          <button onClick={handleViewOnGlobe} className="cta-button w-full py-4 text-sm font-bold uppercase tracking-wide">
-            View my matches on the Globe
-          </button>
-          <button onClick={() => router.push("/wizard")} className="text-sm font-bold text-text-muted hover:text-accent transition-colors uppercase tracking-wide">
-            Retake the quiz
-          </button>
+          {/* Pro: compare hint */}
+          {isPro && matches.length >= 3 && (
+            <div className="mt-6 pt-5 border-t border-[#1a1a1a]">
+              <Link
+                href={compareHref}
+                className="text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest"
+              >
+                Compare top 3 →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
