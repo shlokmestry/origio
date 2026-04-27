@@ -92,7 +92,7 @@ export default function WizardResultsPage() {
     if (!isLoading && matches.length > 0 && user) {
       const save = async () => {
         try {
-          const topCountries = matches.slice(0, 10).map(m => ({
+          const topCountries = matches.slice(0, 25).map(m => ({
             slug: m.country.slug,
             name: m.country.name,
             flagEmoji: m.country.flagEmoji,
@@ -118,7 +118,7 @@ export default function WizardResultsPage() {
   };
 
   const jobRoleDef = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches = isPro ? matches.slice(0, 25) : user ? matches.slice(0, 10) : matches.slice(0, 3);
+  const visibleMatches = isPro ? matches.slice(0, 25) : matches.slice(0, 3);
   const compareHref = matches.length >= 3
     ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}`
     : "/compare";
@@ -428,7 +428,7 @@ export default function WizardResultsPage() {
                   <p className="font-heading text-sm font-extrabold uppercase tracking-tight">
                     {25 - visibleMatches.length} more countries
                   </p>
-                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €5 once</p>
+                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €19.99 once</p>
                 </div>
                 <Link
                   href="/pro"
