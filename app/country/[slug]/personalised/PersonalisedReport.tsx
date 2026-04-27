@@ -94,61 +94,61 @@ function getNarrative(a: NarrativeArgs): string {
 
   // UAE — tax = 0
   if (a.slug === "uae") {
-    return `Zero income tax. Zero social security deductions. What you earn — ${g} — is almost exactly what you keep. The UAE is one of the few places where that sentence is literally true.`;
+    return `Zero income tax and zero social security deductions. What you earn, ${g} a year, is almost exactly what you keep. The UAE is one of the very few places in the world where that sentence is literally true.`;
   }
 
   // Japan — its own world
   if (a.slug === "japan") {
-    return `${g} gross, a work culture unlike anywhere in Europe, and a language that takes years. Japan also scores ${a.safetyScore}/10 on safety — the highest in the index — and surprises almost everyone who actually moves there.`;
+    return `You'd earn ${g} gross and step into a work culture unlike anything in Europe. The language takes years to pick up properly. But Japan scores ${a.safetyScore}/10 on safety and has a quality of life that quietly surprises almost everyone who actually makes the move.`;
   }
 
   // Safety flag — low safety countries
   if (a.safetyScore < 6) {
-    return `The salary-to-cost ratio looks promising — ${g} gross, ${disp} left over. But safety scores ${a.safetyScore}/10 here. That affects where you live, how you move, and what the good neighbourhoods cost.`;
+    return `On paper, ${g} gross with ${disp} left over each month looks workable. The catch is that safety scores ${a.safetyScore}/10 here. That number shapes where you can afford to live, how freely you move around, and what the safer neighbourhoods actually cost.`;
   }
 
   // High tax welfare states
   if (HIGH_TAX_COUNTRIES.includes(a.slug) || a.taxRate > 45) {
-    return `${a.name} takes ${a.taxRate}% of your salary in tax. What you get back — free healthcare, free education, world-class parental leave — is harder to put a number on.`;
+    return `${a.name} will take ${a.taxRate}% of your salary. What comes back is harder to put a number on: free healthcare for you and your family, free university education, and some of the most generous parental leave in the world. Whether that trade works for you is the real question.`;
   }
 
   // Singapore / high internet + English
   if (a.internetSpeed >= 8.5 && a.isEnglish && a.slug === "singapore") {
-    return `${a.internetSpeed}/10 internet speed, world-class infrastructure, English everywhere. If your income is remote, Singapore removes every friction point. You keep ${disp}/mo after costs — you just pay for the privilege.`;
+    return `${a.internetSpeed} out of 10 for internet speed, infrastructure that actually works, and English spoken everywhere. If your income follows you remotely, Singapore removes almost every friction point. You keep ${disp} a month after costs. You just pay for the privilege of being there.`;
   }
 
   // UK — high rent warning
   if (a.slug === "united-kingdom") {
-    return `The salary looks strong until ${r}/mo rent and National Insurance hit. London gives and London takes — your ${disp} monthly surplus is what's left.`;
+    return `The salary looks strong on paper until ${r} a month in rent and a National Insurance bill land in the same week. London gives generously and takes back just as fast. After all of that, your monthly surplus sits at ${disp}.`;
   }
 
   // Australia / Canada / NZ — wealth builders (low SS + decent disposable)
   if (["australia", "canada", "new-zealand"].includes(a.slug) && a.ssRate < 10 && !isTight) {
-    return `${g} gross, a minimal social security hit, and ${disp} left after costs. ${a.name} is one of the few countries where a mid-career professional can genuinely build wealth.`;
+    return `${g} gross, a social security rate low enough that it barely registers, and ${disp} left after costs each month. ${a.name} is one of the few places where a mid-career professional can actually build wealth rather than just get by.`;
   }
 
   // Ireland — English + easy visa
   if (a.slug === "ireland") {
-    return `No language barrier, no culture shock. Ireland is the smoothest landing pad for English-speaking professionals — you pay for that in ${r}/mo rent.`;
+    return `No language barrier, no culture shock, and a visa process that is more straightforward than most. Ireland is the smoothest landing pad for English-speaking professionals who want to stay in Europe. You do pay for that convenience though, and ${r} a month in rent is where you feel it most.`;
   }
 
   // High saver — disposable > 1000 USD
   if (a.disposableUSD >= 1000) {
-    return `Strong salary — ${g} gross — manageable costs, and ${disp} left every month. Not many countries let you do that. ${a.name} is one of them.`;
+    return `${g} gross, manageable costs, and ${disp} left over every month. Not many countries make that combination possible for your role. ${a.name} is one of them.`;
   }
 
   // Quality of life play — decent QoL but tight savings
   if (a.qolScore >= 7.5 && isTight) {
-    return `The weather's good, the food is great, and ${disp}/mo surplus won't make you rich. ${a.name} is a quality of life play, not a wealth-building one.`;
+    return `The weather is good, the food is genuinely great, and ${disp} a month in surplus is not going to make you rich anytime soon. ${a.name} is a quality of life move, not a wealth-building one. Whether that trade is worth it depends entirely on what you are actually optimising for.`;
   }
 
   // Low saver fallback — tight savings in any other country
   if (isTight) {
-    return `The salary is real — ${g} gross, ${th}/mo in hand. But ${a.name} isn't cheap anymore. You'd have ${disp} left after costs. Enough to live, not enough to save fast.`;
+    return `The salary is real. ${g} gross, ${th} a month in hand. But ${a.name} is not as affordable as it used to be. After costs you would have ${disp} left. Enough to live comfortably, not enough to save at any meaningful pace.`;
   }
 
   // Generic good outcome
-  return `Strong salary — ${g} gross — manageable costs, and ${disp} left every month. Not many countries let you do that. ${a.name} is one of them.`;
+  return `${g} gross, manageable costs, and ${disp} left over every month. Not many countries make that combination possible for your role. ${a.name} is one of them.`;
 }
 
 // ── types ──────────────────────────────────────────────────────────────────
