@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Globe2, Star, Lock, Sparkles } from "lucide-react";
-import { CountryMatch } from "@/lib/wizard";
-import { WizardAnswers } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -75,7 +74,6 @@ export default function WizardResultsPage() {
     return () => clearInterval(interval);
   }, [router]);
 
-  // Save wizard results to Supabase when loaded
   useEffect(() => {
     if (!isLoading && matches.length > 0 && user) {
       const saveToSupabase = async () => {
@@ -89,9 +87,7 @@ export default function WizardResultsPage() {
           }));
 
           const { data: existing } = await supabase.from('wizard_results')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
+            .select('id').eq('user_id', user.id).maybeSingle();
 
           if (existing) {
             await supabase.from('wizard_results').update({
@@ -150,10 +146,10 @@ export default function WizardResultsPage() {
   const top = matches[0];
 
   const guideSlug = answers.jobRole ? ROLE_TO_GUIDE[answers.jobRole] : null;
-  const guideHref = guideSlug ? `/guides/${guideSlug}` : `/country/${top.country.slug}`;
+  const guideHref = guideSlug ? `/guides/${guideSlug}` : `/country/${top.country.slug}/personalised`;
   const guideLabel = guideSlug
     ? `${jobRoleDef?.label ?? "Relocation"} Guide`
-    : `${top.country.name} Country Page`;
+    : `${top.country.name} Report`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]" style={{ opacity: revealed ? 1 : 0, transform: revealed ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.5s ease, transform 0.5s ease" }}>
@@ -192,7 +188,7 @@ export default function WizardResultsPage() {
             </div>
           )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Link href={"/country/" + top.country.slug} className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
+            <Link href={"/country/" + top.country.slug + "/personalised"} className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
               View Full Report
             </Link>
             <button onClick={handleViewOnGlobe} className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
@@ -218,7 +214,7 @@ export default function WizardResultsPage() {
           </p>
           <div className="space-y-2">
             {visibleMatches.map((match, i) => (
-              <Link key={match.country.slug} href={"/country/" + match.country.slug}
+              <Link key={match.country.slug} href={"/country/" + match.country.slug + "/personalised"}
                 className="flex items-center gap-4 p-4 border-2 border-[#2a2a2a] bg-[#111111] hover:border-text-primary transition-all group"
                 style={i < 3 ? { boxShadow: "3px 3px 0 " + RANK_COLORS[i] } : {}}>
                 <span className="font-heading font-extrabold text-lg w-7 text-right flex-shrink-0" style={{ color: i < 3 ? RANK_COLORS[i] : "#444" }}>
