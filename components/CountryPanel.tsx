@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from "react";
 import {
   X, DollarSign, Home, Shield, Wifi, Heart, Plane,
-  TrendingUp, Receipt, ChevronDown, ChevronUp, FileText, ArrowRightLeft,
+  TrendingUp, Receipt, ChevronDown, ChevronUp, ArrowRightLeft,
 } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
-import SalaryChart from "./SalaryChart";
 import { useRouter } from "next/navigation";
 
 interface CountryPanelProps {
@@ -27,7 +26,6 @@ function getCurrencySymbol(currency: string): string {
   return symbols[currency] ?? currency + " ";
 }
 
-// ScoreBreakdown has no icon field — map icons by label
 const SCORE_ICONS: Record<string, any> = {
   Salary: DollarSign,
   Affordability: Home,
@@ -70,57 +68,45 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   const backdropClasses = [
     "fixed inset-0 bg-black/60 z-30",
     "transition-opacity duration-300",
-    isVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+    isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
   ].join(" ");
 
   const moveScoreColor = getScoreColor(data.moveScore);
 
   return (
-    <div>
+    <>
       <div className={backdropClasses} onClick={handleClose} />
       <div className={panelClasses} style={{ height: "calc(100vh - 3.5rem)" }}>
+        <div className="flex flex-col gap-4 p-4">
 
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-[#0f0f0f] border-b-2 border-[#2a2a2a]">
-          <div className="flex items-center justify-between p-5">
+          {/* Header */}
+          <div className="flex items-start justify-between pt-1">
             <div className="flex items-center gap-3">
               <span className="text-3xl">{country.flagEmoji}</span>
               <div>
-                <h2 className="font-heading text-2xl font-extrabold text-text-primary uppercase tracking-tight">
+                <h2 className="font-heading text-xl font-extrabold text-text-primary uppercase tracking-tight">
                   {country.name}
                 </h2>
-                <p className="text-xs font-bold text-text-muted uppercase tracking-wide">
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
                   {country.continent} · {country.language}
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} className="p-2 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors">
-              <X className="w-4 h-4 text-text-muted" />
+            <button onClick={handleClose} className="p-1.5 hover:text-accent transition-colors text-text-muted">
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Move Score */}
-          <div className="mx-5 mb-5 p-4 border-2 flex items-center gap-4"
-            style={{ borderColor: moveScoreColor, boxShadow: "4px 4px 0 " + moveScoreColor }}>
-            <div className="w-14 h-14 border-2 flex items-center justify-center font-heading text-2xl font-extrabold flex-shrink-0"
-              style={{ borderColor: moveScoreColor, color: moveScoreColor }}>
-              {data.moveScore}
-            </div>
-            <div>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">Move Score</p>
-              <div className="flex gap-1.5 flex-wrap">
-                {scoreBreakdown.slice(0, 3).map((s) => (
-                  <span key={s.label} className="text-[10px] font-bold uppercase px-2 py-0.5 border"
-                    style={{ borderColor: s.color, color: s.color }}>
-                    {s.label}
-                  </span>
-                ))}
-              </div>
+          {/* Move score */}
+          <div className="p-4 border-2 border-[#2a2a2a]" style={{ borderColor: moveScoreColor, boxShadow: `3px 3px 0 ${moveScoreColor}` }}>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Move Score</p>
+            <div className="flex items-end gap-3">
+              <span className="font-heading text-4xl font-extrabold" style={{ color: moveScoreColor }}>
+                {data.moveScore}
+              </span>
+              <span className="text-sm text-text-muted font-bold mb-1">/ 10</span>
             </div>
           </div>
-        </div>
-
-        <div className="p-5 space-y-5">
 
           {/* Role selector */}
           <div>
@@ -147,7 +133,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             <p className="text-xs text-text-muted font-medium mt-0.5">per year · {country.currency}</p>
           </div>
 
-          {/* Score breakdown — uses item.value / item.maxValue, icon looked up by label */}
+          {/* Score breakdown */}
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Score Breakdown</p>
             <div className="space-y-0 border-2 border-[#2a2a2a]">
@@ -190,7 +176,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             )}
           </div>
 
-          {/* Cost of living — correct field names from CountryData */}
+          {/* Cost of living */}
           <div>
             <button
               onClick={() => setCostsExpanded(!costsExpanded)}
@@ -220,31 +206,24 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             )}
           </div>
 
-          {/* Salary chart — SalaryChart takes data + currency props */}
-          <div>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Salary by Role</p>
-            <div className="border-2 border-[#2a2a2a] p-3">
-              <SalaryChart data={data} currency={country.currency} />
-            </div>
-          </div>
-
           {/* CTAs */}
           <div className="space-y-3 pb-6">
-            <button onClick={handleFullReport} className="cta-button w-full py-3.5 text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2">
-              <FileText className="w-4 h-4" />
-              Get Full Report
+            <button
+              onClick={handleFullReport}
+              className="cta-button w-full py-3.5 text-sm font-bold uppercase tracking-wide flex items-center justify-center"
+            >
+              View Country Page
             </button>
-            <button onClick={handleCompare} className="ghost-button w-full py-3 text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2">
-              <ArrowRightLeft className="w-4 h-4" />
+            <button
+              onClick={handleCompare}
+              className="ghost-button w-full py-3 text-sm font-bold uppercase tracking-wide flex items-center justify-center"
+            >
               Compare Countries
             </button>
-            <a href={"/country/" + country.slug}
-              className="block text-center text-xs font-bold text-text-muted hover:text-accent transition-colors py-1 uppercase tracking-wide">
-              View full country page →
-            </a>
           </div>
+
         </div>
       </div>
-    </div>
+    </>
   );
 }
