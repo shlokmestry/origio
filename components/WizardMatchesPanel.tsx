@@ -23,6 +23,12 @@ function getCurrencySymbol(currency: string): string {
   return symbols[currency] ?? currency + " ";
 }
 
+function matchPercentColor(pct: number): string {
+  if (pct >= 90) return "#4ade80";
+  if (pct >= 75) return "#facc15";
+  return "#888880";
+}
+
 const RANK_COLORS = ["#00ffd5", "#facc15", "#a78bfa"];
 const RANK_LABELS = ["Best Match", "2nd Match", "3rd Match"];
 
@@ -65,12 +71,12 @@ export default function WizardMatchesPanel({
 
       <div className="p-4 space-y-3">
         {matches.slice(0, 3).map((match, index) => {
-          // CountryMatch shape: { country: CountryWithData, matchScore, matchPercent, reasons }
           const country = match.country;
           if (!country) return null;
           const currencySymbol = getCurrencySymbol(country.currency);
           const salary = country.data[currentRole.salaryKey] as number;
           const rankColor = RANK_COLORS[index];
+          const pctColor = matchPercentColor(match.matchPercent);
 
           return (
             <button
@@ -89,7 +95,7 @@ export default function WizardMatchesPanel({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-heading text-lg font-extrabold" style={{ color: rankColor }}>{match.matchPercent}%</p>
+                  <p className="font-heading text-lg font-extrabold" style={{ color: pctColor }}>{match.matchPercent}%</p>
                   <p className="text-[10px] font-bold text-text-muted uppercase">match</p>
                 </div>
               </div>
@@ -111,7 +117,7 @@ export default function WizardMatchesPanel({
                 <div className="px-4 pb-3 flex flex-wrap gap-1.5">
                   {match.reasons.slice(0, 2).map((reason) => (
                     <span key={reason} className="text-[10px] font-bold px-2 py-0.5 border uppercase"
-                      style={{ borderColor: rankColor + "60", color: rankColor }}>
+                      style={{ borderColor: pctColor + "60", color: pctColor }}>
                       {reason}
                     </span>
                   ))}
