@@ -258,7 +258,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         const all: CountryMatch[] = JSON.parse(rawM);
         const m = all.find((x) => x.country.slug === country.slug);
         if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons });
-        setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 2));
+        setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 22));
       }
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -279,7 +279,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons ?? [] });
           const others = (result.top_countries as any[])
             .filter((c: any) => c.slug !== country.slug)
-            .slice(0, 2)
+            .slice(0, 22)
             .map((c: any) => {
               const full = allCountries.find((x) => x.slug === c.slug);
               return full ? { country: full, matchPercent: c.matchPercent, matchScore: 0, reasons: c.reasons ?? [] } : null;
@@ -856,27 +856,55 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               <p className="text-[10px] font-bold text-[#f0f0e8] uppercase tracking-widest">22 more countries · ranked for you</p>
               <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €19</span>
             </div>
-            <div className="relative">
-              <div style={{ filter: isPro ? "none" : "blur(4px) saturate(0.4)", opacity: isPro ? 1 : 0.5, pointerEvents: isPro ? "auto" : "none" }}>
-                {[4,5,6,7,8].map(n => (
-                  <div key={n} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a]">
-                    <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(n).padStart(2, "0")}</span>
-                    <span className="text-xl">🌍</span>
-                    <span className="text-sm font-bold flex-1">Country {n}</span>
-                    <div className="w-32 h-1.5 bg-[#1a1a1a]"><div className="h-full bg-[#4ade80]" style={{ width: `${90 - n * 4}%` }} /></div>
-                    <p className="font-heading text-sm font-extrabold w-10 text-right">{90 - n * 4}%</p>
+            {isPro ? (
+              /* Pro — show real remaining matches */
+              <div>
+                {otherMatches.slice(2).length === 0 ? (
+                  <div className="px-5 py-6 text-center">
+                    <p className="text-sm text-[#888880]">Run the wizard to generate your full ranking.</p>
+                    <Link href="/wizard" className="inline-block mt-3 text-[11px] font-bold text-accent uppercase tracking-widest hover:underline">
+                      Run quiz →
+                    </Link>
                   </div>
-                ))}
+                ) : (
+                  otherMatches.slice(2).map((m, i) => (
+                    <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
+                      className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a] hover:bg-[#0d0d0d] transition-colors last:border-0">
+                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(i + 4).padStart(2, "0")}</span>
+                      <span className="text-xl">{m.country.flagEmoji}</span>
+                      <span className="text-sm font-bold flex-1 uppercase tracking-tight">{m.country.name}</span>
+                      <div className="w-32 h-1.5 bg-[#1a1a1a]">
+                        <div className="h-full" style={{ width: `${m.matchPercent}%`, background: matchPercentColor(m.matchPercent) }} />
+                      </div>
+                      <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: matchPercentColor(m.matchPercent) }}>
+                        {m.matchPercent}%
+                      </p>
+                    </Link>
+                  ))
+                )}
               </div>
-              {!isPro && (
+            ) : (
+              /* Non-Pro — blurred fake rows */
+              <div className="relative">
+                <div style={{ filter: "blur(4px) saturate(0.4)", opacity: 0.5, pointerEvents: "none" }}>
+                  {[4,5,6,7,8].map(n => (
+                    <div key={n} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a]">
+                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(n).padStart(2, "0")}</span>
+                      <span className="text-xl">🌍</span>
+                      <span className="text-sm font-bold flex-1">———</span>
+                      <div className="w-32 h-1.5 bg-[#1a1a1a]"><div className="h-full bg-[#4ade80]" style={{ width: `${90 - n * 4}%` }} /></div>
+                      <p className="font-heading text-sm font-extrabold w-10 text-right">{90 - n * 4}%</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
                     <Lock className="w-3.5 h-3.5 text-accent" />
                     <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries — Pro</span>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             {!isPro && (
               <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
                 <div>

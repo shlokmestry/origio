@@ -92,7 +92,7 @@ export default function WizardResultsPage() {
     if (!isLoading && matches.length > 0 && user) {
       const save = async () => {
         try {
-          const topCountries = matches.slice(0, 10).map(m => ({
+          const topCountries = matches.slice(0, 25).map(m => ({
             slug: m.country.slug,
             name: m.country.name,
             flagEmoji: m.country.flagEmoji,
