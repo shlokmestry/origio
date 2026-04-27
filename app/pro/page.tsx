@@ -25,7 +25,7 @@ const PRO_FEATURES = [
   },
   {
     title: 'Full personalised report',
-    desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores — specific to your role and passport.',
+    desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores specific to your role and passport.',
   },
   {
     title: 'Take-home salary calculator',
@@ -61,7 +61,7 @@ const FAQS = [
   },
   {
     q: 'Do I need an account?',
-    a: 'Yes — Pro features are tied to your account so they work across devices and stay active permanently.',
+    a: 'Yes, Pro features are tied to your account so they work across devices and stay active permanently.',
   },
   {
     q: 'I already ran the quiz as a free user. Do I lose my results?',
@@ -127,7 +127,7 @@ export default function ProPage() {
             Origio Pro
           </h1>
           <p className="text-[15px] text-[#888880] max-w-md leading-relaxed mb-10">
-            Free shows you the top 3. Pro ranks all 25 — with full personalised reports, take-home calculations, and 3-country comparison.{' '}
+            Free shows you the top 3. Pro ranks all 25 ~ with full personalised reports, take-home calculations, and 3-country comparison.{' '}
             <span className="text-[#f0f0e8] font-bold">Pay once. Yours forever.</span>
           </p>
 
@@ -139,7 +139,7 @@ export default function ProPage() {
               style={{ boxShadow: loading ? 'none' : '3px 3px 0 #00aa90' }}
             >
               <Zap className="w-3.5 h-3.5 inline mr-2" />
-              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
+              {loading ? 'Redirecting…' : 'Get Pro ` €19.99'}
             </button>
             <a href="#pricing"
               className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] border border-[#2a2a2a] text-[#888880] hover:text-[#f0f0e8] hover:border-[#444] transition-colors">
@@ -233,7 +233,7 @@ export default function ProPage() {
                 className="w-full py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a] disabled:opacity-50"
                 style={{ boxShadow: loading ? 'none' : '2px 2px 0 #00aa90' }}
               >
-                {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
+                {loading ? 'Redirecting…' : 'Get Pro ~ €19.99'}
               </button>
             </div>
           </div>
@@ -282,7 +282,7 @@ export default function ProPage() {
               style={{ boxShadow: loading ? 'none' : '3px 3px 0 #00aa90' }}
             >
               <Zap className="w-3.5 h-3.5 inline mr-2" />
-              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
+              {loading ? 'Redirecting…' : 'Get Pro ~ €19'}
             </button>
             <Link href="/wizard"
               className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
