@@ -35,8 +35,8 @@ const faqs = [
     category: "Account & Pro",
     items: [
       { q: "Do I need an account to use Origio?", a: "No. The globe, country pages, compare tool, and Find My Country top 3 results are all free without an account." },
-      { q: "What does the Pro plan include?", a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of €5 — no subscription, ever." },
-      { q: "Is this really a one-time payment?", a: "Yes. Pay €5 once and access Pro forever. No subscription, no hidden fees, no recurring charges." },
+      { q: "What does the Pro plan include?", a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of €19.99 — no subscription, ever." },
+      { q: "Is this really a one-time payment?", a: "Yes. Pay €19.99 once and access Pro forever. No subscription, no hidden fees, no recurring charges." },
       { q: "What payment methods are accepted?", a: "All major credit and debit cards via Stripe. Safe and secure." },
       { q: "Can I get a refund?", a: "If you have an issue, contact us and we'll sort it out." },
     ],

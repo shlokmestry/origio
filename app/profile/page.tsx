@@ -289,7 +289,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-text-primary uppercase tracking-tight">Upgrade to Origio Pro</p>
-                <p className="text-xs text-text-muted">Unlimited matches · Full rankings · All 25 countries · €5 one-time</p>
+                <p className="text-xs text-text-muted">Unlimited matches · Full rankings · All 25 countries · €19.99 one-time</p>
               </div>
             </div>
             <a href="/pro" className="cta-button px-5 py-2.5 text-xs font-bold uppercase tracking-wide inline-flex items-center gap-2 flex-shrink-0">
