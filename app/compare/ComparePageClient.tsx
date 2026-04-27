@@ -275,7 +275,7 @@ export default function ComparePageClient() {
               <Link href="/pro"
                 className="flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a] flex-shrink-0"
                 style={{ boxShadow: "2px 2px 0 #00aa90" }}>
-                <Sparkles className="w-3 h-3" /> Pro · €5
+                <Sparkles className="w-3 h-3" /> Pro · €19.99
               </Link>
             </div>
           )}

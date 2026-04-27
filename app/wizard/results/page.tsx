@@ -428,7 +428,7 @@ export default function WizardResultsPage() {
                   <p className="font-heading text-sm font-extrabold uppercase tracking-tight">
                     {25 - visibleMatches.length} more countries
                   </p>
-                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €5 once</p>
+                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €19.99 once</p>
                 </div>
                 <Link
                   href="/pro"

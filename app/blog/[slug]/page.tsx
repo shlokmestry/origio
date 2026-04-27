@@ -27,8 +27,8 @@ const POSTS: Record<string, {
         <h2>Salary Ranges by Experience (2026)</h2>
         <p>These figures are based on current market data from Berlin, Munich, and Hamburg the three dominant tech hubs:</p>
         <ul>
-          <li><strong>Junior (0–2 years):</strong> €42,000 – €55,000</li>
-          <li><strong>Mid-level (3–5 years):</strong> €58,000 – €80,000</li>
+          <li><strong>Junior (0–2 years):</strong> €42,000 – €19.995,000</li>
+          <li><strong>Mid-level (3–5 years):</strong> €19.998,000 – €80,000</li>
           <li><strong>Senior (5+ years):</strong> €80,000 – €115,000</li>
           <li><strong>Staff / Principal:</strong> €115,000 – €160,000+</li>
           <li><strong>Engineering Manager:</strong> €100,000 – €150,000</li>
@@ -41,7 +41,7 @@ const POSTS: Record<string, {
           <li><strong>Gross salary:</strong> €70,000/year</li>
           <li><strong>Income tax (~18.5%):</strong> –€12,950</li>
           <li><strong>Solidarity surcharge:</strong> –€0 (abolished under €73k since 2021)</li>
-          <li><strong>Health insurance (~7.3%):</strong> –€5,110</li>
+          <li><strong>Health insurance (~7.3%):</strong> –€19.99,110</li>
           <li><strong>Pension insurance (~9.3%):</strong> –€6,510</li>
           <li><strong>Unemployment insurance (~1.3%):</strong> –€910</li>
           <li><strong>Long-term care insurance (~1.7%):</strong> –€1,190</li>
@@ -180,7 +180,7 @@ const POSTS: Record<string, {
         <h2>How Do Salaries Compare?</h2>
         <ul>
           <li><strong>Mid-level software engineer, Dublin:</strong> €70,000–€90,000 gross. After Irish tax (~33% effective), take-home is roughly €49,000–€62,000/year.</li>
-          <li><strong>Mid-level software engineer, Berlin:</strong> €60,000–€80,000 gross. After German tax (~38% effective), take-home is roughly €40,000–€52,000/year.</li>
+          <li><strong>Mid-level software engineer, Berlin:</strong> €60,000–€80,000 gross. After German tax (~38% effective), take-home is roughly €40,000–€19.992,000/year.</li>
         </ul>
         <p>Dublin wins on gross salary and net take-home — but once you subtract the higher cost of living, the <strong>disposable income gap almost disappears</strong>. A senior engineer in Berlin often has more money left at end of month than a peer in Dublin earning €15k more.</p>
 
