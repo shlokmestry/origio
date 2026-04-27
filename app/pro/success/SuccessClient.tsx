@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
-import { Sparkles, Loader2, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 const PRO_FEATURES = [
@@ -14,29 +14,30 @@ const PRO_FEATURES = [
     cta: 'Run the quiz',
   },
   {
-    title: 'Full personalised reports',
-    desc: 'Salary, take-home, costs, visa path — specific to your role and passport.',
+    title: 'Full personalised report',
+    desc: 'Salary, take-home after tax, costs, visa path — specific to your role and passport.',
     href: '/wizard',
     cta: 'View report',
   },
   {
-    title: 'Side-by-side comparison',
-    desc: 'Compare any two countries head-to-head on every metric.',
+    title: 'Salary calculator',
+    desc: 'Input your actual salary and see your real take-home after tax in any country.',
+    href: '/wizard',
+    cta: 'Try it',
+  },
+  {
+    title: 'Visa checklist',
+    desc: 'Every document you need, in order, with official links. Country-specific.',
+    href: '/wizard',
+    cta: 'View checklist',
+  },
+  {
+    title: '3-country comparison',
+    desc: 'Compare your top 3 matches side by side across salary, rent, visa, tax, and more.',
     href: '/compare',
     cta: 'Compare now',
   },
-  {
-    title: 'Full country deep-dives',
-    desc: 'Every salary role, every visa route, every cost breakdown.',
-    href: '/',
-    cta: 'Explore globe',
-  },
-  {
-    title: 'Unlimited quiz runs',
-    desc: 'Change your priorities, job, or budget and get fresh results every time.',
-    href: '/wizard',
-    cta: 'Start again',
-  },
+
 ]
 
 export default function SuccessClient() {
@@ -72,7 +73,6 @@ export default function SuccessClient() {
 
         if (data.paid && data.pro) {
           router.refresh()
-          // Pull wizard result for personalisation
           const { data: result } = await supabase
             .from('wizard_results')
             .select('top_countries')
@@ -89,7 +89,6 @@ export default function SuccessClient() {
           return
         }
 
-        // Fallback: check profile directly
         const { data: profile } = await supabase
           .from('profiles').select('is_pro').eq('id', session.user.id).single()
         if (profile?.is_pro) {
@@ -153,17 +152,14 @@ export default function SuccessClient() {
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">
                 Payment confirmed
               </p>
-
               <h1 className="font-heading text-[64px] sm:text-[80px] leading-[0.88] font-extrabold uppercase tracking-[-0.02em] mb-6">
                 Pro unlocked.
               </h1>
-
               <p className="text-[15px] text-[#888880] mb-10 max-w-md leading-relaxed">
-                No renewal. No expiry. Everything is yours. Your Pro status is active — you can verify it anytime in your{' '}
+                No renewal. No expiry. Everything is yours. Your Pro status is active — verify it anytime in your{' '}
                 <Link href="/profile" className="text-accent hover:underline">profile</Link>.
               </p>
 
-              {/* Personalised CTA if wizard was run */}
               {topMatch ? (
                 <div className="mb-8 border-l-2 border-accent pl-5">
                   <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">
@@ -176,20 +172,16 @@ export default function SuccessClient() {
                       <p className="text-[11px] font-bold text-accent">{topMatch.matchPercent}% match</p>
                     </div>
                   </div>
-                  <Link
-                    href="/wizard/results"
+                  <Link href="/wizard/results"
                     className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
-                    style={{ boxShadow: '3px 3px 0 #00aa90' }}
-                  >
+                    style={{ boxShadow: '3px 3px 0 #00aa90' }}>
                     See all 25 countries ranked →
                   </Link>
                 </div>
               ) : (
-                <Link
-                  href="/wizard"
+                <Link href="/wizard"
                   className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
-                  style={{ boxShadow: '3px 3px 0 #00aa90' }}
-                >
+                  style={{ boxShadow: '3px 3px 0 #00aa90' }}>
                   Find my country →
                 </Link>
               )}
@@ -200,23 +192,16 @@ export default function SuccessClient() {
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">
                 What you now have access to
               </p>
-
               <div>
                 {PRO_FEATURES.map((f, i) => (
-                  <div
-                    key={f.title}
-                    className={`flex items-start justify-between gap-6 py-5 ${i < PRO_FEATURES.length - 1 ? 'border-b border-[#111]' : ''}`}
-                  >
+                  <div key={f.title}
+                    className={`flex items-start justify-between gap-6 py-5 ${i < PRO_FEATURES.length - 1 ? 'border-b border-[#111]' : ''}`}>
                     <div className="flex-1 min-w-0">
-                      <p className="font-heading text-[14px] font-extrabold uppercase tracking-tight text-[#f0f0e8] mb-1">
-                        {f.title}
-                      </p>
+                      <p className="font-heading text-[14px] font-extrabold uppercase tracking-tight text-[#f0f0e8] mb-1">{f.title}</p>
                       <p className="text-[11px] text-[#555] leading-relaxed">{f.desc}</p>
                     </div>
-                    <Link
-                      href={f.href}
-                      className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest"
-                    >
+                    <Link href={f.href}
+                      className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest">
                       {f.cta} <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
@@ -228,12 +213,8 @@ export default function SuccessClient() {
             <section className="pt-14">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="font-heading text-lg font-extrabold uppercase tracking-tight mb-1">
-                    Ready to start?
-                  </p>
-                  <p className="text-[11px] text-[#888880]">
-                    Run the quiz and see all 25 countries ranked for you.
-                  </p>
+                  <p className="font-heading text-lg font-extrabold uppercase tracking-tight mb-1">Ready to start?</p>
+                  <p className="text-[11px] text-[#888880]">Run the quiz and see all 25 countries ranked for you.</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Link href="/wizard"

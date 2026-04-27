@@ -12,14 +12,10 @@ const FREE_FEATURES = [
   { text: 'Salary overview by role', included: true },
   { text: 'Basic visa & cost summary', included: true },
   { text: '3 quiz runs total', included: true },
-  { text: 'Save up to 3 countries', included: true },
   { text: 'All 25 countries ranked', included: false },
   { text: 'Full personalised report', included: false },
   { text: 'Take-home calculator', included: false },
   { text: '3-country comparison', included: false },
-  { text: 'PDF download', included: false },
-  { text: 'Unlimited quiz runs', included: false },
-  { text: 'Unlimited saved countries', included: false },
 ]
 
 const PRO_FEATURES = [
@@ -36,21 +32,14 @@ const PRO_FEATURES = [
     desc: 'Input your actual salary and see exactly what you keep after tax and social security in any country.',
   },
   {
+    title: 'Visa checklist',
+    desc: 'Every document you need, in order, with official links. Country-specific.',
+  },
+  {
     title: '3-country comparison',
     desc: 'Compare your top 3 matches side by side across every metric. Pre-filled from your wizard results.',
   },
-  {
-    title: 'PDF report download',
-    desc: 'Export your personalised country report as a PDF. Share it, save it, bring it to a visa appointment.',
-  },
-  {
-    title: 'Unlimited quiz runs',
-    desc: 'Change your job role, rent budget, or priorities and get fresh results every time. No limits.',
-  },
-  {
-    title: 'Unlimited saved countries',
-    desc: 'Bookmark as many countries as you want. Access your list from any device, any time.',
-  },
+  
 ]
 
 const FAQS = [
@@ -233,7 +222,7 @@ export default function ProPage() {
                   <div key={f.text} className="flex items-center gap-3">
                     <Check className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                     <span className={`text-[12px] font-medium ${f.included ? 'text-[#888880]' : 'text-[#f0f0e8]'}`}>
-                      {f.included ? f.text : f.text.replace('3 quiz runs total', 'Unlimited quiz runs').replace('Save up to 3 countries', 'Unlimited saved countries')}
+                      {f.text}
                     </span>
                   </div>
                 ))}
