@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
-import SalaryChart from "./SalaryChart";
+
 import { useRouter } from "next/navigation";
 
 interface CountryPanelProps {
@@ -220,14 +220,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             )}
           </div>
 
-          {/* Salary chart — SalaryChart takes data + currency props */}
-          <div>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Salary by Role</p>
-            <div className="border-2 border-[#2a2a2a] p-3">
-              <SalaryChart data={data} currency={country.currency} />
-            </div>
-          </div>
-
+        
           {/* CTAs */}
           <div className="space-y-3 pb-6">
             <button onClick={handleFullReport} className="cta-button w-full py-3.5 text-sm font-bold uppercase tracking-wide flex items-center justify-center gap-2">
