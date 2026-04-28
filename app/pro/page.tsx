@@ -92,7 +92,7 @@ function Hemisphere() {
 // ── Data ──────────────────────────────────────────────────────────────────
 const PRO_FEATURES = [
   { num: '01', title: 'All 25 countries ranked', desc: 'Your complete personalised ranking, not just the top 3. Every country in the wizard pool scored against your priorities.' },
-  { num: '02', title: 'Full personalised report', desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores — specific to your role and passport.' },
+  { num: '02', title: 'Full personalised report', desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores specific to your role and passport.' },
   { num: '03', title: 'Take-home calculator', desc: 'Input your actual salary and see exactly what you keep after tax and social security in any country.' },
   { num: '04', title: 'Visa checklist', desc: 'Every document you need, in order, with official links. Country-specific.' },
   { num: '05', title: '3-country comparison', desc: 'Compare your top 3 matches side by side across every metric. Pre-filled from your wizard results.' },
@@ -196,7 +196,7 @@ export default function ProPage() {
             Pay once.<br/>Move <span style={{ color: '#00ffd5' }}>freely.</span>
           </h1>
           <p style={{ fontSize: 15, color: '#888880', lineHeight: 1.7, maxWidth: 420, margin: '0 auto 36px' }}>
-            Free shows you the top 3. Pro ranks all 25 — with full personalised reports, take-home calculations, and side-by-side comparison.
+            Free shows you the top 3. Pro ranks all 25 with full personalised reports, take-home calculations, and side-by-side comparison.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
             <button onClick={handleUpgrade} disabled={loading} className="cta-hover" style={{ ...btnPrimary, opacity: loading ? 0.5 : 1 }}>
@@ -263,7 +263,7 @@ export default function ProPage() {
             {/* Features */}
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                ['All 25 countries ranked', '— not just the top 3'],
+                ['All 25 countries ranked', 'not just the top 3'],
                 ['Full personalised reports', 'for every country'],
                 ['Take-home calculator', 'pre-filled for your role'],
                 ['Visa checklist', 'with official links'],
