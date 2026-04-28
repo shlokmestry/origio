@@ -4,18 +4,45 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Globe2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
 
 const TOTAL_STEPS = 8;
 
-const PASSPORTS = [
-  "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
-  "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
-  "Canada","USA","Singapore","UAE","India","China","Brazil","South Africa",
-  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other"
+const PASSPORT_GROUPS = [
+  {
+    label: "🇪🇺 Europe",
+    options: [
+      "Austria","Belgium","Denmark","Finland","France","Germany",
+      "Ireland","Italy","Netherlands","Norway","Poland","Portugal",
+      "Romania","Spain","Sweden","Switzerland","United Kingdom",
+    ],
+  },
+  {
+    label: "🌎 Americas",
+    options: ["Argentina","Brazil","Canada","Colombia","Mexico","USA"],
+  },
+  {
+    label: "🌏 Asia & Middle East",
+    options: [
+      "Bangladesh","China","India","Indonesia","Japan","Malaysia",
+      "Pakistan","Philippines","Singapore","South Korea","Thailand",
+      "Turkey","UAE","Vietnam",
+    ],
+  },
+  {
+    label: "🌍 Africa & Oceania",
+    options: [
+      "Australia","Egypt","Ghana","Kenya","Morocco",
+      "New Zealand","Nigeria","South Africa",
+    ],
+  },
+  {
+    label: "Other",
+    options: ["Other"],
+  },
 ];
 
 function getRentBudgets(passport: string) {
@@ -23,82 +50,107 @@ function getRentBudgets(passport: string) {
   if (p === "india") return {
     note: "Shown in Indian Rupees — typical rent abroad converted to INR",
     options: [
-      { key: "under800", label: "Under ₹65,000/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable" },
+      { key: "under800",   label: "Under ₹65,000/mo",          sub: "Budget-conscious" },
+      { key: "800to1500",  label: "₹65,000 – ₹1,25,000/mo",   sub: "Comfortable" },
       { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ]
+      { key: "any",        label: "Money isn't a concern",       sub: "No limit" },
+    ],
   };
   if (p === "usa") return {
     note: "Shown in US Dollars",
     options: [
-      { key: "under800", label: "Under $800/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ]
+      { key: "under800",   label: "Under $800/mo",       sub: "Budget-conscious" },
+      { key: "800to1500",  label: "$800 – $1,500/mo",    sub: "Comfortable" },
+      { key: "1500to2500", label: "$1,500 – $2,500/mo",  sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern",sub: "No limit" },
+    ],
   };
   return {
     note: "Shown in Euros — average city-centre rent abroad",
     options: [
-      { key: "under800", label: "Under €800/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
-    ]
+      { key: "under800",   label: "Under €800/mo",       sub: "Budget-conscious" },
+      { key: "800to1500",  label: "€800 – €1,500/mo",    sub: "Comfortable" },
+      { key: "1500to2500", label: "€1,500 – €2,500/mo",  sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern",sub: "No limit" },
+    ],
   };
 }
 
 const MOVE_REASONS = [
-  { key: "job", emoji: "💼", label: "I have a job offer" },
-  { key: "career", emoji: "🚀", label: "Career growth" },
-  { key: "lifestyle", emoji: "🌴", label: "Better lifestyle" },
-  { key: "cost", emoji: "💰", label: "Lower cost of living" },
-  { key: "family", emoji: "👨‍👩‍👧", label: "Family or relationship" },
-  { key: "explore", emoji: "🌍", label: "Just exploring" },
+  { key: "job",       emoji: "💼",    label: "I have a job offer" },
+  { key: "career",    emoji: "🚀",    label: "Career growth" },
+  { key: "remote",    emoji: "🌐",    label: "Remote work / Digital nomad" },
+  { key: "retire",    emoji: "🏖️",   label: "Retirement / FIRE" },
+  { key: "lifestyle", emoji: "🌴",    label: "Better lifestyle" },
+  { key: "cost",      emoji: "💰",    label: "Lower cost of living" },
+  { key: "study",     emoji: "🎓",    label: "Study abroad" },
+  { key: "family",    emoji: "👨‍👩‍👧", label: "Family or relationship" },
+  { key: "explore",   emoji: "🌍",    label: "Just exploring options" },
 ];
 
 const PRIORITIES = [
-  { key: "salary", emoji: "💵", label: "High salary" },
-  { key: "tax", emoji: "📊", label: "Low taxes" },
-  { key: "cost", emoji: "🏠", label: "Affordable living" },
-  { key: "visa", emoji: "✈️", label: "Easy visa" },
-  { key: "safety", emoji: "🛡️", label: "Safety & stability" },
-  { key: "quality", emoji: "🌿", label: "Quality of life" },
-  { key: "tech", emoji: "💻", label: "Tech scene" },
-  { key: "weather", emoji: "☀️", label: "Good weather" },
+  { key: "salary",     emoji: "💵",    label: "High salary" },
+  { key: "tax",        emoji: "📊",    label: "Low taxes" },
+  { key: "cost",       emoji: "🏠",    label: "Affordable living" },
+  { key: "visa",       emoji: "✈️",   label: "Easy visa" },
+  { key: "safety",     emoji: "🛡️",   label: "Safety & stability" },
+  { key: "quality",    emoji: "🌿",    label: "Quality of life" },
+  { key: "healthcare", emoji: "❤️‍🩹", label: "Healthcare quality" },
+  { key: "worklife",   emoji: "⚖️",   label: "Work-life balance" },
+  { key: "tech",       emoji: "💻",    label: "Tech scene" },
+  { key: "weather",    emoji: "☀️",   label: "Good weather" },
+  { key: "english",    emoji: "🗣️",   label: "English-speaking" },
 ];
 
 const CITY_VIBES = [
-  { key: "metro", emoji: "🏙️", label: "Big city energy", sub: "NYC, London, Tokyo" },
-  { key: "mid", emoji: "🌆", label: "Mid-size city", sub: "Balanced pace" },
-  { key: "beach", emoji: "🏖️", label: "Coastal / beach", sub: "Warm & relaxed" },
-  { key: "nature", emoji: "🏔️", label: "Close to nature", sub: "Outdoors & quiet" },
-  { key: "any", emoji: "🎲", label: "I'm open to anything", sub: "Surprise me" },
+  { key: "metro",  emoji: "🏙️", label: "Big city energy",     sub: "NYC, London, Tokyo" },
+  { key: "mid",    emoji: "🌆", label: "Mid-size city",        sub: "Balanced pace" },
+  { key: "beach",  emoji: "🏖️", label: "Coastal / beach",     sub: "Warm & relaxed" },
+  { key: "nature", emoji: "🏔️", label: "Close to nature",     sub: "Outdoors & quiet" },
+  { key: "any",    emoji: "🎲", label: "I'm open to anything", sub: "Surprise me" },
 ];
 
 const LANGUAGES = [
-  { key: "german", label: "German" }, { key: "french", label: "French" },
-  { key: "spanish", label: "Spanish" }, { key: "portuguese", label: "Portuguese" },
-  { key: "arabic", label: "Arabic" }, { key: "mandarin", label: "Mandarin" },
-  { key: "hindi", label: "Hindi" }, { key: "italian", label: "Italian" },
-  { key: "dutch", label: "Dutch" }, { key: "swedish", label: "Swedish" },
-  { key: "norwegian", label: "Norwegian" }, { key: "japanese", label: "Japanese" },
-  { key: "korean", label: "Korean" }, { key: "tagalog", label: "Tagalog" },
-  { key: "turkish", label: "Turkish" }, { key: "polish", label: "Polish" },
-  { key: "none", label: "English only" },
+  { key: "german",     label: "German" },
+  { key: "french",     label: "French" },
+  { key: "spanish",    label: "Spanish" },
+  { key: "portuguese", label: "Portuguese" },
+  { key: "arabic",     label: "Arabic" },
+  { key: "mandarin",   label: "Mandarin" },
+  { key: "hindi",      label: "Hindi" },
+  { key: "italian",    label: "Italian" },
+  { key: "dutch",      label: "Dutch" },
+  { key: "swedish",    label: "Swedish" },
+  { key: "norwegian",  label: "Norwegian" },
+  { key: "japanese",   label: "Japanese" },
+  { key: "korean",     label: "Korean" },
+  { key: "tagalog",    label: "Tagalog" },
+  { key: "turkish",    label: "Turkish" },
+  { key: "polish",     label: "Polish" },
+  { key: "thai",       label: "Thai" },
+  { key: "vietnamese", label: "Vietnamese" },
+  { key: "none",       label: "English only" },
 ];
 
 const DEAL_BREAKERS = [
-  { key: "english", label: "Must be English-speaking" },
-  { key: "europe", label: "Must be in Europe" },
-  { key: "lowtax", label: "Must have low taxes" },
-  { key: "warm", label: "Must have warm weather" },
-  { key: "lowcrime", label: "Must have low crime rate" },
-  { key: "none", label: "No deal breakers" },
+  { key: "english",    label: "Must be English-speaking" },
+  { key: "europe",     label: "Must be in Europe" },
+  { key: "lowtax",     label: "Must have low taxes" },
+  { key: "lowcost",    label: "Must have low cost of living" },
+  { key: "warm",       label: "Must have warm weather" },
+  { key: "lowcrime",   label: "Must have low crime rate" },
+  { key: "healthcare", label: "Must have strong public healthcare" },
+  { key: "nomadvisa",  label: "Must offer digital nomad / remote visa" },
+  { key: "none",       label: "No deal breakers" },
 ];
 
-// Shared button styles
+const SPECIAL_ROLES = [
+  { key: "retired",    emoji: "🏖️",   label: "Retired / FIRE",            sub: "Focus on cost, tax, healthcare" },
+  { key: "freelancer", emoji: "🧑‍💻", label: "Freelancer / Self-employed", sub: "Remote income, nomad visas" },
+  { key: "student",    emoji: "🎓",    label: "Student",                    sub: "Affordable education, student visas" },
+  { key: "other",      emoji: "🔎",    label: "Something else",             sub: "We'll use typical professional salary" },
+];
+
 const optionBase = "w-full flex items-center gap-3 p-4 border-2 text-left transition-all font-medium text-sm";
 const optionSelected = "border-accent bg-accent/10 text-text-primary";
 const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-text-primary hover:text-text-primary";
@@ -110,11 +162,42 @@ export default function WizardPage() {
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
   const isJobOffer = answers.moveReason === "job";
+  const isRetired  = answers.moveReason === "retire";
+  const isRemote   = answers.moveReason === "remote";
 
-  const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
-  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
-  const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
-  const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
+  const SPECIAL_ROLE_KEYS = SPECIAL_ROLES.map((r) => r.key);
+
+  const getNextStep = (cur: number) => {
+    if (cur === 2 && isJobOffer) return 3;
+    if (cur === 3 && isJobOffer) return 7;
+    if (cur === 2 && isRetired)  return 4;
+    return cur + 1;
+  };
+  const getPrevStep = (cur: number) => {
+    if (cur === 7 && isJobOffer) return 3;
+    if (cur === 3 && isJobOffer) return 2;
+    if (cur === 4 && isRetired)  return 2;
+    return cur - 1;
+  };
+
+  const getEffectiveTotalSteps = () => {
+    if (isJobOffer) return 5;
+    if (isRetired)  return 7;
+    return TOTAL_STEPS;
+  };
+  const getEffectiveStep = () => {
+    if (isJobOffer) {
+      if (step <= 3) return step;
+      if (step >= 7) return step - 3;
+      return step;
+    }
+    if (isRetired) {
+      if (step <= 2) return step;
+      return step - 1;
+    }
+    return step;
+  };
+
   const progress = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
 
@@ -130,19 +213,40 @@ export default function WizardPage() {
     return false;
   };
 
-  const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
-  const handleBack = () => { if (step === 1) router.push("/"); else setStep(getPrevStep(step)); };
+  const handleNext = () => {
+    const next = getNextStep(step);
+    if (next <= TOTAL_STEPS) setStep(next);
+    else handleSubmit();
+  };
+  const handleBack = () => {
+    if (step === 1) router.push("/");
+    else setStep(getPrevStep(step));
+  };
+
+  const resolveJobRole = (role: string): string => {
+    if (role === "retired" || role === "student") return "teacher";
+    if (role === "freelancer") return "softwareEngineer";
+    if (role === "other") return "softwareEngineer";
+    return role;
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/countries");
       const countries: CountryWithData[] = await res.json();
-      const matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
+      const resolvedAnswers: WizardAnswers = {
+        ...(answers as WizardAnswers),
+        jobRole: isRetired ? "teacher" : resolveJobRole(answers.jobRole ?? "softwareEngineer"),
+      };
+      const matches = scoreCountriesForWizard(countries, resolvedAnswers);
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
-      sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
+      sessionStorage.setItem("wizardAnswers", JSON.stringify(resolvedAnswers));
       router.push("/wizard/results");
-    } catch (err) { console.error(err); setLoading(false); }
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
   };
 
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
@@ -179,12 +283,21 @@ export default function WizardPage() {
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Let's get started</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Where are you from?</h2>
-                <p className="text-text-muted text-sm">Your passport affects which countries are easiest to move to.</p>
+                <p className="text-text-muted text-sm">Your passport determines which countries are easiest to move to.</p>
               </div>
-              <select value={answers.passport ?? ""} onChange={(e) => setAnswers({ ...answers, passport: e.target.value })}
-                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors">
+              <select
+                value={answers.passport ?? ""}
+                onChange={(e) => setAnswers({ ...answers, passport: e.target.value })}
+                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors"
+              >
                 <option value="">Select your country...</option>
-                {PASSPORTS.map((p) => <option key={p} value={p.toLowerCase()}>{p}</option>)}
+                {PASSPORT_GROUPS.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((p) => (
+                      <option key={p} value={p.toLowerCase()}>{p}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
           )}
@@ -195,11 +308,12 @@ export default function WizardPage() {
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your situation</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Why are you moving?</h2>
-                <p className="text-text-muted text-sm">This helps us understand what matters most.</p>
+                <p className="text-text-muted text-sm">This shapes your entire result set.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {MOVE_REASONS.map((r) => (
-                  <button key={r.key} onClick={() => setAnswers({ ...answers, moveReason: r.key })}
+                  <button key={r.key}
+                    onClick={() => setAnswers({ ...answers, moveReason: r.key })}
                     className={`${optionBase} ${answers.moveReason === r.key ? optionSelected : optionIdle}`}
                     style={answers.moveReason === r.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                     <span className="text-xl">{r.emoji}</span>
@@ -212,22 +326,59 @@ export default function WizardPage() {
                   <p className="text-xs font-bold text-accent">Since you have a job offer, we'll skip some questions and focus on what matters most.</p>
                 </div>
               )}
+              {isRetired && (
+                <div className="p-3 border-2 border-accent/40 bg-accent/5">
+                  <p className="text-xs font-bold text-accent">We'll focus on cost of living, passive income tax, healthcare, and retirement visas.</p>
+                </div>
+              )}
+              {isRemote && (
+                <div className="p-3 border-2 border-accent/40 bg-accent/5">
+                  <p className="text-xs font-bold text-accent">We'll highlight countries with digital nomad visas, territorial tax, and fast internet.</p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Step 3 — Job role */}
+          {/* Step 3 — Job role (skipped for retired) */}
           {step === 3 && (
             <div className="space-y-8 animate-fade-up">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Your work</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What do you do?</h2>
-                <p className="text-text-muted text-sm">We'll show you salaries specific to your field.</p>
+                <p className="text-text-muted text-sm">We'll show salaries specific to your field in each country.</p>
               </div>
-              <select value={answers.jobRole ?? ""} onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
-                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors">
+
+              <select
+                value={SPECIAL_ROLE_KEYS.includes(answers.jobRole ?? "") ? "" : (answers.jobRole ?? "")}
+                onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
+                className="w-full px-4 py-3.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm outline-none appearance-none cursor-pointer font-medium transition-colors"
+              >
                 <option value="">Select your job role...</option>
-                {JOB_ROLES.map((r) => <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>)}
+                {JOB_ROLES.map((r) => (
+                  <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
+                ))}
               </select>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t-2 border-[#2a2a2a]" />
+                <span className="text-xs font-bold text-text-muted uppercase tracking-widest">or</span>
+                <div className="flex-1 border-t-2 border-[#2a2a2a]" />
+              </div>
+
+              <div className="space-y-2">
+                {SPECIAL_ROLES.map((r) => (
+                  <button key={r.key}
+                    onClick={() => setAnswers({ ...answers, jobRole: r.key })}
+                    className={`${optionBase} ${answers.jobRole === r.key ? optionSelected : optionIdle}`}
+                    style={answers.jobRole === r.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
+                    <span className="text-xl">{r.emoji}</span>
+                    <div>
+                      <p>{r.label}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{r.sub}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -237,7 +388,7 @@ export default function WizardPage() {
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">What matters to you</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Pick your top 3</h2>
-                <p className="text-text-muted text-sm">Select exactly 3 — we'll weight your matches accordingly.</p>
+                <p className="text-text-muted text-sm">Select exactly 3 — we weight your matches accordingly.</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {PRIORITIES.map((p) => {
@@ -272,7 +423,8 @@ export default function WizardPage() {
               </div>
               <div className="space-y-2">
                 {CITY_VIBES.map((v) => (
-                  <button key={v.key} onClick={() => setAnswers({ ...answers, cityVibe: v.key })}
+                  <button key={v.key}
+                    onClick={() => setAnswers({ ...answers, cityVibe: v.key })}
                     className={`${optionBase} ${answers.cityVibe === v.key ? optionSelected : optionIdle}`}
                     style={answers.cityVibe === v.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                     <span className="text-xl">{v.emoji}</span>
@@ -296,7 +448,8 @@ export default function WizardPage() {
               </div>
               <div className="space-y-2">
                 {rentOptions.map((o) => (
-                  <button key={o.key} onClick={() => setAnswers({ ...answers, rentBudget: o.key })}
+                  <button key={o.key}
+                    onClick={() => setAnswers({ ...answers, rentBudget: o.key })}
                     className={`${optionBase} ${answers.rentBudget === o.key ? optionSelected : optionIdle}`}
                     style={answers.rentBudget === o.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
                     <div>
@@ -315,7 +468,7 @@ export default function WizardPage() {
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Languages</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Languages you speak?</h2>
-                <p className="text-text-muted text-sm">Select all that apply — or English only.</p>
+                <p className="text-text-muted text-sm">Select all that apply — helps us match you to countries where you'll fit in.</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {LANGUAGES.map((l) => {
@@ -324,8 +477,10 @@ export default function WizardPage() {
                     <button key={l.key}
                       onClick={() => {
                         const cur = answers.languages ?? [];
-                        if (selected) setAnswers({ ...answers, languages: cur.filter((x) => x !== l.key) });
-                        else setAnswers({ ...answers, languages: [...cur, l.key] });
+                        if (l.key === "none") { setAnswers({ ...answers, languages: ["none"] }); return; }
+                        const withoutNone = cur.filter((x) => x !== "none");
+                        if (selected) setAnswers({ ...answers, languages: withoutNone.filter((x) => x !== l.key) });
+                        else setAnswers({ ...answers, languages: [...withoutNone, l.key] });
                       }}
                       className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
                       style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
@@ -343,7 +498,7 @@ export default function WizardPage() {
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Almost there</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Any deal breakers?</h2>
-                <p className="text-text-muted text-sm">We'll remove countries that don't fit. Select all that apply.</p>
+                <p className="text-text-muted text-sm">Hard filters — countries that fail these won't appear in your results.</p>
               </div>
               <div className="space-y-2">
                 {DEAL_BREAKERS.map((d) => {
