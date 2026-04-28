@@ -552,9 +552,7 @@ export default function WizardResultsPage() {
                   </div>
 
                   {/* Inline why toggle for #2 and #3 */}
-                  {i > 0 && (
-                    <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
-                  )}
+                  <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
                 </div>
               );
             })}
