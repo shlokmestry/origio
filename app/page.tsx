@@ -154,7 +154,7 @@ export default function Home() {
       </h1>
 
       <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed mb-6">
-        Salaries, visas, cost of living and quality of life —<br className="hidden sm:block" />
+        Salaries, visas, cost of living and quality of life <br className="hidden sm:block" />
         personalised to your job and passport.
       </p>
 
