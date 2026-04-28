@@ -84,9 +84,8 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               Guides
             </Link>
             <Link href="/blog" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
-  Blog
-</Link>
-
+              Blog
+            </Link>
             <Link href="/about" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
               About
             </Link>
@@ -172,7 +171,16 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-[#0f0f0f] border-b-2 border-[#2a2a2a]">
           <div className="p-4 space-y-0">
+            {/* Search */}
+            <button
+              onClick={() => { setSearchOpen(true); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-2 px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a] text-left"
+            >
+              <Search className="w-3.5 h-3.5" /> Search Countries
+            </button>
             <a href="/guides" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>Guides</a>
+            {/* Blog */}
+            <a href="/blog" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>Blog</a>
             <a href="/about" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>About</a>
             {!isPro && (
               <a href="/pro" className="flex items-center gap-1.5 px-3 py-3 text-sm font-bold text-accent border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
