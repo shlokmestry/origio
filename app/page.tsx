@@ -9,7 +9,7 @@ import Nav from "@/components/Nav";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { Briefcase, Globe2, FileText, TrendingUp, Sparkles } from "lucide-react";
+import { TrendingUp, ArrowLeft } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -21,12 +21,24 @@ export default function Home() {
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobile]);
 
   useEffect(() => {
     if (fetchedRef.current) return;
@@ -106,147 +118,215 @@ export default function Home() {
     setSelectedCountry(null);
   }, []);
 
+  // Full reset → back to hero
+  const handleBackToHome = useCallback(() => {
+    setSelectedSlug(null);
+    setSelectedCountry(null);
+    setShowHero(true);
+    setHighlightedSlugs([]);
+    setWizardMatches([]);
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClosePanel();
+      if (e.key === "Escape") {
+        if (selectedSlug) handleClosePanel();
+        else if (!showHero) handleBackToHome();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [handleClosePanel]);
+  }, [handleClosePanel, handleBackToHome, selectedSlug, showHero]);
+
+  const heroContent = (
+    <div
+      className="animate-fade-up"
+      style={{ opacity: 0, animationDelay: "0.15s", animationFillMode: "forwards" }}
+    >
+      <div className="inline-flex items-center gap-2 border-2 border-accent text-accent text-[11px] font-bold px-3 py-1.5 mb-5 uppercase tracking-widest">
+        <div className="w-1.5 h-1.5 bg-accent" />
+        Real data · 25 countries · 20 job roles
+      </div>
+
+      <h1 className="font-heading text-5xl sm:text-6xl font-extrabold tracking-tight leading-[0.95] text-text-primary mb-4">
+        Find Where<br />
+        You <span className="gradient-text">Belong</span>
+      </h1>
+
+      <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed mb-6">
+        Salaries, visas, cost of living and quality of life —<br className="hidden sm:block" />
+        personalised to your job and passport.
+      </p>
+
+      <button
+        onClick={() => router.push("/wizard")}
+        className="cta-button px-8 py-3.5 text-sm font-bold mb-6"
+      >
+        Find My Country
+      </button>
+
+      {trendingCountries.length > 0 && (
+        <div
+          className="animate-fade-up"
+          style={{ opacity: 0, animationDelay: "0.3s", animationFillMode: "forwards" }}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3" /> Trending
+            </span>
+            {trendingCountries.map((country) => (
+              <button
+                key={country.slug}
+                onClick={() => handleCountrySelect(country.slug)}
+                className="brutal-tag"
+              >
+                <span>{country.flagEmoji}</span>
+                <span>{country.name}</span>
+                <span className="text-accent font-bold">{country.data.moveScore}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const globeEl = (
+    <Globe
+      countries={globeCountries}
+      onCountrySelect={handleCountrySelect}
+      selectedSlug={selectedSlug}
+      highlightedSlugs={highlightedSlugs}
+      savedSlugs={savedSlugs}
+    />
+  );
+
+  // Bottom hint bar with ← Home button
+  const hintBar = !showHero && !selectedSlug && wizardMatches.length === 0 && (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handleBackToHome}
+        className="bg-[#111111] border-2 border-[#2a2a2a] px-4 py-3 flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary hover:border-text-primary transition-colors uppercase tracking-wide"
+        style={{ boxShadow: "4px 4px 0 #2a2a2a" }}
+      >
+        <ArrowLeft className="w-3.5 h-3.5" /> Home
+      </button>
+      <div className="bg-[#111111] border-2 border-[#2a2a2a] px-6 py-3 flex items-center gap-3" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
+        <div className="w-2 h-2 bg-accent" />
+        <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
+          {highlightedSlugs.length > 0 ? "Your matched countries are highlighted" : "Click a country to explore"}
+        </span>
+      </div>
+    </div>
+  );
 
   return (
-    <main className="fixed inset-0 bg-bg-primary overflow-hidden">
+    <>
+      {/* ── MOBILE ── */}
+      <main className="md:hidden min-h-screen bg-bg-primary flex flex-col">
+        <div className="relative z-50">
+          <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+        </div>
 
-      {/* Globe */}
-      <div className="fixed inset-0 z-0">
-        <Globe
-          countries={globeCountries}
-          onCountrySelect={handleCountrySelect}
-          selectedSlug={selectedSlug}
-          highlightedSlugs={highlightedSlugs}
-          savedSlugs={savedSlugs}
-        />
-      </div>
+        <div className="w-full mt-14" style={{ height: "60vw", minHeight: 260, maxHeight: 420 }}>
+          {globeEl}
+        </div>
 
-      {/* Nav */}
-      <div className="relative z-50">
-        <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
-      </div>
-
-      {/* Hero overlay */}
-      {showHero && (
-        <>
-          {/* Dark gradient from bottom */}
-          <div
-            className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
-            style={{
-              zIndex: 5,
-              background: "linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.7) 50%, transparent 100%)",
-            }}
-          />
-
-          <div className="fixed bottom-0 left-0 right-0 z-10 px-6 pb-8 sm:pb-10 max-w-2xl">
-
-       
-
-            <div
-              className="animate-fade-up"
-              style={{ opacity: 0, animationDelay: "0.15s", animationFillMode: "forwards" }}
-            >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 border-2 border-accent text-accent text-[11px] font-bold px-3 py-1.5 mb-5 uppercase tracking-widest">
-                <div className="w-1.5 h-1.5 bg-accent" />
-                Real data · 25 countries · 20 job roles
-              </div>
-
-              {/* Headline */}
-              <h1 className="font-heading text-5xl sm:text-6xl font-extrabold tracking-tight leading-[0.95] text-text-primary mb-4">
-                Find Where<br />
-                You <span className="gradient-text">Belong</span>
-              </h1>
-
-              <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed mb-6">
-                Salaries, visas, cost of living and quality of life <br className="hidden sm:block" />
-                personalised to your job and passport.
-              </p>
-
-              {/* CTA */}
-              <button
-                onClick={() => router.push("/wizard")}
-                className="cta-button px-8 py-3.5 text-sm font-bold mb-6"
-              >
-                Find My Country
-              </button>
-            </div>
-
-            {/* Trending */}
-            {trendingCountries.length > 0 && (
-              <div
-                className="animate-fade-up"
-                style={{ opacity: 0, animationDelay: "0.3s", animationFillMode: "forwards" }}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest flex items-center gap-1.5">
-                    <TrendingUp className="w-3 h-3" /> Trending
-                  </span>
-                  {trendingCountries.map((country) => (
-                    <button
-                      key={country.slug}
-                      onClick={() => handleCountrySelect(country.slug)}
-                      className="brutal-tag"
-                    >
-                      <span>{country.flagEmoji}</span>
-                      <span>{country.name}</span>
-                      <span className="text-accent font-bold">{country.data.moveScore}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {showHero && (
+          <div className="px-6 py-8 border-t-2 border-[#2a2a2a]">
+            {heroContent}
           </div>
-        </>
-      )}
+        )}
 
-      {/* Wizard matches panel */}
-      {wizardMatches.length > 0 && !selectedSlug && (
+        {wizardMatches.length > 0 && !selectedSlug && (
+          <div className="relative z-40">
+            <WizardMatchesPanel
+              matches={wizardMatches}
+              allCountries={allCountries}
+              selectedRole={selectedRole}
+              onCountrySelect={(slug) => { handleCountrySelect(slug); setWizardMatches([]); }}
+              onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }}
+            />
+          </div>
+        )}
+
         <div className="relative z-40">
-          <WizardMatchesPanel
-            matches={wizardMatches}
-            allCountries={allCountries}
+          <CountryPanel
+            country={selectedCountry}
+            onClose={handleClosePanel}
             selectedRole={selectedRole}
-            onCountrySelect={(slug) => {
-              handleCountrySelect(slug);
-              setWizardMatches([]);
-            }}
-            onClose={() => {
-              setWizardMatches([]);
-              setHighlightedSlugs([]);
-            }}
+            onRoleChange={setSelectedRole}
           />
         </div>
-      )}
 
-      {/* Country panel */}
-      <div className="relative z-40">
-        <CountryPanel
-          country={selectedCountry}
-          onClose={handleClosePanel}
-          selectedRole={selectedRole}
-          onRoleChange={setSelectedRole}
-        />
-      </div>
-
-      {/* Explore hint */}
-      {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
-          <div className="bg-[#111111] border-2 border-[#2a2a2a] px-6 py-3 flex items-center gap-3" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-            <div className="w-2 h-2 bg-accent" />
-            <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
-              {highlightedSlugs.length > 0 ? "Your matched countries are highlighted" : "Click a country to explore"}
-            </span>
+        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
+          <div className="flex justify-center py-4 z-30">
+            {hintBar}
           </div>
+        )}
+      </main>
+
+      {/* ── DESKTOP ── */}
+      <main className="hidden md:block fixed inset-0 bg-bg-primary overflow-hidden">
+
+        <div className="fixed inset-0 z-0">
+          {globeEl}
         </div>
-      )}
-    </main>
+
+        {/* Invisible backdrop — click anywhere (not on nav/panels) → back to home */}
+        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
+          <div
+            className="fixed inset-0 z-[2] cursor-default"
+            onClick={handleBackToHome}
+          />
+        )}
+
+        <div className="relative z-50">
+          <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+        </div>
+
+        {showHero && (
+          <>
+            <div
+              className="fixed bottom-0 left-0 right-0 h-3/4 pointer-events-none"
+              style={{
+                zIndex: 5,
+                background: "linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.7) 50%, transparent 100%)",
+              }}
+            />
+            <div className="fixed bottom-0 left-0 right-0 z-10 px-6 pb-8 sm:pb-10 max-w-2xl">
+              {heroContent}
+            </div>
+          </>
+        )}
+
+        {wizardMatches.length > 0 && !selectedSlug && (
+          <div className="relative z-40">
+            <WizardMatchesPanel
+              matches={wizardMatches}
+              allCountries={allCountries}
+              selectedRole={selectedRole}
+              onCountrySelect={(slug) => { handleCountrySelect(slug); setWizardMatches([]); }}
+              onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }}
+            />
+          </div>
+        )}
+
+        <div className="relative z-40">
+          <CountryPanel
+            country={selectedCountry}
+            onClose={handleClosePanel}
+            selectedRole={selectedRole}
+            onRoleChange={setSelectedRole}
+          />
+        </div>
+
+        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
+            {hintBar}
+          </div>
+        )}
+      </main>
+    </>
   );
 }
