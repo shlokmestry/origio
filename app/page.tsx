@@ -228,12 +228,12 @@ export default function Home() {
           <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
         </div>
 
-        <div className="w-full mt-14" style={{ height: "60vw", minHeight: 260, maxHeight: 420 }}>
+        <div className="w-full mt-14" style={{ height: "100vw", minHeight: 320, maxHeight: 500 }}>
           {globeEl}
         </div>
 
         {showHero && (
-          <div className="px-6 py-8 border-t-2 border-[#2a2a2a]">
+          <div className="px-6 py-8">
             {heroContent}
           </div>
         )}
