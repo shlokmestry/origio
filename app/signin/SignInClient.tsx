@@ -1,11 +1,11 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
 
-// ── Cycling country data (exact from design HTML) ─────────────────────────
+// ── Cycling country data ──────────────────────────────────────────────────
 const COUNTRIES = [
   {
     flag: '🇨🇭', name: 'Switzerland', score: 92, scoreColor: '#4ade80',
@@ -14,6 +14,7 @@ const COUNTRIES = [
     nums: { salary: '9.6', safety: '9.3', health: '8.8', afford: '4.2' },
     coord: '47.3769° N · 8.5417° E',
     reasons: [['★ Salary fit', '#00ffd5'], ['★ Safety', '#4ade80'], ['★ Easy visa', '#fafafa']] as [string, string][],
+    forName: 'Aoife', forRole: 'PM', forPassport: 'IE',
   },
   {
     flag: '🇩🇰', name: 'Denmark', score: 88, scoreColor: '#4ade80',
@@ -22,6 +23,7 @@ const COUNTRIES = [
     nums: { salary: '8.8', safety: '9.0', health: '9.2', afford: '6.4' },
     coord: '55.6761° N · 12.5683° E',
     reasons: [['★ Healthcare', '#4ade80'], ['★ Work-life', '#fafafa'], ['★ Bike city', '#00ffd5']] as [string, string][],
+    forName: 'James', forRole: 'SWE', forPassport: 'UK',
   },
   {
     flag: '🇳🇱', name: 'Netherlands', score: 85, scoreColor: '#facc15',
@@ -30,6 +32,7 @@ const COUNTRIES = [
     nums: { salary: '8.2', safety: '8.5', health: '8.6', afford: '5.8' },
     coord: '52.3676° N · 4.9041° E',
     reasons: [['★ 30% ruling', '#00ffd5'], ['★ English-friendly', '#fafafa'], ['★ Connected', '#4ade80']] as [string, string][],
+    forName: 'Priya', forRole: 'ENG', forPassport: 'IN',
   },
   {
     flag: '🇵🇹', name: 'Portugal', score: 81, scoreColor: '#facc15',
@@ -38,8 +41,23 @@ const COUNTRIES = [
     nums: { salary: '6.2', safety: '8.2', health: '8.0', afford: '8.8' },
     coord: '38.7223° N · 9.1393° W',
     reasons: [['★ Affordable', '#4ade80'], ['★ Climate', '#fafafa'], ['★ Digital nomad', '#00ffd5']] as [string, string][],
+    forName: 'Marco', forRole: 'DEV', forPassport: 'BR',
   },
 ]
+
+// ── Tab-aware copy ────────────────────────────────────────────────────────
+const COPY = {
+  signin: {
+    eyebrow: 'Welcome back.',
+    headline: <>Still<br />searching?</>,
+    sub: "Your data didn't go anywhere. Sign in to access your matches, saved countries and report.",
+  },
+  signup: {
+    eyebrow: 'Welcome to Origio.',
+    headline: <>Somewhere a version<br />of you already<br />made the move.</>,
+    sub: 'Free to start. No spreadsheet required. Just your job, your passport, and your priorities.',
+  },
+}
 
 function barColor(pct: number) {
   if (pct >= 75) return '#4ade80'
@@ -48,41 +66,23 @@ function barColor(pct: number) {
 }
 
 // ── Cycling product card ──────────────────────────────────────────────────
-function CyclingCard() {
-  const [idx, setIdx] = useState(0)
-  const [fading, setFading] = useState(false)
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setFading(true)
-      setTimeout(() => {
-        setIdx(i => (i + 1) % COUNTRIES.length)
-        setFading(false)
-      }, 350)
-    }, 4200)
-    return () => clearInterval(t)
-  }, [])
-
+function CyclingCard({ idx, fading }: { idx: number; fading: boolean }) {
   const c = COUNTRIES[idx]
-
   return (
     <div style={{
       opacity: fading ? 0 : 1,
       transform: fading ? 'translateY(6px)' : 'translateY(0)',
       transition: 'opacity 0.35s ease, transform 0.35s ease',
-      background: '#0a0a0a',
-      border: '2px solid #2a2a2a',
-      boxShadow: '6px 6px 0 #00ffd5',
-      width: 380,
-      maxWidth: '100%',
+      background: '#0a0a0a', border: '2px solid #2a2a2a',
+      boxShadow: '6px 6px 0 #00ffd5', width: 380, maxWidth: '100%',
     }}>
-      {/* Card head */}
+      {/* Head */}
       <div style={{ padding: '10px 20px', borderBottom: '2px solid #2a2a2a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880' }}>Your top match</span>
         <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#888880', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sample</span>
       </div>
 
-      {/* Card body */}
+      {/* Body */}
       <div style={{ padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
           <span style={{ fontSize: 64, lineHeight: 1 }}>{c.flag}</span>
@@ -96,7 +96,7 @@ function CyclingCard() {
           </div>
         </div>
 
-        {/* Stats row */}
+        {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', border: '2px solid #1a1a1a', marginBottom: 20 }}>
           {[
             { label: 'Take-home', val: c.salary, color: '#00ffd5' },
@@ -110,13 +110,13 @@ function CyclingCard() {
           ))}
         </div>
 
-        {/* Priority bars */}
+        {/* Bars */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
           {[
-            { label: 'Salary',       pct: c.bars.salary, num: c.nums.salary },
-            { label: 'Safety',       pct: c.bars.safety, num: c.nums.safety },
-            { label: 'Healthcare',   pct: c.bars.health, num: c.nums.health },
-            { label: 'Affordability',pct: c.bars.afford, num: c.nums.afford },
+            { label: 'Salary',        pct: c.bars.salary, num: c.nums.salary },
+            { label: 'Safety',        pct: c.bars.safety, num: c.nums.safety },
+            { label: 'Healthcare',    pct: c.bars.health, num: c.nums.health },
+            { label: 'Affordability', pct: c.bars.afford, num: c.nums.afford },
           ].map(b => (
             <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888880', width: 80, flexShrink: 0 }}>{b.label}</span>
@@ -128,42 +128,43 @@ function CyclingCard() {
           ))}
         </div>
 
-        {/* Divider */}
         <div style={{ borderTop: '1px dashed #2a2a2a', marginBottom: 16 }} />
 
-        {/* Reason stamps */}
+        {/* Stamps */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {c.reasons.map(([label, color]) => (
+          {c.reasons.map(([label, color], i) => (
             <span key={label} style={{
               border: `2px solid ${color}`, padding: '4px 8px', color,
               fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase',
               display: 'inline-flex', alignItems: 'center',
-              transform: `rotate(${Math.random() > 0.5 ? '-1.5deg' : '1deg'})`,
+              transform: `rotate(${i % 2 === 0 ? '-1.5deg' : '1deg'})`,
             }}>{label}</span>
           ))}
         </div>
       </div>
 
-      {/* Card foot */}
+      {/* Foot — name cycles with card */}
       <div style={{ padding: '10px 20px', borderTop: '2px solid #2a2a2a', background: '#0f0f0f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888880' }}>For Aoife · PM · IE passport</span>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888880' }}>
+          For {c.forName} · {c.forRole} · {c.forPassport} passport
+        </span>
         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00ffd5' }}>live</span>
       </div>
     </div>
   )
 }
 
-// ── Art panel background ──────────────────────────────────────────────────
+// ── Row data for wallpaper ────────────────────────────────────────────────
 const ROWS = [
   { text: 'Portugal · Denmark · Netherlands · Germany ·', solid: false, dir: 'l', accent: null },
-  { text: 'Spain · ', solid: true,  dir: 'r', accent: 'Switzerland' },
-  { text: 'Sweden · Canada · Singapore · Japan ·',        solid: false, dir: 'l', accent: null },
-  { text: 'Estonia · France · Finland · Australia ·',     solid: true,  dir: 'r', accent: null },
-  { text: 'New Zealand · UK · Iceland · Belgium ·',       solid: false, dir: 'l', accent: null },
-  { text: 'Czechia · Italy · Greece · Mexico · UAE ·',    solid: true,  dir: 'r', accent: null },
+  { text: 'Spain · ', solid: true, dir: 'r', accent: 'Switzerland' },
+  { text: 'Sweden · Canada · Singapore · Japan ·', solid: false, dir: 'l', accent: null },
+  { text: 'Estonia · France · Finland · Australia ·', solid: true, dir: 'r', accent: null },
+  { text: 'New Zealand · UK · Iceland · Belgium ·', solid: false, dir: 'l', accent: null },
+  { text: 'Czechia · Italy · Greece · Mexico · UAE ·', solid: true, dir: 'r', accent: null },
 ]
 
-// ── Main component ────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────
 export default function SignInClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -177,11 +178,28 @@ export default function SignInClient() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Cycling state lifted up so card + coord ticker stay in sync
+  const [cardIdx, setCardIdx] = useState(0)
+  const [fading, setFading] = useState(false)
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) router.push(next)
     })
   }, [next, router])
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFading(true)
+      setTimeout(() => {
+        setCardIdx(i => (i + 1) % COUNTRIES.length)
+        setFading(false)
+      }, 350)
+    }, 4200)
+    return () => clearInterval(t)
+  }, [])
+
+  const copy = COPY[tab]
 
   const passwordTooShort = tab === 'signup' && password.length > 0 && password.length < 8
   const passwordTooLong  = tab === 'signup' && password.length > 16
@@ -243,7 +261,7 @@ export default function SignInClient() {
       <div className="flex flex-col px-6 sm:px-10 py-8 lg:py-10">
 
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2" style={{ opacity: 1 }}>
+        <a href="/" className="flex items-center gap-2">
           <div style={{ width: 14, height: 14, background: '#00ffd5', border: '2px solid #fafafa', flexShrink: 0 }} />
           <span style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 15, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Origio</span>
         </a>
@@ -252,12 +270,15 @@ export default function SignInClient() {
         <div className="flex-1 flex items-center">
           <div className="w-full" style={{ maxWidth: 400, margin: '0 auto' }}>
 
-            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880', marginBottom: 8 }}>Welcome back</p>
-            <h1 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.0, textTransform: 'uppercase', marginBottom: 16 }}>
-              Find where<br />you <span style={{ color: '#00ffd5' }}>belong.</span>
+            {/* Copy — swaps on tab change */}
+            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880', marginBottom: 8 }}>
+              {copy.eyebrow}
+            </p>
+            <h1 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: tab === 'signup' ? 32 : 40, fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.05, textTransform: 'uppercase', marginBottom: 16, transition: 'font-size 0.2s ease' }}>
+              {copy.headline}
             </h1>
             <p style={{ fontSize: 13, color: '#888880', lineHeight: 1.6, maxWidth: 360, marginBottom: 32 }}>
-              Sign in to pick up your wizard answers, saved countries, and personalised reports.
+              {copy.sub}
             </p>
 
             {/* Tab switcher */}
@@ -397,7 +418,6 @@ export default function SignInClient() {
           </div>
         </div>
 
-        {/* Bottom */}
         <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888880' }}>
           Origio · 2026 · All findings personalised.
         </p>
@@ -410,7 +430,7 @@ export default function SignInClient() {
           isolation: 'isolate',
         }}>
 
-        {/* Faint grid */}
+        {/* Grid */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
@@ -418,7 +438,7 @@ export default function SignInClient() {
           maskImage: 'radial-gradient(ellipse at center, #000 30%, transparent 75%)',
         }} />
 
-        {/* Concentric rings */}
+        {/* Rings */}
         <svg style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 720, height: 720, opacity: 0.35, pointerEvents: 'none' }} viewBox="0 0 720 720">
           <circle cx="360" cy="360" r="80"  fill="none" stroke="#1a1a1a" strokeWidth="1"/>
           <circle cx="360" cy="360" r="140" fill="none" stroke="#1a1a1a" strokeWidth="1"/>
@@ -429,7 +449,7 @@ export default function SignInClient() {
           <line x1="360" y1="20" x2="360" y2="700" stroke="#1a1a1a" strokeWidth="1"/>
         </svg>
 
-        {/* Country name wallpaper */}
+        {/* Country wallpaper */}
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
           justifyContent: 'center', pointerEvents: 'none', userSelect: 'none',
@@ -446,30 +466,24 @@ export default function SignInClient() {
               animation: `${row.dir === 'l' ? 'driftL' : 'driftR'} ${40 + i * 5}s linear infinite`,
             }}>
               {row.text}
-              {row.accent && <span style={{ color: 'rgba(0,255,213,0.8)', WebkitTextStroke: 0 as any }}>{row.accent}</span>}
+              {row.accent && <span style={{ color: 'rgba(0,255,213,0.8)', WebkitTextStroke: '0' as any }}>{row.accent}</span>}
               {row.accent && ' · Ireland · Norway ·'}
             </div>
           ))}
         </div>
 
-        {/* Live dot + eyebrow */}
+        {/* Live dot */}
         <div style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 6, height: 6, borderRadius: '50%', background: '#4ade80',
-            boxShadow: '0 0 8px rgba(74,222,128,0.6)',
-            animation: 'pulse 2s ease-in-out infinite',
-          }} />
-          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880' }}>
-            Live · 25 countries scored
-          </p>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.6)', animation: 'pulse 2s ease-in-out infinite' }} />
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880' }}>Live · 25 countries scored</p>
         </div>
 
-        {/* Cycling card — centred */}
+        {/* Cycling card */}
         <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <CyclingCard />
+          <CyclingCard idx={cardIdx} fading={fading} />
         </div>
 
-        {/* Bottom pullquote */}
+        {/* Pullquote */}
         <div style={{ position: 'relative', zIndex: 10, maxWidth: 420 }}>
           <p style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 24, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 1.05, marginBottom: 12 }}>
             Where would your <span style={{ color: '#00ffd5' }}>salary stretch the furthest?</span>
@@ -479,22 +493,23 @@ export default function SignInClient() {
           </p>
         </div>
 
-        {/* Coordinate ticker */}
+        {/* Coord ticker — updates with card */}
         <div style={{
           position: 'absolute', bottom: 18, left: 18, right: 18,
           display: 'flex', justifyContent: 'space-between',
-          fontFamily: 'monospace', fontSize: 10, color: '#444', letterSpacing: '0.1em', textTransform: 'uppercase',
-          pointerEvents: 'none', zIndex: 10,
+          fontFamily: 'monospace', fontSize: 10, color: '#444', letterSpacing: '0.1em',
+          textTransform: 'uppercase', pointerEvents: 'none', zIndex: 10,
+          opacity: fading ? 0 : 1, transition: 'opacity 0.35s ease',
         }}>
           <span>51.5074° N · 0.1278° W</span>
           <span>→</span>
-          <span>47.3769° N · 8.5417° E</span>
+          <span>{COUNTRIES[cardIdx].coord}</span>
         </div>
 
         <style>{`
           @keyframes driftL { from { transform: translateX(0); } to { transform: translateX(-12%); } }
           @keyframes driftR { from { transform: translateX(-12%); } to { transform: translateX(0); } }
-          @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+          @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
         `}</style>
       </div>
     </div>
