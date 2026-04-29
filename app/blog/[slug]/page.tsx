@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Globe2, ArrowLeft, Calendar, Tag, Clock } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm"; 
 
 export const revalidate = 3600;
 
@@ -170,7 +171,7 @@ export default async function BlogPostPage({ params }: Props) {
           prose-blockquote:border-l-accent prose-blockquote:text-text-muted
           prose-code:text-accent prose-code:bg-bg-secondary prose-code:px-1 prose-code:py-0.5 prose-code:text-sm
         ">
-          <ReactMarkdown>{post.content_md}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content_md}</ReactMarkdown>
         </div>
 
         {/* Related posts */}
