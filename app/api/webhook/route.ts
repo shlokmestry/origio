@@ -19,7 +19,7 @@ const adminSupabase = createClient(
 
 export async function POST(request: Request) {
   // Rate limit: max 20 webhook calls per minute (Stripe retries can burst)
-  const limited = rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
+  const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
   if (limited) return limited
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     if (session.customer_email) {
       const customerName = session.customer_details?.name ?? 'there'
       await resend.emails.send({
-        from: 'Origio <onboarding@resend.dev>',
+        from: 'Origio <noreply@findorigio.com>',
         to: session.customer_email,
         subject: 'Welcome to Origio Pro ✨',
         react: createElement(WelcomePro, { name: customerName }),

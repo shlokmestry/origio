@@ -14,7 +14,7 @@ const adminClient = createClient(
 
 export async function DELETE(request: Request) {
   // Rate limit: max 2 deletion attempts per minute
-  const limited = rateLimit(request, { name: 'delete-account', maxRequests: 2, windowSeconds: 60 })
+  const limited = await rateLimit(request, { name: 'delete-account', maxRequests: 2, windowSeconds: 60 })
   if (limited) return limited
   const authHeader = request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
@@ -31,16 +31,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Send deletion email before deleting the account
-  const userName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'there'
-  await resend.emails.send({
-    from: 'Origio <onboarding@resend.dev>',
-    to: user.email!,
-    subject: 'Your Origio account has been deleted',
-    react: createElement(AccountDeleted, { name: userName }),
-  })
-
-  // Delete all user data then auth user
+  // Delete all user data then auth user — do this FIRST before the email
   await Promise.all([
     adminClient.from('saved_countries').delete().eq('user_id', user.id),
     adminClient.from('wizard_results').delete().eq('user_id', user.id),
@@ -50,6 +41,19 @@ export async function DELETE(request: Request) {
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
   if (deleteError) {
     return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  }
+
+  // Send deletion confirmation AFTER successful deletion (best-effort — don't block on failure)
+  const userName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'there'
+  try {
+    await resend.emails.send({
+      from: 'Origio <noreply@findorigio.com>',
+      to: user.email!,
+      subject: 'Your Origio account has been deleted',
+      react: createElement(AccountDeleted, { name: userName }),
+    })
+  } catch (emailErr) {
+    console.error('Failed to send account deletion email:', emailErr)
   }
 
   return NextResponse.json({ success: true })

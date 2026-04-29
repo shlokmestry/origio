@@ -31,6 +31,8 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
       window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname)}`
       return
     }
+    // Validate slug format before any DB operation
+    if (!/^[a-z]+(-[a-z]+)*$/.test(countrySlug)) return
     setLoading(true)
     if (saved) {
       await supabase

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   // Increase timeout for static page generation — Supabase calls at build time
   // can be slow on cold starts, and the default 60s caused /about to timeout.
   staticPageGenerationTimeout: 120,
@@ -49,7 +49,7 @@ const nextConfig = {
               // Stripe checkout is loaded in a frame
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               // Block all object/embed
-              "object-src 'none',",
+              "object-src 'none'",
               // Restrict base URI to self
               "base-uri 'self'",
               // Only allow forms to submit to self and Stripe
