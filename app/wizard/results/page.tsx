@@ -320,8 +320,13 @@ export default function WizardResultsPage() {
     const raw = sessionStorage.getItem("wizardMatches");
     const answersRaw = sessionStorage.getItem("wizardAnswers");
     if (!raw) { router.push("/wizard"); return; }
-    setMatches(JSON.parse(raw));
-    if (answersRaw) setAnswers(JSON.parse(answersRaw));
+    try {
+      setMatches(JSON.parse(raw));
+      if (answersRaw) setAnswers(JSON.parse(answersRaw));
+    } catch {
+      router.push("/wizard");
+      return;
+    }
 
     let progress = 0;
     let stepIndex = 0;
