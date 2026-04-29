@@ -1,3 +1,5 @@
+const SUPABASE_URL = 'https://towrbbimvrsglguprsdk.supabase.co';
+
 const TOPICS = [
   { title: "Software Engineer Salaries in Netherlands 2026", category: "Salary Guides" },
   { title: "Portugal D8 Digital Nomad Visa: Full Guide 2026", category: "Visa Guides" },
@@ -14,15 +16,6 @@ const TOPICS = [
 async function getNextTopic() {
   const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
   return TOPICS[week % TOPICS.length];
-}
-
-function toSlug(title) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
 }
 
 async function generatePost(topic) {
@@ -68,27 +61,23 @@ Return ONLY a valid JSON object. No backticks, no markdown fences, no extra text
   });
 
   console.log('API status:', res.status);
-
   const data = await res.json();
 
   if (!res.ok) {
-    console.error('API error response:', JSON.stringify(data));
+    console.error('API error:', JSON.stringify(data));
     throw new Error(`Claude API error: ${data.error?.message ?? res.status}`);
   }
 
   if (!data.content || !data.content[0]) {
-    console.error('Unexpected response shape:', JSON.stringify(data));
     throw new Error('No content in Claude response');
   }
 
   console.log('Stop reason:', data.stop_reason);
-  console.log('Input tokens:', data.usage?.input_tokens);
-  console.log('Output tokens:', data.usage?.output_tokens);
+  console.log('Tokens used:', data.usage?.input_tokens, 'in /', data.usage?.output_tokens, 'out');
 
   const text = data.content[0].text;
-  console.log('Raw response (first 200 chars):', text.substring(0, 200));
+  console.log('Raw (first 200):', text.substring(0, 200));
 
-  // Strip any accidental backticks or markdown fences
   const clean = text
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
@@ -103,21 +92,18 @@ Return ONLY a valid JSON object. No backticks, no markdown fences, no extra text
     throw new Error(`Failed to parse JSON: ${e.message}`);
   }
 
-  // Validate required fields
   if (!parsed.slug || !parsed.title || !parsed.description || !parsed.content_md) {
-    console.error('Missing fields in parsed response:', Object.keys(parsed));
-    throw new Error('Response missing required fields');
+    throw new Error(`Missing fields: ${Object.keys(parsed).join(', ')}`);
   }
 
   return parsed;
 }
 
 async function publishToSupabase(post, category) {
-  console.log('Inserting to Supabase:', post.slug);
+  const url = `${SUPABASE_URL}/rest/v1/blog_posts`;
+  console.log('Posting to:', url);
 
- const url = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/blog_posts`;
-console.log('Posting to:', url);
-const res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -138,38 +124,36 @@ const res = await fetch(url, {
 
   console.log('Supabase status:', res.status);
 
-  const body = await res.json();
-  console.log('Supabase response:', JSON.stringify(body));
+  const responseText = await res.text();
+  console.log('Supabase raw response:', responseText.substring(0, 500));
 
   if (!res.ok) {
-    // 23505 = unique violation (slug already exists) — skip gracefully
+    let body;
+    try { body = JSON.parse(responseText); } catch { body = responseText; }
     if (body?.code === '23505') {
       console.log('Slug already exists, skipping:', post.slug);
       return;
     }
-    throw new Error(`Supabase insert failed: ${JSON.stringify(body)}`);
+    throw new Error(`Supabase insert failed (${res.status}): ${responseText}`);
   }
 
-  console.log('Inserted successfully:', body[0]?.slug);
+  console.log('Inserted successfully');
 }
 
 async function main() {
   console.log('Script started');
-  console.log('SUPABASE_URL set:', !!process.env.SUPABASE_URL);
   console.log('ANTHROPIC_API_KEY set:', !!process.env.ANTHROPIC_API_KEY);
   console.log('SUPABASE_SERVICE_KEY set:', !!process.env.SUPABASE_SERVICE_KEY);
+  console.log('SUPABASE_SERVICE_KEY length:', process.env.SUPABASE_SERVICE_KEY?.length);
 
   const topic = await getNextTopic();
-  console.log('Topic selected:', topic.title);
-  console.log('Category:', topic.category);
+  console.log('Topic:', topic.title);
 
   const post = await generatePost(topic);
-  console.log('Post generated:', post.slug);
-  console.log('Title:', post.title);
-  console.log('Content length:', post.content_md.length, 'chars');
+  console.log('Generated:', post.slug, '|', post.content_md.length, 'chars');
 
   await publishToSupabase(post, topic.category);
-  console.log('Done ✓');
+  console.log('Done');
 }
 
 main().catch(e => {
