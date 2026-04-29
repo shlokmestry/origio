@@ -103,6 +103,7 @@ export default function ProfilePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   useEffect(() => {
     if (authLoading) return
@@ -154,6 +155,10 @@ export default function ProfilePage() {
 
   const saveEdit = async () => {
     if (!user) { setSaveError('Not logged in'); return }
+    // M-1: Validate lengths and passport allowlist before writing to DB
+    if (editName.trim().length > 100) { setSaveError('Name too long (max 100 chars)'); return }
+    if (editJobTitle.trim().length > 80) { setSaveError('Job title too long (max 80 chars)'); return }
+    if (editPassport && !PASSPORT_FLAGS[editPassport]) { setSaveError('Invalid passport selection'); return }
     setSaving(true); setSaveError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -179,7 +184,9 @@ export default function ProfilePage() {
   }
 
   const removeSave = async (id: string) => {
-    await supabase.from('saved_countries').delete().eq('id', id)
+    if (!user) return
+    // M-2: Always scope by user_id as defence-in-depth alongside RLS
+    await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
     setSavedCountries(prev => prev.filter(s => s.id !== id))
   }
 
@@ -423,7 +430,7 @@ export default function ProfilePage() {
               className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
               <LogOut className="w-3 h-3" /> Sign out
             </button>
-            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError('') }}
+            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
               className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-rose-500/30 text-xs font-bold text-rose-400 hover:border-rose-500/60 transition-colors uppercase tracking-wide">
               <Trash2 className="w-3 h-3" /> Delete account
             </button>
@@ -519,12 +526,24 @@ export default function ProfilePage() {
               All your saved countries, country matches, and profile data will be permanently deleted.
             </p>
             {deleteError && <p className="text-xs font-bold text-rose-400 mb-4">{deleteError}</p>}
+            {/* H-3: Require typing DELETE to confirm — prevents accidental/hijacked session deletions */}
+            <div className="mb-4">
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">
+                Type <span className="text-rose-400 font-extrabold">DELETE</span> to confirm
+              </label>
+              <input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-rose-500/60 text-text-primary text-sm font-medium outline-none transition-colors"
+              />
+            </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} disabled={deleteLoading}
+              <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }} disabled={deleteLoading}
                 className="ghost-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50">
                 Cancel
               </button>
-              <button onClick={deleteAccount} disabled={deleteLoading}
+              <button onClick={deleteAccount} disabled={deleteLoading || deleteConfirmText !== 'DELETE'}
                 className="flex-1 py-2.5 border-2 border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-sm font-bold text-rose-400 transition-colors disabled:opacity-50 uppercase tracking-wide">
                 {deleteLoading ? 'Deleting...' : 'Yes, delete'}
               </button>

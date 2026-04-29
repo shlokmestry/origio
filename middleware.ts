@@ -29,7 +29,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Redirect unauthenticated users away from protected routes
+  const PROTECTED_PREFIXES = ['/profile', '/onboarding']
+  const { pathname } = request.nextUrl
+  if (!user && PROTECTED_PREFIXES.some(p => pathname.startsWith(p))) {
+    const loginUrl = new URL('/signin', request.url)
+    loginUrl.searchParams.set('next', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
 
   return supabaseResponse
 }

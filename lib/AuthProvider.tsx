@@ -18,7 +18,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let resolved = false
 
     function resolve(source: string, u: User | null) {
-      console.log(`🔑 AUTH [${source}]: user=${!!u} | already resolved=${resolved}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔑 AUTH [${source}]: user=${!!u} | already resolved=${resolved}`)
+      }
       if (resolved) {
         setUser(u)
         return
@@ -29,12 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(`🔑 onAuthStateChange event: ${event} | user: ${!!session?.user}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔑 onAuthStateChange event: ${event} | user: ${!!session?.user}`)
+      }
       resolve('onAuthStateChange', session?.user ?? null)
     })
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log(`🔑 getSession resolved: user=${!!session?.user}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔑 getSession resolved: user=${!!session?.user}`)
+      }
       resolve('getSession', session?.user ?? null)
     })
 
