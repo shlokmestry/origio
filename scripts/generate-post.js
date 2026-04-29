@@ -1,28 +1,3 @@
-const TOPICS = [
-  { title: "Software Engineer Salaries in Netherlands 2026", category: "Salary Guides" },
-  { title: "Portugal D8 Digital Nomad Visa: Full Guide 2026", category: "Visa Guides" },
-  { title: "Amsterdam vs Lisbon: Cost of Living for Tech Workers", category: "City Comparisons" },
-  { title: "Nurse Salaries in Australia vs UK 2026", category: "Salary Guides" },
-  { title: "Canada Express Entry for Software Engineers 2026", category: "Visa Guides" },
-  { title: "Singapore vs Dubai: Which Pays More After Tax?", category: "City Comparisons" },
-  { title: "Product Manager Salaries in Switzerland 2026", category: "Salary Guides" },
-  { title: "EU Blue Card: Complete Guide for Non-EU Tech Workers", category: "Visa Guides" },
-];
-
-async function getNextTopic() {
-  // rotate based on week number
-  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
-  return TOPICS[week % TOPICS.length]
-}
-
-function toSlug(title) {
-  return title.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
-
 async function generatePost(topic) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -32,7 +7,7 @@ async function generatePost(topic) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4000,
       messages: [{
         role: 'user',
@@ -48,7 +23,7 @@ Rules:
 - End with 2-3 internal links using these paths: /best-countries-for/software-engineers, /salary-calculator, /wizard, /country/[relevant-slug]
 - Write in Markdown
 
-Return ONLY valid JSON, no backticks:
+Return ONLY valid JSON, no backticks, no markdown fences:
 {
   "slug": "url-slug-here",
   "title": "exact title",
@@ -59,46 +34,26 @@ Return ONLY valid JSON, no backticks:
     })
   })
 
+  // Log status for debugging
+  console.log('API status:', res.status)
+  
   const data = await res.json()
-  const text = data.content[0].text
-  return JSON.parse(text)
-}
-
-async function publishToSupabase(post, category) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/blog_posts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': process.env.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify({
-      slug: post.slug,
-      title: post.title,
-      description: post.description,
-      category,
-      content_md: post.content_md,
-      published: true,
-      published_at: new Date().toISOString()
-    })
-  })
+  
+  // Log full response for debugging
+  console.log('API response:', JSON.stringify(data, null, 2))
 
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Supabase insert failed: ${err}`)
+    throw new Error(`Claude API error: ${data.error?.message ?? res.status}`)
   }
-}
 
-async function main() {
-  const topic = await getNextTopic()
-  console.log(`Generating: ${topic.title}`)
-  
-  const post = await generatePost(topic)
-  console.log(`Generated: ${post.slug}`)
-  
-  await publishToSupabase(post, topic.category)
-  console.log('Published ✓')
-}
+  if (!data.content || !data.content[0]) {
+    throw new Error(`Unexpected response shape: ${JSON.stringify(data)}`)
+  }
 
-main().catch(e => { console.error(e); process.exit(1) })
+  const text = data.content[0].text
+  
+  // Strip any accidental backticks
+  const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+  
+  return JSON.parse(clean)
+}
