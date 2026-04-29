@@ -1,18 +1,15 @@
 // lib/rate-limit.ts
-// In-memory sliding-window rate limiter.
-// Each serverless instance maintains its own window map, so this is
-// best-effort — but it still blocks the vast majority of abuse.
-// For bullet-proof limiting, swap this for Upstash Redis (@upstash/ratelimit).
+// Distributed sliding-window rate limiter using Upstash Redis (H-2 fix).
+// Falls back to in-memory (best-effort, unreliable in serverless) when
+// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set.
+//
+// Setup (free):
+//   1. Create a Redis DB at https://upstash.com
+//   2. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to Vercel env vars
 
 import { NextResponse } from 'next/server'
-
-interface RateLimitEntry {
-  tokens: number
-  lastRefill: number
-}
-
-// Separate buckets for different routes
-const buckets = new Map<string, Map<string, RateLimitEntry>>()
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
 interface RateLimitOptions {
   /** Unique name for this limiter (e.g. "checkout", "delete-account") */
@@ -23,95 +20,141 @@ interface RateLimitOptions {
   windowSeconds: number
 }
 
-/**
- * Extract a stable identifier from the request.
- * Prefers the auth token (user-scoped) and falls back to IP.
- */
-function getIdentifier(request: Request): string {
-  const auth = request.headers.get('Authorization')
-  if (auth) {
-    // Hash-ish: use last 16 chars of the token so we don't store the full JWT
-    return 'tok:' + auth.slice(-16)
-  }
+// ── Upstash distributed limiters ─────────────────────────────────────────────
+const isUpstashConfigured = !!(
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+)
 
-  // Vercel/Cloudflare set these headers
-  const forwarded = request.headers.get('x-forwarded-for')
-  const realIp = request.headers.get('x-real-ip')
-  return 'ip:' + (forwarded?.split(',')[0]?.trim() ?? realIp ?? 'unknown')
+const upstashLimiters = new Map<string, Ratelimit>()
+
+function getUpstashLimiter(
+  name: string,
+  maxRequests: number,
+  windowSeconds: number
+): Ratelimit {
+  const key = `${name}:${maxRequests}:${windowSeconds}`
+  if (!upstashLimiters.has(key)) {
+    upstashLimiters.set(
+      key,
+      new Ratelimit({
+        redis: new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL!,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+        }),
+        limiter: Ratelimit.slidingWindow(maxRequests, `${windowSeconds} s`),
+        prefix: `rl:${name}`,
+      })
+    )
+  }
+  return upstashLimiters.get(key)!
 }
 
+// ── In-memory fallback (single-instance only) ─────────────────────────────────
+interface InMemoryEntry {
+  tokens: number
+  lastRefill: number
+}
+
+const buckets = new Map<string, Map<string, InMemoryEntry>>()
+
+function inMemoryCheck(
+  identifier: string,
+  { name, maxRequests, windowSeconds }: RateLimitOptions
+): boolean {
+  const now = Date.now()
+  const windowMs = windowSeconds * 1000
+
+  if (!buckets.has(name)) buckets.set(name, new Map())
+  const bucket = buckets.get(name)!
+  const entry = bucket.get(identifier)
+
+  if (!entry) {
+    bucket.set(identifier, { tokens: maxRequests - 1, lastRefill: now })
+    return false // allowed
+  }
+
+  const refill = Math.floor(((now - entry.lastRefill) / windowMs) * maxRequests)
+  if (refill > 0) {
+    entry.tokens = Math.min(maxRequests, entry.tokens + refill)
+    entry.lastRefill = now
+  }
+
+  if (entry.tokens <= 0) return true // blocked
+  entry.tokens -= 1
+  return false // allowed
+}
+
+// Cleanup stale in-memory entries every 5 minutes
+setInterval(() => {
+  const now = Date.now()
+  const MAX_AGE = 10 * 60 * 1000
+  buckets.forEach((bucket) => {
+    bucket.forEach((entry, key) => {
+      if (now - entry.lastRefill > MAX_AGE) bucket.delete(key)
+    })
+  })
+}, 5 * 60 * 1000)
+
+// ── Identifier extraction (IP-based) — L-4 fix ───────────────────────────────
+function getIdentifier(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+  return forwarded?.split(',')[0]?.trim() ?? realIp ?? 'unknown'
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
 /**
  * Check the rate limit for a request.
  * Returns `null` if allowed, or a `NextResponse` 429 if blocked.
  *
  * Usage in an API route:
  * ```ts
- * const limited = rateLimit(request, { name: 'checkout', maxRequests: 5, windowSeconds: 60 })
+ * const limited = await rateLimit(request, { name: 'checkout', maxRequests: 5, windowSeconds: 60 })
  * if (limited) return limited
  * ```
  */
-export function rateLimit(
+export async function rateLimit(
   request: Request,
-  { name, maxRequests, windowSeconds }: RateLimitOptions
-): NextResponse | null {
-  const now = Date.now()
-  const windowMs = windowSeconds * 1000
+  options: RateLimitOptions
+): Promise<NextResponse | null> {
+  const { name, maxRequests, windowSeconds } = options
   const identifier = getIdentifier(request)
-  const key = `${name}:${identifier}`
 
-  // Get or create the bucket for this limiter
-  if (!buckets.has(name)) {
-    buckets.set(name, new Map())
-  }
-  const bucket = buckets.get(name)!
-
-  const entry = bucket.get(key)
-
-  if (!entry) {
-    // First request — start with maxRequests - 1 tokens
-    bucket.set(key, { tokens: maxRequests - 1, lastRefill: now })
+  if (isUpstashConfigured) {
+    const limiter = getUpstashLimiter(name, maxRequests, windowSeconds)
+    const { success, reset } = await limiter.limit(identifier)
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again shortly.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfter),
+            'X-RateLimit-Limit': String(maxRequests),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      )
+    }
     return null
   }
 
-  // Refill tokens based on elapsed time (token-bucket algorithm)
-  const elapsed = now - entry.lastRefill
-  const refill = Math.floor((elapsed / windowMs) * maxRequests)
-
-  if (refill > 0) {
-    entry.tokens = Math.min(maxRequests, entry.tokens + refill)
-    entry.lastRefill = now
-  }
-
-  if (entry.tokens <= 0) {
-    // Calculate when the next token becomes available
-    const retryAfter = Math.ceil(windowSeconds / maxRequests)
+  // Fallback to in-memory (best-effort — not reliable across serverless instances)
+  const blocked = inMemoryCheck(identifier, options)
+  if (blocked) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again shortly.' },
       {
         status: 429,
         headers: {
-          'Retry-After': String(retryAfter),
+          'Retry-After': String(Math.ceil(windowSeconds / maxRequests)),
           'X-RateLimit-Limit': String(maxRequests),
           'X-RateLimit-Remaining': '0',
         },
       }
     )
   }
-
-  entry.tokens -= 1
   return null
 }
-
-// ─── Cleanup stale entries every 5 minutes to prevent memory leaks ─────────
-setInterval(() => {
-  const now = Date.now()
-  const MAX_AGE = 10 * 60 * 1000 // 10 minutes
-
-  buckets.forEach((bucket) => {
-    bucket.forEach((entry, key) => {
-      if (now - entry.lastRefill > MAX_AGE) {
-        bucket.delete(key)
-      }
-    })
-  })
-}, 5 * 60 * 1000)

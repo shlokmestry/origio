@@ -20,7 +20,7 @@ const adminSupabase = createClient(
 
 export async function POST(request: Request) {
   // Rate limit: max 10 verification attempts per minute
-  const limited = rateLimit(request, { name: 'verify-payment', maxRequests: 10, windowSeconds: 60 })
+  const limited = await rateLimit(request, { name: 'verify-payment', maxRequests: 10, windowSeconds: 60 })
   if (limited) return limited
   const authHeader = request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
