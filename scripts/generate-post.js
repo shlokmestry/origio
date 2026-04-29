@@ -115,7 +115,9 @@ Return ONLY a valid JSON object. No backticks, no markdown fences, no extra text
 async function publishToSupabase(post, category) {
   console.log('Inserting to Supabase:', post.slug);
 
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/blog_posts`, {
+ const url = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/blog_posts`;
+console.log('Posting to:', url);
+const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
