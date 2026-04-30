@@ -155,10 +155,14 @@ const optionBase = "w-full flex items-center gap-3 p-4 border-2 text-left transi
 const optionSelected = "border-accent bg-accent/10 text-text-primary";
 const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-text-primary hover:text-text-primary";
 
+// English-speaking slugs for validation fallback
+const ENGLISH_SLUGS = ["ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore"];
+
 export default function WizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Finding matches...");
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
   const isJobOffer = answers.moveReason === "job";
@@ -232,20 +236,73 @@ export default function WizardPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setLoadingMessage("Ranking 25 countries...");
+
     try {
       const res = await fetch("/api/countries");
       const countries: CountryWithData[] = await res.json();
+
       const resolvedAnswers: WizardAnswers = {
         ...(answers as WizardAnswers),
         jobRole: isRetired ? "teacher" : resolveJobRole(answers.jobRole ?? "softwareEngineer"),
       };
-      const matches = scoreCountriesForWizard(countries, resolvedAnswers);
+
+      let matches = scoreCountriesForWizard(countries, resolvedAnswers);
+
+      // ── Layer 3: Claude validation ──────────────────────────────
+      try {
+        setLoadingMessage("Fact-checking your results...");
+
+        const validationRes = await fetch("/api/validate-results", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ matches, answers: resolvedAnswers }),
+        });
+
+        if (validationRes.ok) {
+          const validation = await validationRes.json();
+
+          // If Claude flagged countries, remove them from results
+          if (!validation.valid && validation.flaggedCountries?.length > 0) {
+            console.log("Validation issues found:", validation.issues);
+            console.log("Removing flagged countries:", validation.flaggedCountries);
+
+            matches = matches.filter(
+              (m) => !validation.flaggedCountries.includes(m.country.name)
+            );
+
+            // Recalculate match percentages after removing flagged countries
+            if (matches.length > 0) {
+              const topScore = matches[0].matchScore;
+              matches.forEach((m) => {
+                m.matchPercent = Math.round((m.matchScore / topScore) * 100);
+              });
+              if (matches[0]) matches[0].matchPercent = Math.min(97, matches[0].matchPercent);
+            }
+          }
+        }
+      } catch (validationErr) {
+        // Validation failed — never block the user, proceed with original results
+        console.error("Validation step failed (non-blocking):", validationErr);
+      }
+
+      // ── Also apply client-side safety net for critical deal breakers ──
+      // Belt and suspenders — even if Claude validation doesn't run
+      const dealBreakers = resolvedAnswers.dealBreakers ?? [];
+      if (dealBreakers.includes("english")) {
+        matches = matches.filter((m) => ENGLISH_SLUGS.includes(m.country.slug));
+      }
+
+      setLoadingMessage("Almost done...");
+
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(resolvedAnswers));
       router.push("/wizard/results");
+
     } catch (err) {
       console.error(err);
       setLoading(false);
+      setLoadingMessage("Finding matches...");
     }
   };
 
@@ -339,7 +396,7 @@ export default function WizardPage() {
             </div>
           )}
 
-          {/* Step 3 — Job role (skipped for retired) */}
+          {/* Step 3 — Job role */}
           {step === 3 && (
             <div className="space-y-8 animate-fade-up">
               <div>
@@ -347,7 +404,6 @@ export default function WizardPage() {
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What do you do?</h2>
                 <p className="text-text-muted text-sm">We'll show salaries specific to your field in each country.</p>
               </div>
-
               <select
                 value={SPECIAL_ROLE_KEYS.includes(answers.jobRole ?? "") ? "" : (answers.jobRole ?? "")}
                 onChange={(e) => setAnswers({ ...answers, jobRole: e.target.value })}
@@ -358,13 +414,11 @@ export default function WizardPage() {
                   <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
                 ))}
               </select>
-
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t-2 border-[#2a2a2a]" />
                 <span className="text-xs font-bold text-text-muted uppercase tracking-widest">or</span>
                 <div className="flex-1 border-t-2 border-[#2a2a2a]" />
               </div>
-
               <div className="space-y-2">
                 {SPECIAL_ROLES.map((r) => (
                   <button key={r.key}
@@ -530,7 +584,7 @@ export default function WizardPage() {
             </button>
             <button onClick={handleNext} disabled={!canProceed() || loading}
               className="cta-button flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wide disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-              {loading ? "Finding matches..." : isLastStep ? "Find My Country" : <>Next <ArrowRight className="w-4 h-4" /></>}
+              {loading ? loadingMessage : isLastStep ? "Find My Country" : <>Next <ArrowRight className="w-4 h-4" /></>}
             </button>
           </div>
 
