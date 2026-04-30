@@ -38,13 +38,6 @@ function getStartLng(): number {
   return 10;
 }
 
-function getPinSize(moveScore: number, isSelected: boolean, isHovered: boolean): string {
-  if (isSelected) return "32px";
-  if (isHovered) return "28px";
-  const size = 18 + Math.round((moveScore / 10) * 10);
-  return `${Math.min(size, 28)}px`;
-}
-
 export default function Globe({
   countries,
   onCountrySelect,
@@ -81,11 +74,11 @@ export default function Globe({
       const rank = highlightedSlugs.indexOf(d.slug);
 
       let color: string;
-      if (isSelected || isHovered) color = "#00d4c8";
+      if (isSelected || isHovered) color = "#00ffd5";
       else if (rank === 0) color = "#fbbf24";
-      else if (rank === 1) color = "#00d4c8";
+      else if (rank === 1) color = "#00ffd5";
       else if (rank === 2) color = "#a78bfa";
-      else if (hasHighlights) color = "#555566";
+      else if (hasHighlights) color = "#333344";
       else if (isSaved) color = "#f472b6";
       else color = getScoreColor(d.moveScore);
 
@@ -149,8 +142,8 @@ export default function Globe({
         .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
         .backgroundImageUrl("//unpkg.com/three-globe/example/img/night-sky.png")
         .showAtmosphere(true)
-        .atmosphereColor("#00d4c8")
-        .atmosphereAltitude(0.25)
+        .atmosphereColor("#00ffd5")
+        .atmosphereAltitude(0.3)
         .width(mountEl.clientWidth)
         .height(mountEl.clientHeight)
         .pointsData([])
@@ -176,7 +169,7 @@ export default function Globe({
         .labelResolution(2)
         .labelAltitude(0.05)
         .arcsData([])
-        .arcColor(() => ["rgba(0, 212, 200, 0.3)", "rgba(0, 212, 200, 0.05)"])
+        .arcColor(() => ["rgba(0, 255, 213, 0.3)", "rgba(0, 255, 213, 0.05)"])
         .arcStroke(0.3)
         .arcDashLength(0.4)
         .arcDashGap(0.2)
@@ -187,8 +180,8 @@ export default function Globe({
       globe.controls().enableZoom = window.innerWidth >= 768;
       globe.controls().enableRotate = true;
       globe.controls().enablePan = false;
-      globe.controls().minDistance = 150;
-      globe.controls().maxDistance = 600;
+      globe.controls().minDistance = 200;
+      globe.controls().maxDistance = 500;
 
       globe.pointOfView({ lat: 30, lng: startLng, altitude: 2.5 });
 
@@ -270,7 +263,7 @@ export default function Globe({
             !pin.isSelected &&
             !pin.isHovered;
 
-          const pinSize = getPinSize(pin.moveScore, pin.isSelected, pin.isHovered);
+          const pinSize = pin.isSelected ? 14 : pin.isHovered ? 12 : 9;
 
           return (
             <div
@@ -282,24 +275,31 @@ export default function Globe({
                 position: "absolute",
                 left: pin.x,
                 top: pin.y,
-                transform: "translate(-50%, -100%)",
+                transform: "translate(-50%, -50%)",
                 cursor: "pointer",
                 zIndex: pin.isSelected ? 30 : pin.isHovered ? 25 : 20,
-                opacity: isDimmed ? 0.25 : 1,
-                transition: "opacity 0.3s ease, font-size 0.15s ease",
+                opacity: isDimmed ? 0.2 : 1,
+                transition: "opacity 0.3s ease",
                 pointerEvents: "auto",
-                fontSize: pinSize,
-                filter: pin.isSelected
-                  ? "drop-shadow(0 0 8px " + pin.color + ")"
-                  : pin.isHovered
-                  ? "drop-shadow(0 0 4px " + pin.color + ")"
-                  : "drop-shadow(0 2px 3px rgba(0,0,0,0.5))",
                 userSelect: "none",
               }}
             >
-              📌
+              {/* Square pin — no border radius, hard shadow */}
+              <div
+                style={{
+                  width: pinSize,
+                  height: pinSize,
+                  background: pin.color,
+                  border: "2px solid #0a0a0a",
+                  boxShadow: pin.isSelected
+                    ? `3px 3px 0 ${pin.color}`
+                    : "2px 2px 0 #000000",
+                  transition: "width 0.15s ease, height 0.15s ease",
+                  borderRadius: 0,
+                }}
+              />
 
-              {/* Hover tooltip */}
+              {/* Brutalist tooltip — hover only, not selected */}
               {pin.isHovered && !pin.isSelected && (
                 <div
                   style={{
@@ -307,42 +307,43 @@ export default function Globe({
                     bottom: "calc(100% + 8px)",
                     left: "50%",
                     transform: "translateX(-50%)",
-                    background: "rgba(17,17,24,0.96)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "10px",
-                    padding: "8px 12px",
+                    background: "#111111",
+                    border: "1px solid #2a2a2a",
+                    boxShadow: "3px 3px 0 #000000",
+                    padding: "6px 10px",
                     whiteSpace: "nowrap",
                     pointerEvents: "none",
                     zIndex: 50,
-                    fontSize: "13px",
-                    lineHeight: 1.4,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                    borderRadius: 0,
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "18px" }}>{pin.flagEmoji}</span>
+                    <span style={{ fontSize: "14px" }}>{pin.flagEmoji}</span>
                     <div>
-                      <div style={{ color: "#f0f0f5", fontWeight: 700, fontFamily: "Cabinet Grotesk, sans-serif", fontSize: "14px" }}>
+                      <div
+                        style={{
+                          color: "#f0f0e8",
+                          fontWeight: 700,
+                          fontFamily: "Cabinet Grotesk, sans-serif",
+                          fontSize: "12px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                        }}
+                      >
                         {pin.name}
                       </div>
-                      <div style={{ color: "#00d4c8", fontSize: "11px", fontWeight: 600 }}>
-                        Move score {pin.moveScore}/10
+                      <div
+                        style={{
+                          color: "#00ffd5",
+                          fontSize: "11px",
+                          fontFamily: "monospace",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {pin.moveScore}/10
                       </div>
                     </div>
                   </div>
-                  {/* Tooltip arrow */}
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: 0,
-                    height: 0,
-                    borderLeft: "6px solid transparent",
-                    borderRight: "6px solid transparent",
-                    borderTop: "6px solid rgba(17,17,24,0.96)",
-                  }} />
                 </div>
               )}
             </div>

@@ -63,6 +63,7 @@ body {
   width: 100% !important;
   height: 100% !important;
   touch-action: none;
+  filter: saturate(0.35) brightness(0.72) hue-rotate(165deg);
 }
 
 /* ─── Neo-brutalist panel (replaces glass-panel) ─── */
