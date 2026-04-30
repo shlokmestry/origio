@@ -138,7 +138,7 @@ export default function Globe({
       const startLng = getStartLng();
 
       const globe = (GlobeGL as any)()(globeContainer)
-        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-day.jpg")
         .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
         .backgroundImageUrl("//unpkg.com/three-globe/example/img/night-sky.png")
         .showAtmosphere(true)
