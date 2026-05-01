@@ -129,7 +129,7 @@ export default function OgImage({ params }: { params: { role: string } }) {
           }}
         >
           <div style={{ fontSize: 18, color: "#44445a", display: "flex" }}>
-            origio.vercel.app
+            findorigio.com
           </div>
         </div>
       </div>
