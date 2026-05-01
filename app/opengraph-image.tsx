@@ -108,7 +108,7 @@ export default function OgImage() {
             display: "flex",
           }}
         >
-          origio.vercel.app
+          findorigio.com
         </div>
       </div>
     ),
