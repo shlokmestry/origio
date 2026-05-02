@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import {
   Globe2, LogOut, Trash2, Sparkles, Pencil,
-  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock
+  AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock, KeyRound
 } from 'lucide-react'
 
 type SavedCountry = {
@@ -104,6 +104,8 @@ export default function ProfilePage() {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [setPasswordSent, setSetPasswordSent] = useState(false)
+  const [setPasswordLoading, setSetPasswordLoading] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -155,7 +157,6 @@ export default function ProfilePage() {
 
   const saveEdit = async () => {
     if (!user) { setSaveError('Not logged in'); return }
-    // M-1: Validate lengths and passport allowlist before writing to DB
     if (editName.trim().length > 100) { setSaveError('Name too long (max 100 chars)'); return }
     if (editJobTitle.trim().length > 80) { setSaveError('Job title too long (max 80 chars)'); return }
     if (editPassport && !PASSPORT_FLAGS[editPassport]) { setSaveError('Invalid passport selection'); return }
@@ -185,7 +186,6 @@ export default function ProfilePage() {
 
   const removeSave = async (id: string) => {
     if (!user) return
-    // M-2: Always scope by user_id as defence-in-depth alongside RLS
     await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
     setSavedCountries(prev => prev.filter(s => s.id !== id))
   }
@@ -214,6 +214,21 @@ export default function ProfilePage() {
       setDeleteLoading(false)
     }
   }
+
+  // Send password setup link for Google OAuth users
+  const handleSetPassword = async () => {
+    if (!user?.email) return
+    setSetPasswordLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    })
+    setSetPasswordLoading(false)
+    if (!error) setSetPasswordSent(true)
+  }
+
+  // Detect if user signed in with Google (no password identity)
+  const isGoogleUser = user?.app_metadata?.provider === 'google' ||
+    (user?.identities ?? []).every((id: any) => id.provider === 'google')
 
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
   const isPro = profile?.is_pro ?? false
@@ -326,7 +341,6 @@ export default function ProfilePage() {
               </div>
             ) : (
               <>
-                {/* Top match */}
                 {topMatch && (
                   <div className="px-5 py-4 border-b-2 border-[#2a2a2a] flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -344,7 +358,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 )}
-                {/* Other matches */}
                 {wizardResult.top_countries.slice(1).map((c, i) => {
                   const pctColor = matchPercentColor(capPercent(c.matchPercent))
                   return (
@@ -418,14 +431,60 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Sign-in method — shown for Google OAuth users */}
+        {isGoogleUser && (
+          <div className="border-2 border-[#2a2a2a] bg-[#111111]">
+            <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#2a2a2a]">
+              <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Sign-in Method</p>
+            </div>
+            <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                {/* Google icon */}
+                <div className="w-8 h-8 border-2 border-[#2a2a2a] flex items-center justify-center flex-shrink-0 bg-[#1a1a1a]">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-text-primary uppercase tracking-tight">Google</p>
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Connected</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                {setPasswordSent ? (
+                  <p className="text-xs font-bold text-accent uppercase tracking-wide flex items-center gap-1.5">
+                    <Check className="w-3 h-3" /> Check your email
+                  </p>
+                ) : (
+                  <button
+                    onClick={handleSetPassword}
+                    disabled={setPasswordLoading}
+                    className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide disabled:opacity-50"
+                  >
+                    <KeyRound className="w-3 h-3" />
+                    {setPasswordLoading ? 'Sending...' : 'Set a password'}
+                  </button>
+                )}
+                <p className="text-[10px] text-text-muted">Also sign in with email + password</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Account row */}
         <div className="border-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <p className="text-xs font-bold text-text-muted">{user.email}</p>
           <div className="flex gap-2 flex-wrap">
-            <a href="/auth/forgot-password"
-              className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
-              <Lock className="w-3 h-3" /> Reset password
-            </a>
+            {/* Only show reset password for non-Google users */}
+            {!isGoogleUser && (
+              <a href="/auth/forgot-password"
+                className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
+                <Lock className="w-3 h-3" /> Reset password
+              </a>
+            )}
             <button onClick={signOut}
               className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
               <LogOut className="w-3 h-3" /> Sign out
@@ -526,7 +585,6 @@ export default function ProfilePage() {
               All your saved countries, country matches, and profile data will be permanently deleted.
             </p>
             {deleteError && <p className="text-xs font-bold text-rose-400 mb-4">{deleteError}</p>}
-            {/* H-3: Require typing DELETE to confirm — prevents accidental/hijacked session deletions */}
             <div className="mb-4">
               <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">
                 Type <span className="text-rose-400 font-extrabold">DELETE</span> to confirm
