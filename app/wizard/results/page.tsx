@@ -117,11 +117,28 @@ function ScoreBar({ label, value, desc }: { label: string; value: number; desc: 
 }
 
 // ── Email Capture Component ───────────────────────────────────────────────
-function EmailCapture({ topCountry, topCountryFlag, matchPercent, jobRole }: {
+function EmailCapture({
+  topCountry,
+  topCountryFlag,
+  matchPercent,
+  jobRole,
+  grossSalary,
+  netMonthly,
+  taxRate,
+  rentCost,
+  visaLabel,
+  currency,
+}: {
   topCountry: string;
   topCountryFlag: string;
   matchPercent: number;
   jobRole: string;
+  grossSalary: number;
+  netMonthly: number;
+  taxRate: number;
+  rentCost: number;
+  visaLabel: string;
+  currency: string;
 }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -146,6 +163,12 @@ function EmailCapture({ topCountry, topCountryFlag, matchPercent, jobRole }: {
           topCountryFlag,
           matchPercent,
           jobRole,
+          grossSalary,
+          netMonthly,
+          taxRate,
+          rentCost,
+          visaLabel,
+          currency,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -176,7 +199,7 @@ function EmailCapture({ topCountry, topCountryFlag, matchPercent, jobRole }: {
           Get your {topCountryFlag} {topCountry} breakdown by email
         </p>
         <p className="text-sm text-[#888880] leading-relaxed">
-          We will send you a full salary, tax, and cost of living breakdown for your top match. No spam, one email.
+          We will send you a personalised salary, tax, and cost of living breakdown written specifically for your results. No spam, one email.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3">
@@ -194,7 +217,7 @@ function EmailCapture({ topCountry, topCountryFlag, matchPercent, jobRole }: {
           className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a] disabled:opacity-50 flex-shrink-0"
           style={{ boxShadow: "3px 3px 0 #00aa90" }}
         >
-          {loading ? "Saving..." : "Send it"}
+          {loading ? "Sending..." : "Send it"}
         </button>
       </div>
       {error && (
@@ -540,6 +563,10 @@ export default function WizardResultsPage() {
   const cs = getCurrencySymbol(top.country.currency);
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
 
+  // Compute email data from top match
+  const grossSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : 0;
+  const netMonthly = Math.round(grossSalary * (1 - top.country.data.incomeTaxRateMid / 100) / 12);
+
   return (
     <div
       className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]"
@@ -642,6 +669,12 @@ export default function WizardResultsPage() {
                   topCountryFlag={top.country.flagEmoji}
                   matchPercent={top.matchPercent}
                   jobRole={jobRoleDef?.label ?? ""}
+                  grossSalary={grossSalary}
+                  netMonthly={netMonthly}
+                  taxRate={top.country.data.incomeTaxRateMid}
+                  rentCost={top.country.data.costRentCityCentre}
+                  visaLabel={getVisaLabel(top.country.data.visaDifficulty)}
+                  currency={cs}
                 />
               )}
             </div>
