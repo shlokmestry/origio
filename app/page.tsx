@@ -11,6 +11,53 @@ import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { TrendingUp, ArrowLeft } from "lucide-react";
 
+// ── Static example result preview ─────────────────────────────────────────
+function ResultPreview() {
+  const examples = [
+    { flag: "🇩🇰", name: "Denmark",     match: 92, salary: "€74,000", qol: 9.3, color: "#00ffd5" },
+    { flag: "🇳🇱", name: "Netherlands", match: 88, salary: "€68,000", qol: 8.8, color: "#facc15" },
+    { flag: "🇮🇪", name: "Ireland",     match: 81, salary: "€71,000", qol: 8.5, color: "#a78bfa" },
+  ];
+
+  return (
+    <div
+      className="animate-fade-up"
+      style={{ opacity: 0, animationDelay: "0.45s", animationFillMode: "forwards" }}
+    >
+      <p className="text-[9px] font-bold text-[#444440] uppercase tracking-[0.2em] mb-2">
+        Example · Software engineer · Irish passport
+      </p>
+      <div className="flex flex-col gap-1.5 max-w-sm">
+        {examples.map((c, i) => (
+          <div
+            key={c.name}
+            className="flex items-center gap-3 px-3 py-2.5 bg-[#111111] border border-[#1a1a1a]"
+            style={{ borderLeftColor: c.color, borderLeftWidth: 2 }}
+          >
+            <span
+              className="font-heading text-[10px] font-extrabold w-4 text-right flex-shrink-0"
+              style={{ color: c.color }}
+            >
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span className="text-base flex-shrink-0">{c.flag}</span>
+            <span className="font-heading text-xs font-extrabold uppercase tracking-tight text-[#f0f0e8] flex-1">
+              {c.name}
+            </span>
+            <div className="flex items-center gap-3 text-[10px] font-bold text-[#666660]">
+              <span>{c.salary}/yr</span>
+              <span className="text-[#333]">·</span>
+              <span>QoL {c.qol}</span>
+              <span className="text-[#333]">·</span>
+              <span style={{ color: c.color }}>{c.match}%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
@@ -118,7 +165,6 @@ export default function Home() {
     setSelectedCountry(null);
   }, []);
 
-  // Full reset → back to hero
   const handleBackToHome = useCallback(() => {
     setSelectedSlug(null);
     setSelectedCountry(null);
@@ -143,6 +189,7 @@ export default function Home() {
       className="animate-fade-up"
       style={{ opacity: 0, animationDelay: "0.15s", animationFillMode: "forwards" }}
     >
+      {/* Badge */}
       <div className="inline-flex items-center gap-2 border-2 border-accent text-accent text-[11px] font-bold px-3 py-1.5 mb-5 uppercase tracking-widest">
         <div className="w-1.5 h-1.5 bg-accent" />
         Real data · 25 countries · 20 job roles
@@ -158,17 +205,27 @@ export default function Home() {
         personalised to your job and passport.
       </p>
 
-      <button
-        onClick={() => router.push("/wizard")}
-        className="cta-button px-8 py-3.5 text-sm font-bold mb-6"
-      >
-        Find My Country
-      </button>
+      {/* CTA + wizard hint */}
+      <div className="mb-5">
+        <button
+          onClick={() => router.push("/wizard")}
+          className="cta-button px-8 py-3.5 text-sm font-bold"
+        >
+          Find My Country
+        </button>
+        <p className="text-[10px] font-bold text-[#444440] uppercase tracking-widest mt-2.5">
+          8 questions · 3 minutes · free
+        </p>
+      </div>
 
+      {/* Result preview */}
+      <ResultPreview />
+
+      {/* Trending */}
       {trendingCountries.length > 0 && (
         <div
-          className="animate-fade-up"
-          style={{ opacity: 0, animationDelay: "0.3s", animationFillMode: "forwards" }}
+          className="animate-fade-up mt-5"
+          style={{ opacity: 0, animationDelay: "0.6s", animationFillMode: "forwards" }}
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest flex items-center gap-1.5">
@@ -201,7 +258,6 @@ export default function Home() {
     />
   );
 
-  // Bottom hint bar with ← Home button
   const hintBar = !showHero && !selectedSlug && wizardMatches.length === 0 && (
     <div className="flex items-center gap-3">
       <button
@@ -273,7 +329,6 @@ export default function Home() {
           {globeEl}
         </div>
 
-        {/* Invisible backdrop — click anywhere (not on nav/panels) → back to home */}
         {!showHero && !selectedSlug && wizardMatches.length === 0 && (
           <div
             className="fixed inset-0 z-[2] cursor-default"
