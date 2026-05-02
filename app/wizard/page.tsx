@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { JOB_ROLES } from "@/types";
@@ -158,12 +158,43 @@ const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-t
 // English-speaking slugs for validation fallback
 const ENGLISH_SLUGS = ["ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore"];
 
+const DRAFT_KEY = "wizardDraft";
+
 export default function WizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Finding matches...");
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
+  const [resumedFromDraft, setResumedFromDraft] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const didRestore = useRef(false);
+
+  // ── Restore draft on mount ──────────────────────────────────────────────
+  useEffect(() => {
+    if (didRestore.current) return;
+    didRestore.current = true;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const { step: savedStep, answers: savedAnswers } = JSON.parse(raw);
+      if (savedStep && savedStep > 1 && savedAnswers) {
+        setStep(savedStep);
+        setAnswers(savedAnswers);
+        setResumedFromDraft(true);
+        setShowResumeBanner(true);
+        setTimeout(() => setShowResumeBanner(false), 3000);
+      }
+    } catch { /* corrupt draft — ignore */ }
+  }, []);
+
+  // ── Persist draft on every change ──────────────────────────────────────
+  useEffect(() => {
+    if (!didRestore.current) return;
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ step, answers }));
+    } catch { /* storage full — ignore */ }
+  }, [step, answers]);
 
   const isJobOffer = answers.moveReason === "job";
   const isRetired  = answers.moveReason === "retire";
@@ -295,6 +326,7 @@ export default function WizardPage() {
 
       setLoadingMessage("Almost done...");
 
+      sessionStorage.removeItem(DRAFT_KEY); // clear draft on successful submit
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(resolvedAnswers));
       router.push("/wizard/results");
@@ -311,6 +343,18 @@ export default function WizardPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
 
+      {/* Resume banner */}
+      {showResumeBanner && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 py-2 text-[10px] font-bold uppercase tracking-widest"
+          style={{ background: 'rgba(0,255,213,0.08)', borderBottom: '1px solid rgba(0,255,213,0.2)', color: '#00ffd5', animation: 'fadeInDown 0.3s ease' }}
+        >
+          <style>{`@keyframes fadeInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ffd5', display: 'inline-block' }} />
+          Resuming your progress
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#2a2a2a]">
         <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
@@ -320,9 +364,23 @@ export default function WizardPage() {
           <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
           <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
         </a>
-        <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
-          {getEffectiveStep()} / {getEffectiveTotalSteps()}
-        </span>
+        {resumedFromDraft ? (
+          <button
+            onClick={() => {
+              sessionStorage.removeItem(DRAFT_KEY);
+              setStep(1);
+              setAnswers({ priorities: [], languages: [], dealBreakers: [] });
+              setResumedFromDraft(false);
+            }}
+            className="text-[10px] font-bold text-[#555] hover:text-[#888880] transition-colors uppercase tracking-widest"
+          >
+            Start fresh
+          </button>
+        ) : (
+          <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
+            {getEffectiveStep()} / {getEffectiveTotalSteps()}
+          </span>
+        )}
       </div>
 
       {/* Progress */}
