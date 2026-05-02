@@ -10,7 +10,7 @@ export default function OgImage() {
     (
       <div
         style={{
-          background: "#0a0a0f",
+          background: "#0a0a0a",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -29,7 +29,7 @@ export default function OgImage() {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(0,212,200,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(0,255,213,0.10) 0%, transparent 70%)",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
@@ -37,59 +37,75 @@ export default function OgImage() {
           }}
         />
 
-        {/* Globe emoji */}
-        <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>🌍</div>
-
-        {/* Title */}
-        <div
-          style={{
-            fontSize: 88,
-            fontWeight: 800,
-            color: "#ffffff",
-            letterSpacing: "-3px",
-            marginBottom: 12,
+        {/* Logo lockup — teal square + ORIGIO */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 48 }}>
+          <div style={{
+            width: 36,
+            height: 36,
+            background: "#00ffd5",
+            border: "3px solid #f0f0e8",
             display: "flex",
-          }}
-        >
-          Origio
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: 52,
+            fontWeight: 800,
+            color: "#f0f0e8",
+            letterSpacing: "-2px",
+            display: "flex",
+            lineHeight: 1,
+          }}>
+            ORIGIO
+          </span>
         </div>
 
         {/* Tagline */}
         <div
           style={{
-            fontSize: 28,
-            color: "#8888a0",
-            marginBottom: 40,
+            fontSize: 40,
+            fontWeight: 800,
+            color: "#f0f0e8",
+            letterSpacing: "-1px",
+            marginBottom: 12,
             display: "flex",
           }}
         >
           Find Where You Belong
         </div>
 
-        {/* Divider — teal */}
+        <div
+          style={{
+            fontSize: 22,
+            color: "#666660",
+            marginBottom: 48,
+            display: "flex",
+          }}
+        >
+          Salaries · Visas · Cost of Living · Quality of Life
+        </div>
+
+        {/* Divider — teal, sharp */}
         <div
           style={{
             width: 48,
-            height: 3,
-            background: "#00d4c8",
-            borderRadius: 99,
-            marginBottom: 40,
+            height: 4,
+            background: "#00ffd5",
+            marginBottom: 48,
             display: "flex",
           }}
         />
 
-        {/* Pills — teal */}
+        {/* Pills */}
         <div style={{ display: "flex", gap: 12 }}>
           {["🌐 25 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
             <div
               key={label}
               style={{
-                background: "rgba(0,212,200,0.08)",
-                border: "1px solid rgba(0,212,200,0.25)",
-                borderRadius: 999,
-                padding: "8px 20px",
-                fontSize: 19,
-                color: "#00d4c8",
+                background: "rgba(0,255,213,0.08)",
+                border: "1px solid rgba(0,255,213,0.25)",
+                padding: "10px 22px",
+                fontSize: 18,
+                color: "#00ffd5",
                 display: "flex",
               }}
             >
@@ -103,9 +119,10 @@ export default function OgImage() {
           style={{
             position: "absolute",
             bottom: 36,
-            fontSize: 18,
-            color: "#44445a",
+            fontSize: 16,
+            color: "#444440",
             display: "flex",
+            letterSpacing: "0.05em",
           }}
         >
           findorigio.com
