@@ -163,7 +163,7 @@ export default function SuccessClient() {
               {topMatch ? (
                 <div className="mb-8 border-l-2 border-accent pl-5">
                   <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">
-                    Your top match was
+                    Your last top match
                   </p>
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-4xl">{topMatch.flagEmoji}</span>
@@ -172,10 +172,13 @@ export default function SuccessClient() {
                       <p className="text-[11px] font-bold text-accent">{topMatch.matchPercent}% match</p>
                     </div>
                   </div>
-                  <Link href="/wizard/results"
+                  <p className="text-[11px] text-[#555] mb-4 leading-relaxed">
+                    Run the quiz again to unlock all 25 countries ranked — your Pro access is active.
+                  </p>
+                  <Link href="/wizard"
                     className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
                     style={{ boxShadow: '3px 3px 0 #00aa90' }}>
-                    See all 25 countries ranked →
+                    Run quiz → see all 25 →
                   </Link>
                 </div>
               ) : (
@@ -214,13 +217,13 @@ export default function SuccessClient() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="font-heading text-lg font-extrabold uppercase tracking-tight mb-1">Ready to start?</p>
-                  <p className="text-[11px] text-[#888880]">Run the quiz and see all 25 countries ranked for you.</p>
+                  <p className="text-[11px] text-[#888880]">Run the quiz to see all 25 countries ranked — your Pro access is active now.</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <Link href="/wizard"
                     className="px-7 py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
                     style={{ boxShadow: '3px 3px 0 #00aa90' }}>
-                    Find my country
+                    Run the quiz
                   </Link>
                   <Link href="/"
                     className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">

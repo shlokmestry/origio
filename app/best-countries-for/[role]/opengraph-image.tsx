@@ -24,7 +24,7 @@ export default function OgImage({ params }: { params: { role: string } }) {
     (
       <div
         style={{
-          background: "#0a0a0f",
+          background: "#0a0a0a",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -43,13 +43,43 @@ export default function OgImage({ params }: { params: { role: string } }) {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(0,212,200,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(0,255,213,0.10) 0%, transparent 70%)",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
             display: "flex",
           }}
         />
+
+        {/* Logo lockup top-left */}
+        <div
+          style={{
+            position: "absolute",
+            top: 36,
+            left: 48,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <div style={{
+            width: 22,
+            height: 22,
+            background: "#00ffd5",
+            border: "2px solid #f0f0e8",
+            display: "flex",
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: 22,
+            fontWeight: 800,
+            color: "#f0f0e8",
+            letterSpacing: "-0.5px",
+            display: "flex",
+          }}>
+            ORIGIO
+          </span>
+        </div>
 
         {/* Role emoji */}
         <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>
@@ -59,9 +89,9 @@ export default function OgImage({ params }: { params: { role: string } }) {
         {/* Eyebrow */}
         <div
           style={{
-            fontSize: 20,
-            color: "#00d4c8",
-            fontWeight: 600,
+            fontSize: 18,
+            color: "#00ffd5",
+            fontWeight: 700,
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             marginBottom: 16,
@@ -76,7 +106,7 @@ export default function OgImage({ params }: { params: { role: string } }) {
           style={{
             fontSize: 72,
             fontWeight: 800,
-            color: "#ffffff",
+            color: "#f0f0e8",
             letterSpacing: "-2px",
             marginBottom: 20,
             display: "flex",
@@ -86,30 +116,28 @@ export default function OgImage({ params }: { params: { role: string } }) {
           {role.title}
         </div>
 
-        {/* Divider */}
+        {/* Divider — sharp, no radius */}
         <div
           style={{
             width: 48,
-            height: 3,
-            background: "#00d4c8",
-            borderRadius: 99,
+            height: 4,
+            background: "#00ffd5",
             marginBottom: 32,
             display: "flex",
           }}
         />
 
-        {/* Pills */}
+        {/* Pills — sharp corners */}
         <div style={{ display: "flex", gap: 12 }}>
           {["💰 Salaries", "🏛️ Tax Rates", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
             <div
               key={label}
               style={{
-                background: "rgba(0,212,200,0.08)",
-                border: "1px solid rgba(0,212,200,0.25)",
-                borderRadius: 999,
-                padding: "8px 20px",
-                fontSize: 19,
-                color: "#00d4c8",
+                background: "rgba(0,255,213,0.08)",
+                border: "1px solid rgba(0,255,213,0.25)",
+                padding: "10px 22px",
+                fontSize: 18,
+                color: "#00ffd5",
                 display: "flex",
               }}
             >
@@ -118,18 +146,17 @@ export default function OgImage({ params }: { params: { role: string } }) {
           ))}
         </div>
 
-        {/* Origio branding bottom */}
+        {/* Bottom URL */}
         <div
           style={{
             position: "absolute",
             bottom: 36,
             display: "flex",
             alignItems: "center",
-            gap: 10,
           }}
         >
-          <div style={{ fontSize: 18, color: "#44445a", display: "flex" }}>
-            origio.vercel.app
+          <div style={{ fontSize: 16, color: "#444440", display: "flex", letterSpacing: "0.05em" }}>
+            findorigio.com
           </div>
         </div>
       </div>
