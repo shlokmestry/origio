@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { email, source } = await req.json();
+  const { email, source, topCountry, topCountryFlag, matchPercent, jobRole } = await req.json();
 
   if (!email) {
     return NextResponse.json({ error: "Email required" }, { status: 400 });
@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
       email,
       source: source ?? "quiz_results",
       userGroup: "quiz",
+      topCountry: topCountry ?? "",
+      topCountryFlag: topCountryFlag ?? "",
+      matchPercent: matchPercent ?? "",
+      jobRole: jobRole ?? "",
     }),
   });
 
