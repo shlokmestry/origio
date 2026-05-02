@@ -116,6 +116,79 @@ function ScoreBar({ label, value, desc }: { label: string; value: number; desc: 
   );
 }
 
+// ── Email Capture Component ───────────────────────────────────────────────
+function EmailCapture() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    setError("");
+    if (!email || !email.includes("@")) {
+      setError("Enter a valid email.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "quiz_results" }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    }
+    setLoading(false);
+  };
+
+  if (submitted) {
+    return (
+      <div className="border border-accent/30 bg-[#0d0d0d] p-5 mt-8">
+        <p className="text-[11px] font-bold text-accent uppercase tracking-widest">
+          ✓ Saved — check your inbox for the full breakdown
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-[#2a2a2a] bg-[#0d0d0d] p-5 mt-8 space-y-3">
+      <div>
+        <p className="text-[11px] font-bold text-[#f0f0e8] uppercase tracking-widest mb-1">
+          Save your results
+        </p>
+        <p className="text-[10px] text-[#888880]">
+          Get your full salary breakdown sent to your inbox. No spam, one email.
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          className="flex-1 bg-[#111] border border-[#2a2a2a] px-3 py-2.5 text-[11px] text-[#f0f0e8] placeholder-[#444] focus:outline-none focus:border-accent transition-colors"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a] disabled:opacity-50 flex-shrink-0"
+          style={{ boxShadow: "2px 2px 0 #00aa90" }}
+        >
+          {loading ? "..." : "Save"}
+        </button>
+      </div>
+      {error && (
+        <p className="text-[10px] text-[#ef4444]">{error}</p>
+      )}
+    </div>
+  );
+}
+
 function WhyCard({
   match, answers, jobRoleDef, rank, excludedCountries,
 }: {
@@ -275,7 +348,6 @@ function TakeHomeCard({
       </div>
 
       <div className="p-5 bg-[#0a0a0a]">
-        {/* Main rows */}
         <div className="space-y-0">
           {/* Gross */}
           <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
@@ -295,7 +367,6 @@ function TakeHomeCard({
             </span>
           </div>
 
-          {/* Divider line */}
           <div className="h-px bg-[#2a2a2a] my-1" />
 
           {/* Net annual */}
@@ -552,8 +623,11 @@ export default function WizardResultsPage() {
                 </button>
               </div>
 
-              {/* ── TAKE-HOME CARD ── inserted below CTA buttons */}
+              {/* Take-home card */}
               <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
+
+              {/* Email capture — only for non-logged-in users */}
+              {!user && <EmailCapture />}
             </div>
 
             {/* Right — Why card */}
