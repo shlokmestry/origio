@@ -117,7 +117,12 @@ function ScoreBar({ label, value, desc }: { label: string; value: number; desc: 
 }
 
 // ── Email Capture Component ───────────────────────────────────────────────
-function EmailCapture() {
+function EmailCapture({ topCountry, topCountryFlag, matchPercent, jobRole }: {
+  topCountry: string;
+  topCountryFlag: string;
+  matchPercent: number;
+  jobRole: string;
+}) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -134,7 +139,14 @@ function EmailCapture() {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source: "quiz_results" }),
+        body: JSON.stringify({
+          email,
+          source: "quiz_results",
+          topCountry,
+          topCountryFlag,
+          matchPercent,
+          jobRole,
+        }),
       });
       if (!res.ok) throw new Error("Failed");
       setSubmitted(true);
@@ -146,8 +158,8 @@ function EmailCapture() {
 
   if (submitted) {
     return (
-      <div className="border border-accent/30 bg-[#0d0d0d] p-5 mt-8">
-        <p className="text-[11px] font-bold text-accent uppercase tracking-widest">
+      <div className="border-2 border-accent/40 bg-[#0d0d0d] p-8 mt-10">
+        <p className="text-sm font-bold text-accent uppercase tracking-widest">
           ✓ Saved — check your inbox for the full breakdown
         </p>
       </div>
@@ -155,35 +167,38 @@ function EmailCapture() {
   }
 
   return (
-    <div className="border border-[#2a2a2a] bg-[#0d0d0d] p-5 mt-8 space-y-3">
-      <div>
-        <p className="text-[11px] font-bold text-[#f0f0e8] uppercase tracking-widest mb-1">
+    <div className="border-2 border-[#2a2a2a] bg-[#0d0d0d] p-8 mt-10 space-y-5" style={{ boxShadow: "4px 4px 0 #1a1a1a" }}>
+      <div className="space-y-2">
+        <p className="text-xs font-bold text-accent uppercase tracking-[0.2em]">
           Save your results
         </p>
-        <p className="text-[10px] text-[#888880]">
-          Get your full salary breakdown sent to your inbox. No spam, one email.
+        <p className="font-heading text-xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">
+          Get your {topCountryFlag} {topCountry} breakdown by email
+        </p>
+        <p className="text-sm text-[#888880] leading-relaxed">
+          We will send you a full salary, tax, and cost of living breakdown for your top match. No spam, one email.
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="email"
           placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          className="flex-1 bg-[#111] border border-[#2a2a2a] px-3 py-2.5 text-[11px] text-[#f0f0e8] placeholder-[#444] focus:outline-none focus:border-accent transition-colors"
+          className="flex-1 bg-[#111] border border-[#2a2a2a] px-4 py-3.5 text-sm text-[#f0f0e8] placeholder-[#444] focus:outline-none focus:border-accent transition-colors"
         />
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a] disabled:opacity-50 flex-shrink-0"
-          style={{ boxShadow: "2px 2px 0 #00aa90" }}
+          className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a] disabled:opacity-50 flex-shrink-0"
+          style={{ boxShadow: "3px 3px 0 #00aa90" }}
         >
-          {loading ? "..." : "Save"}
+          {loading ? "Saving..." : "Send it"}
         </button>
       </div>
       {error && (
-        <p className="text-[10px] text-[#ef4444]">{error}</p>
+        <p className="text-xs text-[#ef4444]">{error}</p>
       )}
     </div>
   );
@@ -337,7 +352,6 @@ function TakeHomeCard({
 
   return (
     <div className="mt-8 border-2 border-[#2a2a2a]" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b-2 border-[#2a2a2a] bg-[#0d0d0d]">
         <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">
           Estimated take-home · {jobRoleDef.label} · {match.country.name}
@@ -349,7 +363,6 @@ function TakeHomeCard({
 
       <div className="p-5 bg-[#0a0a0a]">
         <div className="space-y-0">
-          {/* Gross */}
           <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
             <span className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">Gross salary</span>
             <span className="font-heading text-base font-extrabold text-[#f0f0e8]">
@@ -357,7 +370,6 @@ function TakeHomeCard({
             </span>
           </div>
 
-          {/* Tax */}
           <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
             <span className="text-[11px] font-bold text-[#888880] uppercase tracking-widest">
               Income tax ({match.country.data.incomeTaxRateMid}%)
@@ -369,7 +381,6 @@ function TakeHomeCard({
 
           <div className="h-px bg-[#2a2a2a] my-1" />
 
-          {/* Net annual */}
           <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
             <span className="text-[11px] font-bold text-[#f0f0e8] uppercase tracking-widest">Net annual</span>
             <span className="font-heading text-lg font-extrabold text-accent">
@@ -377,7 +388,6 @@ function TakeHomeCard({
             </span>
           </div>
 
-          {/* Net monthly */}
           <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
             <span className="text-[11px] font-bold text-[#f0f0e8] uppercase tracking-widest">Net monthly</span>
             <span className="font-heading text-lg font-extrabold text-accent">
@@ -385,7 +395,6 @@ function TakeHomeCard({
             </span>
           </div>
 
-          {/* Pro-locked rows */}
           <div className="relative">
             <div className={isPro ? "" : "blur-sm pointer-events-none select-none"}>
               <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
@@ -627,7 +636,14 @@ export default function WizardResultsPage() {
               <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
 
               {/* Email capture — only for non-logged-in users */}
-              {!user && <EmailCapture />}
+              {!user && (
+                <EmailCapture
+                  topCountry={top.country.name}
+                  topCountryFlag={top.country.flagEmoji}
+                  matchPercent={top.matchPercent}
+                  jobRole={jobRoleDef?.label ?? ""}
+                />
+              )}
             </div>
 
             {/* Right — Why card */}
