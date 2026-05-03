@@ -112,13 +112,17 @@ export default function WizardPage() {
       const countries: CountryWithData[] = await res.json();
       let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
 
-      // ── AI validation — runs during loading, never blocks user ──
+      // ── AI validation — 3s timeout, never blocks user ──
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
         const validationRes = await fetch("/api/validate-results", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ matches, answers }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         if (validationRes.ok) {
           const validation = await validationRes.json();
           if (!validation.valid && validation.flaggedCountries?.length > 0) {
@@ -132,7 +136,7 @@ export default function WizardPage() {
           }
         }
       } catch {
-        // Validation failed — don't block the user, use original matches
+        // Validation failed or timed out — use original matches
       }
       // ────────────────────────────────────────────────────────────
 
