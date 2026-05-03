@@ -1,6 +1,6 @@
-import Footer from "@/components/Footer";
 /* eslint-disable react/no-unescaped-entities */
 "use client";
+import Footer from "@/components/Footer";
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
