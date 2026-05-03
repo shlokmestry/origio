@@ -29,7 +29,6 @@ function getVisaLabel(d: number) {
   return "Very hard";
 }
 
-// Country colors
 const COL_A = "#00ffd5";
 const COL_B = "#facc15";
 const COL_C = "#a78bfa";
@@ -58,18 +57,15 @@ function MetricRow({
     <div className="grid border-b border-[#111]" style={{ gridTemplateColumns: `180px repeat(${isPro ? 3 : 2}, 1fr)` }}>
       <div className="px-4 py-3.5 flex items-center">
         <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wide">{label}</span>
-        <Footer />
-    </div>
+      </div>
       {values.map((val, i) => {
-        // Third column — blur gate for non-Pro
         if (i === 2 && !isPro) {
           return (
             <div key={i} className="px-4 py-3.5 flex items-center border-l border-[#111] relative overflow-hidden">
               <span className="text-[13px] font-extrabold font-heading blur-sm select-none text-[#888880]">
                 ███
               </span>
-              <Footer />
-    </div>
+            </div>
           );
         }
         if (val === null) return null;
@@ -89,11 +85,9 @@ function MetricRow({
                 best
               </span>
             )}
-            <Footer />
-    </div>
+          </div>
         );
       })}
-      <Footer />
     </div>
   );
 }
@@ -104,9 +98,7 @@ function SectionHeader({ label, isPro }: { label: string; isPro: boolean }) {
       style={{ gridTemplateColumns: `180px repeat(${isPro ? 3 : 2}, 1fr)` }}>
       <div className="px-4 py-2.5 col-span-full">
         <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">{label}</p>
-        <Footer />
-    </div>
-      <Footer />
+      </div>
     </div>
   );
 }
@@ -125,7 +117,6 @@ export default function ComparePageClient() {
   const [isPro, setIsPro] = useState(false);
   const [proChecked, setProChecked] = useState(false);
 
-  // Check Pro status
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
@@ -136,7 +127,6 @@ export default function ComparePageClient() {
     });
   }, []);
 
-  // Fetch countries + read URL params
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -170,11 +160,6 @@ export default function ComparePageClient() {
     incomeTaxRateMid: c.data.incomeTaxRateMid,
   }));
 
-  const symA = getCurrencySymbol(countryA?.currency ?? "EUR");
-  const symB = getCurrencySymbol(countryB?.currency ?? "EUR");
-  const symC = getCurrencySymbol(countryC?.currency ?? "EUR");
-
-  // salary values — null if column not shown
   const salaryVals = [
     countryA ? countryA.data[currentRole.salaryKey] as number : null,
     countryB ? countryB.data[currentRole.salaryKey] as number : null,
@@ -187,7 +172,7 @@ export default function ComparePageClient() {
   if (!proChecked) return <div className="min-h-screen bg-[#0a0a0a]" />;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8] flex flex-col">
       <Nav countries={globeCountries} onCountrySelect={() => {}} />
 
       {/* Header + selectors */}
@@ -210,8 +195,7 @@ export default function ComparePageClient() {
             >
               {JOB_ROLES.map(r => <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>)}
             </select>
-            <Footer />
-    </div>
+          </div>
 
           {/* Country selector row */}
           <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${col}, 1fr)` }}>
@@ -221,8 +205,7 @@ export default function ComparePageClient() {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_A }} />
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country A</p>
-                <Footer />
-    </div>
+              </div>
               <div className="flex items-center gap-2">
                 <select
                   value={slugA ?? ""}
@@ -238,18 +221,15 @@ export default function ComparePageClient() {
                 >
                   <ArrowRightLeft className="w-4 h-4 text-[#888880]" />
                 </button>
-                <Footer />
-    </div>
-              <Footer />
-    </div>
+              </div>
+            </div>
 
             {/* Country B */}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_B }} />
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country B</p>
-                <Footer />
-    </div>
+              </div>
               <select
                 value={slugB ?? ""}
                 onChange={e => setSlugB(e.target.value)}
@@ -257,8 +237,7 @@ export default function ComparePageClient() {
               >
                 {allCountries.map(c => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
               </select>
-              <Footer />
-    </div>
+            </div>
 
             {/* Country C — Pro only */}
             {isPro && (
@@ -266,8 +245,7 @@ export default function ComparePageClient() {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_C }} />
                   <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country C</p>
-                  <Footer />
-    </div>
+                </div>
                 <select
                   value={slugC ?? ""}
                   onChange={e => setSlugC(e.target.value)}
@@ -275,11 +253,9 @@ export default function ComparePageClient() {
                 >
                   {allCountries.map(c => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
                 </select>
-                <Footer />
-    </div>
+              </div>
             )}
-            <Footer />
-    </div>
+          </div>
 
           {/* Pro upsell if not Pro */}
           {!isPro && (
@@ -293,17 +269,14 @@ export default function ComparePageClient() {
                 style={{ boxShadow: "2px 2px 0 #00aa90" }}>
                 <Sparkles className="w-3 h-3" /> Pro · €19.99
               </Link>
-              <Footer />
-    </div>
+            </div>
           )}
-          <Footer />
-    </div>
-        <Footer />
-    </div>
+        </div>
+      </div>
 
       {/* Comparison table */}
       {countryA && countryB && (
-        <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="max-w-6xl mx-auto px-6 py-10 flex-1">
 
           {/* Column headers */}
           <div className="grid mb-0 border border-[#1a1a1a] border-b-0" style={{ gridTemplateColumns: gridCols }}>
@@ -322,27 +295,22 @@ export default function ComparePageClient() {
                       {country.name}
                     </p>
                     <p className="text-[10px] text-[#888880] mt-0.5">{country.currency}</p>
-                    <Footer />
-    </div>
+                  </div>
                 ) : (
                   <div className="text-[#333] text-sm">—</div>
                 )}
-                <Footer />
-    </div>
+              </div>
             ))}
-            <Footer />
-    </div>
+          </div>
 
           {/* Table body */}
           <div className="border border-[#1a1a1a]">
 
-            {/* Salary */}
             <SectionHeader label="Salary" isPro={isPro} />
             <MetricRow label={`${currentRole.label}`} isPro={isPro} higherIsBetter={true}
               format={(v) => v.toLocaleString()}
               values={salaryVals} />
 
-            {/* Cost of living */}
             <SectionHeader label="Cost of Living (monthly)" isPro={isPro} />
             <MetricRow label="Rent — city centre" isPro={isPro} higherIsBetter={false}
               format={(v) => v.toLocaleString()}
@@ -360,7 +328,6 @@ export default function ComparePageClient() {
               format={(v) => v.toLocaleString()}
               values={[countryA.data.costEatingOut, countryB.data.costEatingOut, isPro && countryC ? countryC.data.costEatingOut : null]} />
 
-            {/* Tax */}
             <SectionHeader label="Tax" isPro={isPro} />
             <MetricRow label="Income tax (mid)" isPro={isPro} higherIsBetter={false}
               format={(v) => v + "%"}
@@ -369,7 +336,6 @@ export default function ComparePageClient() {
               format={(v) => v + "%"}
               values={[countryA.data.socialSecurityRate, countryB.data.socialSecurityRate, isPro && countryC ? countryC.data.socialSecurityRate : null]} />
 
-            {/* Quality scores */}
             <SectionHeader label="Quality Scores" isPro={isPro} />
             <MetricRow label="Quality of life" isPro={isPro} higherIsBetter={true}
               format={(v) => v + "/10"}
@@ -384,7 +350,6 @@ export default function ComparePageClient() {
               format={(v) => v + "/10"}
               values={[countryA.data.scoreInternetSpeed, countryB.data.scoreInternetSpeed, isPro && countryC ? countryC.data.scoreInternetSpeed : null]} />
 
-            {/* Visa */}
             <SectionHeader label="Visa" isPro={isPro} />
             <MetricRow label="Difficulty (1=easy)" isPro={isPro} higherIsBetter={false}
               format={(v) => `${v}/5 · ${getVisaLabel(v)}`}
@@ -392,10 +357,9 @@ export default function ComparePageClient() {
             <MetricRow label="Move score" isPro={isPro} higherIsBetter={true}
               format={(v) => v + "/10"}
               values={[countryA.data.moveScore, countryB.data.moveScore, isPro && countryC ? countryC.data.moveScore : null]} />
-            <Footer />
-    </div>
+          </div>
 
-          {/* Visa notes — free, always two columns */}
+          {/* Visa notes */}
           <div className="mt-8 grid sm:grid-cols-2 gap-4">
             {[
               { country: countryA, color: COL_A },
@@ -407,8 +371,7 @@ export default function ComparePageClient() {
                   <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
                     {country.name} · Visa
                   </p>
-                  <Footer />
-    </div>
+                </div>
                 <p className="text-[11px] text-[#888880] leading-relaxed mb-3">{country.data.visaNotes}</p>
                 {country.data.visaPopularRoutes?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
@@ -418,16 +381,13 @@ export default function ComparePageClient() {
                         {r}
                       </span>
                     ))}
-                    <Footer />
-    </div>
+                  </div>
                 )}
-                <Footer />
-    </div>
+              </div>
             ))}
-            <Footer />
-    </div>
+          </div>
 
-          {/* Pro: show countryC visa notes too */}
+          {/* Pro: countryC visa notes */}
           {isPro && countryC && (
             <div className="mt-4 border border-[#1a1a1a] p-5 sm:w-1/2">
               <div className="flex items-center gap-2 mb-3">
@@ -435,8 +395,7 @@ export default function ComparePageClient() {
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: COL_C }}>
                   {countryC.name} · Visa
                 </p>
-                <Footer />
-    </div>
+              </div>
               <p className="text-[11px] text-[#888880] leading-relaxed mb-3">{countryC.data.visaNotes}</p>
               {countryC.data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -446,11 +405,9 @@ export default function ComparePageClient() {
                       {r}
                     </span>
                   ))}
-                  <Footer />
-    </div>
+                </div>
               )}
-              <Footer />
-    </div>
+            </div>
           )}
 
           {/* Bottom links */}
@@ -462,12 +419,11 @@ export default function ComparePageClient() {
                 {c.flagEmoji} Full {c.name} report →
               </Link>
             ))}
-            <Footer />
-    </div>
+          </div>
 
-          <Footer />
-    </div>
+        </div>
       )}
+
       <Footer />
     </div>
   );
