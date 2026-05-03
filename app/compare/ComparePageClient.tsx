@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowRightLeft, Lock, Sparkles } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
+import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 
@@ -89,6 +90,7 @@ function MetricRow({
           </div>
         );
       })}
+      <Footer />
     </div>
   );
 }
@@ -100,6 +102,7 @@ function SectionHeader({ label, isPro }: { label: string; isPro: boolean }) {
       <div className="px-4 py-2.5 col-span-full">
         <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">{label}</p>
       </div>
+      <Footer />
     </div>
   );
 }
@@ -185,7 +188,7 @@ export default function ComparePageClient() {
 
       {/* Header + selectors */}
       <div className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8 pt-24">
           <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-2">
             {isPro ? "3-country comparison" : "2-country comparison"}
           </p>
@@ -436,6 +439,7 @@ export default function ComparePageClient() {
 
         </div>
       )}
+      <Footer />
     </div>
   );
 }
