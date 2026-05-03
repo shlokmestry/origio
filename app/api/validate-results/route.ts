@@ -73,7 +73,6 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
     const data = await res.json();
 
     if (!res.ok || !data.content?.[0]?.text) {
-      // Validation failed silently — don't block the user
       return NextResponse.json({ valid: true, issues: [], flaggedCountries: [], confidence: "low" });
     }
 
@@ -92,7 +91,6 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
 
   } catch (err) {
     console.error("Validation error:", err);
-    // Never block the user — fail silently
     return NextResponse.json({ valid: true, issues: [], flaggedCountries: [], confidence: "low" });
   }
 }

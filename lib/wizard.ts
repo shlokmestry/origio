@@ -42,56 +42,20 @@ const WARM_COUNTRIES = [
   "brazil", "malaysia", "thailand", "vietnam", "philippines",
 ];
 
-// FIX: Lowered threshold — was allowing Denmark (DKK converted) through
-// These are countries that are objectively high cost regardless of rent number
 const HIGH_COST_COUNTRIES = [
   "singapore", "switzerland", "norway", "australia", "new-zealand",
   "ireland", "united-kingdom", "usa", "canada", "denmark",
 ];
 
 const HIGH_TAX_COUNTRIES = [
-  "sweden",           // 52%
-  "finland",          // 44%
-  "germany",          // 42%
-  "denmark",          // 42%
-  "austria",          // 42%
-  "ireland",          // 40%
-  "united-kingdom",   // 40%
-  "italy",            // 35%+
-  "netherlands",      // 36.93%
-  "belgium",          // 45%+
-  "norway",           // 34%
-  "australia",        // 32.5%
-  "new-zealand",      // 30%
-  "france",           // 30%+
-  "canada",           // 29.32%
+  "sweden", "finland", "germany", "denmark", "austria", "ireland",
+  "united-kingdom", "italy", "netherlands", "belgium", "norway",
+  "australia", "new-zealand", "france", "canada",
 ];
 
-const TERRITORIAL_TAX_COUNTRIES = [
-  "uae",
-  "singapore",
-  "malaysia",
-  "portugal",
-];
-
-const RETIREMENT_VISA_COUNTRIES = [
-  "portugal",
-  "spain",
-  "malaysia",
-  "uae",
-  "italy",
-  "new-zealand",
-];
-
-const NOMAD_VISA_COUNTRIES = [
-  "portugal",
-  "spain",
-  "germany",
-  "netherlands",
-  "uae",
-  "malaysia",
-  "new-zealand",
-];
+const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal"];
+const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand"];
+const NOMAD_VISA_COUNTRIES       = ["portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand"];
 
 const STRONG_HEALTHCARE_COUNTRIES = [
   "germany", "france", "switzerland", "austria", "netherlands",
@@ -111,13 +75,11 @@ function toUSD(amount: number, currency: string): number {
   return amount * (TO_USD[currency] ?? 1);
 }
 
-// Rent budget map — hard USD thresholds
-// FIX: Changed from soft penalty to hard exclusion in filter
 const RENT_BUDGET_USD: Record<string, number> = {
-  under800:    800,
+  under800: 800,
   "800to1500": 1500,
   "1500to2500": 2500,
-  any:         9999,
+  any: 9999,
 };
 
 export function scoreCountriesForWizard(
@@ -129,45 +91,25 @@ export function scoreCountriesForWizard(
   const currentCountrySlug = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
   const isRetired = answers.moveReason === "retire";
   const isRemote  = answers.moveReason === "remote";
-
-  // Rent budget hard threshold
   const maxRentUSD = RENT_BUDGET_USD[answers.rentBudget ?? "any"] ?? 9999;
 
   // ── HARD EXCLUSIONS ─────────────────────────────────────────────
   const eligible = countries.filter((country) => {
-    // Exclude current country
     if (currentCountrySlug && country.slug === currentCountrySlug) return false;
-
-    // Must be in Europe
-    if (dealBreakers.includes("europe") && !EUROPEAN_COUNTRIES.includes(country.slug)) return false;
-
-    // Must be low tax
-    if (dealBreakers.includes("lowtax") && HIGH_TAX_COUNTRIES.includes(country.slug)) return false;
-
-    // Must be low cost
-    // FIX: Use both slug list AND actual converted rent (belt and suspenders)
+    if (dealBreakers.includes("europe")   && !EUROPEAN_COUNTRIES.includes(country.slug))       return false;
+    if (dealBreakers.includes("english")  && !ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) return false;
+    if (dealBreakers.includes("lowtax")   && HIGH_TAX_COUNTRIES.includes(country.slug))        return false;
+    if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA_COUNTRIES.includes(country.slug))    return false;
+    if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) return false;
     if (dealBreakers.includes("lowcost")) {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (HIGH_COST_COUNTRIES.includes(country.slug)) return false;
-      if (rentUSD > 1200) return false; // lowered from 1700 — "low cost" should mean genuinely cheap
+      if (rentUSD > 1200) return false;
     }
-
-    // Must be English speaking
-    if (dealBreakers.includes("english") && !ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) return false;
-
-    // Must have nomad visa
-    if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA_COUNTRIES.includes(country.slug)) return false;
-
-    // Must have strong healthcare
-    if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) return false;
-
-    // FIX: Rent budget is now a HARD exclusion, not just a penalty
-    // Allow 20% buffer for rounding but not 400 USD of slack
     if (answers.rentBudget && answers.rentBudget !== "any") {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (rentUSD > maxRentUSD * 1.2) return false;
     }
-
     return true;
   });
 
@@ -177,7 +119,7 @@ export function scoreCountriesForWizard(
     let score = 0;
     const reasons: string[] = [];
 
-    const rentUSD = toUSD(data.costRentCityCentre, country.currency);
+    const rentUSD       = toUSD(data.costRentCityCentre, country.currency);
     const affordScore   = 10 - normalise(rentUSD, 300, 4000);
     const qualityScore  = data.scoreQualityOfLife;
     const safetyScore   = data.scoreSafety;
@@ -186,155 +128,85 @@ export function scoreCountriesForWizard(
     const taxScore      = 10 - normalise(data.incomeTaxRateMid, 0, 55);
     const internetScore = data.scoreInternetSpeed;
 
-    // ── RETIRED / FIRE scoring path ──────────────────────────────
+    // ── RETIRED scoring path ─────────────────────────────────────
     if (isRetired) {
-      let w = {
-        affordability: 0.30,
-        tax:           0.22,
-        healthcare:    0.18,
-        safety:        0.15,
-        quality:       0.10,
-        visa:          0.05,
-      };
-
-      answers.priorities?.forEach((priority, index) => {
-        const boost = (5 - index) * 0.05;
-        if (priority === "cost" || priority === "affordability") w.affordability += boost;
-        if (priority === "tax")        w.tax        += boost;
-        if (priority === "healthcare") w.healthcare += boost;
-        if (priority === "safety")     w.safety     += boost;
-        if (priority === "quality")    w.quality    += boost;
-        if (priority === "visa")       w.visa       += boost;
+      let w = { affordability: 0.30, tax: 0.22, healthcare: 0.18, safety: 0.15, quality: 0.10, visa: 0.05 };
+      answers.priorities?.forEach((p, i) => {
+        const b = (5 - i) * 0.05;
+        if (p === "cost" || p === "affordability") w.affordability += b;
+        if (p === "tax")        w.tax        += b;
+        if (p === "healthcare") w.healthcare += b;
+        if (p === "safety")     w.safety     += b;
+        if (p === "quality")    w.quality    += b;
+        if (p === "visa")       w.visa       += b;
       });
-
-      const wTotal = Object.values(w).reduce((a, b) => a + b, 0);
-      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wTotal; });
-
-      score =
-        affordScore  * w.affordability +
-        taxScore     * w.tax +
-        healthScore  * w.healthcare +
-        safetyScore  * w.safety +
-        qualityScore * w.quality +
-        visaScore    * w.visa;
-
-      if (RETIREMENT_VISA_COUNTRIES.includes(country.slug)) {
-        score += 0.8;
-        reasons.push("Retirement / passive income visa available");
-      }
-      if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) {
-        score += 0.6;
-        reasons.push("Territorial tax — foreign income often exempt");
-      }
-      if (rentUSD < 1000) {
-        score += 0.5;
-        reasons.push("Very affordable for retirement");
-      } else if (rentUSD < 1500) {
-        reasons.push("Affordable cost of living");
-      }
+      const wt = Object.values(w).reduce((a, b) => a + b, 0);
+      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
+      score = affordScore * w.affordability + taxScore * w.tax + healthScore * w.healthcare +
+              safetyScore * w.safety + qualityScore * w.quality + visaScore * w.visa;
+      if (RETIREMENT_VISA_COUNTRIES.includes(country.slug))  { score += 0.8; reasons.push("Retirement / passive income visa available"); }
+      if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug))  { score += 0.6; reasons.push("Territorial tax — foreign income often exempt"); }
+      if (rentUSD < 1000)  { score += 0.5; reasons.push("Very affordable for retirement"); }
+      else if (rentUSD < 1500) reasons.push("Affordable cost of living");
       if (healthScore >= 8.5) reasons.push("Excellent public healthcare");
       if (safetyScore >= 9)   reasons.push("One of the safest countries");
       if (taxScore >= 8)      reasons.push("Very tax efficient");
 
-    // ── REMOTE WORK scoring path ─────────────────────────────────
+    // ── REMOTE scoring path ──────────────────────────────────────
     } else if (isRemote) {
-      let w = {
-        tax:           0.25,
-        affordability: 0.22,
-        internet:      0.18,
-        visa:          0.15,
-        quality:       0.12,
-        safety:        0.08,
-      };
-
-      answers.priorities?.forEach((priority, index) => {
-        const boost = (5 - index) * 0.04;
-        if (priority === "tax")                              w.tax           += boost;
-        if (priority === "cost" || priority === "affordability") w.affordability += boost;
-        if (priority === "quality")                          w.quality       += boost;
-        if (priority === "safety")                           w.safety        += boost;
-        if (priority === "visa")                             w.visa          += boost;
+      let w = { tax: 0.25, affordability: 0.22, internet: 0.18, visa: 0.15, quality: 0.12, safety: 0.08 };
+      answers.priorities?.forEach((p, i) => {
+        const b = (5 - i) * 0.04;
+        if (p === "tax")                               w.tax           += b;
+        if (p === "cost" || p === "affordability")     w.affordability += b;
+        if (p === "quality")                           w.quality       += b;
+        if (p === "safety")                            w.safety        += b;
+        if (p === "visa")                              w.visa          += b;
       });
-
-      const wTotal = Object.values(w).reduce((a, b) => a + b, 0);
-      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wTotal; });
-
-      score =
-        taxScore      * w.tax +
-        affordScore   * w.affordability +
-        internetScore * w.internet +
-        visaScore     * w.visa +
-        qualityScore  * w.quality +
-        safetyScore   * w.safety;
-
-      if (NOMAD_VISA_COUNTRIES.includes(country.slug)) {
-        score += 0.8;
-        reasons.push("Official digital nomad visa available");
-      }
-      if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) {
-        score += 0.7;
-        reasons.push("Territorial tax — remote income often exempt");
-      }
+      const wt = Object.values(w).reduce((a, b) => a + b, 0);
+      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
+      score = taxScore * w.tax + affordScore * w.affordability + internetScore * w.internet +
+              visaScore * w.visa + qualityScore * w.quality + safetyScore * w.safety;
+      if (NOMAD_VISA_COUNTRIES.includes(country.slug))       { score += 0.8; reasons.push("Official digital nomad visa available"); }
+      if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug))  { score += 0.7; reasons.push("Territorial tax — remote income often exempt"); }
       if (internetScore >= 8.5) reasons.push("Excellent internet speeds");
       if (taxScore >= 8)        reasons.push("Very tax efficient");
       if (affordScore >= 7)     reasons.push("Low cost of living");
 
-    // ── STANDARD scoring path (study / job / move) ───────────────
+    // ── STANDARD scoring path ────────────────────────────────────
     } else {
-      const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
-      const salaryKey  = jobRoleDef?.salaryKey ?? "salarySoftwareEngineer";
-      const salaryUSD  = toUSD(data[salaryKey] as number, country.currency);
+      const jobRoleDef  = JOB_ROLES.find((r) => r.key === answers.jobRole);
+      const salaryKey   = jobRoleDef?.salaryKey ?? "salarySoftwareEngineer";
+      const salaryUSD   = toUSD(data[salaryKey] as number, country.currency);
       const salaryScore = normalise(salaryUSD, 25000, 200000);
 
-      let w = {
-        salary:        0.25,
-        affordability: 0.20,
-        quality:       0.18,
-        safety:        0.12,
-        visa:          0.15,
-        tax:           0.10,
-      };
-
-      answers.priorities?.forEach((priority, index) => {
-        const boost = (5 - index) * 0.04;
-        if (priority === "salary")                               w.salary        += boost;
-        if (priority === "cost" || priority === "affordability") w.affordability += boost;
-        if (priority === "quality" || priority === "worklife")   w.quality       += boost;
-        if (priority === "safety")                               w.safety        += boost;
-        if (priority === "visa")                                 w.visa          += boost;
-        if (priority === "tax")                                  w.tax           += boost;
-        if (priority === "healthcare")                           w.quality       += boost * 0.5;
+      let w = { salary: 0.25, affordability: 0.20, quality: 0.18, safety: 0.12, visa: 0.15, tax: 0.10 };
+      answers.priorities?.forEach((p, i) => {
+        const b = (5 - i) * 0.04;
+        if (p === "salary")                            w.salary        += b;
+        if (p === "cost" || p === "affordability")     w.affordability += b;
+        if (p === "quality" || p === "worklife")       w.quality       += b;
+        if (p === "safety")                            w.safety        += b;
+        if (p === "visa")                              w.visa          += b;
+        if (p === "tax")                               w.tax           += b;
+        if (p === "healthcare")                        w.quality       += b * 0.5;
       });
+      const wt = Object.values(w).reduce((a, b) => a + b, 0);
+      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
+      score = salaryScore * w.salary + affordScore * w.affordability + qualityScore * w.quality +
+              safetyScore * w.safety + visaScore * w.visa + taxScore * w.tax;
 
-      const wTotal = Object.values(w).reduce((a, b) => a + b, 0);
-      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wTotal; });
-
-      score =
-        salaryScore  * w.salary +
-        affordScore  * w.affordability +
-        qualityScore * w.quality +
-        safetyScore  * w.safety +
-        visaScore    * w.visa +
-        taxScore     * w.tax;
-
-      if (salaryScore >= 7) reasons.push("Strong " + (jobRoleDef?.label ?? "salary") + " salary");
-      if (taxScore >= 8)    reasons.push("Very tax efficient");
-
-      // Study bonuses
+      if (salaryScore >= 8.5) reasons.push(`Top-tier ${jobRoleDef?.label ?? "salary"} pay`);
+      else if (salaryScore >= 7) reasons.push(`Competitive ${jobRoleDef?.label ?? "salary"} salary`);
+      if (taxScore >= 8) reasons.push("Very tax efficient");
       if (answers.moveReason === "study" &&
         ["germany", "netherlands", "sweden", "norway", "finland", "denmark"].includes(country.slug)) {
-        score += 0.4;
-        reasons.push("Free or low-cost university education");
+        score += 0.4; reasons.push("Free or low-cost university education");
       }
-      // Job offer bonus
-      if (answers.moveReason === "job" && data.visaDifficulty <= 2) {
-        score += 0.3;
-      }
+      if (answers.moveReason === "job" && data.visaDifficulty <= 2) score += 0.3;
     }
 
-    // ── SHARED BONUSES (all paths) ───────────────────────────────
-
-    // Passport / EU visa bonus
+    // ── SHARED BONUSES ───────────────────────────────────────────
     const passportLower = (answers.passport ?? "").toLowerCase();
     const isEU = EU_PASSPORTS.includes(passportLower);
     if (isEU && EUROPEAN_COUNTRIES.includes(country.slug)) {
@@ -344,32 +216,20 @@ export function scoreCountriesForWizard(
     if (data.visaDifficulty <= 2 && !reasons.includes("Easy visa with your EU passport")) {
       reasons.push("Straightforward visa process");
     }
-
-    // English priority
     if (answers.priorities?.includes("english") && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) {
-      score += 0.4;
-      reasons.push("English-speaking country");
+      score += 0.4; reasons.push("English-speaking country");
     }
-
-    // Healthcare priority bonus
     if (answers.priorities?.includes("healthcare") && STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) {
       score += 0.3;
-      if (!reasons.some((r) => r.toLowerCase().includes("healthcare"))) {
-        reasons.push("Strong public healthcare system");
-      }
+      if (!reasons.some((r) => r.toLowerCase().includes("healthcare"))) reasons.push("Strong public healthcare system");
     }
-
-    // Rent budget positive label (country is already within budget due to hard filter above)
     if (answers.rentBudget && answers.rentBudget !== "any") {
-      const rentUSD = toUSD(data.costRentCityCentre, country.currency);
-      if (rentUSD <= maxRentUSD) {
-        if (!reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost") || r.toLowerCase().includes("budget"))) {
-          reasons.push("Fits your rent budget");
-        }
+      const rentUSD2 = toUSD(data.costRentCityCentre, country.currency);
+      if (rentUSD2 <= maxRentUSD && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost") || r.toLowerCase().includes("budget"))) {
+        reasons.push("Fits your rent budget");
       }
     }
 
-    // Language bonuses
     const languageMap: Record<string, { slug: string; reason: string }> = {
       german:     { slug: "germany",     reason: "Your German gives you a big advantage" },
       french:     { slug: "france",      reason: "Your French is a major advantage" },
@@ -385,38 +245,24 @@ export function scoreCountriesForWizard(
       mandarin:   { slug: "singapore",   reason: "Mandarin is widely spoken in Singapore" },
     };
     Object.entries(languageMap).forEach(([lang, { slug, reason }]) => {
-      if (answers.languages?.includes(lang) && country.slug === slug) {
-        score += 0.4;
-        reasons.push(reason);
-      }
+      if (answers.languages?.includes(lang) && country.slug === slug) { score += 0.4; reasons.push(reason); }
     });
     if (answers.languages?.includes("french") && country.slug === "canada") {
-      score += 0.3;
-      reasons.push("French is a bonus in Canada");
+      score += 0.3; reasons.push("French is a bonus in Canada");
     }
 
-    // Soft deal breaker penalties
-    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug)) {
-      score -= 2.5;
-    }
+    // Soft deal breaker penalties (warm/crime — can't hard filter, subjective)
+    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug)) score -= 2.5;
     if (dealBreakers.includes("lowcrime")) {
-      if (data.scoreCrimeRate < 8.0) {
-        score -= 2.5;
-      } else {
-        reasons.push("Very low crime rate");
-      }
+      if (data.scoreCrimeRate < 8.0) score -= 2.5;
+      else reasons.push("Very low crime rate");
     }
 
-    // Shared positive labels
-    if (affordScore >= 7 && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost"))) {
+    if (affordScore >= 7.5 && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost"))) {
       reasons.push("Low cost of living");
     }
-    if (qualityScore >= 8.5 && !reasons.some((r) => r.includes("quality"))) {
-      reasons.push("Exceptional quality of life");
-    }
-    if (safetyScore >= 9 && !reasons.some((r) => r.includes("safest"))) {
-      reasons.push("One of the safest countries");
-    }
+    if (qualityScore >= 8.5 && !reasons.some((r) => r.includes("quality"))) reasons.push("Exceptional quality of life");
+    if (safetyScore >= 9 && !reasons.some((r) => r.includes("safest")))     reasons.push("One of the safest countries");
 
     return {
       country,
@@ -428,11 +274,11 @@ export function scoreCountriesForWizard(
 
   results.sort((a, b) => b.matchScore - a.matchScore);
 
-  const topScore = results[0]?.matchScore ?? 10;
+  // ── PERCENT: absolute scale, real spread ─────────────────────
   results.forEach((r) => {
-    r.matchPercent = Math.round((r.matchScore / topScore) * 100);
+    const pct = Math.round(45 + (r.matchScore / 10) * 50);
+    r.matchPercent = Math.min(95, Math.max(45, pct));
   });
-  if (results[0]) results[0].matchPercent = Math.min(97, results[0].matchPercent);
 
   return results;
 }
