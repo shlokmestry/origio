@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Footer from '@/components/Footer'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Mail, MessageSquare, AlertCircle, Lightbulb, Database } from 'lucide-react'
@@ -143,6 +144,7 @@ export default function ContactPage() {
           </div>
         </div>
       </footer>
+      <Footer />
     </main>
   )
 }
