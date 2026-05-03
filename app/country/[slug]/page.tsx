@@ -1,4 +1,5 @@
 // app/country/[slug]/page.tsx
+import SimpleNav from "@/components/SimpleNav";
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { mapRowToCountry } from "@/lib/mappers";
