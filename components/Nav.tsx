@@ -109,10 +109,10 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             </Link>
 
             {!isPro && (
-              <a href="/pro" className="flex items-center gap-1.5 text-sm font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">
+              <Link href="/pro" className="flex items-center gap-1.5 text-sm font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">
                 <Sparkles className="w-3.5 h-3.5" />
                 Origio Pro
-              </a>
+              </Link>
             )}
 
             {user ? (
@@ -128,7 +128,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 {isPro ? <Sparkles className="w-3 h-3" /> : <User className="w-3 h-3" />}
                 {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
                 {isPro && <span className="text-[10px]">PRO</span>}
-              </a>
+              </Link>
             ) : (
               <a
                 href="/signin"
@@ -137,7 +137,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
               >
                 <Bookmark className="w-3 h-3" />
                 Sign In
-              </a>
+              </Link>
             )}
           </div>
 
@@ -192,37 +192,37 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-[#0f0f0f] border-b-2 border-[#2a2a2a]">
           <div className="p-4 space-y-0">
-            <a href="/guides" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/guides" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
               Guides
-            </a>
+            </Link>
             {/* ── Calculator in mobile menu ── */}
-            <a href="/salary-calculator" className="flex items-center justify-between px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/salary-calculator" className="flex items-center justify-between px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
               <span className="flex items-center gap-2">
                 <Calculator className="w-3.5 h-3.5" />
                 Calculator
               </span>
               {!isPro && <span className="text-[9px] border border-[#2a2a2a] px-1 py-0.5 text-[#555] uppercase">Free</span>}
-            </a>
-            <a href="/blog" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
+            </Link>
+            <Link href="/blog" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
               Blog
-            </a>
-            <a href="/about" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
+            </Link>
+            <Link href="/about" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
               About
-            </a>
+            </Link>
             {!isPro && (
-              <a href="/pro" className="flex items-center gap-1.5 px-3 py-3 text-sm font-bold text-accent border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/pro" className="flex items-center gap-1.5 px-3 py-3 text-sm font-bold text-accent border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
                 <Sparkles className="w-3.5 h-3.5" /> Origio Pro
-              </a>
+              </Link>
             )}
             <div className="pt-3">
               {user ? (
-                <a href="/profile" className="block px-3 py-2 text-xs font-bold text-text-muted uppercase" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/profile" className="block px-3 py-2 text-xs font-bold text-text-muted uppercase" onClick={() => setMobileMenuOpen(false)}>
                   {isPro && "✦ "}{user.user_metadata?.full_name || user.email}
-                </a>
+                </Link>
               ) : (
-                <a href="/signin" className="flex items-center justify-center gap-2 px-3 py-3 border-2 border-[#2a2a2a] text-sm font-bold text-text-primary uppercase" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/signin" className="flex items-center justify-center gap-2 px-3 py-3 border-2 border-[#2a2a2a] text-sm font-bold text-text-primary uppercase" onClick={() => setMobileMenuOpen(false)}>
                   <Bookmark className="w-4 h-4" /> Sign In
-                </a>
+                </Link>
               )}
             </div>
           </div>
