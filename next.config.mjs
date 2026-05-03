@@ -3,8 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   staticPageGenerationTimeout: 120,
 
-  // MapLibre GL uses Node-incompatible browser APIs — exclude from server bundle
-  serverExternalPackages: ["maplibre-gl"],
+  // MapLibre GL uses browser APIs — exclude from server bundle (Next 14 syntax)
+  experimental: {
+    serverComponentsExternalPackages: ["maplibre-gl"],
+  },
 
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: "canvas" }];

@@ -204,7 +204,8 @@ export default function Globe({
 
         // Deep space atmosphere
         try {
-          map.setFog({
+          // setFog is v4+ — cast to any to avoid TS error on v3 types
+          (map as any).setFog({
             color: "#000000",
             "high-color": "#000008",
             "horizon-blend": 0.02,
@@ -212,7 +213,7 @@ export default function Globe({
             "star-intensity": 0.8,
           });
         } catch {
-          // setFog not available on all MapLibre versions — silent fail
+          // silent fail on MapLibre v3
         }
 
         mapRef.current = map;
