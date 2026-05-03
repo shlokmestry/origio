@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
@@ -107,6 +108,7 @@ export default function FAQPage() {
           </a>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
