@@ -1,7 +1,6 @@
 'use client'
-import SimpleNav from "@/components/SimpleNav";
 import { useEffect } from 'react'
-import {  } from 'lucide-react'
+import { Globe2 } from 'lucide-react'
 
 export default function Error({
   error,
@@ -36,7 +35,7 @@ export default function Error({
             href="/"
             className="px-6 py-3 rounded-2xl text-sm border border-border hover:border-accent/30 text-text-muted hover:text-text-primary transition-colors inline-flex items-center gap-2"
           >
-            < className="w-4 h-4" />
+            <Globe2 className="w-4 h-4" />
             Back to Globe
           </a>
         </div>
