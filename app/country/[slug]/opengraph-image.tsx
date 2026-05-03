@@ -6,16 +6,17 @@ export const alt = "Origio Country";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function OgImage({ params }: { params: { slug: string } }) {
+export default async function OgImage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   const { data: country } = await supabase
-    .from("countries").select("name, flag_emoji, continent").eq("slug", params.slug).single();
+    .from("countries").select("name, flag_emoji, continent").eq("slug", slug).single();
   const { data: countryData } = await supabase
-    .from("country_data").select("score_safety, score_healthcare, move_score").eq("slug", params.slug).single();
+    .from("country_data").select("score_safety, score_healthcare, move_score").eq("slug", slug).single();
 
   const name = country?.name ?? "Country";
   const flag = country?.flag_emoji ?? "🌍";
@@ -66,7 +67,7 @@ export default async function OgImage({ params }: { params: { slug: string } }) 
         </div>
 
         <div style={{ position: "absolute", bottom: 36, fontSize: 16, color: "#444440", display: "flex", letterSpacing: "0.05em" }}>
-          findorigio.com/country/{params.slug}
+          findorigio.com/country/{slug}
         </div>
       </div>
     ),

@@ -36,9 +36,10 @@ async function getAllCountries(): Promise<CountryWithData[]> {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const country = await getCountry(params.slug);
+  const { slug } = await params;
+  const country = await getCountry(slug);
   if (!country) return { title: "Not Found — Origio" };
   return {
     title: `Why ${country.name} could be your country · Origio`,
@@ -55,10 +56,11 @@ export async function generateStaticParams() {
 export default async function PersonalisedPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   const [country, allCountries] = await Promise.all([
-    getCountry(params.slug),
+    getCountry(slug),
     getAllCountries(),
   ]);
 

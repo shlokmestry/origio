@@ -1,5 +1,6 @@
 'use client'
 import Footer from '@/components/Footer'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -393,16 +394,16 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <a href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide flex items-center gap-1">
+              <Link href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide flex items-center gap-1">
                 Explore <ArrowRight className="w-3 h-3" />
-              </a>
+              </Link>
             </div>
 
             {savedCountries.length === 0 ? (
               <div className="text-center py-10 px-5">
                 <div className="text-4xl mb-3">📌</div>
                 <p className="text-sm font-bold text-text-muted mb-3">No saved countries yet</p>
-                <a href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">Start exploring →</a>
+                <Link href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">Start exploring →</Link>
               </div>
             ) : (
               <div>

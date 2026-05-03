@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRef, useState, useEffect } from "react";
 import {
   DollarSign, Home, Shield, Wifi, Heart, Plane,
@@ -193,10 +195,10 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[#0a0a0a] border-b-2 border-[#2a2a2a]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-3.5 h-3.5 bg-accent border-2 border-text-primary flex-shrink-0" />
             <span className="font-heading text-base font-extrabold uppercase tracking-tight">Origio</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-3">
             <SaveCountryButton countrySlug={country.slug} />
             <button

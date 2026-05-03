@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import Link from 'next/link'
 import { Globe2 } from 'lucide-react'
 
 export default function Error({
@@ -31,13 +32,13 @@ export default function Error({
           >
             Try again
           </button>
-          <a
+          <Link
             href="/"
             className="px-6 py-3 rounded-2xl text-sm border border-border hover:border-accent/30 text-text-muted hover:text-text-primary transition-colors inline-flex items-center gap-2"
           >
             <Globe2 className="w-4 h-4" />
             Back to Globe
-          </a>
+          </Link>
         </div>
       </div>
     </div>

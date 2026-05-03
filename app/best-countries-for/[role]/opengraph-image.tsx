@@ -17,8 +17,9 @@ const roleLabels: Record<string, { title: string; emoji: string }> = {
   "hr-managers": { title: "HR Managers", emoji: "👥" },
 };
 
-export default async function OgImage({ params }: { params: { role: string } }) {
-  const role = roleLabels[params.role] ?? { title: "Professionals", emoji: "🌍" };
+export default async function OgImage({ params }: { params: Promise<{ role: string }> }) {
+  const { role: roleKey } = await params;
+  const role = roleLabels[roleKey] ?? { title: "Professionals", emoji: "🌍" };
   const logoData = await fetch(new URL("/origio_logo_dark_final.png", "https://findorigio.com")).then(r => r.arrayBuffer());
   const logoBase64 = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 

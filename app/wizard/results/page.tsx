@@ -578,10 +578,10 @@ export default function WizardResultsPage() {
           className="flex items-center gap-1.5 text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
           <ArrowLeft className="w-3.5 h-3.5" /> Retake
         </button>
-        <a href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
           <div className="w-3 h-3 bg-accent border-2 border-[#f0f0e8]" />
           <span className="font-heading font-extrabold uppercase tracking-tight text-sm">Origio</span>
-        </a>
+        </Link>
         <button onClick={handleViewOnGlobe}
           className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
           Globe
