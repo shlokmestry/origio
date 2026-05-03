@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Globe2, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
