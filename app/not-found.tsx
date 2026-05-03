@@ -12,7 +12,6 @@ export default function NotFound() {
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <a href="/" className="cta-button px-6 py-3 text-sm font-bold inline-flex items-center gap-2 uppercase">
-            <Globe2 className="w-4 h-4" />
             Back to Globe
           </a>
           <a href="/wizard" className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">

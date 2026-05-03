@@ -2,6 +2,7 @@
 "use client";
 
 import { Mail } from "lucide-react";
+import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 
