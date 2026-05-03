@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 
@@ -155,19 +156,7 @@ export default function PrivacyPage() {
         </div>
       </div>
 
-      <footer className="border-t border-border mt-4">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/origio_logo_dark_final.png" alt="Origio" width={80} height={20} style={{ height: 20, width: "auto" }} />
-            <span className="text-text-muted text-xs ml-2">© 2026</span>
-          </div>
-          <div className="flex items-center gap-5 text-xs text-text-muted">
-            <Link href="/terms" className="hover:text-text-primary transition-colors">Terms</Link>
-            <Link href="/privacy" className="text-accent">Privacy</Link>
-            <Link href="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }
