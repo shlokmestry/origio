@@ -330,6 +330,10 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         isEnglish,
         priorities: answers.priorities,
         matchPercent: match?.percent ?? 0,
+        rentBudget: answers.rentBudget,
+        cityVibe: answers.cityVibe,
+        languages: answers.languages,
+        dealBreakers: answers.dealBreakers,
       }),
     })
       .then((r) => r.json())
