@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Footer from "@/components/Footer";
 import SimpleNav from "@/components/SimpleNav";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -157,6 +158,7 @@ export default async function BlogPage() {
           </Link>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }
