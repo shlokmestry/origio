@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowRightLeft, Lock, Sparkles } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
+import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 
@@ -57,7 +58,8 @@ function MetricRow({
     <div className="grid border-b border-[#111]" style={{ gridTemplateColumns: `180px repeat(${isPro ? 3 : 2}, 1fr)` }}>
       <div className="px-4 py-3.5 flex items-center">
         <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wide">{label}</span>
-      </div>
+        <Footer />
+    </div>
       {values.map((val, i) => {
         // Third column — blur gate for non-Pro
         if (i === 2 && !isPro) {
@@ -66,7 +68,8 @@ function MetricRow({
               <span className="text-[13px] font-extrabold font-heading blur-sm select-none text-[#888880]">
                 ███
               </span>
-            </div>
+              <Footer />
+    </div>
           );
         }
         if (val === null) return null;
@@ -86,9 +89,11 @@ function MetricRow({
                 best
               </span>
             )}
-          </div>
+            <Footer />
+    </div>
         );
       })}
+      <Footer />
     </div>
   );
 }
@@ -99,7 +104,9 @@ function SectionHeader({ label, isPro }: { label: string; isPro: boolean }) {
       style={{ gridTemplateColumns: `180px repeat(${isPro ? 3 : 2}, 1fr)` }}>
       <div className="px-4 py-2.5 col-span-full">
         <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">{label}</p>
-      </div>
+        <Footer />
+    </div>
+      <Footer />
     </div>
   );
 }
@@ -185,7 +192,7 @@ export default function ComparePageClient() {
 
       {/* Header + selectors */}
       <div className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8 pt-24">
           <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-2">
             {isPro ? "3-country comparison" : "2-country comparison"}
           </p>
@@ -203,7 +210,8 @@ export default function ComparePageClient() {
             >
               {JOB_ROLES.map(r => <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>)}
             </select>
-          </div>
+            <Footer />
+    </div>
 
           {/* Country selector row */}
           <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${col}, 1fr)` }}>
@@ -213,7 +221,8 @@ export default function ComparePageClient() {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_A }} />
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country A</p>
-              </div>
+                <Footer />
+    </div>
               <div className="flex items-center gap-2">
                 <select
                   value={slugA ?? ""}
@@ -229,15 +238,18 @@ export default function ComparePageClient() {
                 >
                   <ArrowRightLeft className="w-4 h-4 text-[#888880]" />
                 </button>
-              </div>
-            </div>
+                <Footer />
+    </div>
+              <Footer />
+    </div>
 
             {/* Country B */}
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_B }} />
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country B</p>
-              </div>
+                <Footer />
+    </div>
               <select
                 value={slugB ?? ""}
                 onChange={e => setSlugB(e.target.value)}
@@ -245,7 +257,8 @@ export default function ComparePageClient() {
               >
                 {allCountries.map(c => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
               </select>
-            </div>
+              <Footer />
+    </div>
 
             {/* Country C — Pro only */}
             {isPro && (
@@ -253,7 +266,8 @@ export default function ComparePageClient() {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2.5 h-2.5 flex-shrink-0" style={{ background: COL_C }} />
                   <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Country C</p>
-                </div>
+                  <Footer />
+    </div>
                 <select
                   value={slugC ?? ""}
                   onChange={e => setSlugC(e.target.value)}
@@ -261,9 +275,11 @@ export default function ComparePageClient() {
                 >
                   {allCountries.map(c => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
                 </select>
-              </div>
+                <Footer />
+    </div>
             )}
-          </div>
+            <Footer />
+    </div>
 
           {/* Pro upsell if not Pro */}
           {!isPro && (
@@ -277,10 +293,13 @@ export default function ComparePageClient() {
                 style={{ boxShadow: "2px 2px 0 #00aa90" }}>
                 <Sparkles className="w-3 h-3" /> Pro · €19.99
               </Link>
-            </div>
+              <Footer />
+    </div>
           )}
-        </div>
-      </div>
+          <Footer />
+    </div>
+        <Footer />
+    </div>
 
       {/* Comparison table */}
       {countryA && countryB && (
@@ -303,13 +322,16 @@ export default function ComparePageClient() {
                       {country.name}
                     </p>
                     <p className="text-[10px] text-[#888880] mt-0.5">{country.currency}</p>
-                  </div>
+                    <Footer />
+    </div>
                 ) : (
                   <div className="text-[#333] text-sm">—</div>
                 )}
-              </div>
+                <Footer />
+    </div>
             ))}
-          </div>
+            <Footer />
+    </div>
 
           {/* Table body */}
           <div className="border border-[#1a1a1a]">
@@ -370,7 +392,8 @@ export default function ComparePageClient() {
             <MetricRow label="Move score" isPro={isPro} higherIsBetter={true}
               format={(v) => v + "/10"}
               values={[countryA.data.moveScore, countryB.data.moveScore, isPro && countryC ? countryC.data.moveScore : null]} />
-          </div>
+            <Footer />
+    </div>
 
           {/* Visa notes — free, always two columns */}
           <div className="mt-8 grid sm:grid-cols-2 gap-4">
@@ -384,7 +407,8 @@ export default function ComparePageClient() {
                   <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
                     {country.name} · Visa
                   </p>
-                </div>
+                  <Footer />
+    </div>
                 <p className="text-[11px] text-[#888880] leading-relaxed mb-3">{country.data.visaNotes}</p>
                 {country.data.visaPopularRoutes?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
@@ -394,11 +418,14 @@ export default function ComparePageClient() {
                         {r}
                       </span>
                     ))}
-                  </div>
+                    <Footer />
+    </div>
                 )}
-              </div>
+                <Footer />
+    </div>
             ))}
-          </div>
+            <Footer />
+    </div>
 
           {/* Pro: show countryC visa notes too */}
           {isPro && countryC && (
@@ -408,7 +435,8 @@ export default function ComparePageClient() {
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: COL_C }}>
                   {countryC.name} · Visa
                 </p>
-              </div>
+                <Footer />
+    </div>
               <p className="text-[11px] text-[#888880] leading-relaxed mb-3">{countryC.data.visaNotes}</p>
               {countryC.data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -418,9 +446,11 @@ export default function ComparePageClient() {
                       {r}
                     </span>
                   ))}
-                </div>
+                  <Footer />
+    </div>
               )}
-            </div>
+              <Footer />
+    </div>
           )}
 
           {/* Bottom links */}
@@ -432,10 +462,13 @@ export default function ComparePageClient() {
                 {c.flagEmoji} Full {c.name} report →
               </Link>
             ))}
-          </div>
+            <Footer />
+    </div>
 
-        </div>
+          <Footer />
+    </div>
       )}
+      <Footer />
     </div>
   );
 }
