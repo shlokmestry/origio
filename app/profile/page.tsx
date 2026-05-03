@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -609,6 +610,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   )
 }

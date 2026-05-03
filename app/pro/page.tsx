@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Footer from '@/components/Footer'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
@@ -417,6 +418,7 @@ export default function ProPage() {
 
           <p style={{ textAlign: 'center', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888880', marginTop: 32 }}>
             Origio · 2026 · Pay once. Move freely.
+          <Footer />
           </p>
         </div>
       </section>
