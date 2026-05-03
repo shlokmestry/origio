@@ -17,147 +17,46 @@ const roleLabels: Record<string, { title: string; emoji: string }> = {
   "hr-managers": { title: "HR Managers", emoji: "👥" },
 };
 
-export default function OgImage({ params }: { params: { role: string } }) {
+export default async function OgImage({ params }: { params: { role: string } }) {
   const role = roleLabels[params.role] ?? { title: "Professionals", emoji: "🌍" };
+  const logoData = await fetch(new URL("/origio_logo_dark_final.png", "https://findorigio.com")).then(r => r.arrayBuffer());
+  const logoBase64 = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          background: "#0a0a0a",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "sans-serif",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Background glow */}
-        <div
-          style={{
-            position: "absolute",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(0,255,213,0.10) 0%, transparent 70%)",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-          }}
-        />
+      <div style={{
+        background: "#0a0a0a", width: "100%", height: "100%",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", fontFamily: "sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,255,213,0.10) 0%, transparent 70%)",
+          top: "50%", left: "50%", transform: "translate(-50%, -50%)", display: "flex",
+        }} />
 
-        {/* Logo lockup top-left */}
-        <div
-          style={{
-            position: "absolute",
-            top: 36,
-            left: 48,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <div style={{
-            width: 22,
-            height: 22,
-            background: "#00ffd5",
-            border: "2px solid #f0f0e8",
-            display: "flex",
-            flexShrink: 0,
-          }} />
-          <span style={{
-            fontSize: 22,
-            fontWeight: 800,
-            color: "#f0f0e8",
-            letterSpacing: "-0.5px",
-            display: "flex",
-          }}>
-            ORIGIO
-          </span>
-        </div>
+        {/* Logo top-left */}
+        <img src={logoBase64} style={{ position: "absolute", top: 36, left: 48, height: 36, width: "auto" }} />
 
-        {/* Role emoji */}
-        <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>
-          {role.emoji}
-        </div>
-
-        {/* Eyebrow */}
-        <div
-          style={{
-            fontSize: 18,
-            color: "#00ffd5",
-            fontWeight: 700,
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            marginBottom: 16,
-            display: "flex",
-          }}
-        >
+        <div style={{ fontSize: 64, marginBottom: 16, display: "flex" }}>{role.emoji}</div>
+        <div style={{ fontSize: 18, color: "#00ffd5", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 16, display: "flex" }}>
           Best Countries for
         </div>
-
-        {/* Role title */}
-        <div
-          style={{
-            fontSize: 72,
-            fontWeight: 800,
-            color: "#f0f0e8",
-            letterSpacing: "-2px",
-            marginBottom: 20,
-            display: "flex",
-            textAlign: "center",
-          }}
-        >
+        <div style={{ fontSize: 72, fontWeight: 800, color: "#f0f0e8", letterSpacing: "-2px", marginBottom: 20, display: "flex", textAlign: "center" }}>
           {role.title}
         </div>
-
-        {/* Divider — sharp, no radius */}
-        <div
-          style={{
-            width: 48,
-            height: 4,
-            background: "#00ffd5",
-            marginBottom: 32,
-            display: "flex",
-          }}
-        />
-
-        {/* Pills — sharp corners */}
+        <div style={{ width: 48, height: 4, background: "#00ffd5", marginBottom: 32, display: "flex" }} />
         <div style={{ display: "flex", gap: 12 }}>
           {["💰 Salaries", "🏛️ Tax Rates", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
-            <div
-              key={label}
-              style={{
-                background: "rgba(0,255,213,0.08)",
-                border: "1px solid rgba(0,255,213,0.25)",
-                padding: "10px 22px",
-                fontSize: 18,
-                color: "#00ffd5",
-                display: "flex",
-              }}
-            >
-              {label}
-            </div>
+            <div key={label} style={{
+              background: "rgba(0,255,213,0.08)", border: "1px solid rgba(0,255,213,0.25)",
+              padding: "10px 22px", fontSize: 18, color: "#00ffd5", display: "flex",
+            }}>{label}</div>
           ))}
         </div>
-
-        {/* Bottom URL */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 36,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ fontSize: 16, color: "#444440", display: "flex", letterSpacing: "0.05em" }}>
-            findorigio.com
-          </div>
+        <div style={{ position: "absolute", bottom: 36, display: "flex" }}>
+          <div style={{ fontSize: 16, color: "#444440", display: "flex", letterSpacing: "0.05em" }}>findorigio.com</div>
         </div>
       </div>
     ),
