@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SimpleNav from "@/components/SimpleNav";
 
 export default function NotFound() {
@@ -11,12 +12,12 @@ export default function NotFound() {
           <p className="text-text-muted text-sm leading-relaxed">The country or page you are looking for does not exist yet. Head back to the globe and explore what we have.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <a href="/" className="cta-button px-6 py-3 text-sm font-bold inline-flex items-center gap-2 uppercase">
+          <Link href="/" className="cta-button px-6 py-3 text-sm font-bold inline-flex items-center gap-2 uppercase">
             Back to Globe
-          </a>
-          <a href="/wizard" className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
+          </Link>
+          <Link href="/wizard" className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide">
             Take the quiz
-          </a>
+          </Link>
         </div>
       </div>
     </div>

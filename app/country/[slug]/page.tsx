@@ -1,5 +1,6 @@
 // app/country/[slug]/page.tsx
 import SimpleNav from "@/components/SimpleNav";
+import Link from "next/link";
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { mapRowToCountry } from "@/lib/mappers";
@@ -49,9 +50,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const country = await getCountry(params.slug)
+  const { slug } = await params
+  const country = await getCountry(slug)
   if (!country) return { title: "Country Not Found — Origio" }
 
   const title = `Move to ${country.name} — Salary, Visa, Cost of Living | Origio`
@@ -67,10 +69,11 @@ export async function generateMetadata({
 export default async function CountryPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
+  const { slug } = await params
   const [country, allCountries] = await Promise.all([
-    getCountry(params.slug),
+    getCountry(slug),
     getAllCountries(),
   ])
 
@@ -80,14 +83,14 @@ export default async function CountryPage({
         <div className="text-center">
           <h1 className="font-heading text-4xl font-extrabold mb-4">Country Not Found</h1>
           <p className="text-text-muted mb-8">The country you are looking for does not exist.</p>
-          <a href="/" className="cta-button px-6 py-3 rounded-2xl inline-block">
+          <Link href="/" className="cta-button px-6 py-3 rounded-2xl inline-block">
             Back to Globe
-          </a>
+          </Link>
         </div>
       </div>
     )
   }
 
-  const otherCountries = allCountries.filter((c) => c.slug !== params.slug)
+  const otherCountries = allCountries.filter((c) => c.slug !== slug)
   return <CountryPageClient country={country} otherCountries={otherCountries} />
 }

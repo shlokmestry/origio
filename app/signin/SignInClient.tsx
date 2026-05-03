@@ -261,10 +261,10 @@ export default function SignInClient() {
       <div className="flex flex-col px-6 sm:px-10 py-8 lg:py-10">
 
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div style={{ width: 14, height: 14, background: '#00ffd5', border: '2px solid #fafafa', flexShrink: 0 }} />
           <span style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 15, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Origio</span>
-        </a>
+        </Link>
 
         {/* Form centred */}
         <div className="flex-1 flex items-center">

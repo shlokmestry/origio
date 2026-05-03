@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
@@ -360,10 +361,10 @@ export default function WizardPage() {
         <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
           <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
-        </a>
+        </Link>
         {resumedFromDraft ? (
           <button
             onClick={() => {
