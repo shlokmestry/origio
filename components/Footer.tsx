@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -9,14 +8,9 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
-            <Link href="/" className="inline-block mb-4 hover:opacity-80 transition-opacity">
-              <Image
-                src="/origio_logo_dark_final.png"
-                alt="Origio"
-                width={96}
-                height={24}
-                style={{ height: 24, width: "auto" }}
-              />
+            <Link href="/" className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+              <div className="w-3 h-3 bg-accent flex-shrink-0" />
+              <span className="font-heading text-base font-extrabold text-text-primary uppercase tracking-wide">Origio</span>
             </Link>
             <p className="text-[11px] text-[#444440] leading-relaxed max-w-[180px]">
               Relocation research for professionals moving abroad.
