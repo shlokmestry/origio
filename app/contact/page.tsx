@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import SimpleNav from "@/components/SimpleNav";
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, Mail, MessageSquare, AlertCircle, Lightbulb, Database } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -36,7 +36,17 @@ export default function ContactPage() {
     <main className="min-h-screen bg-bg-primary">
 
       {/* Nav */}
-      <SimpleNav />
+      <nav className="sticky top-0 z-50 glass-panel border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Image src="/origio_logo_dark_final.png" alt="Origio" width={96} height={24} style={{ height: 24, width: "auto" }} priority />
+          </Link>
+          <Link href="/" className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Globe
+          </Link>
+        </div>
+      </nav>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
 
@@ -123,8 +133,7 @@ export default function ContactPage() {
       <footer className="border-t border-border mt-4">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            < className="w-4 h-4 text-accent" />
-            <span className="font-heading text-sm font-bold text-text-primary">Origio</span>
+            <Image src="/origio_logo_dark_final.png" alt="Origio" width={80} height={20} style={{ height: 20, width: "auto" }} />
             <span className="text-text-muted text-xs ml-2">© 2026</span>
           </div>
           <div className="flex items-center gap-5 text-xs text-text-muted">
