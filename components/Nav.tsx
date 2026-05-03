@@ -130,7 +130,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 {isPro && <span className="text-[10px]">PRO</span>}
               </Link>
             ) : (
-              <a
+              <Link
                 href="/signin"
                 className="flex items-center gap-2 px-3 py-1.5 border-2 border-[#2a2a2a] font-bold text-xs text-text-primary uppercase tracking-wide hover:border-text-primary transition-all"
                 style={{ boxShadow: "2px 2px 0 #2a2a2a" }}
