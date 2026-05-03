@@ -116,7 +116,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             )}
 
             {user ? (
-              <a
+              <Link
                 href="/profile"
                 className={`flex items-center gap-2 px-3 py-1.5 border-2 font-bold text-xs uppercase tracking-wide transition-all ${
                   isPro
