@@ -1,5 +1,5 @@
-import Footer from "@/components/Footer";
 'use client'
+import Footer from '@/components/Footer'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
