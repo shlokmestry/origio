@@ -283,7 +283,10 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   }, [country.slug, allCountries]);
 
   useEffect(() => {
-    if (!loading && !answers) router.replace("/wizard");
+    if (!loading && !answers) {
+      const t = setTimeout(() => router.replace("/wizard"), 800);
+      return () => clearTimeout(t);
+    }
   }, [loading, answers, router]);
 
   // ── Generate AI headline once answers + derived data are ready ────────────
