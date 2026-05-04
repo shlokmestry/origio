@@ -4,7 +4,7 @@ import { resend } from "@/lib/resend";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
-  const limited = rateLimit(request, { name: "feedback", maxRequests: 3, windowSeconds: 60 });
+  const limited = await rateLimit(request, { name: "feedback", maxRequests: 3, windowSeconds: 60 });
   if (limited) return limited;
 
   try {
