@@ -9,7 +9,7 @@ import Nav from "@/components/Nav";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { TrendingUp, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 // ── Static example result preview ─────────────────────────────────────────
 function ResultPreview() {
@@ -146,7 +146,7 @@ export default function Home() {
     [allCountries]
   );
 
-  const trendingCountries = useMemo(
+  const topCountries = useMemo(
     () => [...allCountries].sort((a, b) => b.data.moveScore - a.data.moveScore).slice(0, 5),
     [allCountries]
   );
@@ -196,42 +196,42 @@ export default function Home() {
       </div>
 
       <h1 className="font-heading text-5xl sm:text-6xl font-extrabold tracking-tight leading-[0.95] text-text-primary mb-4">
-        Find Where<br />
-        You <span className="gradient-text">Belong</span>
+        25 countries.<br />
+        Ranked <span className="text-accent">for you.</span>
       </h1>
 
       <p className="text-text-muted text-base sm:text-lg max-w-md leading-relaxed mb-6">
-        Salaries, visas, cost of living and quality of life <br className="hidden sm:block" />
-        personalised to your job and passport.
+        Take-home pay. Visa routes. Cost of living.<br className="hidden sm:block" />
+        Ranked for your job and passport.
       </p>
 
-      {/* CTA + wizard hint */}
+      {/* CTA */}
       <div className="mb-5">
         <button
           onClick={() => router.push("/wizard")}
           className="cta-button px-8 py-3.5 text-sm font-bold"
         >
-          Find My Country
+          Run the ranking
         </button>
         <p className="text-[10px] font-bold text-[#444440] uppercase tracking-widest mt-2.5">
-          8 questions · 3 minutes · free
+          8 questions · free
         </p>
       </div>
 
       {/* Result preview */}
       <ResultPreview />
 
-      {/* Trending */}
-      {trendingCountries.length > 0 && (
+      {/* Top countries */}
+      {topCountries.length > 0 && (
         <div
           className="animate-fade-up mt-5"
           style={{ opacity: 0, animationDelay: "0.6s", animationFillMode: "forwards" }}
         >
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest flex items-center gap-1.5">
-              <TrendingUp className="w-3 h-3" /> Trending
+            <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest">
+              ↑ Top rated
             </span>
-            {trendingCountries.map((country) => (
+            {topCountries.map((country) => (
               <button
                 key={country.slug}
                 onClick={() => handleCountrySelect(country.slug)}

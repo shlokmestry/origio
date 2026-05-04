@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Globe2, Sparkles, ArrowRight, ChevronDown, ChevronUp, X, Lock } from "lucide-react";
+import { ArrowLeft, Globe2, ArrowRight, ChevronDown, ChevronUp, X, Lock } from "lucide-react";
 import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const LOADING_STEPS = [
-  "Crunching salary data...",
-  "Checking visa routes...",
-  "Weighing your priorities...",
   "Ranking 25 countries...",
-  "Almost done...",
+  "Checking visa routes...",
+  "Calculating take-home pay...",
+  "Applying your priorities...",
+  "Done.",
 ];
 
 const RANK_COLORS = ["#00ffd5", "#facc15", "#a78bfa"];
@@ -65,17 +65,18 @@ function computeScoreBreakdown(country: CountryWithData, answers: Partial<Wizard
   const salaryUSD = toUSD(salaryRaw, country.currency);
 
   const scores = {
-    salary:       { label: "Salary",        value: normalise(salaryUSD, 25000, 200000), desc: `${getCurrencySymbol(country.currency)}${salaryRaw.toLocaleString()}/yr` },
-    affordability:{ label: "Affordability", value: 10 - normalise(rentUSD, 300, 4000),  desc: `${getCurrencySymbol(country.currency)}${data.costRentCityCentre.toLocaleString()}/mo rent` },
+    salary:       { label: "Salary",         value: normalise(salaryUSD, 25000, 200000), desc: `${getCurrencySymbol(country.currency)}${salaryRaw.toLocaleString()}/yr` },
+    affordability:{ label: "Affordability",  value: 10 - normalise(rentUSD, 300, 4000),  desc: `${getCurrencySymbol(country.currency)}${data.costRentCityCentre.toLocaleString()}/mo rent` },
     tax:          { label: "Tax efficiency", value: 10 - normalise(data.incomeTaxRateMid, 0, 55), desc: `${data.incomeTaxRateMid}% income tax` },
-    safety:       { label: "Safety",         value: data.scoreSafety,                    desc: `${data.scoreSafety}/10 safety score` },
-    quality:      { label: "Quality of life",value: data.scoreQualityOfLife,             desc: `${data.scoreQualityOfLife}/10 QoL score` },
-    visa:         { label: "Visa access",    value: 10 - data.visaDifficulty * 2,        desc: getVisaLabel(data.visaDifficulty) + " visa process" },
+    safety:       { label: "Safety",         value: data.scoreSafety,                    desc: `${data.scoreSafety}/10` },
+    quality:      { label: "Quality of life",value: data.scoreQualityOfLife,             desc: `${data.scoreQualityOfLife}/10` },
+    visa:         { label: "Visa access",    value: 10 - data.visaDifficulty * 2,        desc: getVisaLabel(data.visaDifficulty) },
   };
 
   return scores;
 }
 
+// Data-first summary — no fluff
 function generateSummary(
   match: CountryMatch,
   answers: Partial<WizardAnswers>,
@@ -83,18 +84,15 @@ function generateSummary(
   rank: number
 ): string {
   const name = match.country.name;
+  const cs = getCurrencySymbol(match.country.currency);
+  const data = match.country.data;
   const entries = Object.entries(scores).sort((a, b) => b[1].value - a[1].value);
-  const top2 = entries.slice(0, 2).map(([, v]) => v.label.toLowerCase());
-  const bottom1 = entries[entries.length - 1];
-  const rankWord = rank === 1 ? "your top match" : rank === 2 ? "your second match" : `#${rank}`;
-  let summary = `${name} is ${rankWord} because it scores strongly on ${top2[0]} and ${top2[1]} for your profile.`;
-  if (bottom1[1].value < 4) {
-    summary += ` The main trade-off is ${bottom1[1].label.toLowerCase()} — ${bottom1[1].desc}.`;
-  }
-  if (answers.moveReason === "retire") {
-    summary += ` Strong fit for retirement given its cost and tax profile.`;
-  } else if (answers.moveReason === "remote") {
-    summary += ` Internet speeds and nomad visa availability make it a solid remote work base.`;
+  const weakest = entries[entries.length - 1];
+
+  let summary = `${name} ranks #${rank}. Tax ${data.incomeTaxRateMid}%. Rent ${cs}${data.costRentCityCentre.toLocaleString()}/mo. Visa: ${getVisaLabel(data.visaDifficulty).toLowerCase()}.`;
+
+  if (weakest[1].value < 4) {
+    summary += ` Trade-off: ${weakest[1].label.toLowerCase()} (${weakest[1].desc}).`;
   }
   return summary;
 }
@@ -118,27 +116,12 @@ function ScoreBar({ label, value, desc }: { label: string; value: number; desc: 
 
 // ── Email Capture Component ───────────────────────────────────────────────
 function EmailCapture({
-  topCountry,
-  topCountryFlag,
-  matchPercent,
-  jobRole,
-  grossSalary,
-  netMonthly,
-  taxRate,
-  rentCost,
-  visaLabel,
-  currency,
+  topCountry, topCountryFlag, matchPercent, jobRole,
+  grossSalary, netMonthly, taxRate, rentCost, visaLabel, currency,
 }: {
-  topCountry: string;
-  topCountryFlag: string;
-  matchPercent: number;
-  jobRole: string;
-  grossSalary: number;
-  netMonthly: number;
-  taxRate: number;
-  rentCost: number;
-  visaLabel: string;
-  currency: string;
+  topCountry: string; topCountryFlag: string; matchPercent: number; jobRole: string;
+  grossSalary: number; netMonthly: number; taxRate: number; rentCost: number;
+  visaLabel: string; currency: string;
 }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -147,29 +130,13 @@ function EmailCapture({
 
   const handleSubmit = async () => {
     setError("");
-    if (!email || !email.includes("@")) {
-      setError("Enter a valid email.");
-      return;
-    }
+    if (!email || !email.includes("@")) { setError("Enter a valid email."); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          source: "quiz_results",
-          topCountry,
-          topCountryFlag,
-          matchPercent,
-          jobRole,
-          grossSalary,
-          netMonthly,
-          taxRate,
-          rentCost,
-          visaLabel,
-          currency,
-        }),
+        body: JSON.stringify({ email, source: "quiz_results", topCountry, topCountryFlag, matchPercent, jobRole, grossSalary, netMonthly, taxRate, rentCost, visaLabel, currency }),
       });
       if (!res.ok) throw new Error("Failed");
       setSubmitted(true);
@@ -183,7 +150,7 @@ function EmailCapture({
     return (
       <div className="border-2 border-accent/40 bg-[#0d0d0d] p-8 mt-10">
         <p className="text-sm font-bold text-accent uppercase tracking-widest">
-          ✓ Saved — check your inbox for the full breakdown
+          ✓ Check your inbox for the full breakdown
         </p>
       </div>
     );
@@ -192,14 +159,12 @@ function EmailCapture({
   return (
     <div className="border-2 border-[#2a2a2a] bg-[#0d0d0d] p-8 mt-10 space-y-5" style={{ boxShadow: "4px 4px 0 #1a1a1a" }}>
       <div className="space-y-2">
-        <p className="text-xs font-bold text-accent uppercase tracking-[0.2em]">
-          Save your results
-        </p>
+        <p className="text-xs font-bold text-accent uppercase tracking-[0.2em]">Save your results</p>
         <p className="font-heading text-xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">
           Get your {topCountryFlag} {topCountry} breakdown by email
         </p>
         <p className="text-sm text-[#888880] leading-relaxed">
-          We will send you a personalised salary, tax, and cost of living breakdown written specifically for your results. No spam, one email.
+          Salary, tax, and cost of living for your results. No spam. One email.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3">
@@ -220,14 +185,12 @@ function EmailCapture({
           {loading ? "Sending..." : "Send it"}
         </button>
       </div>
-      {error && (
-        <p className="text-xs text-[#ef4444]">{error}</p>
-      )}
+      {error && <p className="text-xs text-[#ef4444]">{error}</p>}
     </div>
   );
 }
 
-function WhyCard({
+function ScoreCard({
   match, answers, jobRoleDef, rank, excludedCountries,
 }: {
   match: CountryMatch;
@@ -242,11 +205,10 @@ function WhyCard({
   return (
     <div className="border border-[#2a2a2a] bg-[#0d0d0d] p-6 space-y-6 h-fit" style={{ boxShadow: "4px 4px 0 #00ffd520" }}>
       <div>
-        <p className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] mb-2">Why this match?</p>
-        <p className="text-[11px] text-[#888880] leading-relaxed">{summary}</p>
+        <p className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] mb-2">Score breakdown</p>
+        <p className="text-[11px] text-[#888880] leading-relaxed font-mono">{summary}</p>
       </div>
       <div className="space-y-3 border-t border-[#1a1a1a] pt-5">
-        <p className="text-[9px] font-bold text-[#444] uppercase tracking-widest mb-3">Score breakdown</p>
         {Object.values(scores).map((s) => (
           <ScoreBar key={s.label} label={s.label} value={s.value} desc={s.desc} />
         ))}
@@ -271,7 +233,7 @@ function WhyCard({
   );
 }
 
-function WhyToggle({
+function ScoreToggle({
   match, answers, jobRoleDef, rank,
 }: {
   match: CountryMatch;
@@ -289,11 +251,11 @@ function WhyToggle({
         onClick={(e) => { e.preventDefault(); setOpen(!open); }}
         className="flex items-center gap-1.5 text-[10px] font-bold text-[#444] hover:text-[#888880] transition-colors uppercase tracking-widest"
       >
-        Why this match? {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        Scores {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
       </button>
       {open && (
         <div className="mt-3 pt-3 border-t border-[#1a1a1a] space-y-4">
-          <p className="text-[10px] text-[#888880] leading-relaxed">{summary}</p>
+          <p className="text-[10px] text-[#888880] leading-relaxed font-mono">{summary}</p>
           <div className="space-y-2.5">
             {Object.values(scores).map((s) => (
               <ScoreBar key={s.label} label={s.label} value={s.value} desc={s.desc} />
@@ -377,10 +339,10 @@ function TakeHomeCard({
     <div className="mt-8 border-2 border-[#2a2a2a]" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
       <div className="flex items-center justify-between px-5 py-3 border-b-2 border-[#2a2a2a] bg-[#0d0d0d]">
         <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em]">
-          Estimated take-home · {jobRoleDef.label} · {match.country.name}
+          Take-home · {jobRoleDef.label} · {match.country.name}
         </p>
         <span className="text-[10px] font-bold text-[#444] uppercase tracking-widest">
-          {match.country.data.incomeTaxRateMid}% tax rate
+          {match.country.data.incomeTaxRateMid}% tax
         </span>
       </div>
 
@@ -442,7 +404,7 @@ function TakeHomeCard({
                   style={{ boxShadow: "2px 2px 0 #00aa90" }}
                 >
                   <Lock className="w-3 h-3" />
-                  Full breakdown → Pro
+                  Full breakdown — Pro
                 </Link>
               </div>
             )}
@@ -450,7 +412,7 @@ function TakeHomeCard({
         </div>
 
         <p className="text-[9px] text-[#444] mt-4 leading-relaxed">
-          * Estimate based on mid-bracket income tax rate. Social security, local taxes, and deductions vary. Verify with official sources before relocating.
+          * Mid-bracket income tax estimate. Social security, local taxes, and deductions vary. Verify before relocating.
         </p>
       </div>
     </div>
@@ -541,12 +503,13 @@ export default function WizardResultsPage() {
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm space-y-8">
           <div className="relative mx-auto w-20 h-20 border-2 border-[#2a2a2a] flex items-center justify-center">
-            <Globe2 className="w-10 h-10 text-accent animate-spin" style={{ animationDuration: "3s" }} />
-            <div className="absolute inset-0 border-2 border-accent animate-ping opacity-20" />
+            <Globe2 className="w-10 h-10 text-accent" style={{ animation: "spin 3s linear infinite" }} />
           </div>
           <div className="space-y-1">
-            <h2 className="font-heading text-2xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">Finding your country...</h2>
-            <p key={loadingStep} className="text-[#888880] text-sm font-medium">{LOADING_STEPS[loadingStep]}</p>
+            <h2 className="font-heading text-2xl font-extrabold text-[#f0f0e8] uppercase tracking-tight">
+              Ranking 25 countries
+            </h2>
+            <p key={loadingStep} className="text-[#888880] text-sm font-mono">{LOADING_STEPS[loadingStep]}</p>
           </div>
           <div className="w-full h-px bg-[#1a1a1a]">
             <div className="h-full bg-accent transition-all duration-100 ease-linear" style={{ width: loadingProgress + "%" }} />
@@ -563,7 +526,6 @@ export default function WizardResultsPage() {
   const cs = getCurrencySymbol(top.country.currency);
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
 
-  // Compute email data from top match
   const grossSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : 0;
   const netMonthly = Math.round(grossSalary * (1 - top.country.data.incomeTaxRateMid / 100) / 12);
 
@@ -597,7 +559,7 @@ export default function WizardResultsPage() {
             {/* Left */}
             <div>
               <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">
-                Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
+                #1 match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
               </p>
 
               <div className="flex items-start gap-6 mb-6">
@@ -616,11 +578,15 @@ export default function WizardResultsPage() {
               </div>
 
               {topSalary && (
-                <div className="flex flex-wrap gap-x-6 gap-y-1 mb-7 text-[12px] font-bold text-[#888880]">
+                <div className="flex flex-wrap gap-x-6 gap-y-1 mb-7 text-[12px] font-bold text-[#888880] font-mono">
                   <span>{cs}{topSalary.toLocaleString()}/yr</span>
-                  <span>Visa {getVisaLabel(top.country.data.visaDifficulty)}</span>
+                  <span>·</span>
+                  <span>Visa: {getVisaLabel(top.country.data.visaDifficulty)}</span>
+                  <span>·</span>
                   <span>{cs}{top.country.data.costRentCityCentre.toLocaleString()}/mo rent</span>
+                  <span>·</span>
                   <span>{top.country.language}</span>
+                  <span>·</span>
                   <span>{top.country.data.incomeTaxRateMid}% tax</span>
                 </div>
               )}
@@ -643,7 +609,7 @@ export default function WizardResultsPage() {
                   className="px-8 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] bg-accent text-[#0a0a0a]"
                   style={{ boxShadow: "3px 3px 0 #00aa90" }}
                 >
-                  View full report
+                  Full report →
                 </Link>
                 <button
                   onClick={handleViewOnGlobe}
@@ -655,14 +621,14 @@ export default function WizardResultsPage() {
                   onClick={() => router.push("/wizard")}
                   className="text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest ml-auto"
                 >
-                  Retake quiz →
+                  Retake →
                 </button>
               </div>
 
               {/* Take-home card */}
               <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
 
-              {/* Email capture — only for non-logged-in users */}
+              {/* Email capture */}
               {!user && (
                 <EmailCapture
                   topCountry={top.country.name}
@@ -679,9 +645,9 @@ export default function WizardResultsPage() {
               )}
             </div>
 
-            {/* Right — Why card */}
+            {/* Right — Score card */}
             <div className="lg:sticky lg:top-6">
-              <WhyCard
+              <ScoreCard
                 match={top}
                 answers={answers}
                 jobRoleDef={jobRoleDef}
@@ -713,18 +679,18 @@ export default function WizardResultsPage() {
                   <div className="text-3xl mb-3">{m.country.flagEmoji}</div>
                   <p className="font-heading text-lg font-extrabold uppercase tracking-tight mb-1">{m.country.name}</p>
                   {salary && (
-                    <p className="text-[10px] text-[#888880] font-medium">
+                    <p className="text-[10px] text-[#888880] font-mono">
                       {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa
                     </p>
                   )}
                   <div className="mt-3 pt-3 border-t border-[#1a1a1a] flex items-center justify-between">
-                    <p className="text-[10px] text-[#888880]">{mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo rent</p>
+                    <p className="text-[10px] text-[#888880] font-mono">{mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo rent</p>
                     <Link href={"/country/" + m.country.slug + "/personalised"}
                       className="text-[10px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest">
                       Report →
                     </Link>
                   </div>
-                  <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
+                  <ScoreToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
                 </div>
               );
             })}
@@ -741,11 +707,11 @@ export default function WizardResultsPage() {
 
         {/* ── WHAT THIS MEANS ──────────────────────────────────────────────── */}
         <section className="py-14 border-b border-[#1a1a1a]">
-          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">What this means</p>
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-8">At a glance</p>
           <div className="grid sm:grid-cols-2 gap-px bg-[#1a1a1a]">
             {[
               {
-                label: "Best salary among your top 3",
+                label: "Best salary · top 3",
                 value: (() => {
                   if (!jobRoleDef) return "—";
                   const best = [...matches.slice(0, 3)].sort((a, b) =>
@@ -755,14 +721,14 @@ export default function WizardResultsPage() {
                 })(),
               },
               {
-                label: "Easiest visa among your top 3",
+                label: "Easiest visa · top 3",
                 value: (() => {
                   const easiest = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
                   return `${easiest.country.flagEmoji} ${easiest.country.name} · ${getVisaLabel(easiest.country.data.visaDifficulty)}`;
                 })(),
               },
               {
-                label: "Lowest rent among your top 3",
+                label: "Lowest rent · top 3",
                 value: (() => {
                   const cheapest = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0];
                   const lcs = getCurrencySymbol(cheapest.country.currency);
@@ -770,7 +736,7 @@ export default function WizardResultsPage() {
                 })(),
               },
               {
-                label: "Safest among your top 3",
+                label: "Safest · top 3",
                 value: (() => {
                   const safest = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
                   return `${safest.country.flagEmoji} ${safest.country.name} · ${safest.country.data.scoreSafety}/10`;
@@ -779,7 +745,7 @@ export default function WizardResultsPage() {
             ].map(item => (
               <div key={item.label} className="bg-[#0a0a0a] px-6 py-5">
                 <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">{item.label}</p>
-                <p className="font-heading text-base font-extrabold text-[#f0f0e8]">{item.value}</p>
+                <p className="font-heading text-base font-extrabold text-[#f0f0e8] font-mono">{item.value}</p>
               </div>
             ))}
           </div>
@@ -815,7 +781,7 @@ export default function WizardResultsPage() {
                         {match.country.name}
                       </p>
                       {salary && (
-                        <p className="text-[10px] text-[#444] font-medium mt-0.5">
+                        <p className="text-[10px] text-[#444] font-mono mt-0.5">
                           {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(match.country.data.visaDifficulty)} visa · {mcs}{match.country.data.costRentCityCentre.toLocaleString()}/mo rent
                         </p>
                       )}
@@ -826,7 +792,7 @@ export default function WizardResultsPage() {
                   </Link>
                   {i >= 3 && (
                     <div className="px-3 pb-3 -mt-1">
-                      <WhyToggle match={match} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
+                      <ScoreToggle match={match} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
                     </div>
                   )}
                 </div>
@@ -855,12 +821,12 @@ export default function WizardResultsPage() {
               <div className="flex items-center justify-between pt-5 border-t border-[#1a1a1a]">
                 <div>
                   <p className="font-heading text-sm font-extrabold uppercase tracking-tight">{25 - visibleMatches.length} more countries</p>
-                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Unlock full ranking · €19.99 once</p>
+                  <p className="text-[10px] text-[#888880] mt-0.5 uppercase tracking-widest">Full ranking — €19.99 once</p>
                 </div>
                 <Link href="/pro"
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest bg-accent text-[#0a0a0a]"
                   style={{ boxShadow: "2px 2px 0 #00aa90" }}>
-                  <Sparkles className="w-3 h-3" /> Get Pro
+                  Get Pro
                 </Link>
               </div>
             </div>
@@ -868,7 +834,7 @@ export default function WizardResultsPage() {
 
           {isPro && matches.length >= 3 && (
             <div className="mt-8 pt-6 border-t border-[#1a1a1a] flex items-center justify-between">
-              <p className="text-[10px] text-[#888880] uppercase tracking-widest">All 25 countries ranked for you</p>
+              <p className="text-[10px] text-[#888880] uppercase tracking-widest">All 25 countries ranked</p>
               <Link href={compareHref}
                 className="inline-flex items-center gap-2 text-[11px] font-bold text-[#888880] hover:text-accent transition-colors uppercase tracking-widest">
                 Compare top 3 <ArrowRight className="w-3 h-3" />

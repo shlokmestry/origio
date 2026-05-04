@@ -6,15 +6,15 @@ import { AuthProvider } from "@/lib/AuthProvider"
 
 export const metadata: Metadata = {
   title: {
-    default: "Origio ~ Find Where You Belong",
+    default: "Origio — Country rankings for professionals moving abroad",
     template: "%s | Origio",
   },
   description:
-    "Explore opportunities, salaries, visas and life quality across every country — personalised to you.",
+    "Salary after tax. Visa routes. Cost of living. 25 countries ranked for your job and passport.",
   keywords: [
-    "move abroad", "relocation", "salary comparison", "visa",
-    "cost of living", "quality of life", "immigration", "expat",
-    "work abroad", "best countries to live", "relocation guide",
+    "move abroad", "work abroad", "visa routes", "salary comparison",
+    "cost of living abroad", "immigration", "relocation",
+    "take home pay abroad", "country comparison",
   ],
   metadataBase: new URL("https://findorigio.com"),
   verification: {
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
   openGraph: {
-    title: "Origio ~ Find Where You Belong",
-    description: "Explore opportunities, salaries, visas and life quality across every country.",
+    title: "Origio — Country rankings for professionals moving abroad",
+    description: "Salary after tax. Visa routes. Cost of living. 25 countries ranked for your job and passport.",
     type: "website",
     url: "https://findorigio.com",
     siteName: "Origio",
@@ -39,14 +39,14 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Origio ~ Find Where You Belong",
+        alt: "Origio — Country rankings for professionals moving abroad",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Origio ~ Find Where You Belong",
-    description: "Explore opportunities, salaries, visas and life quality across every country.",
+    title: "Origio — Country rankings for professionals moving abroad",
+    description: "Salary after tax. Visa routes. Cost of living. 25 countries ranked for your job and passport.",
     images: ["/og-image.png"],
   },
 };

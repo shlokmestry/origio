@@ -37,27 +37,10 @@ function XIcon() {
   )
 }
 
-function LiveDot() {
-  return (
-    <span style={{
-      display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-      background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.6)',
-      animation: 'pulse 2s ease-in-out infinite',
-    }} />
-  )
-}
-
 // ── Hemisphere SVG ────────────────────────────────────────────────────────
 function Hemisphere() {
   return (
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: -60, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-      {/* Glow */}
-      <div style={{
-        position: 'absolute', width: 1200, height: 600, bottom: 0,
-        background: 'radial-gradient(ellipse at center bottom, rgba(0,255,213,0.22) 0%, rgba(0,255,213,0.08) 35%, transparent 65%)',
-        filter: 'blur(20px)',
-      }} />
-      {/* SVG */}
       <div style={{ position: 'relative', width: 1100, height: 550 }}>
         <svg viewBox="-550 -500 1100 550" fill="none" style={{ width: '100%', height: '100%', display: 'block' }}>
           <defs>
@@ -75,7 +58,6 @@ function Hemisphere() {
             <ellipse cx="0" cy="0" rx="140" ry="360" stroke="rgba(0,255,213,0.2)"  strokeWidth="1"   fill="none"/>
             <ellipse cx="0" cy="0" rx="220" ry="360" stroke="rgba(0,255,213,0.2)"  strokeWidth="1"   fill="none"/>
             <ellipse cx="0" cy="0" rx="295" ry="360" stroke="rgba(0,255,213,0.2)"  strokeWidth="1"   fill="none"/>
-            {/* Pins */}
             {[[-160,-180],[70,-110],[210,-220],[-260,-90],[310,-60]].map(([cx,cy],i) => (
               <g key={i}>
                 <circle cx={cx} cy={cy} r="9" fill="rgba(0,255,213,0.35)"/>
@@ -92,18 +74,18 @@ function Hemisphere() {
 
 // ── Data ──────────────────────────────────────────────────────────────────
 const PRO_FEATURES = [
-  { num: '01', title: 'All 25 countries ranked', desc: 'Your complete personalised ranking, not just the top 3. Every country in the wizard pool scored against your priorities.' },
-  { num: '02', title: 'Full personalised report', desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores specific to your role and passport.' },
-  { num: '03', title: 'Take-home calculator', desc: 'Input your actual salary and see exactly what you keep after tax and social security in any country.' },
-  { num: '04', title: 'Visa checklist', desc: 'Every document you need, in order, with official links. Country-specific.' },
-  { num: '05', title: '3-country comparison', desc: 'Compare your top 3 matches side by side across every metric. Pre-filled from your wizard results.' },
+  { num: '01', title: 'All 25 countries ranked', desc: 'Your complete ranking, not just the top 3. Every country scored against your priorities, role, and passport.' },
+  { num: '02', title: 'Full report per country', desc: 'Salary, take-home after tax, cost breakdown, visa path, and priority scores for your role and passport.' },
+  { num: '03', title: 'Take-home calculator', desc: 'Enter your actual salary. See what you keep after tax and social security in any country.' },
+  { num: '04', title: 'Visa checklist', desc: 'Every document you need, in order, with official links. Country-specific to your passport.' },
+  { num: '05', title: '3-country comparison', desc: 'Compare your top 3 side by side across every metric. Pre-filled from your results.' },
 ]
 
 const COMPARE_ROWS = [
   { feature: 'Top country matches',  free: 'Top 3',    pro: 'All 25',    freeCheck: null, proCheck: null },
   { feature: 'Salary by role',       free: null,       pro: null,         freeCheck: true, proCheck: true },
   { feature: 'Visa & cost summary',  free: 'Basic',    pro: 'Full',       freeCheck: null, proCheck: null },
-  { feature: 'Personalised report',  free: null,       pro: null,         freeCheck: false, proCheck: true },
+  { feature: 'Full report',          free: null,       pro: null,         freeCheck: false, proCheck: true },
   { feature: 'Take-home calculator', free: null,       pro: null,         freeCheck: false, proCheck: true },
   { feature: 'Visa checklist',       free: null,       pro: null,         freeCheck: false, proCheck: true },
   { feature: '3-country comparison', free: null,       pro: null,         freeCheck: false, proCheck: true },
@@ -111,12 +93,12 @@ const COMPARE_ROWS = [
 ]
 
 const FAQS = [
-  { q: 'Is this really a one-time payment?', a: '€19.99 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.' },
-  { q: 'Why €19.99 and not less?', a: 'A single immigration lawyer consultation costs €200–500. Origio gives you the data to make that decision yourself.' },
+  { q: 'Is this a one-time payment?', a: '€19.99 once. Pro forever. No subscription, no renewal, no surprise charges.' },
+  { q: 'Why €19.99?', a: 'A single immigration lawyer consultation costs €200–500. Origio gives you the data to make that decision yourself.' },
   { q: 'What payment methods are accepted?', a: 'All major credit and debit cards via Stripe. We never see your card details.' },
-  { q: 'Can I get a refund?', a: "If something isn't right, email us and we'll sort it out. We stand behind the product." },
-  { q: 'Do I need an account?', a: 'Yes. Pro features are tied to your account so they work across devices and stay active permanently.' },
-  { q: 'I already ran the quiz as a free user. Do I lose my results?', a: "No. Your answers are saved. Run the quiz again after upgrading and you'll instantly see all 25 countries ranked." },
+  { q: 'Can I get a refund?', a: "If something isn't right, email us and we'll sort it out." },
+  { q: 'Do I need an account?', a: 'Yes. Pro features are tied to your account so they work across devices and stay active.' },
+  { q: 'I already ran the quiz as a free user. Do I lose my results?', a: "No. Your answers are saved. Run the quiz again after upgrading and you'll see all 25 countries ranked." },
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────────
@@ -166,7 +148,6 @@ export default function ProPage() {
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#f0f0e8', fontFamily: 'inherit', overflowX: 'hidden' }}>
 
       <style>{`
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
         .cta-hover:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #00aa90 !important; }
         .ghost-hover:hover { color: #f0f0e8 !important; border-color: #444 !important; }
         .compare-row-hover:hover { background: #0d0d0d; }
@@ -192,16 +173,16 @@ export default function ProPage() {
       <section style={{ position: 'relative', paddingTop: 80, paddingBottom: 320, borderBottom: '1px solid #1a1a1a', overflow: 'hidden' }}>
         <Hemisphere />
         <div style={{ position: 'relative', maxWidth: 768, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
-          <p style={{ ...eyebrow, marginBottom: 20 }}>★ One-time payment · No subscription</p>
+          <p style={{ ...eyebrow, marginBottom: 20 }}>One-time payment · No subscription</p>
           <h1 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 'clamp(52px, 8vw, 88px)', lineHeight: 0.88, fontWeight: 900, letterSpacing: '-0.025em', textTransform: 'uppercase', marginBottom: 24 }}>
-            Pay once.<br/>Move <span style={{ color: '#00ffd5' }}>freely.</span>
+            Full access.<br/><span style={{ color: '#00ffd5' }}>€19.99.</span> Once.
           </h1>
-          <p style={{ fontSize: 15, color: '#888880', lineHeight: 1.7, maxWidth: 420, margin: '0 auto 36px' }}>
-            Free shows you the top 3. Pro ranks all 25 with full personalised reports, take-home calculations, and side-by-side comparison.
+          <p style={{ fontSize: 15, color: '#888880', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 36px' }}>
+            Free: top 3 matches. Pro: all 25, take-home calculator, visa checklist, 3-country comparison.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
             <button onClick={handleUpgrade} disabled={loading} className="cta-hover" style={{ ...btnPrimary, opacity: loading ? 0.5 : 1 }}>
-              ⚡ {loading ? 'Redirecting…' : 'Get Pro · €19.99'}
+              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
             </button>
             <a href="#compare" className="ghost-hover" style={{
               background: 'transparent', color: '#888880', fontWeight: 800, textTransform: 'uppercase',
@@ -212,36 +193,25 @@ export default function ProPage() {
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
             {['No subscription', 'Secure via Stripe', 'Yours forever'].map(t => (
-              <span key={t} style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <LiveDot /> {t}
-              </span>
+              <span key={t} style={{ ...eyebrow }}>{t}</span>
             ))}
           </div>
           {error && <p style={{ marginTop: 16, fontSize: 13, color: '#f87171', fontWeight: 700 }}>{error}</p>}
         </div>
       </section>
 
-      {/* ── PRICE CARD (hovering over globe) ── */}
+      {/* ── PRICE CARD ── */}
       <section id="pricing" style={{ position: 'relative', marginTop: -288, paddingBottom: 80, paddingLeft: 24, paddingRight: 24, borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ position: 'relative', maxWidth: 448, margin: '0 auto' }}>
           <div style={{
             position: 'relative',
-            background: 'linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)',
+            background: '#0d0d0d',
             border: '2px solid #2a2a2a',
-            boxShadow: '6px 6px 0 #00ffd5, inset 0 1px 0 rgba(255,255,255,0.04)',
+            boxShadow: '6px 6px 0 #00ffd5',
             padding: 40,
           }}>
-            {/* Glow overlay */}
-            <div style={{ position: 'absolute', inset: -1, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(0,255,213,0.08), transparent 50%)' }} />
-
-            {/* Stamp + label */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, position: 'relative' }}>
-              <span style={{
-                border: '1.5px solid #00ffd5', padding: '4px 8px', color: '#00ffd5',
-                fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                transform: 'rotate(-3deg)',
-              }}>★ Best value</span>
+            {/* Label */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 32 }}>
               <span style={{ ...eyebrow }}>Origio Pro</span>
             </div>
 
@@ -256,16 +226,15 @@ export default function ProPage() {
             </div>
 
             {/* Comparison line */}
-            <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 20, marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#888880' }}>
+            <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 20, marginBottom: 28, fontSize: 11, color: '#888880' }}>
               <span style={{ textDecoration: 'line-through', textDecorationThickness: 2, textDecorationColor: '#555' }}>€200+ for an immigration consult</span>
-              <span style={{ color: '#00ffd5', fontWeight: 700 }}>Save 90%</span>
             </div>
 
             {/* Features */}
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 ['All 25 countries ranked', 'not just the top 3'],
-                ['Full personalised reports', 'for every country'],
+                ['Full report per country', 'salary, tax, visa, cost'],
                 ['Take-home calculator', 'pre-filled for your role'],
                 ['Visa checklist', 'with official links'],
                 ['3-country comparison', 'side-by-side'],
@@ -273,7 +242,7 @@ export default function ProPage() {
                 <li key={bold} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <CheckIcon />
                   <span style={{ fontSize: 13, color: '#f0f0e8', lineHeight: 1.4 }}>
-                    <strong>{bold}</strong> {rest}
+                    <strong>{bold}</strong> — {rest}
                   </span>
                 </li>
               ))}
@@ -282,7 +251,7 @@ export default function ProPage() {
             {/* CTA */}
             <button onClick={handleUpgrade} disabled={loading} className="cta-hover"
               style={{ ...btnPrimary, width: '100%', padding: '14px 0', opacity: loading ? 0.5 : 1 }}>
-              ⚡ {loading ? 'Redirecting…' : 'Get Pro · €19.99'}
+              {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
             </button>
             <p style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#888880', marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Secure checkout via Stripe
@@ -294,9 +263,9 @@ export default function ProPage() {
       {/* ── WHAT YOU UNLOCK ── */}
       <section style={{ padding: '80px 24px', borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: 672, margin: '0 auto' }}>
-          <p style={{ ...eyebrow, marginBottom: 12 }}>What you unlock</p>
+          <p style={{ ...eyebrow, marginBottom: 12 }}>What Pro includes</p>
           <h2 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: 48 }}>
-            Five things free users don't get.
+            Five features. Not in the free tier.
           </h2>
           <div>
             {PRO_FEATURES.map((f, i) => (
@@ -358,7 +327,7 @@ export default function ProPage() {
       {/* ── FAQ ── */}
       <section id="faq" style={{ padding: '80px 24px', borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: 672, margin: '0 auto' }}>
-          <p style={{ ...eyebrow, marginBottom: 12 }}>Questions</p>
+          <p style={{ ...eyebrow, marginBottom: 12 }}>Common questions</p>
           <h2 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: 48 }}>
             Before you upgrade.
           </h2>
@@ -393,19 +362,16 @@ export default function ProPage() {
       {/* ── FINAL CTA ── */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 768, margin: '0 auto' }}>
-          <div style={{ border: '1px solid #2a2a2a', padding: 'clamp(32px, 5vw, 48px)', position: 'relative', overflow: 'hidden', boxShadow: '4px 4px 0 #00ffd5' }}>
-            {/* Corner glow */}
-            <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,213,0.12), transparent 70%)', pointerEvents: 'none' }} />
-
-            <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+          <div style={{ border: '1px solid #2a2a2a', padding: 'clamp(32px, 5vw, 48px)', boxShadow: '4px 4px 0 #00ffd5' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <h2 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: 8 }}>Ready to move?</h2>
-                <p style={{ fontSize: 13, color: '#888880' }}>One payment. Full access. Forever.</p>
+                <h2 style={{ fontFamily: 'var(--font-heading, sans-serif)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: 8 }}>Get the full ranking.</h2>
+                <p style={{ fontSize: 13, color: '#888880' }}>€19.99. No subscription.</p>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
                 <button onClick={handleUpgrade} disabled={loading} className="cta-hover"
                   style={{ ...btnPrimary, opacity: loading ? 0.5 : 1 }}>
-                  ⚡ {loading ? 'Redirecting…' : 'Get Pro · €19.99'}
+                  {loading ? 'Redirecting…' : 'Get Pro — €19.99'}
                 </button>
                 <Link href="/wizard" style={{ fontSize: 11, fontWeight: 700, color: '#888880', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.1em' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#f0f0e8')}
