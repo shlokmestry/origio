@@ -2,16 +2,23 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Globe2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
+import { supabase } from "@/lib/supabase";
+import QuizGate from "@/components/QuizGate";
 
+// ── Constants ─────────────────────────────────────────────────────────────
+const ANON_MAX_RUNS = 3;
+const FREE_MAX_RUNS = 5;
+const ANON_STORAGE_KEY = "origio_quiz_runs";
 const TOTAL_STEPS = 8;
 
+// ── Static data ───────────────────────────────────────────────────────────
 const PASSPORTS = [
   "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
   "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
@@ -24,71 +31,116 @@ function getRentBudgets(passport: string) {
   if (p === "india") return {
     note: "Shown in Indian Rupees — typical rent abroad converted to INR",
     options: [
-      { key: "under800", label: "Under ₹65,000/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "₹65,000 – ₹1,25,000/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      { key: "under800",    label: "Under ₹65,000/mo",          sub: "Budget-conscious" },
+      { key: "800to1500",   label: "₹65,000 – ₹1,25,000/mo",   sub: "Comfortable" },
+      { key: "1500to2500",  label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
+      { key: "any",         label: "Money isn't a concern",      sub: "No limit" },
     ]
   };
   if (p === "usa") return {
     note: "Shown in US Dollars",
     options: [
-      { key: "under800", label: "Under $800/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "$800 – $1,500/mo", sub: "Comfortable" },
-      { key: "1500to2500", label: "$1,500 – $2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      { key: "under800",   label: "Under $800/mo",       sub: "Budget-conscious" },
+      { key: "800to1500",  label: "$800 – $1,500/mo",    sub: "Comfortable" },
+      { key: "1500to2500", label: "$1,500 – $2,500/mo",  sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern", sub: "No limit" },
     ]
   };
   return {
     note: "Shown in Euros — average city-centre rent abroad",
     options: [
-      { key: "under800", label: "Under €800/mo", sub: "Budget-conscious" },
-      { key: "800to1500", label: "€800 – €1,500/mo", sub: "Comfortable" },
+      { key: "under800",   label: "Under €800/mo",       sub: "Budget-conscious" },
+      { key: "800to1500",  label: "€800 – €1,500/mo",   sub: "Comfortable" },
       { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
-      { key: "any", label: "Money isn't a concern", sub: "No limit" },
+      { key: "any",        label: "Money isn't a concern", sub: "No limit" },
     ]
   };
 }
 
 const LANGUAGES = [
-  { key: "english", label: "English" }, { key: "spanish", label: "Spanish" },
-  { key: "french", label: "French" }, { key: "german", label: "German" },
-  { key: "portuguese", label: "Portuguese" }, { key: "arabic", label: "Arabic" },
-  { key: "mandarin", label: "Mandarin" }, { key: "hindi", label: "Hindi" },
-  { key: "italian", label: "Italian" }, { key: "dutch", label: "Dutch" },
-  { key: "swedish", label: "Swedish" }, { key: "norwegian", label: "Norwegian" },
-  { key: "japanese", label: "Japanese" }, { key: "korean", label: "Korean" },
-  { key: "tagalog", label: "Tagalog" }, { key: "turkish", label: "Turkish" },
-  { key: "polish", label: "Polish" }, { key: "none", label: "English only" },
+  { key: "english",    label: "English" },    { key: "spanish",    label: "Spanish" },
+  { key: "french",     label: "French" },     { key: "german",     label: "German" },
+  { key: "portuguese", label: "Portuguese" }, { key: "arabic",     label: "Arabic" },
+  { key: "mandarin",   label: "Mandarin" },   { key: "hindi",      label: "Hindi" },
+  { key: "italian",    label: "Italian" },    { key: "dutch",      label: "Dutch" },
+  { key: "swedish",    label: "Swedish" },    { key: "norwegian",  label: "Norwegian" },
+  { key: "japanese",   label: "Japanese" },   { key: "korean",     label: "Korean" },
+  { key: "tagalog",    label: "Tagalog" },    { key: "turkish",    label: "Turkish" },
+  { key: "polish",     label: "Polish" },     { key: "none",       label: "English only" },
 ];
 
 const DEAL_BREAKERS = [
-  { key: "english", label: "Must be English-speaking" },
-  { key: "europe", label: "Must be in Europe" },
-  { key: "lowtax", label: "Must have low taxes" },
-  { key: "warm", label: "Must have warm weather" },
-  { key: "lowcrime", label: "Must have low crime rate" },
-  { key: "none", label: "No deal breakers" },
+  { key: "english",   label: "Must be English-speaking" },
+  { key: "europe",    label: "Must be in Europe" },
+  { key: "lowtax",    label: "Must have low taxes" },
+  { key: "warm",      label: "Must have warm weather" },
+  { key: "lowcrime",  label: "Must have low crime rate" },
+  { key: "none",      label: "No deal breakers" },
 ];
 
 const optionBase = "w-full flex items-center gap-3 p-4 border-2 text-left transition-all font-medium text-sm";
 const optionSelected = "border-accent bg-accent/10 text-text-primary";
 const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-text-primary hover:text-text-primary";
 
+// ── Component ─────────────────────────────────────────────────────────────
 export default function WizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
-  const isJobOffer = answers.moveReason === "job";
+  // Gate state
+  const [gateChecked, setGateChecked] = useState(false);
+  const [gateType, setGateType] = useState<"anon" | "free" | null>(null);
+  const [runsUsed, setRunsUsed] = useState(0);
+  const [isPro, setIsPro] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
+  // ── Check run limits on mount ──────────────────────────────────────────
+  useEffect(() => {
+    async function checkGate() {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        // Anonymous user — check localStorage
+        const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
+        setRunsUsed(stored);
+        setIsSignedIn(false);
+        if (stored >= ANON_MAX_RUNS) setGateType("anon");
+        setGateChecked(true);
+        return;
+      }
+
+      // Signed in — check Supabase
+      setIsSignedIn(true);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_pro, quiz_runs_count")
+        .eq("id", session.user.id)
+        .single();
+
+      const pro = profile?.is_pro ?? false;
+      const runs = profile?.quiz_runs_count ?? 0;
+      setIsPro(pro);
+      setRunsUsed(runs);
+
+      if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
+      setGateChecked(true);
+    }
+    checkGate();
+  }, []);
+
+  const isJobOffer = answers.moveReason === "job";
   const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
   const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
   const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
   const progress = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
+
+  // Runs remaining display
+  const maxRuns = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
+  const runsLeft = isPro ? null : Math.max(0, maxRuns - runsUsed);
 
   const canProceed = () => {
     if (step === 1) return !!answers.passport;
@@ -112,7 +164,7 @@ export default function WizardPage() {
       const countries: CountryWithData[] = await res.json();
       let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
 
-      // ── AI validation — 3s timeout, never blocks user ──
+      // ── AI validation ────────────────────────────────────────────────
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
@@ -135,18 +187,43 @@ export default function WizardPage() {
             ];
           }
         }
-      } catch {
-        // Validation failed or timed out — use original matches
+      } catch { /* silent */ }
+
+      // ── Increment run count ──────────────────────────────────────────
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Signed in — increment in Supabase
+        await supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
+      } else {
+        // Anonymous — increment in localStorage
+        const current = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
+        localStorage.setItem(ANON_STORAGE_KEY, String(current + 1));
       }
-      // ────────────────────────────────────────────────────────────
 
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
-    } catch (err) { console.error(err); setLoading(false); }
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
   };
 
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
+
+  // ── Loading state ────────────────────────────────────────────────────
+  if (!gateChecked) return (
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="w-32 h-1 bg-[#1a1a1a]">
+        <div className="h-full bg-accent animate-pulse" style={{ width: "40%" }} />
+      </div>
+    </div>
+  );
+
+  // ── Gate screen ──────────────────────────────────────────────────────
+  if (gateType) {
+    return <QuizGate type={gateType} runsUsed={runsUsed} maxRuns={gateType === "anon" ? ANON_MAX_RUNS : FREE_MAX_RUNS} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
@@ -160,9 +237,17 @@ export default function WizardPage() {
           <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
           <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
         </Link>
-        <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
-          {getEffectiveStep()} / {getEffectiveTotalSteps()}
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Runs remaining badge */}
+          {runsLeft !== null && runsLeft <= 2 && (
+            <span className="text-[10px] font-bold text-[#888880] uppercase tracking-wide border border-[#2a2a2a] px-2 py-1">
+              {runsLeft} run{runsLeft !== 1 ? "s" : ""} left
+            </span>
+          )}
+          <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
+            {getEffectiveStep()} / {getEffectiveTotalSteps()}
+          </span>
+        </div>
       </div>
 
       {/* Progress */}
@@ -176,7 +261,7 @@ export default function WizardPage() {
 
           {/* Step 1 — Passport */}
           {step === 1 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Let's get started</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Where are you from?</h2>
@@ -193,7 +278,7 @@ export default function WizardPage() {
 
           {/* Step 2 — Move reason */}
           {step === 2 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 2</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Why are you moving?</h2>
@@ -201,12 +286,12 @@ export default function WizardPage() {
               </div>
               <div className="space-y-2">
                 {[
-                  { key: "job", label: "I have a job offer", sub: "Moving for a specific role" },
-                  { key: "career", label: "Better career opportunities", sub: "Higher salary, growth, tech hubs" },
-                  { key: "remote", label: "I work remotely", sub: "Location flexibility, low tax, good internet" },
-                  { key: "retire", label: "Retirement / FIRE", sub: "Low cost, good healthcare, passive income" },
-                  { key: "study", label: "Study abroad", sub: "Universities, student visas" },
-                  { key: "lifestyle", label: "Lifestyle change", sub: "Weather, culture, quality of life" },
+                  { key: "job",       label: "I have a job offer",           sub: "Moving for a specific role" },
+                  { key: "career",    label: "Better career opportunities",  sub: "Higher salary, growth, tech hubs" },
+                  { key: "remote",    label: "I work remotely",              sub: "Location flexibility, low tax, good internet" },
+                  { key: "retire",    label: "Retirement / FIRE",            sub: "Low cost, good healthcare, passive income" },
+                  { key: "study",     label: "Study abroad",                 sub: "Universities, student visas" },
+                  { key: "lifestyle", label: "Lifestyle change",             sub: "Weather, culture, quality of life" },
                 ].map((opt) => (
                   <button key={opt.key}
                     onClick={() => setAnswers({ ...answers, moveReason: opt.key })}
@@ -224,7 +309,7 @@ export default function WizardPage() {
 
           {/* Step 3 — Job role */}
           {step === 3 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 3</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What's your job?</h2>
@@ -246,7 +331,7 @@ export default function WizardPage() {
 
           {/* Step 4 — Priorities */}
           {step === 4 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 4</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What matters most?</h2>
@@ -254,14 +339,14 @@ export default function WizardPage() {
               </div>
               <div className="space-y-2">
                 {[
-                  { key: "salary", label: "High salary" },
+                  { key: "salary",        label: "High salary" },
                   { key: "affordability", label: "Low cost of living" },
-                  { key: "quality", label: "Quality of life" },
-                  { key: "safety", label: "Safety & low crime" },
-                  { key: "visa", label: "Easy visa / immigration" },
-                  { key: "tax", label: "Low taxes" },
-                  { key: "healthcare", label: "Good healthcare" },
-                  { key: "english", label: "English-speaking environment" },
+                  { key: "quality",       label: "Quality of life" },
+                  { key: "safety",        label: "Safety & low crime" },
+                  { key: "visa",          label: "Easy visa / immigration" },
+                  { key: "tax",           label: "Low taxes" },
+                  { key: "healthcare",    label: "Good healthcare" },
+                  { key: "english",       label: "English-speaking environment" },
                 ].map((opt) => {
                   const idx = answers.priorities?.indexOf(opt.key) ?? -1;
                   const selected = idx !== -1;
@@ -285,7 +370,7 @@ export default function WizardPage() {
 
           {/* Step 5 — City vibe */}
           {step === 5 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 5</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What's your vibe?</h2>
@@ -293,10 +378,10 @@ export default function WizardPage() {
               </div>
               <div className="space-y-2">
                 {[
-                  { key: "big-city", label: "Big city", sub: "London, NYC, Singapore energy" },
-                  { key: "mid-city", label: "Mid-size city", sub: "Liveable, less hectic" },
-                  { key: "coastal", label: "Coastal / beach", sub: "Warm, relaxed, outdoor lifestyle" },
-                  { key: "anywhere", label: "Anywhere works", sub: "I'm flexible" },
+                  { key: "big-city",  label: "Big city",       sub: "London, NYC, Singapore energy" },
+                  { key: "mid-city",  label: "Mid-size city",  sub: "Liveable, less hectic" },
+                  { key: "coastal",   label: "Coastal / beach", sub: "Warm, relaxed, outdoor lifestyle" },
+                  { key: "anywhere",  label: "Anywhere works", sub: "I'm flexible" },
                 ].map((opt) => (
                   <button key={opt.key}
                     onClick={() => setAnswers({ ...answers, cityVibe: opt.key })}
@@ -314,7 +399,7 @@ export default function WizardPage() {
 
           {/* Step 6 — Rent budget */}
           {step === 6 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 6</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Rent budget?</h2>
@@ -338,7 +423,7 @@ export default function WizardPage() {
 
           {/* Step 7 — Languages */}
           {step === 7 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 7</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Languages you speak?</h2>
@@ -368,7 +453,7 @@ export default function WizardPage() {
 
           {/* Step 8 — Deal breakers */}
           {step === 8 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div>
                 <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Final step</p>
                 <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Any deal breakers?</h2>
