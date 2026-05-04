@@ -172,7 +172,7 @@ export default function Globe({
 
       globe.controls().autoRotate = true;
       globe.controls().autoRotateSpeed = 0.25;
-      globe.controls().enableZoom = window.innerWidth >= 768;
+      globe.controls().enableZoom = false;
       globe.controls().enableRotate = true;
       globe.controls().enablePan = false;
       globe.controls().minDistance = 200;

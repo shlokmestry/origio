@@ -6,47 +6,62 @@ import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
-import { ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
+import BelongFlicker from "@/components/BelongFlicker";
 
-function ResultStrip() {
-  const examples = [
-    { flag: "🇩🇰", name: "Denmark",     match: 92, salary: "€74k", tax: "39%", rent: "€1,800", color: "#00ffd5" },
-    { flag: "🇳🇱", name: "Netherlands", match: 88, salary: "€68k", tax: "37%", rent: "€1,600", color: "#facc15" },
-    { flag: "🇮🇪", name: "Ireland",     match: 81, salary: "€71k", tax: "41%", rent: "€2,100", color: "#a78bfa" },
-  ];
+// ── Hero background: drifting country names ──
+const HERO_COUNTRIES = [
+  "DENMARK", "NETHERLANDS", "CANADA", "GERMANY", "SINGAPORE",
+  "AUSTRALIA", "SWITZERLAND", "SWEDEN", "PORTUGAL", "JAPAN",
+  "UAE", "FRANCE", "IRELAND", "NEW ZEALAND", "SPAIN",
+  "FINLAND", "NORWAY", "AUSTRIA", "BELGIUM", "CZECHIA",
+];
 
+const COLUMNS = [
+  { names: [0, 5, 10, 15], left: "4%",  duration: 35, delay: 0,   opacity: 0.04, size: "clamp(32px,4vw,56px)"   },
+  { names: [1, 6, 11, 16], left: "20%", duration: 28, delay: -8,  opacity: 0.07, size: "clamp(40px,5vw,72px)"   },
+  { names: [2, 7, 12, 17], left: "40%", duration: 42, delay: -14, opacity: 0.03, size: "clamp(28px,3.5vw,48px)" },
+  { names: [3, 8, 13, 18], left: "62%", duration: 32, delay: -5,  opacity: 0.06, size: "clamp(36px,4.5vw,64px)" },
+  { names: [4, 9, 14, 19], left: "80%", duration: 38, delay: -20, opacity: 0.04, size: "clamp(30px,3.8vw,52px)" },
+];
+
+function HeroDriftBackground() {
   return (
-    <div className="mt-8">
-      <p className="text-[9px] font-bold text-[#333330] uppercase tracking-[0.25em] mb-3">
-        Example · Software engineer · Irish passport
-      </p>
-      <div className="flex flex-col gap-px border border-[#1a1a1a]">
-        {examples.map((c, i) => (
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none select-none"
+      style={{ zIndex: 1 }}
+    >
+      {COLUMNS.map((col, ci) => {
+        const words = [
+          ...col.names.map((i) => HERO_COUNTRIES[i]),
+          ...col.names.map((i) => HERO_COUNTRIES[i]),
+        ];
+        return (
           <div
-            key={c.name}
-            className="flex items-center gap-3 px-4 py-3 bg-[#0d0d0d]"
-            style={{ borderLeft: `2px solid ${c.color}` }}
+            key={ci}
+            className="absolute top-0 flex flex-col gap-8"
+            style={{
+              left: col.left,
+              opacity: col.opacity,
+              animation: `hero-drift ${col.duration}s linear ${col.delay}s infinite`,
+            }}
           >
-            <span className="font-mono text-[10px] font-bold w-4 flex-shrink-0" style={{ color: c.color }}>
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className="text-sm flex-shrink-0">{c.flag}</span>
-            <span className="font-heading text-[11px] font-extrabold uppercase tracking-tight text-[#f0f0e8] flex-1">
-              {c.name}
-            </span>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-[#555550]">
-              <span>{c.salary}</span>
-              <span className="text-[#222]">·</span>
-              <span>{c.tax} tax</span>
-              <span className="text-[#222]">·</span>
-              <span style={{ color: c.color }}>{c.match}%</span>
-            </div>
+            {words.map((name, wi) => (
+              <span
+                key={wi}
+                className="font-heading font-extrabold uppercase text-[#00ffd5] whitespace-nowrap"
+                style={{ fontSize: col.size, letterSpacing: "-0.03em", lineHeight: 1 }}
+              >
+                {name}
+              </span>
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
@@ -61,32 +76,29 @@ export default function Home() {
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
   const [wizardMatches, setWizardMatches] = useState<CountryMatch[]>([]);
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  useEffect(() => {
-    if (!isMobile) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
-  }, [isMobile]);
+  }, []);
 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/countries").then((r) => r.json()).then((d) => setAllCountries(d)).catch(console.error);
+    fetch("/api/countries")
+      .then((r) => r.json())
+      .then((d) => setAllCountries(d))
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const { data } = await supabase.from("saved_countries").select("country_slug").eq("user_id", session.user.id);
+        const { data } = await supabase
+          .from("saved_countries")
+          .select("country_slug")
+          .eq("user_id", session.user.id);
         setSavedSlugs((data ?? []).map((r: any) => r.country_slug));
       } else setSavedSlugs([]);
     });
@@ -125,7 +137,7 @@ export default function Home() {
   );
 
   const topCountries = useMemo(
-    () => [...allCountries].sort((a, b) => b.data.moveScore - a.data.moveScore).slice(0, 5),
+    () => [...allCountries].sort((a, b) => b.data.moveScore - a.data.moveScore).slice(0, 10),
     [allCountries]
   );
 
@@ -135,7 +147,9 @@ export default function Home() {
     if (country) { setSelectedCountry(country); setShowHero(false); }
   }, [allCountries]);
 
-  const handleClosePanel = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
+  const handleClosePanel = useCallback(() => {
+    setSelectedSlug(null); setSelectedCountry(null);
+  }, []);
 
   const handleBackToHome = useCallback(() => {
     setSelectedSlug(null); setSelectedCountry(null);
@@ -153,152 +167,207 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handler);
   }, [handleClosePanel, handleBackToHome, selectedSlug, showHero]);
 
-  const heroContent = (
-    <div className="animate-fade-up" style={{ opacity: 0, animationDelay: "0.15s", animationFillMode: "forwards" }}>
-      <p className="text-[10px] font-bold text-[#444440] uppercase tracking-[0.25em] mb-6">
-        25 countries · 20 job roles · real data
-      </p>
-
-      {/* Mixed serif + sans headline */}
-      <h1 className="mb-6" style={{ lineHeight: 1 }}>
-        <span
-          className="block text-[#f0f0e8]"
-          style={{
-            fontFamily: "DM Serif Display, Georgia, serif",
-            fontSize: "clamp(40px, 5.5vw, 64px)",
-            fontWeight: 400,
-            fontStyle: "italic",
-            lineHeight: 1.05,
-          }}
-        >
-          Where does your
-        </span>
-        <span
-          className="block font-heading font-extrabold uppercase tracking-tight"
-          style={{ fontSize: "clamp(40px, 5.5vw, 64px)", lineHeight: 0.95, color: "#00ffd5" }}
-        >
-          salary go further?
-        </span>
-      </h1>
-
-      <p className="text-[#666660] text-sm max-w-xs leading-relaxed mb-8">
-        Take-home pay. Visa routes. Cost of living.<br />
-        Ranked for your job and passport.
-      </p>
-
-      <div className="flex items-center gap-5 mb-2">
-        <button onClick={() => router.push("/wizard")} className="cta-button px-7 py-3.5 text-[11px] font-bold uppercase tracking-widest">
-          Run the ranking
-        </button>
-        <span className="text-[10px] font-bold text-[#333330] uppercase tracking-widest">8 questions · free</span>
+  const overlays = (
+    <>
+      {wizardMatches.length > 0 && !selectedSlug && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60">
+          <WizardMatchesPanel
+            matches={wizardMatches}
+            allCountries={allCountries}
+            selectedRole={selectedRole}
+            onCountrySelect={(slug) => { handleCountrySelect(slug); setWizardMatches([]); }}
+            onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }}
+          />
+        </div>
+      )}
+      <div className="fixed bottom-0 right-0 z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <CountryPanel
+            country={selectedCountry}
+            onClose={handleClosePanel}
+            selectedRole={selectedRole}
+            onRoleChange={setSelectedRole}
+          />
+        </div>
       </div>
-
-      <ResultStrip />
-
-      {topCountries.length > 0 && (
-        <div className="animate-fade-up mt-6" style={{ opacity: 0, animationDelay: "0.5s", animationFillMode: "forwards" }}>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold text-[#333330] uppercase tracking-widest">↑ Highest rated</span>
-            {topCountries.map((country) => (
-              <button key={country.slug} onClick={() => handleCountrySelect(country.slug)} className="brutal-tag">
-                <span>{country.flagEmoji}</span>
-                <span>{country.name}</span>
-                <span className="font-mono font-bold" style={{ color: "#00ffd5" }}>{country.data.moveScore}</span>
-              </button>
-            ))}
+      {!showHero && !selectedSlug && wizardMatches.length === 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+          <button
+            onClick={handleBackToHome}
+            className="bg-[#111111] border-2 border-[#2a2a2a] px-4 py-3 flex items-center gap-2 text-sm font-bold text-[#666660] hover:text-[#f0f0e8] hover:border-[#f0f0e8] transition-colors uppercase tracking-wide"
+            style={{ boxShadow: "4px 4px 0 #2a2a2a" }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Home
+          </button>
+          <div
+            className="bg-[#111111] border-2 border-[#2a2a2a] px-6 py-3 flex items-center gap-3"
+            style={{ boxShadow: "4px 4px 0 #2a2a2a" }}
+          >
+            <div className="w-2 h-2 bg-accent" />
+            <span className="text-sm font-bold text-[#666660] uppercase tracking-wide">
+              {highlightedSlugs.length > 0 ? "Your matched countries are highlighted" : "Click a country to explore"}
+            </span>
           </div>
         </div>
       )}
-    </div>
-  );
-
-  const globeEl = (
-    <Globe countries={globeCountries} onCountrySelect={handleCountrySelect}
-      selectedSlug={selectedSlug} highlightedSlugs={highlightedSlugs} savedSlugs={savedSlugs} />
-  );
-
-  const hintBar = !showHero && !selectedSlug && wizardMatches.length === 0 && (
-    <div className="flex items-center gap-3">
-      <button onClick={handleBackToHome}
-        className="bg-[#111111] border-2 border-[#2a2a2a] px-4 py-3 flex items-center gap-2 text-sm font-bold text-[#666660] hover:text-[#f0f0e8] hover:border-[#f0f0e8] transition-colors uppercase tracking-wide"
-        style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-        <ArrowLeft className="w-3.5 h-3.5" /> Home
-      </button>
-      <div className="bg-[#111111] border-2 border-[#2a2a2a] px-6 py-3 flex items-center gap-3" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
-        <div className="w-2 h-2 bg-accent" />
-        <span className="text-sm font-bold text-[#666660] uppercase tracking-wide">
-          {highlightedSlugs.length > 0 ? "Your matched countries are highlighted" : "Click a country to explore"}
-        </span>
-      </div>
-    </div>
+    </>
   );
 
   return (
-    <>
-      {/* ── MOBILE ── */}
-      <main className="md:hidden min-h-screen bg-[#0a0a0a] flex flex-col">
-        <div className="relative z-50"><Nav countries={globeCountries} onCountrySelect={handleCountrySelect} /></div>
-        <div className="w-full mt-14" style={{ height: "100vw", minHeight: 320, maxHeight: 500 }}>{globeEl}</div>
-        {showHero && <div className="px-6 py-8">{heroContent}</div>}
-        {wizardMatches.length > 0 && !selectedSlug && (
-          <div className="relative z-40">
-            <WizardMatchesPanel matches={wizardMatches} allCountries={allCountries} selectedRole={selectedRole}
-              onCountrySelect={(slug) => { handleCountrySelect(slug); setWizardMatches([]); }}
-              onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }} />
-          </div>
-        )}
-        <div className="relative z-40">
-          <CountryPanel country={selectedCountry} onClose={handleClosePanel} selectedRole={selectedRole} onRoleChange={setSelectedRole} />
+    <div className="min-h-screen bg-[#0a0a0a]">
+      {/* Sticky nav */}
+      <div className="sticky top-0 z-50">
+        <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+      </div>
+
+      {/* ── SECTION 1: Hero ── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 md:px-16 py-24 border-b border-[#111] overflow-hidden">
+
+        {/* Drifting country names background */}
+        <HeroDriftBackground />
+
+        {/* Radial vignette — keeps centre clear for text */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 2,
+            background: "radial-gradient(ellipse 65% 60% at 50% 50%, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.75) 60%, transparent 100%)",
+          }}
+        />
+
+        {/* Hero content */}
+        <div
+          className="relative w-full max-w-3xl mx-auto text-center animate-fade-up"
+          style={{ zIndex: 3, opacity: 0, animationDelay: "0.1s", animationFillMode: "forwards" }}
+        >
+          <h1 className="mb-6">
+  <span
+    className="block text-[#f0f0e8] whitespace-nowrap"
+    style={{
+      fontFamily: "DM Serif Display, Georgia, serif",
+      fontSize: "clamp(36px, 6.5vw, 96px)",
+      fontWeight: 400,
+      fontStyle: "italic",
+      lineHeight: 1.05,
+    }}
+  >
+    Find where you <BelongFlicker />
+  </span>
+</h1>
+
+          <p
+            className="mx-auto text-[#555550] leading-relaxed mb-10"
+            style={{ fontSize: "clamp(15px, 1.5vw, 18px)", maxWidth: "34ch" }}
+          >
+            The platform that helps you compare salaries, visas, and cost of living for your exact job and passport.
+          </p>
+
+          <button
+            onClick={() => router.push("/wizard")}
+            className="cta-button group inline-flex items-center gap-3 px-8 py-4 text-[11px] font-bold uppercase tracking-widest"
+          >
+            Run the ranking
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
-        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-          <div className="flex justify-center py-4 z-30">{hintBar}</div>
-        )}
-      </main>
+      </section>
 
-      {/* ── DESKTOP — asymmetric: hero left, globe fills right ── */}
-      <main className="hidden md:block fixed inset-0 bg-[#0a0a0a] overflow-hidden">
-        <div className="fixed inset-0 z-0">{globeEl}</div>
-
-        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-          <div className="fixed inset-0 z-[2] cursor-default" onClick={handleBackToHome} />
-        )}
-
-        <div className="relative z-50">
-          <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+      {/* ── SECTION 2: Globe ── */}
+      <section
+        className="w-full border-b border-[#111] relative"
+        style={{ height: "100svh", minHeight: 500 }}
+      >
+        <div className="absolute top-6 left-6 z-10 pointer-events-none">
+          <p className="font-mono text-[9px] text-[#222] uppercase tracking-[0.25em]">
+            Drag to explore · click a country
+          </p>
         </div>
+        <Globe
+          countries={globeCountries}
+          onCountrySelect={handleCountrySelect}
+          selectedSlug={selectedSlug}
+          highlightedSlugs={highlightedSlugs}
+          savedSlugs={savedSlugs}
+        />
+      </section>
 
-        {showHero && (
-          <>
-            {/* Left gradient — hero lives here, globe visible right */}
-            <div className="fixed top-0 left-0 bottom-0 w-[52%] pointer-events-none" style={{
-              zIndex: 5,
-              background: "linear-gradient(to right, rgba(10,10,10,0.99) 0%, rgba(10,10,10,0.92) 70%, transparent 100%)",
-            }} />
-            <div className="fixed bottom-0 left-0 right-0 h-24 pointer-events-none" style={{
-              zIndex: 5,
-              background: "linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 100%)",
-            }} />
-            {/* Hero — vertically centered left column */}
-            <div className="fixed top-14 left-0 bottom-0 z-10 flex items-center" style={{ width: "48%" }}>
-              <div className="px-10 py-8 max-w-lg">{heroContent}</div>
+      {/* ── SECTION 3: Top countries ── */}
+      <section className="border-b border-[#111] px-6 md:px-16 lg:px-24 py-16">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-baseline justify-between mb-8">
+            <div>
+              <p className="font-mono text-[9px] text-[#333330] uppercase tracking-[0.3em] mb-2">
+                Live rankings
+              </p>
+              <h2
+                className="font-heading font-extrabold uppercase text-[#f0f0e8]"
+                style={{ fontSize: "clamp(24px, 4vw, 48px)", letterSpacing: "-0.02em", lineHeight: 1 }}
+              >
+                Top countries right now
+              </h2>
             </div>
-          </>
-        )}
-
-        {wizardMatches.length > 0 && !selectedSlug && (
-          <div className="relative z-40">
-            <WizardMatchesPanel matches={wizardMatches} allCountries={allCountries} selectedRole={selectedRole}
-              onCountrySelect={(slug) => { handleCountrySelect(slug); setWizardMatches([]); }}
-              onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }} />
+            <button
+              onClick={() => router.push("/wizard")}
+              className="hidden md:flex items-center gap-2 text-[10px] font-mono font-bold text-[#333330] hover:text-[#00ffd5] uppercase tracking-widest transition-colors"
+            >
+              Get your ranking <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
-        )}
-        <div className="relative z-40">
-          <CountryPanel country={selectedCountry} onClose={handleClosePanel} selectedRole={selectedRole} onRoleChange={setSelectedRole} />
+
+          {topCountries.length === 0 ? (
+            <div className="flex flex-col gap-px">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-[#0d0d0d] border border-[#1a1a1a] animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-px">
+              {topCountries.map((country, i) => (
+                <button
+                  key={country.slug}
+                  onClick={() => handleCountrySelect(country.slug)}
+                  className="group flex items-center gap-4 md:gap-6 px-5 py-4 bg-[#0d0d0d] border border-[#1a1a1a] hover:border-[#2a2a2a] hover:bg-[#111] active:border-[#00ffd5] transition-all text-left w-full"
+                >
+                  <span className="font-mono text-[10px] font-bold text-[#1e1e1e] w-5 flex-shrink-0 group-hover:text-[#333] transition-colors">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-xl md:text-2xl flex-shrink-0">{country.flagEmoji}</span>
+                  <span className="font-heading text-[13px] md:text-[15px] font-extrabold uppercase tracking-tight text-[#f0f0e8] flex-1">
+                    {country.name}
+                  </span>
+                  <div className="hidden md:flex items-center gap-6 text-[10px] font-mono text-[#333330]">
+                    <span>€{Math.round(country.data.salarySoftwareEngineer / 1000)}k avg</span>
+                    <span className="text-[#1a1a1a]">·</span>
+                    <span>{country.data.incomeTaxRateMid}% tax</span>
+                    <span className="text-[#1a1a1a]">·</span>
+                    <span>€{Math.round(country.data.costRentCityCentre / 100) * 100}/mo rent</span>
+                  </div>
+                  <span
+                    className="font-mono text-[13px] font-bold flex-shrink-0 ml-auto"
+                    style={{ color: "#00ffd5" }}
+                  >
+                    {country.data.moveScore}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 md:hidden">
+            <button
+              onClick={() => router.push("/wizard")}
+              className="cta-button group flex items-center gap-3 px-6 py-3.5 text-[11px] font-bold uppercase tracking-widest w-full justify-center"
+            >
+              Get your personalised ranking <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-        {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">{hintBar}</div>
-        )}
-      </main>
-    </>
+      </section>
+
+      {/* ── SECTION 4: Footer ── */}
+      <Footer />
+
+      {overlays}
+    </div>
   );
 }
