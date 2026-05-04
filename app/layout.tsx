@@ -34,14 +34,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://findorigio.com",
     siteName: "Origio",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Origio — Country rankings for professionals moving abroad",
-      },
-    ],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Origio — Country rankings for professionals moving abroad" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -51,24 +44,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* DM Serif Display — serif headline font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="bg-bg-primary text-text-primary font-body antialiased noise-overlay">
         <AuthProvider>{children}</AuthProvider>
-
-        {/* Vercel Analytics */}
         <Analytics />
-
-        {/* Google Analytics GA4 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2"
-          strategy="afterInteractive"
-        />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
