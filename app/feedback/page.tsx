@@ -7,12 +7,7 @@ import { ArrowLeft } from "lucide-react";
 
 const MAX_CHARS = 300;
 
-const PROMPTS = [
-  "Which country do you want to see next?",
-  "What's your job role and where are you trying to move?",
-  "What question do you wish the quiz asked?",
-  "What's missing from the country reports?",
-];
+
 
 export default function FeedbackPage() {
   const [message, setMessage] = useState("");
@@ -86,21 +81,7 @@ export default function FeedbackPage() {
               </p>
             </div>
 
-            {/* ── Prompt suggestions ── */}
-            <div className="mb-6">
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">Some things people ask about</p>
-              <div className="flex flex-wrap gap-2">
-                {PROMPTS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setMessage(p + " ")}
-                    className="text-[11px] font-bold px-3 py-1.5 border-2 border-[#2a2a2a] text-[#888880] hover:border-[#f0f0e8] hover:text-[#f0f0e8] transition-all uppercase tracking-wide"
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             {/* ── Message ── */}
             <div className="mb-5">

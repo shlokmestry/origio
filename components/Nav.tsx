@@ -93,11 +93,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
             >
               <Calculator className="w-3.5 h-3.5" />
               Calculator
-              {!isPro && (
-                <span className="text-[9px] font-bold border border-[#2a2a2a] px-1 py-0.5 text-[#888880] uppercase tracking-wide leading-none">
-                  Free
-                </span>
-              )}
+
             </Link>
 
             <Link href="/blog" className="text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
@@ -201,7 +197,7 @@ export default function Nav({ countries, onCountrySelect }: NavProps) {
                 <Calculator className="w-3.5 h-3.5" />
                 Calculator
               </span>
-              {!isPro && <span className="text-[9px] border border-[#2a2a2a] px-1 py-0.5 text-[#555] uppercase">Free</span>}
+
             </Link>
             <Link href="/blog" className="block px-3 py-3 text-sm font-bold uppercase tracking-wide text-text-muted hover:text-text-primary border-b-2 border-[#1a1a1a]" onClick={() => setMobileMenuOpen(false)}>
               Blog
