@@ -1,16 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Globe2, ArrowLeft, Calendar, Tag, Clock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm"; 
+import remarkGfm from "remark-gfm";
 
 export const revalidate = 3600;
 
-type Props = {
-  params: Promise<{ slug: string }>;
-};
+type Props = { params: Promise<{ slug: string }> };
 
 function getSupabase() {
   return createClient(
@@ -25,35 +23,19 @@ function getReadingTime(content: string): number {
 }
 
 async function getPost(slug: string) {
-  const supabase = getSupabase();
-  const { data } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("slug", slug)
-    .eq("published", true)
-    .single();
+  const { data } = await getSupabase().from("blog_posts").select("*").eq("slug", slug).eq("published", true).single();
   return data;
 }
 
 async function getRelatedPosts(slug: string, category: string) {
-  const supabase = getSupabase();
-  const { data } = await supabase
-    .from("blog_posts")
-    .select("slug, title, category, published_at")
-    .eq("published", true)
-    .eq("category", category)
-    .neq("slug", slug)
-    .order("published_at", { ascending: false })
-    .limit(2);
+  const { data } = await getSupabase().from("blog_posts").select("slug, title, category, published_at")
+    .eq("published", true).eq("category", category).neq("slug", slug)
+    .order("published_at", { ascending: false }).limit(2);
   return data ?? [];
 }
 
 export async function generateStaticParams() {
-  const supabase = getSupabase();
-  const { data } = await supabase
-    .from("blog_posts")
-    .select("slug")
-    .eq("published", true);
+  const { data } = await getSupabase().from("blog_posts").select("slug").eq("published", true);
   return (data ?? []).map((p) => ({ slug: p.slug }));
 }
 
@@ -62,11 +44,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPost(slug);
   if (!post) return { title: "Post Not Found" };
   return {
-    title: `${post.title} — Origio Blog`,
+    title: `${post.title} — Origio`,
     description: post.description,
     alternates: { canonical: `https://findorigio.com/blog/${slug}` },
     openGraph: {
-      title: `${post.title} — Origio Blog`,
+      title: `${post.title} — Origio`,
       description: post.description,
       url: `https://findorigio.com/blog/${slug}`,
       siteName: "Origio",
@@ -75,16 +57,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} — Origio Blog`,
+      title: `${post.title} — Origio`,
       description: post.description,
     },
   };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "Salary Guides": "text-green-400",
-  "Visa Guides": "text-blue-400",
-  "City Comparisons": "text-purple-400",
+  "Salary Guides":    "#4ade80",
+  "Visa Guides":      "#60a5fa",
+  "City Comparisons": "#a78bfa",
 };
 
 export default async function BlogPostPage({ params }: Props) {
@@ -94,10 +76,10 @@ export default async function BlogPostPage({ params }: Props) {
 
   const related = await getRelatedPosts(slug, post.category);
   const readingTime = getReadingTime(post.content_md);
+  const catColor = CATEGORY_COLORS[post.category] ?? "#00ffd5";
 
   return (
-    <main className="min-h-screen bg-bg-primary">
-      {/* JSON-LD Article schema */}
+    <main className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -107,88 +89,88 @@ export default async function BlogPostPage({ params }: Props) {
             headline: post.title,
             description: post.description,
             datePublished: post.published_at,
-            dateModified: post.published_at,
-            publisher: {
-              "@type": "Organization",
-              name: "Origio",
-              url: "https://findorigio.com",
-            },
+            publisher: { "@type": "Organization", name: "Origio", url: "https://findorigio.com" },
             mainEntityOfPage: `https://findorigio.com/blog/${slug}`,
           }),
         }}
       />
 
-      <nav className="sticky top-0 z-50 glass-panel border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Globe2 className="w-5 h-5 text-accent" />
-            <span className="font-heading text-lg font-extrabold text-text-primary">Origio</span>
+      {/* ── NAV ── */}
+      <nav className="sticky top-0 z-50 border-b border-[#1a1a1a]" style={{ background: "rgba(10,10,10,0.95)", backdropFilter: "blur(8px)" }}>
+        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+            <div className="w-3 h-3 bg-[#00ffd5] border-2 border-[#f0f0e8]" />
+            <span className="font-heading text-sm font-extrabold uppercase tracking-tight">Origio</span>
           </Link>
-          <Link href="/blog" className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            All Articles
+          <Link href="/blog" className="flex items-center gap-2 text-[11px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest">
+            <ArrowLeft className="w-3.5 h-3.5" /> All articles
           </Link>
         </div>
       </nav>
 
-      <article className="max-w-3xl mx-auto px-4 py-12">
-        <header className="mb-10">
-          <div className="flex items-center gap-4 mb-4 flex-wrap">
-            <span className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${CATEGORY_COLORS[post.category] ?? "text-accent"}`}>
-              <Tag className="w-3 h-3" />
-              {post.category}
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Calendar className="w-3 h-3" />
+      <article className="max-w-3xl mx-auto px-6 py-16">
+
+        {/* ── ARTICLE HEADER ── */}
+        <header className="mb-12">
+          <div className="flex items-center gap-4 mb-6 font-mono text-[10px]">
+            <span style={{ color: catColor }} className="font-bold uppercase tracking-widest">{post.category}</span>
+            <span className="text-[#444]">·</span>
+            <span className="text-[#444]">
               {new Date(post.published_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Clock className="w-3 h-3" />
-              {readingTime} min read
-            </span>
+            <span className="text-[#444]">·</span>
+            <span className="text-[#444]">{readingTime} min read</span>
           </div>
-          <h1 className="font-heading text-4xl md:text-5xl font-extrabold text-text-primary mb-4">
+
+          {/* Serif title */}
+          <h1 style={{
+            fontFamily: "DM Serif Display, Georgia, serif",
+            fontSize: "clamp(32px, 5vw, 52px)",
+            fontWeight: 400,
+            lineHeight: 1.1,
+            color: "#f0f0e8",
+            marginBottom: 20,
+          }}>
             {post.title}
           </h1>
-          <p className="text-text-muted text-lg">{post.description}</p>
-          <div className="mt-6 h-px bg-border" />
+
+          <p className="text-[#888880] text-base leading-relaxed max-w-xl">{post.description}</p>
+          <div className="mt-8 h-px bg-[#1a1a1a]" />
         </header>
 
-        {/* Markdown content */}
+        {/* ── ARTICLE BODY ── */}
         <div className="prose prose-invert max-w-none
-          prose-headings:font-heading prose-headings:font-bold prose-headings:text-text-primary prose-headings:tracking-tight
-          prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-          prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-          prose-p:text-text-muted prose-p:leading-7 prose-p:mb-4
-          prose-strong:text-text-primary prose-strong:font-semibold
-          prose-ul:text-text-muted prose-ul:space-y-2
-          prose-ol:text-text-muted prose-ol:space-y-2
-          prose-li:leading-7
-          prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+          prose-headings:font-heading prose-headings:font-extrabold prose-headings:text-[#f0f0e8] prose-headings:tracking-tight prose-headings:uppercase
+          prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-l-2 prose-h2:border-[#00ffd5] prose-h2:pl-4
+          prose-h3:text-base prose-h3:mt-8 prose-h3:mb-3
+          prose-p:text-[#888880] prose-p:leading-7 prose-p:mb-4 prose-p:text-sm
+          prose-strong:text-[#f0f0e8] prose-strong:font-bold
+          prose-ul:text-[#888880] prose-ul:text-sm
+          prose-ol:text-[#888880] prose-ol:text-sm
+          prose-li:leading-7 prose-li:mb-1
+          prose-a:text-[#00ffd5] prose-a:no-underline hover:prose-a:underline
           prose-table:text-sm prose-table:border-collapse
-          prose-th:text-text-primary prose-th:font-semibold prose-th:border prose-th:border-border prose-th:px-4 prose-th:py-2 prose-th:text-left
-          prose-td:text-text-muted prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2
-          prose-blockquote:border-l-accent prose-blockquote:text-text-muted
-          prose-code:text-accent prose-code:bg-bg-secondary prose-code:px-1 prose-code:py-0.5 prose-code:text-sm
+          prose-th:text-[#f0f0e8] prose-th:font-bold prose-th:border prose-th:border-[#2a2a2a] prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:bg-[#111] prose-th:text-xs prose-th:uppercase prose-th:tracking-widest
+          prose-td:text-[#888880] prose-td:border prose-td:border-[#1a1a1a] prose-td:px-4 prose-td:py-2 prose-td:text-xs prose-td:font-mono
+          prose-blockquote:border-l-[#00ffd5] prose-blockquote:text-[#888880] prose-blockquote:not-italic
+          prose-code:text-[#00ffd5] prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-code:font-mono prose-code:bg-[#111]
         ">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content_md}</ReactMarkdown>
         </div>
 
-        {/* Related posts */}
+        {/* ── RELATED ── */}
         {related.length > 0 && (
-          <div className="mt-16">
-            <p className="text-xs text-text-muted uppercase tracking-wider font-semibold mb-4">Related Articles</p>
+          <div className="mt-16 pt-8 border-t border-[#1a1a1a]">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.2em] mb-6">Related articles</p>
             <div className="grid sm:grid-cols-2 gap-4">
               {related.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/blog/${r.slug}`}
-                  className="glass-panel p-5 border border-border hover:border-accent/30 transition-all group"
-                >
-                  <span className={`text-xs font-semibold uppercase tracking-wider ${CATEGORY_COLORS[r.category] ?? "text-accent"}`}>
+                <Link key={r.slug} href={`/blog/${r.slug}`}
+                  className="group border border-[#1a1a1a] p-5 hover:border-[#2a2a2a] transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-widest font-mono block mb-2"
+                    style={{ color: CATEGORY_COLORS[r.category] ?? "#00ffd5" }}>
                     {r.category}
                   </span>
-                  <p className="font-heading text-sm font-bold text-text-primary mt-2 group-hover:text-accent transition-colors leading-snug">
+                  <p className="font-heading text-sm font-extrabold uppercase tracking-tight text-[#f0f0e8] group-hover:text-[#00ffd5] transition-colors leading-snug">
                     {r.title}
                   </p>
                 </Link>
@@ -197,23 +179,34 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         )}
 
-        <footer className="mt-16 pt-8 border-t border-border">
-          {/* CTA */}
-          <div className="glass-panel p-8 border border-accent/20 text-center mb-8">
-            <h3 className="font-heading text-xl font-bold text-text-primary mb-2">
-              Find your perfect country
-            </h3>
-            <p className="text-text-muted text-sm mb-6 max-w-sm mx-auto">
-              Answer 8 quick questions and get a personalised ranking based on your salary, visa, and lifestyle priorities.
-            </p>
-            <Link href="/wizard" className="cta-button px-6 py-3 text-sm inline-flex items-center gap-2">
-              Find My Country
-            </Link>
+        {/* ── FOOTER CTA ── */}
+        <footer className="mt-16 pt-8 border-t border-[#1a1a1a]">
+          <div className="border border-[#2a2a2a] p-8 mb-8" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <h3 style={{
+                  fontFamily: "DM Serif Display, Georgia, serif",
+                  fontSize: "clamp(20px, 3vw, 26px)",
+                  fontWeight: 400,
+                  fontStyle: "italic",
+                  color: "#f0f0e8",
+                  marginBottom: 4,
+                }}>
+                  Find your country.
+                </h3>
+                <p className="text-[#666660] text-xs">8 questions. 25 countries ranked. Free.</p>
+              </div>
+              <Link href="/wizard"
+                className="cta-button px-6 py-3 text-[11px] font-bold uppercase tracking-widest inline-flex items-center justify-center flex-shrink-0">
+                Run the ranking
+              </Link>
+            </div>
           </div>
-          <Link href="/blog" className="text-accent hover:underline text-sm">
-            ← Back to all articles
+          <Link href="/blog" className="text-[11px] font-bold text-[#888880] hover:text-[#00ffd5] transition-colors uppercase tracking-widest">
+            ← All articles
           </Link>
         </footer>
+
       </article>
     </main>
   );

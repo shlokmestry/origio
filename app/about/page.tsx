@@ -1,96 +1,158 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { Mail } from "lucide-react";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-text-primary">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <main className="max-w-4xl mx-auto px-6 pt-24 pb-16">
 
-        {/* Header */}
-        <div className="mb-12 border-b-2 border-[#2a2a2a] pb-8">
-          <p className="text-xs font-bold text-accent uppercase tracking-widest mb-3">About</p>
-          <h1 className="font-heading text-4xl sm:text-5xl font-extrabold uppercase tracking-tight mb-3">
-            What is Origio?
+        {/* ── HEADER — left-aligned, serif + sans mix ── */}
+        <div className="mb-16 pb-8 border-b border-[#1a1a1a]">
+          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-[0.25em] mb-6">About</p>
+          <h1 style={{ lineHeight: 1, marginBottom: 20 }}>
+            <span style={{
+              display: "block",
+              fontFamily: "DM Serif Display, Georgia, serif",
+              fontSize: "clamp(40px, 6vw, 64px)",
+              fontWeight: 400,
+              fontStyle: "italic",
+              color: "#f0f0e8",
+              lineHeight: 1.05,
+            }}>
+              A relocation tool
+            </span>
+            <span className="font-heading font-extrabold uppercase tracking-tight block"
+              style={{ fontSize: "clamp(40px, 6vw, 64px)", lineHeight: 0.95, color: "#00ffd5" }}>
+              built on real data.
+            </span>
           </h1>
-          <p className="text-text-muted text-sm font-medium leading-relaxed max-w-xl">
-            A relocation research tool built for people who want real data before making a real move.
+          <p className="text-[#666660] text-sm leading-relaxed max-w-lg">
+            Salaries, visas, cost of living, and quality of life across 25 countries — in one place.
           </p>
         </div>
 
-        {/* Story */}
-        <section className="mb-12">
-          <h2 className="font-heading text-lg font-extrabold text-text-primary uppercase tracking-tight mb-5 border-l-2 border-accent pl-3">The story</h2>
-          <div className="space-y-4 text-text-muted text-sm leading-relaxed border-2 border-[#2a2a2a] p-6">
-            <p>
-              Origio was built by Shlok Mestry after spending weeks manually researching countries to move to and realising there was no single place that had all the information needed to make a proper decision.
-            </p>
-            <p>
-              The core feature is the interactive 3D globe ~ click any country to instantly see how it stacks up across every dimension that matters. No more bouncing between Numbeo, Expatistan, and government visa websites trying to piece together a picture.
-            </p>
-            <p>
-              If  you&apos;re not sure where to start, the Find My Country quiz asks 8 questions about your priorities, job, passport, and budget then scores all 25 countries and gives you a personalised ranked list.
-            </p>
+        {/* ── STORY — two column on desktop ── */}
+        <section className="mb-16">
+          <div className="grid md:grid-cols-[180px_1fr] gap-8 items-start">
+            <div>
+              <h2 className="font-heading text-[10px] font-extrabold text-[#888880] uppercase tracking-[0.2em] border-l-2 border-[#00ffd5] pl-3">
+                The story
+              </h2>
+            </div>
+            <div className="space-y-4 text-[#666660] text-sm leading-relaxed">
+              <p>
+                Origio was built by Shlok Mestry after spending weeks manually researching countries to move to — bouncing between Numbeo, Expatistan, government visa sites, and salary surveys — and realising there was no single place that had it all.
+              </p>
+              <p>
+                The core is an interactive 3D globe. Click any country to instantly see how it stacks up across salary, cost of living, visa difficulty, safety, and quality of life. No tab-switching, no piecing things together.
+              </p>
+              <p>
+                If you don't know where to start, the ranking quiz asks 8 questions about your role, passport, priorities, and budget — then scores all 25 countries and returns a ranked list specific to you.
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="mb-12">
-          <h2 className="font-heading text-lg font-extrabold text-text-primary uppercase tracking-tight mb-5 border-l-2 border-accent pl-3">How it works</h2>
-          <div className="grid sm:grid-cols-3 gap-0 border-2 border-[#2a2a2a]">
+        {/* ── HOW IT WORKS — numbered, not cards ── */}
+        <section className="mb-16">
+          <div className="grid md:grid-cols-[180px_1fr] gap-8 items-start">
+            <div>
+              <h2 className="font-heading text-[10px] font-extrabold text-[#888880] uppercase tracking-[0.2em] border-l-2 border-[#00ffd5] pl-3">
+                How it works
+              </h2>
+            </div>
+            <div>
+              {[
+                { num: "01", title: "Explore the globe", desc: "Click any country pin to see salaries, costs, visa routes, and quality of life scores." },
+                { num: "02", title: "Run the ranking", desc: "8 questions about your role, passport, and priorities. Get 25 countries ranked by fit." },
+                { num: "03", title: "Go deeper", desc: "Compare countries side by side, check take-home pay, read role-specific relocation data." },
+              ].map((item, i, arr) => (
+                <div key={item.num} className={`grid grid-cols-[48px_1fr] gap-4 py-6 ${i < arr.length - 1 ? "border-b border-[#111]" : ""}`}>
+                  <span className="font-heading text-2xl font-extrabold text-[#1a1a1a]">{item.num}</span>
+                  <div>
+                    <p className="font-heading text-[13px] font-extrabold uppercase tracking-tight text-[#f0f0e8] mb-1">{item.title}</p>
+                    <p className="text-[#666660] text-xs leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── DATA SOURCES ── */}
+        <section className="mb-16">
+          <div className="grid md:grid-cols-[180px_1fr] gap-8 items-start">
+            <div>
+              <h2 className="font-heading text-[10px] font-extrabold text-[#888880] uppercase tracking-[0.2em] border-l-2 border-[#00ffd5] pl-3">
+                Data sources
+              </h2>
+            </div>
+            <div className="space-y-4 text-[#666660] text-sm leading-relaxed">
+              <p>
+                All data is manually researched from primary sources. Salary figures come from national labour statistics, recruitment platform reports, and industry salary surveys. Cost of living draws from Numbeo, Expatistan, and government statistical offices.
+              </p>
+              <p>
+                Data is reviewed regularly. Each country page shows the last verified date.
+              </p>
+              <div className="border-l-2 border-[#2a2a2a] pl-4 text-xs text-[#444] mt-4 font-mono">
+                Origio is not financial or legal advice. Always verify with official sources before relocating.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── STATS — horizontal data strip ── */}
+        <section className="mb-16 border-t border-b border-[#1a1a1a] py-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#1a1a1a]">
             {[
-              { step: "01", title: "Explore the Globe", desc: "Click any country pin to see salaries, costs, visa routes, and quality of life scores instantly." },
-              { step: "02", title: "Find My Country", desc: "Answer 8 questions about your role, passport, and priorities to get a personalised country ranking." },
-              { step: "03", title: "Go deeper", desc: "Compare countries side by side, check your take-home pay, and read role-specific relocation guides." },
-            ].map((item, i) => (
-              <div key={item.step} className={`p-6 ${i < 2 ? "border-b-2 sm:border-b-0 sm:border-r-2 border-[#2a2a2a]" : ""}`}>
-                <p className="font-heading text-4xl font-extrabold text-accent/30 mb-3">{item.step}</p>
-                <p className="font-heading font-bold text-text-primary text-sm uppercase tracking-tight mb-2">{item.title}</p>
-                <p className="text-text-muted text-xs leading-relaxed">{item.desc}</p>
+              { num: "25", label: "Countries" },
+              { num: "20", label: "Job roles" },
+              { num: "8",  label: "Quiz questions" },
+              { num: "6",  label: "Data dimensions" },
+            ].map(item => (
+              <div key={item.label} className="bg-[#0a0a0a] px-6 py-5 text-center">
+                <p className="font-heading text-3xl font-extrabold text-[#00ffd5] font-mono">{item.num}</p>
+                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mt-1">{item.label}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Data sources */}
-        <section className="mb-12">
-          <h2 className="font-heading text-lg font-extrabold text-text-primary uppercase tracking-tight mb-5 border-l-2 border-accent pl-3">Where does the data come from?</h2>
-          <div className="space-y-4 text-text-muted text-sm leading-relaxed border-2 border-[#2a2a2a] p-6">
-            <p>
-              All data is manually researched and verified from primary sources. Salary figures come from national labour statistics, recruitment platform reports, and industry salary surveys. Cost of living data draws from Numbeo, Expatistan, and government statistical offices.
-            </p>
-            <p>
-              Data is reviewed and updated regularly. Each country page shows the last verified date so you always know how recent the information is.
-            </p>
-            <div className="border-l-2 border-accent pl-4 text-xs text-text-muted mt-4">
-              All salary figures are in local currency unless otherwise stated. Origio is not financial or legal advice always verify with official sources before making decisions.
+        {/* ── CTA — asymmetric, left text ── */}
+        <div className="border border-[#2a2a2a] p-8" style={{ boxShadow: "4px 4px 0 #00ffd5" }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h3 style={{
+                fontFamily: "DM Serif Display, Georgia, serif",
+                fontSize: "clamp(24px, 3vw, 32px)",
+                fontWeight: 400,
+                fontStyle: "italic",
+                color: "#f0f0e8",
+                marginBottom: 6,
+              }}>
+                Find your country.
+              </h3>
+              <p className="text-[#666660] text-sm">8 questions. 25 countries ranked. Free.</p>
             </div>
-          </div>
-        </section>
-
-       
-        {/* CTA */}
-        <div className="border-2 border-accent p-8 text-center" style={{ boxShadow: "6px 6px 0 #00ffd5" }}>
-          <h3 className="font-heading text-xl font-extrabold text-text-primary uppercase tracking-tight mb-2">Ready to find your country?</h3>
-          <p className="text-text-muted text-sm mb-6 max-w-sm mx-auto">Start with the globe or answer 8 questions to get your personalised ranking.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/wizard" className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide inline-flex items-center justify-center">
-              Find My Country
-            </Link>
-            <Link href="/" className="ghost-button px-6 py-3 text-sm font-bold uppercase tracking-wide inline-flex items-center justify-center">
-              Explore the Globe
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+              <Link href="/wizard" className="cta-button px-6 py-3 text-[11px] font-bold uppercase tracking-widest inline-flex items-center justify-center">
+                Run the ranking
+              </Link>
+              <Link href="/" className="ghost-button px-6 py-3 text-[11px] font-bold uppercase tracking-widest inline-flex items-center justify-center">
+                Explore the globe
+              </Link>
+            </div>
           </div>
         </div>
 
-      <Footer />
       </main>
+      <Footer />
     </div>
   );
 }
