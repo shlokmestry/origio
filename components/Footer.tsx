@@ -41,13 +41,21 @@ export default function Footer() {
             <p className="text-[9px] font-bold text-[#444440] uppercase tracking-[0.2em] mb-4">Company</p>
             <ul className="space-y-2.5">
               {[
-                { href: "/about", label: "About" },
-                { href: "/blog", label: "Blog" },
-                { href: "/contact", label: "Contact" },
-                { href: "/pro", label: "Origio Pro" },
+                { href: "/about",    label: "About" },
+                { href: "/blog",     label: "Blog" },
+                { href: "/contact",  label: "Contact" },
+                { href: "/pro",      label: "Origio Pro" },
+                { href: "/feedback", label: "Request a country", accent: true },
               ].map(l => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-[12px] text-[#888880] hover:text-[#f0f0e8] transition-colors font-medium">
+                  <Link
+                    href={l.href}
+                    className={`text-[12px] transition-colors font-medium ${
+                      l.accent
+                        ? "text-[#00ffd5] hover:text-[#00ffd5]/80"
+                        : "text-[#888880] hover:text-[#f0f0e8]"
+                    }`}
+                  >
                     {l.label}
                   </Link>
                 </li>
@@ -61,7 +69,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { href: "/privacy", label: "Privacy Policy" },
-                { href: "/terms", label: "Terms of Service" },
+                { href: "/terms",   label: "Terms of Service" },
               ].map(l => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-[12px] text-[#888880] hover:text-[#f0f0e8] transition-colors font-medium">
