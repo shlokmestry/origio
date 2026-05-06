@@ -1,95 +1,117 @@
 import Link from "next/link";
 
 export default function Footer() {
-  return (
-    <footer className="border-t border-[#1a1a1a] bg-[#0a0a0a] mt-auto">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
+  const cols = [
+    {
+      heading: "Product",
+      links: [
+        { href: "/wizard",  label: "Find My Country" },
+        { href: "/compare", label: "Compare Countries" },
+        { href: "/pro",     label: "Origio Pro" },
+        { href: "/blog",    label: "Blog" },
+        { href: "/guides",  label: "Relocation Guides" },
+      ],
+    },
+    {
+      heading: "Data",
+      links: [
+        { href: "/faq",     label: "FAQ" },
+        { href: "/about",   label: "About" },
+        { href: "/contact", label: "Contact" },
+      ],
+    },
+    {
+      heading: "Legal",
+      links: [
+        { href: "/privacy", label: "Privacy Policy" },
+        { href: "/terms",   label: "Terms of Service" },
+      ],
+    },
+  ];
 
-          {/* Brand */}
-          <div className="col-span-2 sm:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
-              <div className="w-3 h-3 bg-accent flex-shrink-0" />
-              <span className="font-heading text-base font-extrabold text-text-primary uppercase tracking-wide">Origio</span>
+  return (
+    <footer
+      className="border-t"
+      style={{ borderColor: "#e8e4dc", background: "#f5f2ec" }}
+    >
+      {/* ── Link columns ── */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+
+          {/* Brand col */}
+          <div>
+            <Link href="/" className="flex items-center gap-2 mb-5 hover:opacity-80 transition-opacity">
+              <div className="w-3 h-3 bg-[#00c4a0] border-2 border-[#1a1a1a] flex-shrink-0" />
+              <span className="font-heading text-[15px] font-extrabold tracking-tight text-[#1a1a1a] uppercase">Origio</span>
             </Link>
-            <p className="text-[11px] text-[#444440] leading-relaxed max-w-[180px]">
-              Relocation research for professionals moving abroad.
+            <p className="text-[11px] text-[#888] leading-relaxed max-w-[180px] font-mono">
+              25 countries ranked for your job and passport.
             </p>
           </div>
 
-          {/* Explore */}
-          <div>
-            <p className="text-[9px] font-bold text-[#444440] uppercase tracking-[0.2em] mb-4">Explore</p>
-            <ul className="space-y-2.5">
-              {[
-                { href: "/", label: "Globe" },
-                { href: "/wizard", label: "Find My Country" },
-                { href: "/compare", label: "Compare" },
-                { href: "/guides", label: "Guides" },
-              ].map(l => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-[12px] text-[#888880] hover:text-[#f0f0e8] transition-colors font-medium">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <p className="text-[9px] font-bold text-[#444440] uppercase tracking-[0.2em] mb-4">Company</p>
-            <ul className="space-y-2.5">
-              {[
-                { href: "/about",    label: "About" },
-                { href: "/blog",     label: "Blog" },
-                { href: "/contact",  label: "Contact" },
-                { href: "/pro",      label: "Origio Pro" },
-                { href: "/feedback", label: "Request a country", accent: true },
-              ].map(l => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className={`text-[12px] transition-colors font-medium ${
-                      l.accent
-                        ? "text-[#00ffd5] hover:text-[#00ffd5]/80"
-                        : "text-[#888880] hover:text-[#f0f0e8]"
-                    }`}
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <p className="text-[9px] font-bold text-[#444440] uppercase tracking-[0.2em] mb-4">Legal</p>
-            <ul className="space-y-2.5">
-              {[
-                { href: "/privacy", label: "Privacy Policy" },
-                { href: "/terms",   label: "Terms of Service" },
-              ].map(l => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-[12px] text-[#888880] hover:text-[#f0f0e8] transition-colors font-medium">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
+          {/* Link cols */}
+          {cols.map((col) => (
+            <div key={col.heading}>
+              <p className="text-[10px] font-bold text-[#aaa] uppercase tracking-[0.2em] mb-4">{col.heading}</p>
+              <ul className="space-y-3">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-[12px] font-medium text-[#888] transition-colors"
+                      style={{ textDecoration: "none" }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#1a1a1a"}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#888"}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-[#1a1a1a] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[10px] font-bold text-[#333330] uppercase tracking-[0.15em]">
-            © 2026 Origio · findorigio.com
+      {/* ── Giant wordmark ── */}
+      <div
+        className="border-t overflow-hidden select-none"
+        style={{ borderColor: "#e8e4dc" }}
+        aria-hidden
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <p
+            className="font-heading font-extrabold uppercase tracking-tight text-[#ece8e0]"
+            style={{
+              fontSize: "clamp(80px, 18vw, 220px)",
+              lineHeight: 0.85,
+              letterSpacing: "-0.04em",
+              userSelect: "none",
+            }}
+          >
+            Origio
           </p>
-          <p className="text-[10px] text-[#333330] uppercase tracking-[0.1em] font-bold">
-            Data · Not advice
-          </p>
+        </div>
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div
+        className="border-t"
+        style={{ borderColor: "#e8e4dc" }}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[10px] font-mono text-[#aaa]">© Origio 2026</p>
+          <div className="flex items-center gap-5">
+            <Link href="/privacy" className="text-[10px] font-mono text-[#aaa] hover:text-[#1a1a1a] transition-colors">Privacy</Link>
+            <Link href="/terms"   className="text-[10px] font-mono text-[#aaa] hover:text-[#1a1a1a] transition-colors">Terms</Link>
+            <Link href="/contact" className="text-[10px] font-mono text-[#aaa] hover:text-[#1a1a1a] transition-colors">Contact</Link>
+            <a
+              href="mailto:hello@findorigio.com"
+              className="text-[10px] font-mono text-[#aaa] hover:text-[#1a1a1a] transition-colors"
+            >
+              hello@findorigio.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
