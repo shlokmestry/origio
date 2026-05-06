@@ -1,33 +1,27 @@
 @import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&f[]=satoshi@400,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
 :root {
-  --bg-primary: #0a0a0a;
-  --bg-surface: #111111;
-  --bg-elevated: #1a1a1a;
-  --accent: #00ffd5;
-  --accent-dim: rgba(0, 255, 213, 0.12);
-  --accent-glow: rgba(0, 255, 213, 0.3);
-  --text-primary: #f0f0e8;
-  --text-muted: #666660;
-  --border: #2a2a2a;
-  --border-hover: #444440;
-  --score-high: #00ffd5;
-  --score-mid: #facc15;
-  --score-low: #f87171;
+  --bg-primary:    #0a0a0a;
+  --bg-surface:    #111111;
+  --bg-elevated:   #1a1a1a;
+  --text-primary:  #f0f0e8;
+  --text-muted:    #555550;
+  --border:        #2a2a2a;
+  --border-hover:  #444440;
+  --font-serif:    "DM Serif Display", Georgia, serif;
+  --accent:        #00ffd5;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html,
-body {
+html, body {
   min-height: 100%;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -36,107 +30,70 @@ body {
   line-height: 1.6;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
+/* ─── Focus ──────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-surface);
-}
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #444440; }
 
-::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 0;
-}
+/* ─── Globe ──────────────────────────────────────────────────────────────── */
+.globe-container { width: 100%; height: 100%; }
+.globe-container canvas { width: 100% !important; height: 100% !important; touch-action: none; }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #444440;
-}
+/* ─── Panels ─────────────────────────────────────────────────────────────── */
+.glass-panel        { background: #111111; border: 2px solid #2a2a2a; }
+.glass-panel-strong { background: #0f0f0f; border: 2px solid var(--text-primary); }
 
-/* Globe container */
-.globe-container {
-  width: 100%;
-  height: 100%;
-}
+/* ─── Brutalist shadows ──────────────────────────────────────────────────── */
+.brutal-shadow    { box-shadow: 4px 4px 0 var(--text-primary); }
+.brutal-shadow-sm { box-shadow: 3px 3px 0 var(--text-primary); }
 
-.globe-container canvas {
-  width: 100% !important;
-  height: 100% !important;
-  touch-action: none;
- 
-}
-
-/* ─── Neo-brutalist panel (replaces glass-panel) ─── */
-.glass-panel {
-  background: #111111;
-  border: 2px solid #2a2a2a;
-}
-
-.glass-panel-strong {
-  background: #0f0f0f;
-  border: 2px solid var(--text-primary);
-}
-
-/* ─── Brutalist card shadow ─── */
-.brutal-shadow {
-  box-shadow: 4px 4px 0 var(--text-primary);
-}
-
-.brutal-shadow-accent {
-  box-shadow: 4px 4px 0 var(--accent);
-}
-
-.brutal-shadow-sm {
-  box-shadow: 3px 3px 0 var(--text-primary);
-}
-
-/* ─── Score utilities (kept for colour logic) ─── */
-.accent-glow {
-  border: 2px solid var(--accent);
-}
-
-.accent-border-glow {
-  border: 2px solid var(--accent);
-}
+/* ─── Score utilities ────────────────────────────────────────────────────── */
+.accent-glow        { border: 2px solid var(--text-primary); }
+.accent-border-glow { border: 2px solid var(--text-primary); }
 
 .score-high {
-  color: var(--score-high);
-  border-color: var(--score-high);
-  background: rgba(0, 255, 213, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: rgba(240, 240, 232, 0.06);
+  font-weight: 600;
 }
-
 .score-mid {
-  color: var(--score-mid);
-  border-color: var(--score-mid);
-  background: rgba(250, 204, 21, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border);
+  background: rgba(240, 240, 232, 0.03);
 }
-
 .score-low {
-  color: var(--score-low);
-  border-color: var(--score-low);
-  background: rgba(248, 113, 113, 0.08);
+  color: var(--text-muted);
+  border-color: var(--border);
+  background: transparent;
 }
 
-/* ─── Stat card ─── */
+/* ─── Stat card ──────────────────────────────────────────────────────────── */
 .stat-card {
   border: 2px solid #2a2a2a;
   transition: box-shadow 0.1s ease, transform 0.1s ease;
 }
-
 .stat-card:hover {
-  border-color: var(--accent);
-  box-shadow: 4px 4px 0 var(--accent);
+  border-color: var(--border-hover);
+  box-shadow: 4px 4px 0 var(--text-primary);
   transform: translate(-2px, -2px);
 }
 
-/* ─── CTA button ─── */
+/* ─── CTA button ─────────────────────────────────────────────────────────── */
 .cta-button {
   background: var(--accent);
   color: #0a0a0a;
   font-family: "Cabinet Grotesk", sans-serif;
-  font-weight: 700;
-  border: 2px solid var(--text-primary);
-  box-shadow: 4px 4px 0 var(--text-primary);
+  font-weight: 800;
+  border: 2px solid var(--accent);
+  box-shadow: 3px 3px 0 rgba(0, 255, 213, 0.22);
   transition: box-shadow 0.1s ease, transform 0.1s ease;
   position: relative;
   display: inline-flex;
@@ -145,18 +102,16 @@ body {
   cursor: pointer;
   border-radius: 0 !important;
 }
-
 .cta-button:hover {
-  box-shadow: 2px 2px 0 var(--text-primary);
+  box-shadow: 1px 1px 0 rgba(0, 255, 213, 0.22);
   transform: translate(2px, 2px);
 }
-
 .cta-button:active {
-  box-shadow: 0 0 0 var(--text-primary);
-  transform: translate(4px, 4px);
+  box-shadow: none;
+  transform: translate(3px, 3px);
 }
 
-/* ─── Ghost button ─── */
+/* ─── Ghost button ───────────────────────────────────────────────────────── */
 .ghost-button {
   background: transparent;
   color: var(--text-primary);
@@ -168,27 +123,24 @@ body {
   cursor: pointer;
   border-radius: 0 !important;
 }
-
 .ghost-button:hover {
   border-color: var(--text-primary);
   box-shadow: 3px 3px 0 var(--text-primary);
 }
-
 .ghost-button:active {
-  box-shadow: 0 0 0;
+  box-shadow: none;
   transform: translate(3px, 3px);
 }
 
-/* ─── Gradient text → now just accent underline ─── */
-.gradient-text {
-  color: var(--accent);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 6px;
-  text-decoration-thickness: 3px;
-}
+/* ─── Pro badge ──────────────────────────────────────────────────────────── */
+.pro-badge { color: var(--accent); border-color: var(--accent); }
 
-/* ─── Input fields ─── */
+/* ─── Serif display ──────────────────────────────────────────────────────── */
+.font-serif-display        { font-family: var(--font-serif); font-weight: 400; font-style: normal; }
+.font-serif-display-italic { font-family: var(--font-serif); font-weight: 400; font-style: italic; }
+.gradient-text             { color: var(--text-primary); }
+
+/* ─── Input fields ───────────────────────────────────────────────────────── */
 .brutal-input {
   background: #111111;
   border: 2px solid #2a2a2a;
@@ -198,26 +150,17 @@ body {
   outline: none;
   font-family: "Satoshi", sans-serif;
 }
-
 .brutal-input:focus {
-  border-color: var(--accent);
-  box-shadow: 3px 3px 0 var(--accent);
+  border-color: var(--border-hover);
+  box-shadow: 3px 3px 0 var(--text-muted);
 }
+.brutal-input::placeholder { color: var(--text-muted); }
+select.brutal-input         { appearance: none; cursor: pointer; }
 
-.brutal-input::placeholder {
-  color: var(--text-muted);
-}
-
-/* ─── Select ─── */
-select.brutal-input {
-  appearance: none;
-  cursor: pointer;
-}
-
-/* ─── Badge / pill ─── */
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
 .brutal-badge {
-  border: 2px solid var(--accent);
-  color: var(--accent);
+  border: 2px solid var(--text-primary);
+  color: var(--text-primary);
   font-family: "Cabinet Grotesk", sans-serif;
   font-weight: 700;
   font-size: 11px;
@@ -230,17 +173,7 @@ select.brutal-input {
   gap: 6px;
 }
 
-/* ─── Noise overlay removed ─── */
-.noise-overlay::after {
-  display: none;
-}
-
-/* ─── Card accent top border ─── */
-.card-accent-top {
-  border-top: 3px solid var(--accent) !important;
-}
-
-/* ─── Progress bar ─── */
+/* ─── Progress bar ───────────────────────────────────────────────────────── */
 .brutal-progress {
   background: #1a1a1a;
   border: 2px solid #2a2a2a;
@@ -248,20 +181,15 @@ select.brutal-input {
   border-radius: 0;
   overflow: hidden;
 }
-
 .brutal-progress-bar {
-  background: var(--accent);
+  background: var(--text-primary);
   height: 100%;
   transition: width 0.4s ease;
 }
 
-/* ─── Separator ─── */
-.brutal-divider {
-  border: none;
-  border-top: 2px solid #2a2a2a;
-}
+/* ─── Misc utilities ─────────────────────────────────────────────────────── */
+.brutal-divider { border: none; border-top: 2px solid #2a2a2a; }
 
-/* ─── Tag / trending pill ─── */
 .brutal-tag {
   border: 2px solid #2a2a2a;
   color: #888880;
@@ -277,8 +205,138 @@ select.brutal-input {
   background: transparent;
   font-family: "Satoshi", sans-serif;
 }
+.brutal-tag:hover { border-color: var(--text-primary); color: var(--text-primary); }
 
-.brutal-tag:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
+.card-accent-top { border-top: 3px solid var(--text-primary) !important; }
+
+.data-num {
+  font-family: "Cabinet Grotesk", sans-serif;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.hero-serif         { font-family: var(--font-serif); line-height: 0.9; letter-spacing: -0.01em; }
+.hero-ghost-link    { color: rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.12); text-decoration: none; transition: color 0.15s, border-color 0.15s; }
+.hero-ghost-link:hover { color: rgba(255,255,255,0.6); border-bottom-color: rgba(255,255,255,0.3); }
+
+/* ─── Asymmetric hero ────────────────────────────────────────────────────── */
+.hero-asymmetric { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 100vh; }
+@media (max-width: 768px) { .hero-asymmetric { grid-template-columns: 1fr; } }
+
+/* ─── Hero drift background ──────────────────────────────────────────────── */
+@keyframes hero-drift {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+/* ─── Mobile scroll ──────────────────────────────────────────────────────── */
+@keyframes mobile-scroll-up {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+.mobile-scroll-track { animation: mobile-scroll-up 20s linear infinite; }
+.mobile-scroll-track:hover { animation-play-state: paused; }
+
+/* ─── Fade ───────────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in { animation: fade-in 0.3s ease both; }
+
+/* ─── Pulse for skeleton ─────────────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.7; }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-scroll-track,
+  .animate-fade-up,
+  .animate-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ─── Noise overlay (compat) ─────────────────────────────────────────────── */
+.noise-overlay::after { display: none; }
+
+/* ─── Hero CTA pill button (used in page.tsx inline) ────────────────────── */
+.hero-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-family: "Satoshi", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px 36px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0,255,213,0.25);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.hero-cta-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(0,255,213,0.35);
+}
+.hero-cta-pill:active { transform: translateY(0); }
+
+/* ─── Hero white pill CTA ────────────────────────────────────────────────── */
+.hero-cta-white {
+  transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+.hero-cta-white:hover {
+  background: #f0f0f0 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 32px rgba(255,255,255,0.22) !important;
+}
+.hero-cta-white:active {
+  transform: translateY(0);
+}
+
+/* ─── Animated deep-space gradient background ────────────────────────────── */
+.hero-gradient-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 25%, rgba(6, 28, 58, 0.45) 0%, transparent 70%),
+    #0a0a0a;
+  animation: gradientShift 14s ease-in-out infinite alternate;
+}
+
+@keyframes gradientShift {
+  0% {
+    background:
+      radial-gradient(ellipse 55% 45% at 15% 25%, rgba(6, 28, 58, 0.42) 0%, transparent 70%),
+      #0a0a0a;
+  }
+  50% {
+    background:
+      radial-gradient(ellipse 50% 50% at 25% 55%, rgba(5, 22, 48, 0.38) 0%, transparent 70%),
+      #0a0a0a;
+  }
+  100% {
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 35%, rgba(7, 30, 60, 0.40) 0%, transparent 70%),
+      #0a0a0a;
+  }
+}
+
+/* Disable for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient-bg { animation: none; }
 }

@@ -35,10 +35,19 @@ const SCORE_ICONS: Record<string, any> = {
   "Tax Efficiency": Receipt,
 };
 
+// Matches screenshot: colored bars, right-aligned scores
+const SCORE_BAR_COLORS = [
+  "#00ffd5", // Salary      — cyan
+  "#00d97e", // Affordability — green
+  "#a78bfa", // Quality of Life — purple
+  "#60a5fa", // Safety — blue
+  "#fbbf24", // Visa Access — amber
+  "#f472b6", // Tax Efficiency — pink
+];
+
 export default function CountryPanel({ country, onClose, selectedRole, onRoleChange }: CountryPanelProps) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
-  const [costsExpanded, setCostsExpanded] = useState(false);
 
   useEffect(() => {
     if (country) requestAnimationFrame(() => setIsVisible(true));
@@ -53,175 +62,365 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
   const currentSalary = data[currentRole.salaryKey] as number;
 
-  const handleClose = () => { setIsVisible(false); setTimeout(onClose, 400); };
+  const handleClose = () => { setIsVisible(false); setTimeout(onClose, 300); };
   const handleCompare = () => router.push("/compare?a=" + country.slug);
   const handleFullReport = () => router.push("/country/" + country.slug);
 
-  const panelClasses = [
-    "fixed top-14 right-0 z-40 w-full sm:max-w-md",
-    "bg-[#0f0f0f] border-l-2 border-[#f0f0e8]",
-    "transform transition-transform duration-400",
-    "ease-[cubic-bezier(0.16,1,0.3,1)] overflow-y-auto overscroll-contain",
-    isVisible ? "translate-x-0" : "translate-x-full",
-  ].join(" ");
-
-  const backdropClasses = [
-    "fixed inset-0 bg-black/60 z-30",
-    "transition-opacity duration-300",
-    isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-  ].join(" ");
-
-  const moveScoreColor = getScoreColor(data.moveScore);
-
   return (
     <>
-      <div className={backdropClasses} onClick={handleClose} />
-      <div className={panelClasses} style={{ height: "calc(100vh - 3.5rem)" }}>
-        <div className="flex flex-col gap-4 p-4">
+      {/* Backdrop */}
+      <div
+        onClick={handleClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 50,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(2px)",
+          transition: "opacity 0.3s ease",
+          opacity: isVisible ? 1 : 0,
+          pointerEvents: isVisible ? "auto" : "none",
+        }}
+      />
 
-          {/* Header */}
-          <div className="flex items-start justify-between pt-1">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{country.flagEmoji}</span>
+      {/* Modal container — centered */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 51,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1rem",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            pointerEvents: "auto",
+            width: "100%",
+            maxWidth: "680px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+            background: "#111111",
+            border: "1px solid #2a2a2a",
+            boxShadow: "0 0 0 1px #1a1a1a, 8px 8px 0 #000000",
+            transition: "opacity 0.3s ease, transform 0.3s ease",
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? "scale(1) translateY(0)" : "scale(0.97) translateY(8px)",
+          }}
+        >
+          {/* ── HEADER ── */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "20px 24px 16px",
+            borderBottom: "1px solid #2a2a2a",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "2rem", lineHeight: 1 }}>{country.flagEmoji}</span>
               <div>
-                <h2 className="font-heading text-xl font-extrabold text-text-primary uppercase tracking-tight">
+                <h2 style={{
+                  margin: 0,
+                  fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                  fontSize: "1.5rem",
+                  fontWeight: 800,
+                  color: "#f0f0e8",
+                  textTransform: "uppercase",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                }}>
                   {country.name}
                 </h2>
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                <p style={{
+                  margin: "4px 0 0",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "#666",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                }}>
                   {country.continent} · {country.language}
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} className="p-1.5 hover:text-accent transition-colors text-text-muted">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* Move score */}
-          <div className="p-4 border-2 border-[#2a2a2a]" style={{ borderColor: moveScoreColor, boxShadow: `3px 3px 0 ${moveScoreColor}` }}>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Move Score</p>
-            <div className="flex items-end gap-3">
-              <span className="font-heading text-4xl font-extrabold" style={{ color: moveScoreColor }}>
-                {data.moveScore}
-              </span>
-              <span className="text-sm text-text-muted font-bold mb-1">/ 10</span>
+            {/* Score pill */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "50%",
+                border: "2px solid #2a2a2a",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#0f0f0f",
+              }}>
+                <span style={{
+                  fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                  fontSize: "1.25rem",
+                  fontWeight: 800,
+                  color: "#f0f0e8",
+                  lineHeight: 1,
+                }}>
+                  {data.moveScore}
+                </span>
+                <span style={{ fontSize: "9px", color: "#666", fontWeight: 700, marginTop: "2px" }}>/10</span>
+              </div>
+              <button
+                onClick={handleClose}
+                style={{
+                  background: "none",
+                  border: "1px solid #2a2a2a",
+                  color: "#666",
+                  cursor: "pointer",
+                  padding: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "color 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#f0f0e8"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#f0f0e8"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#666"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#2a2a2a"; }}
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
 
-          {/* Role selector */}
-          <div>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Job Role</p>
-            <select
-              value={selectedRole}
-              onChange={(e) => onRoleChange(e.target.value as JobRole)}
-              className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium outline-none appearance-none cursor-pointer transition-colors"
-            >
-              {JOB_ROLES.map((r) => (
-                <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
-              ))}
-            </select>
-          </div>
+          {/* ── BODY ── */}
+          <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
 
-          {/* Salary */}
-          <div className="p-4 border-2 border-[#2a2a2a]" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">
-              {currentRole.label} Salary
-            </p>
-            <p className="font-heading text-2xl font-extrabold text-text-primary">
-              {currencySymbol}{currentSalary.toLocaleString()}
-            </p>
-            <p className="text-xs text-text-muted font-medium mt-0.5">per year · {country.currency}</p>
-          </div>
+            {/* Top two-col: Move Score bar + Score Breakdown */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
-          {/* Score breakdown */}
-          <div>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Score Breakdown</p>
-            <div className="space-y-0 border-2 border-[#2a2a2a]">
-              {scoreBreakdown.map((item, i) => {
-                const Icon = SCORE_ICONS[item.label] ?? TrendingUp;
-                return (
-                  <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < scoreBreakdown.length - 1 ? "border-b-2 border-[#1a1a1a]" : ""}`}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-3.5 h-3.5" style={{ color: item.color }} />
-                      <span className="text-xs font-bold text-text-muted uppercase tracking-wide">{item.label}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-20 h-1.5 bg-[#1a1a1a]">
-                        <div className="h-full transition-all"
-                          style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} />
+              {/* Left: Move Score + Job Role + Salary */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+                {/* Move Score big */}
+                <div>
+                  <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    Move Score
+                  </p>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", marginBottom: "8px" }}>
+                    <span style={{
+                      fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                      fontSize: "2.5rem",
+                      fontWeight: 800,
+                      color: "#f0f0e8",
+                      lineHeight: 1,
+                    }}>
+                      {data.moveScore}
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#555", fontWeight: 700, marginBottom: "4px" }}>/10</span>
+                  </div>
+                  {/* Score bar */}
+                  <div style={{ height: "4px", background: "#1a1a1a", width: "100%" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${(data.moveScore / 10) * 100}%`,
+                      background: "#00ffd5",
+                      transition: "width 0.6s ease",
+                    }} />
+                  </div>
+                </div>
+
+                {/* Job role selector */}
+                <div>
+                  <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    Job Role
+                  </p>
+                  <div style={{ position: "relative" }}>
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => onRoleChange(e.target.value as JobRole)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 32px 8px 10px",
+                        background: "#0f0f0f",
+                        border: "1px solid #2a2a2a",
+                        color: "#f0f0e8",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        outline: "none",
+                        appearance: "none",
+                        cursor: "pointer",
+                        borderRadius: 0,
+                      }}
+                    >
+                      {JOB_ROLES.map((r) => (
+                        <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={12} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }} />
+                  </div>
+                </div>
+
+                {/* Salary */}
+                <div>
+                  <p style={{ margin: "0 0 4px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    {currentRole.label} Salary
+                  </p>
+                  <p style={{
+                    margin: 0,
+                    fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                    fontSize: "1.6rem",
+                    fontWeight: 800,
+                    color: "#f0f0e8",
+                    lineHeight: 1,
+                  }}>
+                    {currencySymbol}{currentSalary.toLocaleString()}
+                  </p>
+                  <p style={{ margin: "3px 0 0", fontSize: "10px", color: "#555", fontWeight: 600 }}>
+                    per year · {country.currency}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Score Breakdown */}
+              <div>
+                <p style={{ margin: "0 0 10px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Score Breakdown
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {scoreBreakdown.map((item, i) => {
+                    const barColor = SCORE_BAR_COLORS[i] ?? item.color;
+                    return (
+                      <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", width: "90px", flexShrink: 0 }}>
+                          {item.label}
+                        </span>
+                        <div style={{ flex: 1, height: "3px", background: "#1a1a1a" }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${(item.value / item.maxValue) * 100}%`,
+                            background: barColor,
+                          }} />
+                        </div>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: barColor, width: "24px", textAlign: "right", flexShrink: 0 }}>
+                          {Math.round(item.value * 10) / 10}
+                        </span>
                       </div>
-                      <span className="text-xs font-bold w-6 text-right" style={{ color: item.color }}>
-                        {Math.round(item.value * 10) / 10}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Visa */}
-          <div className="p-4 border-2 border-[#2a2a2a]">
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Visa</p>
-            <p className="text-sm font-bold text-text-primary mb-1">{getVisaLabel(data.visaDifficulty)}</p>
-            <p className="text-xs text-text-muted leading-relaxed">{data.visaNotes}</p>
-            {data.visaPopularRoutes?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {data.visaPopularRoutes.map((route) => (
-                  <span key={route} className="text-[10px] font-bold px-2 py-0.5 border-2 border-accent text-accent uppercase">
-                    {route}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            {/* Visa */}
+            <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "16px" }}>
+              <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Visa
+              </p>
+              <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 700, color: "#f0f0e8" }}>
+                {getVisaLabel(data.visaDifficulty)}
+              </p>
+              <p style={{ margin: "0 0 10px", fontSize: "12px", color: "#666", lineHeight: 1.5 }}>
+                {data.visaNotes}
+              </p>
+              {data.visaPopularRoutes?.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {data.visaPopularRoutes.map((route) => (
+                    <span key={route} style={{
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      padding: "3px 8px",
+                      border: "1px solid #00ffd5",
+                      color: "#00ffd5",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}>
+                      {route}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* Cost of living */}
-          <div>
-            <button
-              onClick={() => setCostsExpanded(!costsExpanded)}
-              className="w-full flex items-center justify-between px-4 py-3 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors"
-            >
-              <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Cost of Living</span>
-              {costsExpanded
-                ? <ChevronUp className="w-4 h-4 text-text-muted" />
-                : <ChevronDown className="w-4 h-4 text-text-muted" />}
-            </button>
-            {costsExpanded && (
-              <div className="border-2 border-[#2a2a2a] border-t-0 space-y-0">
+            {/* Cost of Living grid — always visible, matches screenshot */}
+            <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "16px" }}>
+              <p style={{ margin: "0 0 10px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                Cost of Living
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {[
-                  { label: "Rent (city centre)", value: currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo" },
-                  { label: "Groceries", value: currencySymbol + data.costGroceriesMonthly.toLocaleString() + "/mo" },
+                  { label: "Rent (1BR)", value: currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo" },
+                  { label: "Meal Out", value: currencySymbol + data.costEatingOut.toLocaleString() },
                   { label: "Transport", value: currencySymbol + data.costTransportMonthly.toLocaleString() + "/mo" },
-                  { label: "Dining out", value: currencySymbol + data.costEatingOut.toLocaleString() + "/meal" },
-                  { label: "Utilities", value: currencySymbol + data.costUtilitiesMonthly.toLocaleString() + "/mo" },
-                  { label: "Income tax (mid)", value: data.incomeTaxRateMid + "%" },
-                ].map((item, i, arr) => (
-                  <div key={item.label} className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                    <span className="text-xs font-medium text-text-muted">{item.label}</span>
-                    <span className="text-xs font-bold text-text-primary">{item.value}</span>
+                  { label: "Groceries", value: currencySymbol + data.costGroceriesMonthly.toLocaleString() + "/mo" },
+                ].map((item) => (
+                  <div key={item.label} style={{
+                    background: "#0f0f0f",
+                    border: "1px solid #1a1a1a",
+                    padding: "12px 14px",
+                  }}>
+                    <p style={{ margin: "0 0 4px", fontSize: "9px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      {item.label}
+                    </p>
+                    <p style={{
+                      margin: 0,
+                      fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                      fontSize: "1.1rem",
+                      fontWeight: 800,
+                      color: "#f0f0e8",
+                    }}>
+                      {item.value}
+                    </p>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* CTAs */}
-          <div className="space-y-3 pb-6">
-            <button
-              onClick={handleFullReport}
-              className="cta-button w-full py-3.5 text-sm font-bold uppercase tracking-wide flex items-center justify-center"
-            >
-              View Country Page
-            </button>
-            <button
-              onClick={handleCompare}
-              className="ghost-button w-full py-3 text-sm font-bold uppercase tracking-wide flex items-center justify-center"
-            >
-              Compare Countries
-            </button>
-          </div>
+            {/* CTAs */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", borderTop: "1px solid #1a1a1a", paddingTop: "16px" }}>
+              <button
+                onClick={handleFullReport}
+                style={{
+                  padding: "14px 0",
+                  background: "#f0f0e8",
+                  border: "none",
+                  color: "#0a0a0a",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#00ffd5")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#f0f0e8")}
+              >
+                View Country Page
+              </button>
+              <button
+                onClick={handleCompare}
+                style={{
+                  padding: "14px 0",
+                  background: "transparent",
+                  border: "1px solid #2a2a2a",
+                  color: "#f0f0e8",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#f0f0e8"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2a2a2a"; }}
+              >
+                Compare Countries
+              </button>
+            </div>
 
+          </div>
         </div>
       </div>
     </>
