@@ -124,10 +124,11 @@ export default function Globe({
     globeContainer.style.height = "100%";
     mountEl.appendChild(globeContainer);
 
-    const blockScrollPropagation = (e: WheelEvent) => {
-      if (window.innerWidth >= 768) e.stopPropagation();
-    };
-    mountEl.addEventListener("wheel", blockScrollPropagation, { passive: true });
+    // ── Scroll fix ──────────────────────────────────────────────────────────
+    // Do NOT stop propagation on wheel events — let the page scroll freely.
+    // globe.gl's Three.js OrbitControls captures wheel by default; we disable
+    // that via enableZoom = false below, so no handler needed here at all.
+    // ────────────────────────────────────────────────────────────────────────
 
     let cancelled = false;
     let resizeHandler: (() => void) | null = null;
@@ -170,13 +171,24 @@ export default function Globe({
         .arcDashGap(0.2)
         .arcDashAnimateTime(4000);
 
-      globe.controls().autoRotate = true;
-      globe.controls().autoRotateSpeed = 0.25;
-      globe.controls().enableZoom = window.innerWidth >= 768;
-      globe.controls().enableRotate = true;
-      globe.controls().enablePan = false;
-      globe.controls().minDistance = 200;
-      globe.controls().maxDistance = 500;
+      const controls = globe.controls();
+      controls.autoRotate      = true;
+      controls.autoRotateSpeed = 0.25;
+      controls.enableZoom      = false;   // ← zoom off, no scroll interference
+      controls.enableRotate    = true;
+      controls.enablePan       = false;
+      controls.minDistance     = 200;
+      controls.maxDistance     = 500;
+
+      // Belt-and-braces: remove the wheel listener Three.js/OrbitControls
+      // adds internally so it can never swallow scroll events.
+      if (controls.domElement) {
+        controls.domElement.removeEventListener(
+          "wheel",
+          (controls as any)._onMouseWheel || (() => {}),
+          { passive: false } as EventListenerOptions
+        );
+      }
 
       globe.pointOfView({ lat: 30, lng: startLng, altitude: 2.5 });
 
@@ -195,7 +207,6 @@ export default function Globe({
 
     return () => {
       cancelled = true;
-      mountEl.removeEventListener("wheel", blockScrollPropagation);
       if (resizeHandler) window.removeEventListener("resize", resizeHandler);
       cancelAnimationFrame(animFrameRef.current);
       globeRef.current = null;
