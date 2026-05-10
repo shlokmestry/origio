@@ -36,8 +36,8 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
               // Styles — added MapTiler for map styles
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
-              // Images — added MapTiler tile domains
-              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
+              // Images — added picsum.photos for blog cover images
+              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos",
               // Fonts
               "font-src 'self' https://api.fontshare.com https://fonts.gstatic.com",
               // Connections — added MapTiler tile + API endpoints
