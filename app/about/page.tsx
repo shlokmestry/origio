@@ -398,8 +398,7 @@ function AlgorithmScribble() {
 
         {/* Scrawled note bottom-left */}
         <text x="24" y="268" fill="rgba(240,240,232,0.18)"
-          style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.05em" }}
-          style={{ opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" } as any}
+          style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.05em", opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" }}
         >
           * weights shift based on your wizard answers
         </text>
