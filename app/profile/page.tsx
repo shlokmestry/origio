@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import Nav from '@/components/Nav'
 import {
-  Globe2, LogOut, Trash2, Sparkles, Pencil,
+  LogOut, Trash2, Sparkles, Pencil,
   AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock, KeyRound
 } from 'lucide-react'
 
@@ -71,6 +71,9 @@ const PASSPORT_LIST = Object.entries(PASSPORT_FLAGS).map(([slug, d]) => ({ slug,
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+function formatDateShort(d: string) {
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
 function capPercent(n: number) { return Math.min(n, 99) }
 function formatRole(r: string) {
   return r.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()
@@ -78,13 +81,8 @@ function formatRole(r: string) {
 function formatSlug(slug: string) {
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
-function matchPercentColor(pct: number): string {
-  if (pct >= 90) return '#4ade80'
-  if (pct >= 75) return '#facc15'
-  return '#888880'
-}
 
-const MATCH_LABELS = ['Best Match', '2nd', '3rd']
+const MATCH_LABELS = ['Best Match', '2nd', '3rd', '4th', '5th']
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -217,7 +215,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Send password setup link for Google OAuth users
   const handleSetPassword = async () => {
     if (!user?.email) return
     setSetPasswordLoading(true)
@@ -228,7 +225,6 @@ export default function ProfilePage() {
     if (!error) setSetPasswordSent(true)
   }
 
-  // Detect if user signed in with Google (no password identity)
   const isGoogleUser = user?.app_metadata?.provider === 'google' ||
     (user?.identities ?? []).every((id: any) => id.provider === 'google')
 
@@ -241,16 +237,16 @@ export default function ProfilePage() {
   )
 
   if (loading || authLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-      <div className="w-8 h-8 border-2 border-[#2a2a2a] border-t-accent animate-spin" />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#050508' }}>
+      <div className="w-7 h-7 rounded-full border-2 border-white/10 border-t-white/60 animate-spin" />
     </div>
   )
 
   if (loadError) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] gap-4">
-      <p className="text-text-muted text-sm font-medium">Something went wrong loading your profile.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: '#050508' }}>
+      <p className="text-white/40 text-sm">Something went wrong loading your profile.</p>
       <button onClick={() => window.location.reload()}
-        className="ghost-button px-4 py-2 text-sm font-bold uppercase tracking-wide">
+        className="px-4 py-2 text-sm font-semibold text-white/70 border border-white/10 rounded-lg hover:border-white/20 hover:text-white transition-colors">
         Try again
       </button>
     </div>
@@ -259,191 +255,281 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-text-primary">
+    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      {/* Header */}
-      <div className="border-b-2 border-[#2a2a2a] bg-[#0f0f0f]">
-        <div className="max-w-5xl mx-auto px-6 pt-20 pb-8">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4">
-              {user.user_metadata?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.user_metadata.avatar_url} alt="avatar"
-                  className="w-14 h-14 border-2 border-[#2a2a2a] object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-14 h-14 border-2 border-accent flex items-center justify-center flex-shrink-0 bg-accent/10">
-                  <span className="font-heading text-xl font-extrabold text-accent">
-                    {(displayName?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
+      <div className="max-w-[1000px] mx-auto px-10 pt-28 pb-20" style={{ paddingLeft: 'clamp(20px, 4vw, 40px)', paddingRight: 'clamp(20px, 4vw, 40px)' }}>
+
+        {/* ── PROFILE HEADER ── */}
+        <div className="flex items-start justify-between gap-6 pb-10 mb-10 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-6 flex-wrap">
+            {/* Avatar */}
+            {user.user_metadata?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.user_metadata.avatar_url}
+                alt="avatar"
+                className="w-[72px] h-[72px] rounded-full object-cover flex-shrink-0"
+                style={{ border: '1px solid rgba(255,255,255,0.14)' }}
+              />
+            ) : (
+              <div
+                className="w-[72px] h-[72px] rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.14)' }}
+              >
+                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, color: '#fff' }}>
+                  {(displayName?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
+                </span>
+              </div>
+            )}
+
+            <div>
+              {/* Name + Pro badge */}
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
+                  {displayName}
+                </span>
+                {isPro && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
+                    style={{ background: '#fff', color: '#0a0a0a', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                    <Sparkles className="w-2.5 h-2.5" /> Pro
                   </span>
-                </div>
-              )}
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-heading text-2xl font-extrabold uppercase tracking-tight">{displayName}</h1>
-                  {isPro && (
-                    <span className="border-2 border-accent text-accent text-[10px] font-bold px-2 py-0.5 uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles className="w-2.5 h-2.5" /> Pro
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-xs font-bold text-text-muted uppercase tracking-wide flex-wrap">
-                  {profile?.job_title && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{profile.job_title}</span>}
-                  {passportData && <span>{passportData.flag} {passportData.name}</span>}
-                  {memberSince && <span>Since {memberSince}</span>}
-                </div>
+                )}
+              </div>
+              {/* Meta row */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {profile?.job_title && (
+                  <span className="flex items-center gap-1.5" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                    <Briefcase className="w-3 h-3" />{profile.job_title}
+                  </span>
+                )}
+                {passportData && (
+                  <>
+                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'inline-block' }} />
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{passportData.flag} {passportData.name}</span>
+                  </>
+                )}
+                {memberSince && (
+                  <>
+                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'inline-block' }} />
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Since {memberSince}</span>
+                  </>
+                )}
               </div>
             </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2.5 flex-wrap items-start">
             <button onClick={openEdit}
-              className="ghost-button flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wide">
+              className="inline-flex items-center gap-1.5 transition-all"
+              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
               <Pencil className="w-3.5 h-3.5" /> Edit Profile
+            </button>
+            <button onClick={signOut}
+              className="inline-flex items-center gap-1.5 transition-all"
+              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
+              <LogOut className="w-3.5 h-3.5" /> Sign Out
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-
+        {/* ── PRO UPGRADE BANNER ── */}
         {!isPro && (
-          <div className="border-2 border-accent p-5 flex items-center justify-between gap-4 flex-wrap"
-            style={{ boxShadow: '4px 4px 0 #00ffd5' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 border-2 border-accent flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-accent" />
+          <div className="flex items-center justify-between gap-5 flex-wrap mb-7"
+            style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 14, padding: '20px 24px' }}>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center flex-shrink-0"
+                style={{ width: 42, height: 42, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
+                <Zap className="w-4 h-4 text-white/60" />
               </div>
               <div>
-                <p className="text-sm font-bold text-text-primary uppercase tracking-tight">Upgrade to Origio Pro</p>
-                <p className="text-xs text-text-muted">Unlimited matches · Full rankings · All 25 countries · €19.99 one-time</p>
+                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 25 countries · €19.99 one-time</p>
               </div>
             </div>
-            <a href="/pro" className="cta-button px-5 py-2.5 text-xs font-bold uppercase tracking-wide inline-flex items-center gap-2 flex-shrink-0">
-              <Zap className="w-3.5 h-3.5" /> Get Pro
+            <a href="/pro"
+              className="inline-flex items-center gap-2 transition-all"
+              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 100, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              <Sparkles className="w-3.5 h-3.5" /> Get Pro
             </a>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* ── CARDS GRID ── */}
+        <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
 
-          {/* Wizard result */}
-          <div className="border-2 border-[#2a2a2a] overflow-hidden bg-[#111111]">
-            <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#2a2a2a]">
-              <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Your Country Matches</p>
-              <a href="/wizard" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide flex items-center gap-1">
+          {/* Country Matches */}
+          <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+            {/* Card head */}
+            <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                Your Country Matches
+              </span>
+              <a href="/wizard" className="flex items-center gap-1.5 transition-colors"
+                style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)'}>
                 Retake <ArrowRight className="w-3 h-3" />
               </a>
             </div>
 
             {!wizardResult ? (
-              <div className="text-center py-10 px-5">
-                <div className="text-4xl mb-3">🧭</div>
-                <p className="text-sm font-bold text-text-muted mb-4">No results yet</p>
-                <a href="/wizard" className="cta-button px-5 py-2.5 text-xs font-bold uppercase tracking-wide inline-flex">
-                  Find My Country
+              <div className="flex flex-col items-center justify-center text-center" style={{ padding: '48px 24px' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🧭</div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>No results yet</p>
+                <a href="/wizard"
+                  style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+                  Find My Country →
                 </a>
               </div>
             ) : (
               <>
+                {/* Best match */}
                 {topMatch && (
-                  <div className="px-5 py-4 border-b-2 border-[#2a2a2a] flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{topMatch.flagEmoji}</span>
+                  <div className="flex items-center justify-between" style={{ padding: '22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-center gap-4">
+                      <span style={{ fontSize: 40, lineHeight: 1 }}>{topMatch.flagEmoji}</span>
                       <div>
-                        <p className="font-heading font-extrabold text-text-primary uppercase tracking-tight">{topMatch.name}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(capPercent(topMatch.matchPercent ?? 0)) }}>Best Match</p>
+                        <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
+                          {topMatch.name}
+                        </div>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                          Best Match
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-heading text-2xl font-extrabold" style={{ color: matchPercentColor(capPercent(topMatch.matchPercent ?? 0)) }}>
+                      <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 42, color: '#fff', lineHeight: 1 }}>
                         {capPercent(topMatch.matchPercent ?? 0)}%
-                      </p>
-                      <p className="text-[10px] font-bold text-text-muted uppercase">match</p>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        match
+                      </div>
                     </div>
                   </div>
                 )}
+
+                {/* Other matches */}
                 {wizardResult.top_countries.slice(1).map((c, i) => {
-                  const pctColor = matchPercentColor(capPercent(c.matchPercent))
+                  const pct = capPercent(c.matchPercent ?? 0)
                   return (
-                    <div key={c.slug} className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1a1a] last:border-0">
-                      <span className="border px-1.5 py-0.5 text-[10px] font-bold uppercase"
-                        style={{ borderColor: pctColor, color: pctColor }}>
-                        {MATCH_LABELS[i + 1]}
+                    <div key={c.slug} className="flex items-center gap-3" style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', width: 28, flexShrink: 0 }}>
+                        {MATCH_LABELS[i + 1] ?? `${i + 2}th`}
                       </span>
-                      <span className="text-lg">{c.flagEmoji}</span>
-                      <span className="text-sm font-medium text-text-primary flex-1">{c.name}</span>
-                      <span className="text-xs font-bold" style={{ color: pctColor }}>{capPercent(c.matchPercent)}%</span>
+                      <span style={{ fontSize: 20 }}>{c.flagEmoji}</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', flex: 1 }}>{c.name}</span>
+                      {/* Progress bar */}
+                      <div style={{ flex: '0 0 80px', height: 2, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: '#fff', borderRadius: 2 }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', minWidth: 34, textAlign: 'right' }}>{pct}%</span>
                     </div>
                   )
                 })}
-                <div className="px-5 py-2.5 border-t-2 border-[#2a2a2a]">
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide">
-                    {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
-                  </p>
+
+                <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
+                  {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
                 </div>
               </>
             )}
           </div>
 
-          {/* Saved countries */}
-          <div className="border-2 border-[#2a2a2a] overflow-hidden bg-[#111111]">
-            <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#2a2a2a]">
+          {/* Saved Countries */}
+          <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+            <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Saved Countries</p>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Saved Countries
+                </span>
                 {savedCountries.length > 0 && (
-                  <span className="border-2 border-accent text-accent text-[10px] font-bold px-1.5 py-0.5">
+                  <span className="inline-flex items-center justify-center"
+                    style={{ width: 18, height: 18, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', fontSize: 10, fontWeight: 700, color: '#fff' }}>
                     {savedCountries.length}
                   </span>
                 )}
               </div>
-              <Link href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide flex items-center gap-1">
+              <Link href="/" className="flex items-center gap-1.5 transition-colors"
+                style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)'}>
                 Explore <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
 
             {savedCountries.length === 0 ? (
-              <div className="text-center py-10 px-5">
-                <div className="text-4xl mb-3">📌</div>
-                <p className="text-sm font-bold text-text-muted mb-3">No saved countries yet</p>
-                <Link href="/" className="text-xs font-bold text-accent hover:opacity-80 transition-opacity uppercase tracking-wide">Start exploring →</Link>
+              <div className="flex flex-col items-center justify-center text-center" style={{ padding: '48px 24px' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>📌</div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>No saved countries yet</p>
+                <Link href="/"
+                  style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+                  Start exploring →
+                </Link>
               </div>
             ) : (
-              <div>
+              <>
                 {savedCountries.slice(0, 6).map(s => {
                   const countryData = PASSPORT_FLAGS[s.country_slug]
                   return (
-                    <div key={s.id} className="flex items-center gap-3 px-5 py-3 border-b border-[#1a1a1a] last:border-0 group">
-                      <span className="text-lg flex-shrink-0">{countryData?.flag ?? '🌍'}</span>
+                    <div key={s.id} className="group flex items-center gap-3 transition-colors"
+                      style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>{countryData?.flag ?? '🌍'}</span>
                       <a href={`/country/${s.country_slug}`}
-                        className="text-sm font-medium text-text-primary hover:text-accent transition-colors flex-1 truncate uppercase tracking-tight">
+                        style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', textDecoration: 'none', flex: 1 }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}>
                         {countryData?.name ?? formatSlug(s.country_slug)}
                       </a>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <a href={`/country/${s.country_slug}`} className="text-xs font-bold text-accent hover:opacity-80 uppercase">View</a>
-                        <button onClick={() => removeSave(s.id)} className="text-xs font-bold text-text-muted hover:text-rose-400 transition-colors uppercase">Remove</button>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginRight: 8 }}>{formatDateShort(s.created_at)}</span>
+                      {/* Hover actions */}
+                      <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a href={`/country/${s.country_slug}`}
+                          style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'}>
+                          View
+                        </a>
+                        <button onClick={() => removeSave(s.id)}
+                          style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#f87171'}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.25)'}>
+                          Remove
+                        </button>
                       </div>
                     </div>
                   )
                 })}
                 {savedCountries.length > 6 && (
-                  <div className="px-5 py-3 text-xs font-bold text-text-muted uppercase tracking-wide">
+                  <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
                     +{savedCountries.length - 6} more saved
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Sign-in method — shown for Google OAuth users */}
-        {isGoogleUser && (
-          <div className="border-2 border-[#2a2a2a] bg-[#111111]">
-            <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#2a2a2a]">
-              <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Sign-in Method</p>
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                {/* Google icon */}
-                <div className="w-8 h-8 border-2 border-[#2a2a2a] flex items-center justify-center flex-shrink-0 bg-[#1a1a1a]">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+        {/* ── ACCOUNT CARD ── */}
+        <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+          {/* Head */}
+          <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+            Account
+          </div>
+
+          {/* Google provider row — only for OAuth users */}
+          {isGoogleUser && (
+            <div className="flex items-center justify-between gap-4 flex-wrap" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-3.5">
+                <div className="flex items-center justify-center flex-shrink-0"
+                  style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -451,118 +537,150 @@ export default function ProfilePage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-text-primary uppercase tracking-tight">Google</p>
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Connected</p>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 2 }}>Google</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Connected</div>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                {setPasswordSent ? (
-                  <p className="text-xs font-bold text-accent uppercase tracking-wide flex items-center gap-1.5">
-                    <Check className="w-3 h-3" /> Check your email
-                  </p>
-                ) : (
-                  <button
-                    onClick={handleSetPassword}
-                    disabled={setPasswordLoading}
-                    className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide disabled:opacity-50"
-                  >
-                    <KeyRound className="w-3 h-3" />
-                    {setPasswordLoading ? 'Sending...' : 'Set a password'}
-                  </button>
-                )}
-                <p className="text-[10px] text-text-muted">Also sign in with email + password</p>
-              </div>
+              {setPasswordSent ? (
+                <span className="flex items-center gap-1.5" style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
+                  <Check className="w-3.5 h-3.5" /> Check your email
+                </span>
+              ) : (
+                <button onClick={handleSetPassword} disabled={setPasswordLoading}
+                  className="inline-flex items-center gap-1.5 transition-all disabled:opacity-50"
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
+                  <KeyRound className="w-3 h-3" />
+                  {setPasswordLoading ? 'Sending...' : 'Set a password'}
+                </button>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Account row */}
-        <div className="border-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <p className="text-xs font-bold text-text-muted">{user.email}</p>
-          <div className="flex gap-2 flex-wrap">
-            {/* Only show reset password for non-Google users */}
-            {!isGoogleUser && (
-              <a href="/auth/forgot-password"
-                className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
-                <Lock className="w-3 h-3" /> Reset password
-              </a>
-            )}
-            <button onClick={signOut}
-              className="ghost-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wide">
-              <LogOut className="w-3 h-3" /> Sign out
-            </button>
-            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
-              className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-rose-500/30 text-xs font-bold text-rose-400 hover:border-rose-500/60 transition-colors uppercase tracking-wide">
-              <Trash2 className="w-3 h-3" /> Delete account
-            </button>
+          {/* Email + action buttons row */}
+          <div className="flex items-center justify-between gap-5 flex-wrap" style={{ padding: '18px 22px' }}>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{user.email}</span>
+            <div className="flex gap-2.5 flex-wrap">
+              {!isGoogleUser && (
+                <a href="/auth/forgot-password"
+                  className="inline-flex items-center gap-1.5 transition-all"
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
+                  <Lock className="w-3 h-3" /> Reset password
+                </a>
+              )}
+              <button onClick={signOut}
+                className="inline-flex items-center gap-1.5 transition-all"
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
+                <LogOut className="w-3 h-3" /> Sign out
+              </button>
+              <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
+                className="inline-flex items-center gap-1.5 transition-all"
+                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#f87171', cursor: 'pointer' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.6)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.3)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                <Trash2 className="w-3 h-3" /> Delete account
+              </button>
+            </div>
           </div>
         </div>
 
       </div>
 
-      {/* Edit modal */}
+      {/* ── EDIT PROFILE MODAL ── */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-          <div className="bg-[#111111] border-2 border-[#f0f0e8] p-6 w-full max-w-md" style={{ boxShadow: '6px 6px 0 #f0f0e8' }}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-heading text-lg font-extrabold uppercase tracking-tight">Edit Profile</h3>
-              <button onClick={() => setEditing(false)} className="p-1.5 border-2 border-[#2a2a2a] hover:border-text-primary transition-colors">
-                <X className="w-4 h-4 text-text-muted" />
-              </button>
-            </div>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setEditing(false) }}>
+          <div className="w-full" style={{ maxWidth: 480, background: '#111113', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: 32, position: 'relative' }}>
+            {/* Close */}
+            <button onClick={() => setEditing(false)}
+              style={{ position: 'absolute', top: 18, right: 18, width: 34, height: 34, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}>
+              <X className="w-4 h-4" />
+            </button>
 
-            <div className="space-y-4">
+            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 24 }}>Edit Profile</h3>
+
+            <div className="space-y-5">
+              {/* Name */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Display name</label>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>
+                  Display name
+                </label>
                 <input value={editName} onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium outline-none transition-colors" />
+                  style={{ width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
               </div>
+
+              {/* Job title */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Job title</label>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>
+                  Job title
+                </label>
                 <input value={editJobTitle} onChange={e => setEditJobTitle(e.target.value)}
                   placeholder="e.g. Software Engineer, Nurse, Student..."
-                  className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-text-primary text-sm font-medium placeholder:text-text-muted outline-none transition-colors" />
+                  style={{ width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
               </div>
+
+              {/* Passport */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">Passport</label>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>
+                  Passport
+                </label>
                 {editPassport && (
-                  <div className="flex items-center justify-between mb-2 px-3 py-2 border-2 border-accent bg-accent/5">
-                    <span className="text-sm font-bold text-text-primary">
+                  <div className="flex items-center justify-between mb-2"
+                    style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>
                       {PASSPORT_FLAGS[editPassport]?.flag} {PASSPORT_FLAGS[editPassport]?.name}
                     </span>
-                    <button onClick={() => setEditPassport(null)} className="text-xs font-bold text-text-muted hover:text-rose-400 transition-colors uppercase">Clear</button>
+                    <button onClick={() => setEditPassport(null)}
+                      style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      Clear
+                    </button>
                   </div>
                 )}
                 <div className="relative mb-2">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
                   <input placeholder="Search passport..." value={passportSearch}
                     onChange={e => setPassportSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors" />
+                    style={{ width: '100%', paddingLeft: 36, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <div className="max-h-36 overflow-y-auto border-2 border-[#2a2a2a]">
+                <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
                   {filteredPassports.slice(0, 20).map(p => (
                     <button key={p.slug} onClick={() => { setEditPassport(p.slug); setPassportSearch('') }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors border-b border-[#1a1a1a] last:border-0 ${
-                        editPassport === p.slug ? 'bg-accent/10 text-text-primary' : 'hover:bg-[#1a1a1a] text-text-muted hover:text-text-primary'
-                      }`}>
+                      className="w-full flex items-center gap-2.5 text-left transition-colors"
+                      style={{
+                        padding: '10px 14px',
+                        fontSize: 13,
+                        background: editPassport === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent',
+                        color: editPassport === p.slug ? '#fff' : 'rgba(255,255,255,0.6)',
+                        border: 'none',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        cursor: 'pointer',
+                        width: '100%',
+                      }}>
                       <span>{p.flag}</span>
-                      <span className="flex-1 font-medium">{p.name}</span>
-                      {editPassport === p.slug && <Check className="w-3.5 h-3.5 text-accent" />}
+                      <span style={{ flex: 1, fontWeight: 500 }}>{p.name}</span>
+                      {editPassport === p.slug && <Check className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {saveError && <p className="text-xs font-bold text-rose-400 mt-3">{saveError}</p>}
+            {saveError && <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginTop: 12 }}>{saveError}</p>}
 
-            <div className="flex gap-3 mt-5">
+            <div className="flex gap-3 mt-6">
               <button onClick={() => setEditing(false)} disabled={saving}
-                className="ghost-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50">
+                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={saveEdit} disabled={saving}
-                className="cta-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50 disabled:transform-none disabled:shadow-none">
+                style={{ flex: 1, padding: 13, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving...' : 'Save changes'}
               </button>
             </div>
@@ -570,47 +688,58 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Delete confirm modal */}
+      {/* ── DELETE CONFIRM MODAL ── */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-          <div className="bg-[#111111] border-2 border-rose-500/40 p-6 max-w-sm w-full" style={{ boxShadow: '6px 6px 0 rgba(239,68,68,0.3)' }}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 border-2 border-rose-500/40 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-              </div>
-              <div>
-                <h3 className="font-heading text-base font-extrabold uppercase tracking-tight">Delete account?</h3>
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide">This cannot be undone</p>
-              </div>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowDeleteConfirm(false); setDeleteConfirmText('') } }}>
+          <div className="w-full" style={{ maxWidth: 420, background: '#111113', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: 32, position: 'relative' }}>
+            <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }}
+              style={{ position: 'absolute', top: 18, right: 18, width: 34, height: 34, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}>
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, color: '#fff', marginBottom: 16 }}>Delete account?</h3>
+
+            {/* Warning box */}
+            <div className="flex items-center gap-3.5 mb-5"
+              style={{ padding: 16, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 10 }}>
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: '#f87171' }} />
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+                All your saved countries, country matches, and profile data will be permanently deleted. This cannot be undone.
+              </p>
             </div>
-            <p className="text-sm text-text-muted mb-4 leading-relaxed">
-              All your saved countries, country matches, and profile data will be permanently deleted.
-            </p>
-            {deleteError && <p className="text-xs font-bold text-rose-400 mb-4">{deleteError}</p>}
-            <div className="mb-4">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5 block">
-                Type <span className="text-rose-400 font-extrabold">DELETE</span> to confirm
+
+            {deleteError && <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginBottom: 12 }}>{deleteError}</p>}
+
+            <div className="mb-5">
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>
+                Type <strong style={{ color: '#f87171' }}>DELETE</strong> to confirm
               </label>
               <input
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-rose-500/60 text-text-primary text-sm font-medium outline-none transition-colors"
-              />
+                style={{ width: '100%', padding: '11px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 14, fontWeight: 500, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
             </div>
+
             <div className="flex gap-3">
               <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }} disabled={deleteLoading}
-                className="ghost-button flex-1 py-2.5 text-sm font-bold uppercase tracking-wide disabled:opacity-50">
+                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={deleteAccount} disabled={deleteLoading || deleteConfirmText !== 'DELETE'}
-                className="flex-1 py-2.5 border-2 border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-sm font-bold text-rose-400 transition-colors disabled:opacity-50 uppercase tracking-wide">
-                {deleteLoading ? 'Deleting...' : 'Yes, delete'}
+                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: '#f87171', cursor: 'pointer', opacity: (deleteLoading || deleteConfirmText !== 'DELETE') ? 0.4 : 1, transition: 'border-color 0.15s, background 0.15s' }}
+                onMouseEnter={e => { if (deleteConfirmText === 'DELETE') { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.7)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.07)' } }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.4)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                {deleteLoading ? 'Deleting...' : 'Yes, delete account'}
               </button>
             </div>
           </div>
         </div>
       )}
+
       <Footer />
     </div>
   )
