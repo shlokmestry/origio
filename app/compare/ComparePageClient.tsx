@@ -9,40 +9,31 @@ import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 
-// ── constants ────────────────────────────────────────────────────────────────
+// ── constants ─────────────────────────────────────────────────────────────────
 
 const COL_A = "#4de6cc";
 const COL_B = "#f0c84a";
 const COL_C = "#c4b5fd";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
 function getVisaLabel(d: number) {
   if (d <= 1) return "Easy";
-  if (d <= 2) return "Straightforward";
-  if (d <= 3) return "Moderate";
+  if (d <= 2) return "Moderate";
+  if (d <= 3) return "Challenging";
   if (d <= 4) return "Difficult";
-  return "Very hard";
+  return "Very Hard";
 }
 
-// ── MiniBar ──────────────────────────────────────────────────────────────────
-
-function MiniBar({ pct, color, show }: { pct: number; color: string; show: boolean }) {
-  if (!show) return null;
-  return (
-    <div className="mt-1.5 h-0.5 w-16 bg-white/5 overflow-hidden">
-      <div
-        className="h-full transition-all duration-500"
-        style={{ width: `${pct}%`, background: color }}
-      />
-    </div>
-  );
+function fmt(v: number) {
+  return v.toLocaleString("en-US");
 }
 
-// ── MetricCell ───────────────────────────────────────────────────────────────
+// ── sub-components ────────────────────────────────────────────────────────────
 
-function MetricCell({
-  value,
+/** Single value cell inside a metric row */
+function ValCell({
+  val,
   formatted,
   isBest,
   isWorst,
@@ -51,7 +42,7 @@ function MetricCell({
   showBar,
   locked,
 }: {
-  value: number | null;
+  val: number | null;
   formatted: string;
   isBest: boolean;
   isWorst: boolean;
@@ -62,48 +53,65 @@ function MetricCell({
 }) {
   if (locked) {
     return (
-      <div className="px-5 py-3.5 border-l border-white/[0.04] relative overflow-hidden flex flex-col justify-center">
-        <div className="blur-sm select-none pointer-events-none">
-          <div className="font-serif text-[21px] leading-tight text-white/20">—</div>
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-6 h-6 flex items-center justify-center border border-white/[0.14] bg-white/[0.04]">
-            <Lock className="w-2.5 h-2.5 text-white/35" />
-          </div>
+      <div className="relative flex items-center justify-center border-l border-white/[0.05]" style={{ minHeight: 72 }}>
+        <div className="w-7 h-7 flex items-center justify-center border border-white/[0.12] bg-white/[0.04]">
+          <Lock className="w-3 h-3 text-white/30" />
         </div>
       </div>
     );
   }
 
-  if (value === null) return null;
+  if (val === null) return null;
 
-  const textColor = isBest ? color : isWorst ? "rgba(255,255,255,0.2)" : "#fff";
+  const valColor = isBest ? color : isWorst ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.85)";
 
   return (
     <div
-      className="px-5 py-3.5 border-l border-white/[0.04] flex flex-col justify-center transition-colors duration-200"
-      style={{ background: isBest ? "rgba(255,255,255,0.025)" : undefined }}
+      className="flex flex-col justify-center px-6 py-4 border-l border-white/[0.05]"
+      style={{ background: isBest ? "rgba(255,255,255,0.018)" : undefined, minHeight: 72 }}
     >
-      <div className="font-serif text-[21px] leading-tight" style={{ color: textColor }}>
+      {/* value */}
+      <div
+        className="leading-none mb-1"
+        style={{
+          fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
+          fontSize: 22,
+          color: valColor,
+        }}
+      >
         {formatted}
       </div>
+
+      {/* best pill */}
       {isBest ? (
         <span
-          className="mt-1 inline-block text-[8px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 border"
+          className="inline-block text-[8px] font-black uppercase tracking-[0.22em] px-2 py-0.5 border w-fit mb-1"
           style={{ color, borderColor: color + "55" }}
         >
           best
         </span>
       ) : (
-        <div className="h-[20px]" />
+        <div style={{ height: 18 }} />
       )}
-      <MiniBar pct={pct} color={isBest ? color : "rgba(255,255,255,0.1)"} show={showBar} />
+
+      {/* mini bar */}
+      {showBar && (
+        <div className="h-px w-14 bg-white/[0.07] overflow-hidden mt-0.5">
+          <div
+            className="h-full"
+            style={{
+              width: `${pct}%`,
+              background: isBest ? color : "rgba(255,255,255,0.12)",
+              transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-// ── MetricRow ─────────────────────────────────────────────────────────────────
-
+/** One full metric row: label + 2 or 3 value cells */
 function MetricRow({
   label,
   values,
@@ -120,34 +128,35 @@ function MetricRow({
   showBar?: boolean;
 }) {
   const defined = values.filter((v): v is number => v !== null);
-  const best = higherIsBetter ? Math.max(...defined) : Math.min(...defined);
-  const worst = higherIsBetter ? Math.min(...defined) : Math.max(...defined);
-  const maxV = Math.max(...defined.map(Math.abs)) || 1;
+  const best = defined.length ? (higherIsBetter ? Math.max(...defined) : Math.min(...defined)) : 0;
+  const worst = defined.length > 1 ? (higherIsBetter ? Math.min(...defined) : Math.max(...defined)) : best;
+  const maxV = Math.max(...defined.map(Math.abs), 1);
   const colors = [COL_A, COL_B, COL_C];
-
   const cols = isPro ? 3 : 2;
 
   return (
     <div
       className="grid border-b border-white/[0.04] last:border-0"
-      style={{ gridTemplateColumns: `168px repeat(${cols}, 1fr)` }}
+      style={{ gridTemplateColumns: `180px repeat(${cols}, 1fr)` }}
     >
-      <div className="px-5 py-3.5 flex items-start pt-4 border-r border-white/[0.04]">
-        <span className="text-[11px] font-semibold text-white/40 leading-snug">{label}</span>
+      {/* label */}
+      <div className="flex items-center px-5 border-r border-white/[0.05]" style={{ minHeight: 72 }}>
+        <span className="text-[11px] font-medium text-white/40 leading-snug">{label}</span>
       </div>
 
+      {/* values */}
       {values.map((val, i) => {
         if (i === 2 && !isPro) {
-          return <MetricCell key={i} value={0} formatted="" isBest={false} isWorst={false} color={COL_C} pct={0} showBar={false} locked />;
+          return <ValCell key={i} val={null} formatted="" isBest={false} isWorst={false} color={COL_C} pct={0} showBar={false} locked />;
         }
         if (val === null) return null;
         const isBest = val === best && defined.length > 1;
         const isWorst = val === worst && defined.length > 1 && best !== worst;
         const pct = Math.round((Math.abs(val) / maxV) * 100);
         return (
-          <MetricCell
+          <ValCell
             key={i}
-            value={val}
+            val={val}
             formatted={format(val)}
             isBest={isBest}
             isWorst={isWorst}
@@ -161,71 +170,92 @@ function MetricRow({
   );
 }
 
-// ── SectionHeader ─────────────────────────────────────────────────────────────
-
-function SectionHeader({ label, isPro }: { label: string; isPro: boolean }) {
+/** Section divider row */
+function SectionRow({ label, isPro }: { label: string; isPro: boolean }) {
   const cols = isPro ? 3 : 2;
   return (
     <div
-      className="grid border-b border-white/[0.06] bg-white/[0.022]"
-      style={{ gridTemplateColumns: `168px repeat(${cols}, 1fr)` }}
+      className="grid border-b border-white/[0.05]"
+      style={{
+        gridTemplateColumns: `180px repeat(${cols}, 1fr)`,
+        background: "rgba(255,255,255,0.018)",
+      }}
     >
       <div className="col-span-full px-5 py-2.5">
-        <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.22em]">{label}</p>
+        <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/35">{label}</span>
       </div>
     </div>
   );
 }
 
-// ── ColHeader ─────────────────────────────────────────────────────────────────
-
-function ColHeader({
-  country,
-  color,
-  locked,
+/** Sticky column header row */
+function ColHeaderRow({
+  countryA,
+  countryB,
+  countryC,
+  isPro,
 }: {
-  country: CountryWithData | null;
-  color: string;
-  locked?: boolean;
+  countryA: CountryWithData | null;
+  countryB: CountryWithData | null;
+  countryC: CountryWithData | null;
+  isPro: boolean;
 }) {
-  if (locked) {
-    return (
-      <div className="px-5 py-4 border-l border-white/[0.04] flex items-center justify-center opacity-25">
-        <Lock className="w-4 h-4 text-white/40" />
-      </div>
-    );
-  }
-  if (!country) return <div className="px-5 py-4 border-l border-white/[0.04] text-white/20">—</div>;
+  const cols = isPro ? 3 : 2;
+  const entries = [
+    { c: countryA, col: COL_A },
+    { c: countryB, col: COL_B },
+    ...(isPro ? [{ c: countryC, col: COL_C }] : [{ c: null as CountryWithData | null, col: COL_C }]),
+  ];
 
   return (
-    <div className="px-5 py-4 border-l border-white/[0.04]">
-      <div className="text-3xl mb-1.5 leading-none">{country.flagEmoji}</div>
-      <div className="text-[13px] font-extrabold uppercase tracking-wide" style={{ color }}>
-        {country.name}
-      </div>
-      <div className="text-[10px] font-semibold text-white/40 mt-0.5 tracking-widest">{country.currency}</div>
+    <div
+      className="sticky top-0 z-20 border-b border-white/[0.1] bg-[#050508]"
+      style={{
+        display: "grid",
+        gridTemplateColumns: `180px repeat(${cols}, 1fr)`,
+      }}
+    >
+      <div className="px-5 py-4" />
+      {entries.map(({ c, col }, i) => {
+        if (!c && !isPro && i === 2) {
+          return (
+            <div key={i} className="flex items-center justify-center px-5 py-4 border-l border-white/[0.05] opacity-20">
+              <Lock className="w-4 h-4 text-white/50" />
+            </div>
+          );
+        }
+        if (!c) return <div key={i} className="px-5 py-4 border-l border-white/[0.05] text-white/20 text-sm">—</div>;
+        return (
+          <div key={i} className="px-6 py-4 border-l border-white/[0.05]">
+            <div className="text-[28px] leading-none mb-1.5">{c.flagEmoji}</div>
+            <div className="text-[12px] font-black uppercase tracking-[0.07em]" style={{ color: col }}>
+              {c.name}
+            </div>
+            <div className="text-[10px] font-semibold text-white/35 tracking-widest mt-0.5">{c.currency}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-// ── VisaCard ──────────────────────────────────────────────────────────────────
-
+/** Visa notes card */
 function VisaCard({ country, color }: { country: CountryWithData; color: string }) {
   return (
-    <div className="bg-[#0d0d10] border border-white/[0.08] p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-2xl">{country.flagEmoji}</span>
-        <span className="text-[12px] font-extrabold uppercase tracking-[0.09em]" style={{ color }}>
+    <div className="border border-white/[0.07] bg-[#0d0d10] p-6">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-xl leading-none">{country.flagEmoji}</span>
+        <span className="text-[11px] font-black uppercase tracking-[0.1em]" style={{ color }}>
           {country.name}
         </span>
       </div>
-      <p className="text-[13px] font-medium text-white/40 leading-[1.68] mb-4">{country.data.visaNotes}</p>
+      <p className="text-[12px] font-medium text-white/40 leading-[1.7] mb-4">{country.data.visaNotes}</p>
       {country.data.visaPopularRoutes?.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {country.data.visaPopularRoutes.map((r: string) => (
             <span
               key={r}
-              className="text-[10px] font-bold px-3 py-1 border uppercase tracking-[0.08em]"
+              className="text-[9px] font-black px-2.5 py-1 border uppercase tracking-[0.1em]"
               style={{ color, borderColor: color + "40" }}
             >
               {r}
@@ -237,7 +267,12 @@ function VisaCard({ country, color }: { country: CountryWithData; color: string 
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// ── select style ──────────────────────────────────────────────────────────────
+
+const SEL =
+  "appearance-none bg-[#0d0d10] border border-white/[0.1] text-white text-[13px] font-semibold outline-none cursor-pointer px-3 py-2 pr-8 transition-colors hover:border-white/20 focus:border-white/25 w-full truncate";
+
+// ── main ──────────────────────────────────────────────────────────────────────
 
 export default function ComparePageClient() {
   const searchParams = useSearchParams();
@@ -269,32 +304,28 @@ export default function ComparePageClient() {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     fetch("/api/countries")
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then((data: CountryWithData[]) => {
         setAllCountries(data);
-        const validSlugs = data.map((c) => c.slug);
+        const valid = data.map((c) => c.slug);
         const pA = searchParams.get("a");
         const pB = searchParams.get("b");
         const pC = searchParams.get("c");
-        setSlugA(pA && validSlugs.includes(pA) ? pA : "portugal");
-        setSlugB(pB && validSlugs.includes(pB) ? pB : "germany");
-        setSlugC(pC && validSlugs.includes(pC) ? pC : validSlugs[2] ?? null);
+        setSlugA(pA && valid.includes(pA) ? pA : "portugal");
+        setSlugB(pB && valid.includes(pB) ? pB : "germany");
+        setSlugC(pC && valid.includes(pC) ? pC : valid[2] ?? null);
       })
-      .catch((err) => console.error("Failed to fetch countries:", err));
+      .catch(console.error);
   }, [searchParams]);
 
   const countryA = allCountries.find((c) => c.slug === slugA) ?? null;
   const countryB = allCountries.find((c) => c.slug === slugB) ?? null;
   const countryC = allCountries.find((c) => c.slug === slugC) ?? null;
-  const currentRole = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
+  const role = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
 
   const globeCountries = allCountries.map((c) => ({
-    slug: c.slug,
-    name: c.name,
-    flagEmoji: c.flagEmoji,
-    lat: c.lat,
-    lng: c.lng,
-    moveScore: c.data.moveScore,
+    slug: c.slug, name: c.name, flagEmoji: c.flagEmoji,
+    lat: c.lat, lng: c.lng, moveScore: c.data.moveScore,
     salarySoftwareEngineer: c.data.salarySoftwareEngineer,
     costRentCityCentre: c.data.costRentCityCentre,
     scoreQualityOfLife: c.data.scoreQualityOfLife,
@@ -302,30 +333,30 @@ export default function ComparePageClient() {
     incomeTaxRateMid: c.data.incomeTaxRateMid,
   }));
 
-  const v = (country: CountryWithData | null, key: string) =>
-    country ? (country.data[key as keyof typeof country.data] as number) : null;
+  const g = (c: CountryWithData | null, k: string): number | null =>
+    c ? (c.data[k as keyof typeof c.data] as number) ?? null : null;
 
-  const cols = isPro ? 3 : 2;
-  const gridCols = `168px repeat(${cols}, 1fr)`;
-
-  const selectClass =
-    "w-full appearance-none bg-white/[0.04] border border-white/[0.08] px-3 py-2.5 text-sm font-semibold text-white outline-none cursor-pointer transition-colors hover:border-white/20 focus:border-white/25 focus:bg-white/[0.06]";
+  const trio = (k: string) =>
+    [g(countryA, k), g(countryB, k), isPro ? g(countryC, k) : null] as (number | null)[];
 
   if (!proChecked) return <div className="min-h-screen bg-[#050508]" />;
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
       <Nav countries={globeCountries} onCountrySelect={() => {}} />
 
-      {/* ── Page header ── */}
-      <div className="border-b border-white/[0.08]">
-        <div className="max-w-[1060px] mx-auto px-10 pt-28 pb-10">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
-            Side by Side
-          </p>
+      {/* ── PAGE HEADER ── */}
+      <div className="border-b border-white/[0.07]">
+        <div className="max-w-[1100px] mx-auto px-8 pt-28 pb-10">
+
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">Side by Side</p>
           <h1
-            className="text-[clamp(40px,5vw,60px)] font-normal leading-none text-white mb-3"
-            style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
+            className="leading-none text-white mb-3"
+            style={{
+              fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
+              fontSize: "clamp(44px,5.5vw,68px)",
+              fontWeight: 400,
+            }}
           >
             Compare
           </h1>
@@ -333,261 +364,176 @@ export default function ComparePageClient() {
             Stack countries against each other across salary, cost of living, tax, and visa difficulty.
           </p>
 
-          {/* ── Selectors card ── */}
+          {/* ── SELECTORS ── */}
           <div
-            className="bg-[#0d0d10] border border-white/[0.08] overflow-hidden mb-8"
+            className="bg-[#0d0d10] border border-white/[0.09] overflow-hidden"
             style={{
               display: "grid",
               gridTemplateColumns: isPro
-                ? "auto 1px 1fr 1fr 1fr 1px auto"
-                : "auto 1px 1fr 1fr 1px auto",
+                ? "minmax(150px,180px) 1px minmax(120px,1fr) minmax(120px,1fr) minmax(120px,1fr) 1px auto"
+                : "minmax(150px,180px) 1px minmax(120px,1fr) minmax(120px,1fr) 1px auto",
               alignItems: "stretch",
             }}
           >
             {/* Role */}
-            <div className="flex flex-col justify-center gap-2 px-5 py-5 min-w-0">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
-                Role
-              </span>
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as JobRole)}
-                className={selectClass}
-              >
-                {JOB_ROLES.map((r) => (
-                  <option key={r.key} value={r.key}>
-                    {r.emoji} {r.label}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col justify-center gap-1.5 px-4 py-4">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Role</span>
+              <div className="relative">
+                <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value as JobRole)} className={SEL}>
+                  {JOB_ROLES.map((r) => <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>)}
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l4 4 4-4"/></svg>
+              </div>
             </div>
 
             {/* divider */}
-            <div className="bg-white/[0.08] self-stretch my-4" />
+            <div className="bg-white/[0.07] self-stretch my-3" />
 
             {/* Country A */}
-            <div className="flex flex-col justify-center gap-2 px-5 py-5 min-w-0">
-              <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
-                <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: COL_A }} />
+            <div className="flex flex-col justify-center gap-1.5 px-4 py-4">
+              <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: COL_A }} />
                 Country A
               </span>
               <div className="flex items-center gap-1.5">
-                <select
-                  value={slugA ?? ""}
-                  onChange={(e) => setSlugA(e.target.value)}
-                  className={selectClass + " flex-1"}
-                >
-                  {allCountries.map((c) => (
-                    <option key={c.slug} value={c.slug}>
-                      {c.flagEmoji} {c.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative flex-1 min-w-0">
+                  <select value={slugA ?? ""} onChange={(e) => setSlugA(e.target.value)} className={SEL}>
+                    {allCountries.map((c) => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
+                  </select>
+                  <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l4 4 4-4"/></svg>
+                </div>
                 <button
-                  onClick={() => {
-                    const t = slugA;
-                    setSlugA(slugB);
-                    setSlugB(t);
-                  }}
-                  className="w-9 h-9 flex-shrink-0 flex items-center justify-center border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+                  onClick={() => { const t = slugA; setSlugA(slugB); setSlugB(t); }}
+                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
                   title="Swap A ↔ B"
                 >
-                  <ArrowRightLeft className="w-3.5 h-3.5 text-white/40" />
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-white/35" />
                 </button>
               </div>
             </div>
 
             {/* Country B */}
-            <div className="flex flex-col justify-center gap-2 px-5 py-5 min-w-0">
-              <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
-                <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: COL_B }} />
+            <div className="flex flex-col justify-center gap-1.5 px-4 py-4">
+              <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: COL_B }} />
                 Country B
               </span>
-              <select
-                value={slugB ?? ""}
-                onChange={(e) => setSlugB(e.target.value)}
-                className={selectClass}
-              >
-                {allCountries.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.flagEmoji} {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select value={slugB ?? ""} onChange={(e) => setSlugB(e.target.value)} className={SEL}>
+                  {allCountries.map((c) => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l4 4 4-4"/></svg>
+              </div>
             </div>
 
-            {/* Country C — pro only */}
+            {/* Country C */}
             {isPro ? (
-              <div className="flex flex-col justify-center gap-2 px-5 py-5 min-w-0">
-                <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
-                  <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: COL_C }} />
+              <div className="flex flex-col justify-center gap-1.5 px-4 py-4">
+                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: COL_C }} />
                   Country C
                 </span>
-                <select
-                  value={slugC ?? ""}
-                  onChange={(e) => setSlugC(e.target.value)}
-                  className={selectClass}
-                >
-                  {allCountries.map((c) => (
-                    <option key={c.slug} value={c.slug}>
-                      {c.flagEmoji} {c.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select value={slugC ?? ""} onChange={(e) => setSlugC(e.target.value)} className={SEL}>
+                    {allCountries.map((c) => <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>)}
+                  </select>
+                  <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1l4 4 4-4"/></svg>
+                </div>
               </div>
             ) : (
-              <></>
+              <div className="flex flex-col justify-center gap-1.5 px-4 py-4">
+                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/20">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-40" style={{ background: COL_C }} />
+                  Country C
+                </span>
+                <div className="flex items-center gap-2 border border-dashed border-white/[0.08] px-3 py-2 text-[13px] font-semibold text-white/20">
+                  <Lock className="w-3 h-3 flex-shrink-0 opacity-50" />
+                  Pro only
+                </div>
+              </div>
             )}
 
             {/* divider */}
-            <div className="bg-white/[0.08] self-stretch my-4" />
+            <div className="bg-white/[0.07] self-stretch my-3" />
 
-            {/* Pro CTA or pro badge */}
-            <div className="flex items-center px-5 py-5">
+            {/* Pro CTA */}
+            <div className="flex items-center px-4 py-4">
               {isPro ? (
-                <div className="flex items-center gap-2 text-[10px] font-bold text-white/40 uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">
                   <Star className="w-3 h-3" /> Pro
                 </div>
               ) : (
                 <Link
                   href="/pro"
-                  className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2.5 text-[12px] font-bold tracking-[0.04em] whitespace-nowrap hover:bg-white/90 transition-colors"
+                  className="flex items-center gap-2 bg-white text-[#0a0a0a] px-4 py-2 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
+                  style={{ borderRadius: 100 }}
                 >
-                  <Star className="w-3 h-3" />
+                  <Star className="w-3 h-3" fill="currentColor" />
                   Unlock Pro
                 </Link>
               )}
             </div>
           </div>
-
-          {/* Free upsell strip */}
-          {!isPro && (
-            <div className="flex items-center gap-4 border border-white/[0.08] bg-white/[0.02] px-5 py-3.5 mb-0">
-              <Lock className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
-              <p className="text-[11px] text-white/40 flex-1">
-                Add a third country. Compare salary, taxes, and cost of living side-by-side with Pro.
-              </p>
-              <Link
-                href="/pro"
-                className="flex items-center gap-1.5 bg-white text-[#0a0a0a] px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap hover:bg-white/90 transition-colors"
-              >
-                Get Pro · €19.99
-              </Link>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── Sticky col headers ── */}
+      {/* ── STICKY COL HEADERS ── */}
       {countryA && countryB && (
-        <div
-          className="sticky top-0 z-20 border-b border-white/[0.14] bg-[#050508]"
-          style={{ gridTemplateColumns: gridCols, display: "grid" }}
-        >
-          <div className="max-w-[1060px] mx-auto px-10 w-full" style={{ display: "contents" }}>
-            <div className="px-5 py-4" />
-            <ColHeader country={countryA} color={COL_A} />
-            <ColHeader country={countryB} color={COL_B} />
-            {isPro ? (
-              <ColHeader country={countryC} color={COL_C} />
-            ) : (
-              <ColHeader country={null} color={COL_C} locked />
-            )}
-          </div>
-        </div>
+        <ColHeaderRow countryA={countryA} countryB={countryB} countryC={countryC} isPro={isPro} />
       )}
 
-      {/* ── Compare table ── */}
+      {/* ── TABLE + REST ── */}
       {countryA && countryB && (
-        <div className="max-w-[1060px] mx-auto px-10 py-10 flex-1 w-full">
-          <div className="border border-white/[0.08] overflow-hidden">
+        <div className="max-w-[1100px] mx-auto px-8 py-10 flex-1 w-full">
 
-            {/* ── SALARY ── */}
-            <SectionHeader label="Salary" isPro={isPro} />
+          <div className="border border-white/[0.07] overflow-hidden">
+
+            <SectionRow label="Salary" isPro={isPro} />
             <MetricRow
-              label={currentRole.label}
-              isPro={isPro}
-              higherIsBetter
-              showBar
-              format={(v) => v.toLocaleString()}
-              values={[
-                v(countryA, currentRole.salaryKey),
-                v(countryB, currentRole.salaryKey),
-                isPro ? v(countryC, currentRole.salaryKey) : null,
-              ]}
+              label={role.label} isPro={isPro} higherIsBetter showBar
+              format={fmt}
+              values={[g(countryA, role.salaryKey), g(countryB, role.salaryKey), isPro ? g(countryC, role.salaryKey) : null]}
             />
 
-            {/* ── COST OF LIVING ── */}
-            <SectionHeader label="Cost of Living — Monthly" isPro={isPro} />
-            <MetricRow label="Rent · city centre" isPro={isPro} higherIsBetter={false}
-              format={(v) => v.toLocaleString() + "/mo"}
-              values={[v(countryA, "costRentCityCentre"), v(countryB, "costRentCityCentre"), isPro ? v(countryC, "costRentCityCentre") : null]} />
-            <MetricRow label="Groceries" isPro={isPro} higherIsBetter={false}
-              format={(v) => v.toLocaleString() + "/mo"}
-              values={[v(countryA, "costGroceriesMonthly"), v(countryB, "costGroceriesMonthly"), isPro ? v(countryC, "costGroceriesMonthly") : null]} />
-            <MetricRow label="Transport" isPro={isPro} higherIsBetter={false}
-              format={(v) => v.toLocaleString() + "/mo"}
-              values={[v(countryA, "costTransportMonthly"), v(countryB, "costTransportMonthly"), isPro ? v(countryC, "costTransportMonthly") : null]} />
-            <MetricRow label="Utilities" isPro={isPro} higherIsBetter={false}
-              format={(v) => v.toLocaleString() + "/mo"}
-              values={[v(countryA, "costUtilitiesMonthly"), v(countryB, "costUtilitiesMonthly"), isPro ? v(countryC, "costUtilitiesMonthly") : null]} />
-            <MetricRow label="Eating out / meal" isPro={isPro} higherIsBetter={false}
-              format={(v) => v.toLocaleString() + "/meal"}
-              values={[v(countryA, "costEatingOut"), v(countryB, "costEatingOut"), isPro ? v(countryC, "costEatingOut") : null]} />
+            <SectionRow label="Cost of Living" isPro={isPro} />
+            <MetricRow label="Rent · city centre" isPro={isPro} higherIsBetter={false} format={(v) => fmt(v) + "/mo"} values={trio("costRentCityCentre")} />
+            <MetricRow label="Groceries" isPro={isPro} higherIsBetter={false} format={(v) => fmt(v) + "/mo"} values={trio("costGroceriesMonthly")} />
+            <MetricRow label="Transport" isPro={isPro} higherIsBetter={false} format={(v) => fmt(v) + "/mo"} values={trio("costTransportMonthly")} />
+            <MetricRow label="Utilities" isPro={isPro} higherIsBetter={false} format={(v) => fmt(v) + "/mo"} values={trio("costUtilitiesMonthly")} />
+            <MetricRow label="Eating out" isPro={isPro} higherIsBetter={false} format={(v) => fmt(v) + "/meal"} values={trio("costEatingOut")} />
 
-            {/* ── TAX ── */}
-            <SectionHeader label="Tax" isPro={isPro} />
-            <MetricRow label="Income tax — mid bracket" isPro={isPro} higherIsBetter={false}
-              format={(v) => v + "%"}
-              values={[v(countryA, "incomeTaxRateMid"), v(countryB, "incomeTaxRateMid"), isPro ? v(countryC, "incomeTaxRateMid") : null]} />
-            <MetricRow label="Social security" isPro={isPro} higherIsBetter={false}
-              format={(v) => v + "%"}
-              values={[v(countryA, "socialSecurityRate"), v(countryB, "socialSecurityRate"), isPro ? v(countryC, "socialSecurityRate") : null]} />
+            <SectionRow label="Tax" isPro={isPro} />
+            <MetricRow label="Income tax (mid-bracket)" isPro={isPro} higherIsBetter={false} format={(v) => v + "%"} values={trio("incomeTaxRateMid")} />
+            <MetricRow label="Social security" isPro={isPro} higherIsBetter={false} format={(v) => v + "%"} values={trio("socialSecurityRate")} />
 
-            {/* ── QUALITY OF LIFE ── */}
-            <SectionHeader label="Quality of Life" isPro={isPro} />
-            <MetricRow label="Overall" isPro={isPro} higherIsBetter showBar
-              format={(v) => v + "/10"}
-              values={[v(countryA, "scoreQualityOfLife"), v(countryB, "scoreQualityOfLife"), isPro ? v(countryC, "scoreQualityOfLife") : null]} />
-            <MetricRow label="Healthcare" isPro={isPro} higherIsBetter showBar
-              format={(v) => v + "/10"}
-              values={[v(countryA, "scoreHealthcare"), v(countryB, "scoreHealthcare"), isPro ? v(countryC, "scoreHealthcare") : null]} />
-            <MetricRow label="Safety" isPro={isPro} higherIsBetter showBar
-              format={(v) => v + "/10"}
-              values={[v(countryA, "scoreSafety"), v(countryB, "scoreSafety"), isPro ? v(countryC, "scoreSafety") : null]} />
-            <MetricRow label="Internet speed" isPro={isPro} higherIsBetter showBar
-              format={(v) => v + "/10"}
-              values={[v(countryA, "scoreInternetSpeed"), v(countryB, "scoreInternetSpeed"), isPro ? v(countryC, "scoreInternetSpeed") : null]} />
+            <SectionRow label="Quality of Life" isPro={isPro} />
+            <MetricRow label="Overall" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreQualityOfLife")} />
+            <MetricRow label="Healthcare" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreHealthcare")} />
+            <MetricRow label="Safety" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreSafety")} />
+            <MetricRow label="Internet speed" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreInternetSpeed")} />
 
-            {/* ── VISA ── */}
-            <SectionHeader label="Visa" isPro={isPro} />
-            <MetricRow label="Difficulty (1 = easy)" isPro={isPro} higherIsBetter={false}
-              format={(v) => `${getVisaLabel(v)} · ${v}/5`}
-              values={[v(countryA, "visaDifficulty"), v(countryB, "visaDifficulty"), isPro ? v(countryC, "visaDifficulty") : null]} />
-            <MetricRow label="Move score" isPro={isPro} higherIsBetter showBar
-              format={(v) => v + "/10"}
-              values={[v(countryA, "moveScore"), v(countryB, "moveScore"), isPro ? v(countryC, "moveScore") : null]} />
+            <SectionRow label="Visa" isPro={isPro} />
+            <MetricRow label="Difficulty" isPro={isPro} higherIsBetter={false} format={(v) => `${getVisaLabel(v)} · ${v}/5`} values={trio("visaDifficulty")} />
+            <MetricRow label="Move score" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("moveScore")} />
           </div>
 
-          {/* ── Visa notes ── */}
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mt-10 mb-4">
-            Visa Notes
-          </p>
-          <div className={`grid gap-3.5 ${isPro && countryC ? "grid-cols-3" : "grid-cols-2"}`}>
+          {/* ── VISA NOTES ── */}
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35 mt-10 mb-4">Visa Notes</p>
+          <div className={`grid gap-3 ${isPro && countryC ? "grid-cols-3" : "grid-cols-2"}`}>
             <VisaCard country={countryA} color={COL_A} />
             <VisaCard country={countryB} color={COL_B} />
             {isPro && countryC && <VisaCard country={countryC} color={COL_C} />}
           </div>
 
-          {/* ── Pro banner (free only) ── */}
+          {/* ── PRO BANNER ── */}
           {!isPro && (
-            <div className="mt-7 flex items-center gap-5 flex-wrap bg-[#0d0d10] border border-white/[0.08] px-6 py-5">
-              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-white/[0.14] bg-white/[0.05] text-lg">
+            <div className="mt-6 flex items-center gap-5 flex-wrap bg-[#0d0d10] border border-white/[0.07] px-6 py-5">
+              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-white/[0.12] bg-white/[0.04] text-lg leading-none">
                 ✦
               </div>
               <div className="flex-1 min-w-0">
                 <p
-                  className="text-[19px] font-normal text-white mb-1"
+                  className="text-[18px] font-normal text-white mb-1"
                   style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
                 >
                   Add a third country
@@ -598,27 +544,29 @@ export default function ComparePageClient() {
               </div>
               <Link
                 href="/pro"
-                className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2.5 text-[12px] font-bold tracking-[0.04em] hover:bg-white/90 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2.5 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
+                style={{ borderRadius: 100 }}
               >
+                <Star className="w-3 h-3" fill="currentColor" />
                 Get Pro · €19.99
               </Link>
             </div>
           )}
 
-          {/* ── Bottom links ── */}
-          <div className="mt-10 pt-8 border-t border-white/[0.08] flex flex-wrap gap-5">
+          {/* ── BOTTOM LINKS ── */}
+          <div className="mt-10 pt-8 border-t border-white/[0.07] flex flex-wrap gap-6">
             {[
-              { country: countryA, color: COL_A },
-              { country: countryB, color: COL_B },
-              ...(isPro && countryC ? [{ country: countryC, color: COL_C }] : []),
-            ].map(({ country, color }) => (
+              { c: countryA, col: COL_A },
+              { c: countryB, col: COL_B },
+              ...(isPro && countryC ? [{ c: countryC, col: COL_C }] : []),
+            ].map(({ c, col }) => (
               <Link
-                key={country.slug}
-                href={`/country/${country.slug}`}
-                className="text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70"
-                style={{ color }}
+                key={c.slug}
+                href={`/country/${c.slug}`}
+                className="text-[11px] font-bold uppercase tracking-widest hover:opacity-60 transition-opacity"
+                style={{ color: col }}
               >
-                {country.flagEmoji} Full {country.name} report →
+                {c.flagEmoji} Full {c.name} report →
               </Link>
             ))}
           </div>
