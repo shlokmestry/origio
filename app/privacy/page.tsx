@@ -1,13 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
-import type { Metadata } from 'next'
+'use client'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import Nav from '@/components/Nav'
-
-export const metadata: Metadata = {
-  title: 'Privacy Policy — Origio',
-  description: 'How Origio collects, uses, and protects your personal data.',
-}
 
 const LAST_UPDATED = '19 April 2026'
 
