@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
@@ -12,18 +12,34 @@ import { CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import QuizGate from "@/components/QuizGate";
 
-// ── Constants ─────────────────────────────────────────────────────────────
-const ANON_MAX_RUNS = 3;
-const FREE_MAX_RUNS = 5;
-const ANON_STORAGE_KEY = "origio_quiz_runs";
-const TOTAL_STEPS = 8;
+// ── Design tokens ──────────────────────────────────────────────────────────
+const SERIF  = "'DM Serif Display', Georgia, serif";
+const SANS   = "'Satoshi', system-ui, sans-serif";
+const MONO   = "'Cabinet Grotesk', 'Satoshi', sans-serif";
+const BG     = "#0a0a0a";
+const FG     = "#f0f0e8";
+const MINT   = "#00ffd5";
+const DIM    = "#888880";
+const LINE   = "#1f1f1f";
+const PANEL  = "#0f0f0f";
 
-// ── Static data ───────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────
+const ANON_MAX_RUNS    = 3;
+const FREE_MAX_RUNS    = 5;
+const ANON_STORAGE_KEY = "origio_quiz_runs";
+const TOTAL_STEPS      = 8;
+
+const STEP_LABELS = [
+  "Origin", "Reason", "Role", "Priorities",
+  "Vibe", "Budget", "Languages", "Deal breakers",
+];
+
+// ── Static data ────────────────────────────────────────────────────────────
 const PASSPORTS = [
   "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
   "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
   "Canada","USA","Singapore","UAE","India","China","Brazil","South Africa",
-  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other"
+  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
 ];
 
 function getRentBudgets(passport: string) {
@@ -31,99 +47,148 @@ function getRentBudgets(passport: string) {
   if (p === "india") return {
     note: "Shown in Indian Rupees — typical rent abroad converted to INR",
     options: [
-      { key: "under800",    label: "Under ₹65,000/mo",          sub: "Budget-conscious" },
-      { key: "800to1500",   label: "₹65,000 – ₹1,25,000/mo",   sub: "Comfortable" },
-      { key: "1500to2500",  label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
-      { key: "any",         label: "Money isn't a concern",      sub: "No limit" },
-    ]
+      { key: "under800",   label: "Under ₹65,000/mo",          sub: "Budget-conscious" },
+      { key: "800to1500",  label: "₹65,000 – ₹1,25,000/mo",   sub: "Comfortable" },
+      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern",      sub: "No limit" },
+    ],
   };
   if (p === "usa") return {
     note: "Shown in US Dollars",
     options: [
-      { key: "under800",   label: "Under $800/mo",       sub: "Budget-conscious" },
-      { key: "800to1500",  label: "$800 – $1,500/mo",    sub: "Comfortable" },
-      { key: "1500to2500", label: "$1,500 – $2,500/mo",  sub: "Flexible" },
+      { key: "under800",   label: "Under $800/mo",        sub: "Budget-conscious" },
+      { key: "800to1500",  label: "$800 – $1,500/mo",     sub: "Comfortable" },
+      { key: "1500to2500", label: "$1,500 – $2,500/mo",   sub: "Flexible" },
       { key: "any",        label: "Money isn't a concern", sub: "No limit" },
-    ]
+    ],
   };
   return {
     note: "Shown in Euros — average city-centre rent abroad",
     options: [
-      { key: "under800",   label: "Under €800/mo",       sub: "Budget-conscious" },
-      { key: "800to1500",  label: "€800 – €1,500/mo",   sub: "Comfortable" },
-      { key: "1500to2500", label: "€1,500 – €2,500/mo", sub: "Flexible" },
+      { key: "under800",   label: "Under €800/mo",        sub: "Budget-conscious" },
+      { key: "800to1500",  label: "€800 – €1,500/mo",     sub: "Comfortable" },
+      { key: "1500to2500", label: "€1,500 – €2,500/mo",   sub: "Flexible" },
       { key: "any",        label: "Money isn't a concern", sub: "No limit" },
-    ]
+    ],
   };
 }
 
 const LANGUAGES = [
-  { key: "english",    label: "English" },    { key: "spanish",    label: "Spanish" },
-  { key: "french",     label: "French" },     { key: "german",     label: "German" },
-  { key: "portuguese", label: "Portuguese" }, { key: "arabic",     label: "Arabic" },
-  { key: "mandarin",   label: "Mandarin" },   { key: "hindi",      label: "Hindi" },
-  { key: "italian",    label: "Italian" },    { key: "dutch",      label: "Dutch" },
-  { key: "swedish",    label: "Swedish" },    { key: "norwegian",  label: "Norwegian" },
-  { key: "japanese",   label: "Japanese" },   { key: "korean",     label: "Korean" },
-  { key: "tagalog",    label: "Tagalog" },    { key: "turkish",    label: "Turkish" },
-  { key: "polish",     label: "Polish" },     { key: "none",       label: "English only" },
+  { key: "english",    label: "English" },
+  { key: "spanish",    label: "Spanish" },
+  { key: "french",     label: "French" },
+  { key: "german",     label: "German" },
+  { key: "portuguese", label: "Portuguese" },
+  { key: "arabic",     label: "Arabic" },
+  { key: "mandarin",   label: "Mandarin" },
+  { key: "hindi",      label: "Hindi" },
+  { key: "italian",    label: "Italian" },
+  { key: "dutch",      label: "Dutch" },
+  { key: "swedish",    label: "Swedish" },
+  { key: "norwegian",  label: "Norwegian" },
+  { key: "japanese",   label: "Japanese" },
+  { key: "korean",     label: "Korean" },
+  { key: "tagalog",    label: "Tagalog" },
+  { key: "turkish",    label: "Turkish" },
+  { key: "polish",     label: "Polish" },
+  { key: "none",       label: "English only" },
 ];
 
 const DEAL_BREAKERS = [
-  { key: "english",   label: "Must be English-speaking" },
-  { key: "europe",    label: "Must be in Europe" },
-  { key: "lowtax",    label: "Must have low taxes" },
-  { key: "warm",      label: "Must have warm weather" },
-  { key: "lowcrime",  label: "Must have low crime rate" },
-  { key: "none",      label: "No deal breakers" },
+  { key: "english",  label: "Must be English-speaking" },
+  { key: "europe",   label: "Must be in Europe" },
+  { key: "lowtax",   label: "Must have low taxes" },
+  { key: "warm",     label: "Must have warm weather" },
+  { key: "lowcrime", label: "Must have low crime rate" },
+  { key: "none",     label: "No deal breakers" },
 ];
 
-const optionBase = "w-full flex items-center gap-3 p-4 border-2 text-left transition-all font-medium text-sm";
-const optionSelected = "border-accent bg-accent/10 text-text-primary";
-const optionIdle = "border-[#2a2a2a] bg-[#1a1a1a] text-text-muted hover:border-text-primary hover:text-text-primary";
+// ── Shared UI ──────────────────────────────────────────────────────────────
+function EyebrowLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: MINT, marginBottom: 12 }}>
+      {children}
+    </div>
+  );
+}
 
-// ── Component ─────────────────────────────────────────────────────────────
+function StepHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h1 style={{ fontFamily: SERIF, fontSize: "clamp(38px, 5vw, 60px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 14px", color: FG, fontWeight: 400 }}>
+      {children}
+    </h1>
+  );
+}
+
+function StepSub({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ color: DIM, fontSize: 15, lineHeight: 1.6, margin: "0 0 32px", fontFamily: SANS }}>
+      {children}
+    </p>
+  );
+}
+
+function Mint({ children }: { children: React.ReactNode }) {
+  return <em style={{ color: MINT, fontStyle: "italic" }}>{children}</em>;
+}
+
+function OptionCard({ selected, onClick, children, badge }: {
+  selected: boolean; onClick: () => void; children: React.ReactNode; badge?: React.ReactNode;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button onClick={onClick} type="button"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14,
+        padding: "15px 18px", borderRadius: 12,
+        border: `1px solid ${selected ? MINT : hovered ? "#333" : LINE}`,
+        background: selected ? "rgba(0,255,213,0.05)" : PANEL,
+        color: FG, cursor: "pointer", transition: "all 0.15s",
+        fontFamily: SANS, fontSize: 14,
+        boxShadow: selected ? "0 0 0 3px rgba(0,255,213,0.07)" : "none",
+      }}>
+      {badge}
+      <div style={{ flex: 1 }}>{children}</div>
+      {selected && !badge && (
+        <span style={{ width: 22, height: 22, borderRadius: "50%", background: MINT, color: BG, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Check size={12} strokeWidth={3} />
+        </span>
+      )}
+    </button>
+  );
+}
+
+
+
+// ── Main ───────────────────────────────────────────────────────────────────
 export default function WizardPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
-  // Gate state
   const [gateChecked, setGateChecked] = useState(false);
-  const [gateType, setGateType] = useState<"anon" | "free" | null>(null);
-  const [runsUsed, setRunsUsed] = useState(0);
-  const [isPro, setIsPro] = useState(false);
-  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [gateType, setGateType]       = useState<"anon" | "free" | null>(null);
+  const [runsUsed, setRunsUsed]       = useState(0);
+  const [isPro, setIsPro]             = useState(false);
+  const [isSignedIn, setIsSignedIn]   = useState(false);
 
-  // ── Check run limits on mount ──────────────────────────────────────────
   useEffect(() => {
     async function checkGate() {
       const { data: { session } } = await supabase.auth.getSession();
-
       if (!session?.user) {
-        // Anonymous user — check localStorage
         const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-        setRunsUsed(stored);
-        setIsSignedIn(false);
+        setRunsUsed(stored); setIsSignedIn(false);
         if (stored >= ANON_MAX_RUNS) setGateType("anon");
-        setGateChecked(true);
-        return;
+        setGateChecked(true); return;
       }
-
-      // Signed in — check Supabase
       setIsSignedIn(true);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_pro, quiz_runs_count")
-        .eq("id", session.user.id)
-        .single();
-
-      const pro = profile?.is_pro ?? false;
+      const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
+      const pro  = profile?.is_pro ?? false;
       const runs = profile?.quiz_runs_count ?? 0;
-      setIsPro(pro);
-      setRunsUsed(runs);
-
+      setIsPro(pro); setRunsUsed(runs);
       if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
       setGateChecked(true);
     }
@@ -135,12 +200,10 @@ export default function WizardPage() {
   const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
   const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
-  const progress = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
+  const progress   = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
-
-  // Runs remaining display
-  const maxRuns = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
-  const runsLeft = isPro ? null : Math.max(0, maxRuns - runsUsed);
+  const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
+  const runsLeft   = isPro ? null : Math.max(0, maxRuns - runsUsed);
 
   const canProceed = () => {
     if (step === 1) return !!answers.passport;
@@ -160,184 +223,187 @@ export default function WizardPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/countries");
+      const res       = await fetch("/api/countries");
       const countries: CountryWithData[] = await res.json();
-      let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
-
-      // ── AI validation ────────────────────────────────────────────────
+      let matches     = scoreCountriesForWizard(countries, answers as WizardAnswers);
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        const validationRes = await fetch("/api/validate-results", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ matches, answers }),
-          signal: controller.signal,
-        });
+        const timeout    = setTimeout(() => controller.abort(), 3000);
+        const vRes       = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: controller.signal });
         clearTimeout(timeout);
-        if (validationRes.ok) {
-          const validation = await validationRes.json();
-          if (!validation.valid && validation.flaggedCountries?.length > 0) {
-            const flagged = validation.flaggedCountries.map((n: string) => n.toLowerCase());
-            matches = [
-              ...matches.filter((m) => !flagged.includes(m.country.name.toLowerCase())),
-              ...matches
-                .filter((m) => flagged.includes(m.country.name.toLowerCase()))
-                .map((m) => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) })),
-            ];
+        if (vRes.ok) {
+          const v = await vRes.json();
+          if (!v.valid && v.flaggedCountries?.length > 0) {
+            const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
+            matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
           }
         }
       } catch { /* silent */ }
-
-      // ── Increment run count ──────────────────────────────────────────
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Signed in — increment in Supabase
-        await supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
-      } else {
-        // Anonymous — increment in localStorage
-        const current = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-        localStorage.setItem(ANON_STORAGE_KEY, String(current + 1));
-      }
-
+      if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
+      else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); setLoading(false); }
   };
 
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
+  const effectiveStep = getEffectiveStep();
+  const totalSteps    = getEffectiveTotalSteps();
+  const stepPad       = (n: number) => String(n).padStart(2, "0");
 
-  // ── Loading state ────────────────────────────────────────────────────
   if (!gateChecked) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <div className="w-32 h-1 bg-[#1a1a1a]">
-        <div className="h-full bg-accent animate-pulse" style={{ width: "40%" }} />
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 120, height: 2, background: LINE }}>
+        <div style={{ width: "40%", height: "100%", background: MINT, animation: "pulse 1.5s infinite" }} />
       </div>
     </div>
   );
 
-  // ── Gate screen ──────────────────────────────────────────────────────
-  if (gateType) {
-    return <QuizGate type={gateType} runsUsed={runsUsed} maxRuns={gateType === "anon" ? ANON_MAX_RUNS : FREE_MAX_RUNS} />;
-  }
+  if (gateType) return <QuizGate type={gateType} runsUsed={runsUsed} maxRuns={gateType === "anon" ? ANON_MAX_RUNS : FREE_MAX_RUNS} />;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
+      <style>{`
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        select option { background:#0f0f0f; color:#f0f0e8; }
+        @media(max-width:860px){
+          .wiz-layout  { grid-template-columns: 1fr !important; }
+          .wiz-sidebar { display: none !important; }
+        }
+      `}</style>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#2a2a2a]">
-        <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="w-3 h-3 bg-accent border-2 border-text-primary" />
-          <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
-        </Link>
-        <div className="flex items-center gap-3">
-          {/* Runs remaining badge */}
-          {runsLeft !== null && runsLeft <= 2 && (
-            <span className="text-[10px] font-bold text-[#888880] uppercase tracking-wide border border-[#2a2a2a] px-2 py-1">
-              {runsLeft} run{runsLeft !== 1 ? "s" : ""} left
-            </span>
-          )}
-          <span className="text-sm font-bold text-text-muted uppercase tracking-wide">
-            {getEffectiveStep()} / {getEffectiveTotalSteps()}
-          </span>
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,10,0.80)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${LINE}` }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={handleBack} style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = FG)}
+            onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+            <ArrowLeft size={14} /> Back
+          </button>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: FG }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: MINT, display: "inline-block" }} />
+            <span style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "-0.02em" }}>origio<span style={{ color: MINT }}>.</span></span>
+          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {runsLeft !== null && runsLeft <= 2 && (
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, border: `1px solid ${LINE}`, padding: "4px 10px" }}>
+                {runsLeft} run{runsLeft !== 1 ? "s" : ""} left
+              </span>
+            )}
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>
+              <span style={{ color: MINT }}>{stepPad(effectiveStep)}</span>{" / "}<span>{stepPad(totalSteps)}</span>
+            </div>
+          </div>
         </div>
-      </div>
+        <div style={{ height: 2, background: "#111" }}>
+          <div style={{ width: `${progress}%`, height: "100%", background: MINT, transition: "width 0.45s cubic-bezier(.2,.8,.2,1)" }} />
+        </div>
+      </header>
 
-      {/* Progress */}
-      <div className="h-1.5 bg-[#1a1a1a] border-b-2 border-[#2a2a2a]">
-        <div className="h-full bg-accent transition-all duration-500 ease-out" style={{ width: progress + "%" }} />
-      </div>
+      {/* ── Main ──────────────────────────────────────────────────────────── */}
+      <main className="wiz-layout" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px 120px", display: "grid", gridTemplateColumns: "240px 1fr", gap: "48px 52px", alignItems: "start" }}>
 
-      {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-lg">
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+        <aside className="wiz-sidebar" style={{ position: "sticky", top: 88, alignSelf: "start" }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 18 }}>
+            ✦ Quiz · 8 questions
+          </div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+            {STEP_LABELS.map((label, i) => {
+              const num     = i + 1;
+              const isCur   = num === step;
+              const done    = num < step;
+              const skipped = isJobOffer && (num === 4 || num === 5 || num === 6);
+              return (
+                <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {done ? <Check size={11} strokeWidth={3} /> : num}
+                  </span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: isCur ? FG : DIM, textDecoration: skipped ? "line-through" : "none" }}>
+                    {label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
 
-          {/* Step 1 — Passport */}
+          <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 12, background: PANEL }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
+            <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
+              We score 25 countries against your role, passport and priorities. Takes ~90 seconds.
+            </p>
+          </div>
+        </aside>
+
+        {/* ── Step content ────────────────────────────────────────────────── */}
+        <section key={step} style={{ animation: "fadeUp 0.38s ease both", maxWidth: 660 }}>
+          {/* Step 1 */}
           {step === 1 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Let's get started</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Where are you from?</h2>
-                <p className="text-text-muted text-sm">Your passport affects which countries are easiest to move to.</p>
-              </div>
-              <select value={answers.passport ?? ""}
-                onChange={(e) => setAnswers({ ...answers, passport: e.target.value })}
-                className="w-full px-4 py-3 bg-[#111] border-2 border-[#2a2a2a] text-text-primary font-bold focus:outline-none focus:border-accent text-sm">
-                <option value="">Select your passport country</option>
-                {PASSPORTS.map((p) => <option key={p} value={p.toLowerCase()}>{p}</option>)}
+            <>
+              <EyebrowLabel>Step 01 · Origin</EyebrowLabel>
+              <StepHeading>Where are you <Mint>from?</Mint></StepHeading>
+              <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
+              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
+                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
+                onFocus={e => (e.currentTarget.style.borderColor = MINT)}
+                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
+                <option value="" disabled>Select your passport country</option>
+                {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
               </select>
-            </div>
+            </>
           )}
 
-          {/* Step 2 — Move reason */}
+          {/* Step 2 */}
           {step === 2 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 2</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Why are you moving?</h2>
-                <p className="text-text-muted text-sm">This shapes which factors matter most in your results.</p>
-              </div>
-              <div className="space-y-2">
+            <>
+              <EyebrowLabel>Step 02 · Reason</EyebrowLabel>
+              <StepHeading>Why are you <Mint>moving?</Mint></StepHeading>
+              <StepSub>This shapes which factors matter most. A job offer skips a few questions.</StepSub>
+              <div style={{ display: "grid", gap: 10 }}>
                 {[
-                  { key: "job",       label: "I have a job offer",           sub: "Moving for a specific role" },
-                  { key: "career",    label: "Better career opportunities",  sub: "Higher salary, growth, tech hubs" },
-                  { key: "remote",    label: "I work remotely",              sub: "Location flexibility, low tax, good internet" },
-                  { key: "retire",    label: "Retirement / FIRE",            sub: "Low cost, good healthcare, passive income" },
-                  { key: "study",     label: "Study abroad",                 sub: "Universities, student visas" },
-                  { key: "lifestyle", label: "Lifestyle change",             sub: "Weather, culture, quality of life" },
-                ].map((opt) => (
-                  <button key={opt.key}
-                    onClick={() => setAnswers({ ...answers, moveReason: opt.key })}
-                    className={`${optionBase} ${answers.moveReason === opt.key ? optionSelected : optionIdle}`}
-                    style={answers.moveReason === opt.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                    <div>
-                      <div className="font-bold">{opt.label}</div>
-                      <div className="text-xs opacity-60 mt-0.5">{opt.sub}</div>
-                    </div>
-                  </button>
+                  { key: "job",       label: "I have a job offer",          sub: "Moving for a specific role" },
+                  { key: "career",    label: "Better career opportunities", sub: "Higher salary, growth, tech hubs" },
+                  { key: "remote",    label: "I work remotely",             sub: "Location flexibility, low tax, fast internet" },
+                  { key: "retire",    label: "Retirement / FIRE",           sub: "Low cost, healthcare, passive income" },
+                  { key: "study",     label: "Study abroad",                sub: "Universities, student visas" },
+                  { key: "lifestyle", label: "Lifestyle change",            sub: "Weather, culture, quality of life" },
+                ].map(opt => (
+                  <OptionCard key={opt.key} selected={answers.moveReason === opt.key} onClick={() => setAnswers({ ...answers, moveReason: opt.key })}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
+                    <div style={{ fontSize: 13, color: DIM }}>{opt.sub}</div>
+                  </OptionCard>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Step 3 — Job role */}
+          {/* Step 3 */}
           {step === 3 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 3</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What's your job?</h2>
-                <p className="text-text-muted text-sm">Used to show realistic salary expectations per country.</p>
-              </div>
-              <div className="space-y-2">
-                {JOB_ROLES.map((r) => (
-                  <button key={r.key}
-                    onClick={() => setAnswers({ ...answers, jobRole: r.key })}
-                    className={`${optionBase} ${answers.jobRole === r.key ? optionSelected : optionIdle}`}
-                    style={answers.jobRole === r.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                    <span>{r.emoji}</span>
-                    <span>{r.label}</span>
-                  </button>
+            <>
+              <EyebrowLabel>Step 03 · Role</EyebrowLabel>
+              <StepHeading>What's your <Mint>job?</Mint></StepHeading>
+              <StepSub>Used to show realistic salary expectations per country.</StepSub>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+                {JOB_ROLES.map(r => (
+                  <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
+                    badge={<span style={{ fontSize: 20, flexShrink: 0 }}>{r.emoji}</span>}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: FG }}>{r.label}</div>
+                  </OptionCard>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Step 4 — Priorities */}
+          {/* Step 4 */}
           {step === 4 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 4</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What matters most?</h2>
-                <p className="text-text-muted text-sm">Pick at least 3, in order of importance. First = highest weight.</p>
-              </div>
-              <div className="space-y-2">
+            <>
+              <EyebrowLabel>Step 04 · Priorities</EyebrowLabel>
+              <StepHeading>What matters <Mint>most?</Mint></StepHeading>
+              <StepSub>Pick at least 3, in order of importance. The first one you tap carries the highest weight.</StepSub>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {[
                   { key: "salary",        label: "High salary" },
                   { key: "affordability", label: "Low cost of living" },
@@ -346,155 +412,134 @@ export default function WizardPage() {
                   { key: "visa",          label: "Easy visa / immigration" },
                   { key: "tax",           label: "Low taxes" },
                   { key: "healthcare",    label: "Good healthcare" },
-                  { key: "english",       label: "English-speaking environment" },
-                ].map((opt) => {
+                  { key: "english",       label: "English-speaking" },
+                ].map(opt => {
                   const idx = answers.priorities?.indexOf(opt.key) ?? -1;
                   const selected = idx !== -1;
                   return (
-                    <button key={opt.key}
-                      onClick={() => {
-                        const cur = answers.priorities ?? [];
-                        if (selected) setAnswers({ ...answers, priorities: cur.filter((x) => x !== opt.key) });
-                        else setAnswers({ ...answers, priorities: [...cur, opt.key] });
-                      }}
-                      className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
-                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                      {selected && <span className="text-accent font-extrabold text-xs w-4">{idx + 1}</span>}
-                      <span>{opt.label}</span>
-                    </button>
+                    <OptionCard key={opt.key} selected={selected}
+                      onClick={() => { const cur = answers.priorities ?? []; setAnswers({ ...answers, priorities: selected ? cur.filter(x => x !== opt.key) : [...cur, opt.key] }); }}
+                      badge={
+                        <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "italic", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {selected ? idx + 1 : "·"}
+                        </span>
+                      }>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: FG }}>{opt.label}</div>
+                    </OptionCard>
                   );
                 })}
               </div>
-            </div>
+              <div style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: (answers.priorities?.length ?? 0) >= 3 ? MINT : DIM, transition: "color 0.2s" }}>
+                {answers.priorities?.length ?? 0} / 3 selected {(answers.priorities?.length ?? 0) >= 3 && "✓"}
+              </div>
+            </>
           )}
 
-          {/* Step 5 — City vibe */}
+          {/* Step 5 */}
           {step === 5 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 5</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">What's your vibe?</h2>
-                <p className="text-text-muted text-sm">What kind of place are you looking for?</p>
-              </div>
-              <div className="space-y-2">
+            <>
+              <EyebrowLabel>Step 05 · Vibe</EyebrowLabel>
+              <StepHeading>What's your <Mint>vibe?</Mint></StepHeading>
+              <StepSub>What kind of place are you actually looking for?</StepSub>
+              <div style={{ display: "grid", gap: 10 }}>
                 {[
-                  { key: "big-city",  label: "Big city",       sub: "London, NYC, Singapore energy" },
-                  { key: "mid-city",  label: "Mid-size city",  sub: "Liveable, less hectic" },
-                  { key: "coastal",   label: "Coastal / beach", sub: "Warm, relaxed, outdoor lifestyle" },
-                  { key: "anywhere",  label: "Anywhere works", sub: "I'm flexible" },
-                ].map((opt) => (
-                  <button key={opt.key}
-                    onClick={() => setAnswers({ ...answers, cityVibe: opt.key })}
-                    className={`${optionBase} ${answers.cityVibe === opt.key ? optionSelected : optionIdle}`}
-                    style={answers.cityVibe === opt.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                    <div>
-                      <div className="font-bold">{opt.label}</div>
-                      <div className="text-xs opacity-60 mt-0.5">{opt.sub}</div>
-                    </div>
-                  </button>
+                  { key: "big-city", label: "Big city",        sub: "London, NYC, Singapore energy" },
+                  { key: "mid-city", label: "Mid-size city",   sub: "Liveable, less hectic" },
+                  { key: "coastal",  label: "Coastal / beach", sub: "Warm, relaxed, outdoor lifestyle" },
+                  { key: "anywhere", label: "Anywhere works",  sub: "I'm flexible" },
+                ].map(opt => (
+                  <OptionCard key={opt.key} selected={answers.cityVibe === opt.key} onClick={() => setAnswers({ ...answers, cityVibe: opt.key })}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
+                    <div style={{ fontSize: 13, color: DIM }}>{opt.sub}</div>
+                  </OptionCard>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Step 6 — Rent budget */}
+          {/* Step 6 */}
           {step === 6 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 6</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Rent budget?</h2>
-                <p className="text-text-muted text-sm">{rentNote}</p>
-              </div>
-              <div className="space-y-2">
-                {rentOptions.map((opt) => (
-                  <button key={opt.key}
-                    onClick={() => setAnswers({ ...answers, rentBudget: opt.key })}
-                    className={`${optionBase} ${answers.rentBudget === opt.key ? optionSelected : optionIdle}`}
-                    style={answers.rentBudget === opt.key ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                    <div>
-                      <div className="font-bold">{opt.label}</div>
-                      <div className="text-xs opacity-60 mt-0.5">{opt.sub}</div>
-                    </div>
-                  </button>
+            <>
+              <EyebrowLabel>Step 06 · Budget</EyebrowLabel>
+              <StepHeading>Rent <Mint>budget?</Mint></StepHeading>
+              <StepSub>{rentNote}</StepSub>
+              <div style={{ display: "grid", gap: 10 }}>
+                {rentOptions.map(opt => (
+                  <OptionCard key={opt.key} selected={answers.rentBudget === opt.key} onClick={() => setAnswers({ ...answers, rentBudget: opt.key })}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
+                    <div style={{ fontSize: 13, color: DIM }}>{opt.sub}</div>
+                  </OptionCard>
                 ))}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Step 7 — Languages */}
+          {/* Step 7 */}
           {step === 7 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Step 7</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Languages you speak?</h2>
-                <p className="text-text-muted text-sm">Speaking the local language opens more doors.</p>
-              </div>
-              <div className="space-y-2">
-                {LANGUAGES.map((l) => {
+            <>
+              <EyebrowLabel>Step 07 · Languages</EyebrowLabel>
+              <StepHeading>Languages you <Mint>speak?</Mint></StepHeading>
+              <StepSub>Speaking the local language opens more doors — and unlocks lower-tax visas in some countries.</StepSub>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {LANGUAGES.map(l => {
                   const selected = answers.languages?.includes(l.key);
                   return (
-                    <button key={l.key}
+                    <button key={l.key} type="button"
                       onClick={() => {
                         const cur = answers.languages ?? [];
                         if (l.key === "none") { setAnswers({ ...answers, languages: ["none"] }); return; }
-                        const withoutNone = cur.filter((x) => x !== "none");
-                        if (selected) setAnswers({ ...answers, languages: withoutNone.filter((x) => x !== l.key) });
-                        else setAnswers({ ...answers, languages: [...withoutNone, l.key] });
+                        const withoutNone = cur.filter(x => x !== "none");
+                        setAnswers({ ...answers, languages: selected ? withoutNone.filter(x => x !== l.key) : [...withoutNone, l.key] });
                       }}
-                      className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
-                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                      <span>{l.label}</span>
+                      style={{ padding: "10px 16px", borderRadius: 999, border: `1px solid ${selected ? MINT : LINE}`, background: selected ? "rgba(0,255,213,0.08)" : PANEL, color: selected ? MINT : FG, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
+                      {selected && <Check size={12} strokeWidth={3} />}
+                      {l.label}
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Step 8 — Deal breakers */}
+          {/* Step 8 */}
           {step === 8 && (
-            <div className="space-y-8">
-              <div>
-                <p className="text-accent text-xs font-bold uppercase tracking-widest mb-2">Final step</p>
-                <h2 className="font-heading text-4xl font-extrabold mb-3 uppercase tracking-tight">Any deal breakers?</h2>
-                <p className="text-text-muted text-sm">Select all that apply.</p>
-              </div>
-              <div className="space-y-2">
-                {DEAL_BREAKERS.map((d) => {
+            <>
+              <EyebrowLabel>Final step · Deal breakers</EyebrowLabel>
+              <StepHeading>Anything <Mint>non-negotiable?</Mint></StepHeading>
+              <StepSub>Select all that apply. We'll filter out countries that don't meet these.</StepSub>
+              <div style={{ display: "grid", gap: 10 }}>
+                {DEAL_BREAKERS.map(d => {
                   const selected = answers.dealBreakers?.includes(d.key);
                   return (
-                    <button key={d.key}
+                    <OptionCard key={d.key} selected={!!selected}
                       onClick={() => {
                         const cur = answers.dealBreakers ?? [];
                         if (d.key === "none") { setAnswers({ ...answers, dealBreakers: ["none"] }); return; }
-                        const withoutNone = cur.filter((x) => x !== "none");
-                        if (selected) setAnswers({ ...answers, dealBreakers: withoutNone.filter((x) => x !== d.key) });
-                        else setAnswers({ ...answers, dealBreakers: [...withoutNone, d.key] });
-                      }}
-                      className={`${optionBase} ${selected ? optionSelected : optionIdle}`}
-                      style={selected ? { boxShadow: "3px 3px 0 #00ffd5" } : {}}>
-                      <span>{d.label}</span>
-                    </button>
+                        const withoutNone = cur.filter(x => x !== "none");
+                        setAnswers({ ...answers, dealBreakers: selected ? withoutNone.filter(x => x !== d.key) : [...withoutNone, d.key] });
+                      }}>
+                      <div style={{ fontWeight: 600, fontSize: 15, color: FG }}>{d.label}</div>
+                    </OptionCard>
                   );
                 })}
               </div>
-            </div>
+            </>
           )}
 
-          {/* Nav buttons */}
-          <div className="flex items-center justify-between mt-10">
-            <button onClick={handleBack}
-              className="ghost-button flex items-center gap-2 px-5 py-3 text-sm font-bold uppercase tracking-wide">
-              <ArrowLeft className="w-4 h-4" /> Back
+          {/* Nav */}
+          <div style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#3a3a3a"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = LINE; }}>
+              <ArrowLeft size={14} /> Back
             </button>
             <button onClick={handleNext} disabled={!canProceed() || loading}
-              className="cta-button flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wide disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-              {loading ? "Finding matches..." : isLastStep ? "Find My Country" : <>Next <ArrowRight className="w-4 h-4" /></>}
+              style={{ padding: "14px 28px", borderRadius: 999, background: canProceed() && !loading ? MINT : "#1a1a1a", color: canProceed() && !loading ? BG : DIM, border: "none", cursor: canProceed() && !loading ? "pointer" : "not-allowed", fontFamily: MONO, fontSize: 12, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", boxShadow: canProceed() && !loading ? "0 4px 20px rgba(0,255,213,0.18)" : "none" }}>
+              {loading ? "Finding matches..." : isLastStep ? <><Sparkles size={14} /> Find my country</> : <>Next <ArrowRight size={14} /></>}
             </button>
           </div>
-
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
