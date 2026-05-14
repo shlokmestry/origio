@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+
 export const metadata: Metadata = {
   title: 'Profile',
   description: 'Your Origio profile — saved countries and wizard results.',
