@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft, Lock, Check, X, Wifi,
-  DollarSign, Shield, Heart, Home, Plane, Receipt, Calculator,
-} from "lucide-react";
+import { Lock, Calculator } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { WizardAnswers, CountryMatch } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
 import { getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -46,35 +45,20 @@ const ENGLISH_COUNTRIES = [
 
 const HIGH_TAX_COUNTRIES = ["sweden", "denmark", "finland", "belgium"];
 
-const SCORE_ICONS: Record<string, any> = {
-  Salary: DollarSign, Affordability: Home, "Quality of Life": Heart,
-  Safety: Shield, "Visa Access": Plane, "Tax Efficiency": Receipt,
+const SCORE_EMOJI: Record<string, string> = {
+  Salary: "💰", Affordability: "🏠", "Quality of Life": "❤️",
+  Safety: "🛡️", "Visa Access": "✈️", "Tax Efficiency": "🧾",
 };
-
-function scoreColor(v: number) {
-  if (v >= 7) return "#4ade80";
-  if (v >= 5) return "#facc15";
-  return "#f87171";
-}
-
-function matchPercentColor(pct: number): string {
-  if (pct >= 90) return "#4ade80";
-  if (pct >= 75) return "#facc15";
-  return "#888880";
-}
 
 function calcTakeHome(gross: number, taxRate: number, ssRate: number) {
   const net = gross * (1 - taxRate / 100) * (1 - ssRate / 100);
   return { annual: Math.round(net), monthly: Math.round(net / 12) };
 }
 
-// ── fallback narrative (used while Claude generates or if it fails) ────────
-
 function getFallbackNarrative(slug: string, name: string, cs: string, grossSalary: number, takeHomeMonthly: number, disposable: number, disposableUSD: number, taxRate: number, safetyScore: number, qolScore: number): string {
   const g = `${cs}${grossSalary.toLocaleString()}`;
   const disp = `${cs}${Math.abs(disposable).toLocaleString()}`;
   const isTight = disposableUSD < PPP_TIGHT_USD;
-
   if (slug === "uae") return `Zero tax. What you earn — ${g} — is what you keep.`;
   if (HIGH_TAX_COUNTRIES.includes(slug) || taxRate > 45) return `${name} takes ${taxRate}% in tax. Decide if what you get in return works for you.`;
   if (disposable >= 0 && !isTight) return `${g} gross, ${disp} left every month. ${name} makes that possible.`;
@@ -82,19 +66,13 @@ function getFallbackNarrative(slug: string, name: string, cs: string, grossSalar
   return `${g} gross, ${disp} left after costs. Enough to live. Check if it's enough to stay.`;
 }
 
-// ── move timeline logic ───────────────────────────────────────────────────
-
-function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
-  months: string;
-  steps: { month: string; action: string }[];
-} {
+function getMoveTimeline(visaDifficulty: number, isEU: boolean) {
   const now = new Date();
   const add = (m: number) => {
     const d = new Date(now);
     d.setMonth(d.getMonth() + m);
-    return d.toLocaleString("default", { month: "short", year: "numeric" });
+    return d.toLocaleString("default", { month: "short", year: "numeric" }).toUpperCase();
   };
-
   if (isEU) {
     return {
       months: "1–2 months",
@@ -102,11 +80,10 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
         { month: add(0), action: "Start job search or confirm remote work arrangement" },
         { month: add(1), action: "Register with local authorities on arrival" },
         { month: add(2), action: "Sort local bank account, NIF/tax number" },
-        { month: add(2), action: "You're in. EU freedom of movement — no visa required." },
+        { month: add(2), action: "You're in. EU freedom of movement — no visa required.", final: true },
       ],
     };
   }
-
   if (visaDifficulty <= 2) {
     return {
       months: "3–6 months",
@@ -115,11 +92,10 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
         { month: add(1), action: "Submit visa application at consulate" },
         { month: add(2), action: "Processing period (2–4 months typical)" },
         { month: add(5), action: "Visa issued — book flights, sort accommodation" },
-        { month: add(6), action: "You're in." },
+        { month: add(6), action: "You're in.", final: true },
       ],
     };
   }
-
   if (visaDifficulty <= 3) {
     return {
       months: "6–12 months",
@@ -128,11 +104,10 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
         { month: add(2), action: "Employer submits work permit application" },
         { month: add(4), action: "Processing period (3–6 months)" },
         { month: add(9), action: "Permit issued — arrange relocation" },
-        { month: add(11), action: "You're in." },
+        { month: add(11), action: "You're in.", final: true },
       ],
     };
   }
-
   return {
     months: "12–18 months",
     steps: [
@@ -141,12 +116,10 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean): {
       { month: add(5), action: "Visa application submitted with full documentation" },
       { month: add(10), action: "Processing + possible interview or biometrics" },
       { month: add(15), action: "Visa issued" },
-      { month: add(17), action: "You're in." },
+      { month: add(17), action: "You're in.", final: true },
     ],
   };
 }
-
-// ── visa checklist data ───────────────────────────────────────────────────
 
 const VISA_DOCS: Record<string, string[]> = {
   default: [
@@ -205,14 +178,23 @@ function getVisaChecklist(slug: string): string[] {
   return VISA_DOCS[slug] ?? VISA_DOCS.default;
 }
 
-// ── types ──────────────────────────────────────────────────────────────────
-
 interface Props {
   country: CountryWithData;
   allCountries: CountryWithData[];
 }
 
-// ── component ──────────────────────────────────────────────────────────────
+// ── Inline style constants ─────────────────────────────────────────────────
+
+const S = {
+  bg: '#050508',
+  card: '#0c0c0f',
+  border: 'rgba(255,255,255,0.07)',
+  borderMd: 'rgba(255,255,255,0.12)',
+  dim: 'rgba(255,255,255,0.38)',
+  dimmer: 'rgba(255,255,255,0.2)',
+  serif: "'DM Serif Display', Georgia, serif",
+  sans: "'Inter', sans-serif",
+};
 
 export default function PersonalisedReport({ country, allCountries }: Props) {
   const router = useRouter();
@@ -225,14 +207,12 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const [otherMatches, setOtherMatches] = useState<CountryMatch[]>([]);
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // AI headline state
   const [headline, setHeadline] = useState<string | null>(null);
   const [headlineLoading, setHeadlineLoading] = useState(false);
-
-  // Salary calculator state (Pro)
   const [customSalary, setCustomSalary] = useState<string>("");
   const [useCustom, setUseCustom] = useState(false);
+  // Interactive checklist state
+  const [checked, setChecked] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     async function load() {
@@ -289,10 +269,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     }
   }, [loading, answers, router]);
 
-  // ── Generate AI headline once answers + derived data are ready ────────────
   useEffect(() => {
     if (loading || !answers) return;
-
     const userRole = JOB_ROLES.find((r) => r.key === answers.jobRole) ?? JOB_ROLES[0];
     const grossSalary = data[userRole.salaryKey] as number;
     const { monthly: takeHomeMonthly } = calcTakeHome(grossSalary, data.incomeTaxRateMid, data.socialSecurityRate);
@@ -301,56 +279,36 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
     const isEU = EU_PASSPORTS.includes((answers.passport ?? "").toLowerCase());
     const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
-
     setHeadlineLoading(true);
-
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
-
     fetch("/api/generate-headline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
       body: JSON.stringify({
-        countryName: country.name,
-        countrySlug: country.slug,
-        currency: country.currency,
-        grossSalary,
-        takeHomeMonthly,
-        disposable,
-        disposableUSD,
-        taxRate: data.incomeTaxRateMid,
-        ssRate: data.socialSecurityRate,
-        rentMonthly: data.costRentCityCentre,
-        moveReason: answers.moveReason,
-        jobRole: userRole.label,
-        passport: answers.passport,
-        safetyScore: data.scoreSafety,
-        qualityOfLife: data.scoreQualityOfLife,
-        internetSpeed: data.scoreInternetSpeed,
-        visaDifficulty: data.visaDifficulty,
-        isEU,
-        isEnglish,
-        priorities: answers.priorities,
-        matchPercent: match?.percent ?? 0,
-        rentBudget: answers.rentBudget,
-        cityVibe: answers.cityVibe,
-        languages: answers.languages,
-        dealBreakers: answers.dealBreakers,
+        countryName: country.name, countrySlug: country.slug, currency: country.currency,
+        grossSalary, takeHomeMonthly, disposable, disposableUSD, taxRate: data.incomeTaxRateMid,
+        ssRate: data.socialSecurityRate, rentMonthly: data.costRentCityCentre,
+        moveReason: answers.moveReason, jobRole: userRole.label, passport: answers.passport,
+        safetyScore: data.scoreSafety, qualityOfLife: data.scoreQualityOfLife,
+        internetSpeed: data.scoreInternetSpeed, visaDifficulty: data.visaDifficulty,
+        isEU, isEnglish, priorities: answers.priorities, matchPercent: match?.percent ?? 0,
+        rentBudget: answers.rentBudget, cityVibe: answers.cityVibe,
+        languages: answers.languages, dealBreakers: answers.dealBreakers,
       }),
     })
       .then((r) => r.json())
       .then((d) => { if (d.headline) setHeadline(d.headline); })
-      .catch(() => { /* silent — fallback shown */ })
+      .catch(() => {})
       .finally(() => { clearTimeout(timeout); setHeadlineLoading(false); });
-
     return () => { controller.abort(); clearTimeout(timeout); };
   }, [loading, answers, country, data, match]);
 
   if (loading || !answers) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <div className="w-32 h-1 bg-[#1a1a1a]">
-        <div className="h-full bg-accent animate-pulse" style={{ width: "60%" }} />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: S.bg }}>
+      <div style={{ width: 120, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ width: '60%', height: '100%', background: 'rgba(255,255,255,0.5)', animation: 'pulse 1.5s infinite' }} />
       </div>
     </div>
   );
@@ -359,25 +317,16 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
 
   const userRole = JOB_ROLES.find((r) => r.key === answers.jobRole) ?? JOB_ROLES[0];
   const roleAvgSalary = data[userRole.salaryKey] as number;
-
   const parsedCustom = useCustom && customSalary ? parseInt(customSalary.replace(/[^0-9]/g, ""), 10) : 0;
   const grossSalary = (isPro && useCustom && parsedCustom > 0) ? parsedCustom : roleAvgSalary;
-
-  const { annual: takeHomeAnnual, monthly: takeHomeMonthly } = calcTakeHome(
-    grossSalary, data.incomeTaxRateMid, data.socialSecurityRate
-  );
-
+  const { annual: takeHomeAnnual, monthly: takeHomeMonthly } = calcTakeHome(grossSalary, data.incomeTaxRateMid, data.socialSecurityRate);
   const rentUSD = data.costRentCityCentre * (TO_USD[country.currency] ?? 1);
   const maxRentUSD = RENT_MAX[answers.rentBudget ?? "any"] ?? 99999;
   const rentFits = rentUSD <= maxRentUSD;
   const rentPct = Math.round(((rentUSD - maxRentUSD) / maxRentUSD) * 100);
-
-  const monthlyTotal =
-    data.costRentCityCentre + data.costGroceriesMonthly +
-    data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
+  const monthlyTotal = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
   const disposable = takeHomeMonthly - monthlyTotal;
   const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
-
   const isEU = EU_PASSPORTS.includes((answers.passport ?? "").toLowerCase());
   const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
   const dealBreakers = answers.dealBreakers ?? [];
@@ -385,7 +334,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const hasHighTaxFlag = dealBreakers.includes("lowtax") && data.incomeTaxRateMid > 30;
   const hasCrimeFlag = dealBreakers.includes("lowcrime") && (data.scoreCrimeRate ?? 0) < 7;
 
-  // Use AI headline if available, otherwise fallback
   const displayHeadline = headline ?? getFallbackNarrative(
     country.slug, country.name, cs, grossSalary, takeHomeMonthly,
     disposable, disposableUSD, data.incomeTaxRateMid, data.scoreSafety, data.scoreQualityOfLife
@@ -407,7 +355,6 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   if (hasCrimeFlag) warnings.push({ title: "Crime rate below your threshold", sub: "You flagged low crime as a deal breaker. Check neighbourhood-level data before deciding." });
   if (data.visaDifficulty >= 4 && !isEU) warnings.push({ title: `Visa difficulty: ${data.visaDifficulty}/5`, sub: "This country has restrictive immigration. Expect a longer, more expensive process." });
 
-  const visaColor = getVisaColor(data.visaDifficulty);
   const priorities = answers.priorities ?? [];
   const priorityLabelMap: Record<string, string> = {
     salary: "Salary", affordability: "Affordability", quality: "Quality of Life",
@@ -417,553 +364,614 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const timeline = getMoveTimeline(data.visaDifficulty, isEU);
   const visaDocs = getVisaChecklist(country.slug);
 
+  // Breakdown bar %s
+  const total = takeHomeMonthly || 1;
+  const rPct = Math.round((data.costRentCityCentre / total) * 100);
+  const gPct = Math.round((data.costGroceriesMonthly / total) * 100);
+  const tPct = Math.round((data.costTransportMonthly / total) * 100);
+  const uPct = Math.round((data.costUtilitiesMonthly / total) * 100);
+  const freePct = Math.max(0, 100 - rPct - gPct - tPct - uPct);
+
+  const visaColor = getVisaColor(data.visaDifficulty);
+
+  const toggleCheck = (i: number) => setChecked(prev => ({ ...prev, [i]: !prev[i] }));
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8]" style={{ fontFamily: "var(--font-body, sans-serif)" }}>
+    <div style={{ background: S.bg, color: '#fff', minHeight: '100vh', fontFamily: S.sans, overflowX: 'hidden' }}>
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur border-b-2 border-[#2a2a2a]">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-3.5 h-3.5 bg-accent border-2 border-[#f0f0e8]" />
-            <span className="font-heading text-base font-extrabold uppercase tracking-tight">Origio</span>
+      {/* Nav — reuse existing component */}
+      <Nav countries={[]} onCountrySelect={() => {}} />
+
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: 'clamp(90px,10vw,110px) clamp(20px,4vw,40px) 80px' }}>
+
+        {/* ── BREADCRUMB ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, marginBottom: 48 }}>
+          <Link href="/wizard/results" style={{ color: S.dim, textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
+            Results
           </Link>
-          <button onClick={() => router.back()} className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#888880] hover:text-[#f0f0e8] transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </button>
+          <span style={{ color: S.dimmer }}>/</span>
+          <Link href={`/country/${country.slug}`} style={{ color: S.dim, textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
+            {country.name}
+          </Link>
+          <span style={{ color: S.dimmer }}>/</span>
+          <span style={{ color: 'rgba(255,255,255,0.7)' }}>Your report</span>
         </div>
-      </nav>
 
-      {/* Breadcrumb */}
-      <div className="max-w-6xl mx-auto px-6 pt-5">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-bold text-[#888880]">
-          <Link href="/wizard/results" className="hover:text-[#f0f0e8] transition-colors">Results</Link>
-          <span>/</span>
-          <Link href={`/country/${country.slug}`} className="hover:text-[#f0f0e8] transition-colors">{country.name}</Link>
-          <span>/</span>
-          <span className="text-accent">Your report</span>
-        </div>
-      </div>
-
-      <main className="max-w-6xl mx-auto px-6 pb-20 space-y-0">
-
-        {/* ── HERO ───────────────────────────────────────────────────────── */}
-        <section className="pt-10 pb-14 text-center">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <span className="text-6xl leading-none">{country.flagEmoji}</span>
+        {/* ── HERO ── */}
+        <div style={{ paddingBottom: 56, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* Flag + match badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
+            <span style={{ fontSize: 64, lineHeight: 1 }}>{country.flagEmoji}</span>
             {match && (
-              <span className="flex items-center gap-2 px-3 py-1.5 border-2" style={{ borderColor: matchPercentColor(match.percent), boxShadow: `3px 3px 0 ${matchPercentColor(match.percent)}` }}>
-                <span className="font-heading text-lg font-extrabold" style={{ color: matchPercentColor(match.percent) }}>{match.percent}%</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: matchPercentColor(match.percent) }}>match</span>
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(255,255,255,0.06)', border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '10px 18px' }}>
+                <span style={{ fontFamily: S.serif, fontSize: 32, color: '#fff', lineHeight: 1 }}>{match.percent}%</span>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>Match</span>
+              </div>
             )}
           </div>
-          <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-6">
+
+          {/* Context line */}
+          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, marginBottom: 20 }}>
             {country.name} · {userRole.label}{answers.passport ? ` · ${answers.passport} passport` : ""}
           </p>
 
-          {/* Headline — AI generated or fallback */}
-          <div className="min-h-[80px] flex items-center justify-center mb-8">
+          {/* Headline */}
+          <div style={{ minHeight: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
             {headlineLoading && !headline ? (
-              <div className="space-y-2 w-full max-w-2xl mx-auto">
-                <div className="h-7 bg-[#1a1a1a] animate-pulse w-full" />
-                <div className="h-7 bg-[#1a1a1a] animate-pulse w-4/5 mx-auto" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 720 }}>
+                <div style={{ height: 28, background: 'rgba(255,255,255,0.06)', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
+                <div style={{ height: 28, background: 'rgba(255,255,255,0.06)', borderRadius: 6, width: '80%', margin: '0 auto', animation: 'pulse 1.5s infinite' }} />
               </div>
             ) : (
-              <p className="font-heading text-[28px] sm:text-[38px] leading-[1.15] font-extrabold tracking-[-0.01em] max-w-3xl mx-auto transition-opacity duration-300">
+              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(28px, 4.5vw, 52px)', fontWeight: 400, lineHeight: 1.12, color: '#fff', maxWidth: 720, margin: 0 }}>
                 {displayHeadline}
-              </p>
+              </h1>
             )}
           </div>
 
+          {/* Reason tags */}
           {match?.reasons && match.reasons.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center mb-8">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
               {match.reasons.map((r) => (
-                <span key={r} className="text-[11px] font-bold px-2.5 py-1 border-2 border-accent text-accent uppercase tracking-wide">{r}</span>
+                <span key={r} style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${S.borderMd}`, borderRadius: 100, padding: '5px 14px', color: 'rgba(255,255,255,0.6)' }}>
+                  {r}
+                </span>
               ))}
             </div>
           )}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <a href="#visa" className="inline-block px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>
+
+          {/* CTA buttons */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <a href="#visa"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '14px 32px', fontSize: 14, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', boxShadow: '0 2px 20px rgba(255,255,255,0.12)' }}>
               View visa path →
             </a>
             {otherMatches[0] && (
               <Link href={`/country/${otherMatches[0].country.slug}/personalised`}
-                className="inline-block px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-[#0f0f0f] text-[#f0f0e8] border-2 border-[#2a2a2a]" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'rgba(255,255,255,0.65)', border: `1px solid ${S.borderMd}`, borderRadius: 100, padding: '14px 28px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                 Compare with {otherMatches[0].country.name}
               </Link>
             )}
           </div>
-        </section>
+        </div>
 
-        {/* ── SALARY ─────────────────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Salary</h2>
-            <p className="text-xs text-[#888880] hidden md:block">{userRole.label} · {country.currency}</p>
+        {/* ── SALARY ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Salary</h2>
+            <span style={{ fontSize: 12, color: S.dim, letterSpacing: '0.04em' }}>{userRole.label} · {country.currency}</span>
           </div>
 
+          {/* Pro salary calculator */}
           {isPro && (
-            <div className="mb-6 border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-              <div className="flex items-center gap-2 mb-3">
-                <Calculator className="w-3.5 h-3.5 text-accent" />
-                <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Salary calculator</p>
+            <div style={{ marginBottom: 16, background: S.card, border: `1px solid ${S.borderMd}`, borderRadius: 14, padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <Calculator style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.5)' }} />
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>Salary calculator</span>
               </div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center border-2 border-[#2a2a2a] focus-within:border-accent transition-colors">
-                  <span className="px-3 text-[#888880] font-bold text-sm">{cs}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                  <span style={{ padding: '0 12px', color: S.dim, fontWeight: 700, fontSize: 14 }}>{cs}</span>
                   <input
                     type="number"
                     placeholder={roleAvgSalary.toLocaleString()}
                     value={customSalary}
                     onChange={e => { setCustomSalary(e.target.value); setUseCustom(true); }}
-                    className="w-36 px-2 py-2.5 bg-transparent text-[#f0f0e8] text-sm font-bold outline-none"
+                    style={{ width: 140, padding: '10px 8px', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', outline: 'none' }}
                   />
-                  <span className="px-3 text-[#888880] text-xs font-bold">/yr</span>
+                  <span style={{ padding: '0 12px', color: S.dim, fontSize: 12, fontWeight: 700 }}>/yr</span>
                 </div>
-                <button
-                  onClick={() => { setUseCustom(false); setCustomSalary(""); }}
-                  className="text-[10px] font-bold text-[#888880] hover:text-[#f0f0e8] transition-colors uppercase tracking-widest"
-                >
+                <button onClick={() => { setUseCustom(false); setCustomSalary(""); }}
+                  style={{ fontSize: 11, fontWeight: 600, color: S.dim, background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Reset to average
                 </button>
               </div>
               {useCustom && parsedCustom > 0 && (
-                <p className="text-[11px] text-[#888880] mt-2">
+                <p style={{ fontSize: 11, color: S.dim, marginTop: 8 }}>
                   Showing results for {cs}{parsedCustom.toLocaleString()}/yr — role average is {cs}{roleAvgSalary.toLocaleString()}/yr
                 </p>
               )}
             </div>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-5 mb-6">
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">Gross salary</p>
-              <p className="font-heading text-4xl font-extrabold leading-none">{cs}{grossSalary.toLocaleString()}</p>
-              <p className="text-xs text-[#888880] mt-2">{isPro && useCustom && parsedCustom > 0 ? "your salary" : `/ year as ${userRole.label}`}</p>
+          {/* 3 stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+            {/* Gross */}
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 12 }}>Gross salary</div>
+              <div style={{ fontFamily: S.serif, fontSize: 38, color: '#fff', lineHeight: 1, marginBottom: 6 }}>{cs}{grossSalary.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: S.dim }}>{isPro && useCustom && parsedCustom > 0 ? "your salary" : `per year as ${userRole.label}`}</div>
             </div>
 
-            <div className="relative border-2 bg-[#0f0f0f] p-5" style={{ borderColor: isPro ? "#00ffd5" : "#2a2a2a", boxShadow: isPro ? "3px 3px 0 #00ffd5" : "3px 3px 0 #2a2a2a" }}>
-              {isPro && <div className="absolute -top-2.5 left-3 bg-accent text-[#0a0a0a] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Take-home</div>}
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3 mt-1">After tax + social security</p>
-              <div style={{ filter: isPro ? "none" : "blur(8px)", userSelect: isPro ? "auto" : "none" }}>
-                <p className="font-heading text-4xl font-extrabold leading-none text-accent">{cs}{takeHomeAnnual.toLocaleString()}</p>
-                <p className="text-xs text-[#888880] mt-2">~ {cs}{takeHomeMonthly.toLocaleString()} / month</p>
+            {/* Take-home */}
+            <div style={{ position: 'relative', background: S.card, border: `1px solid ${S.borderMd}`, borderRadius: 14, padding: 24, overflow: 'hidden' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 12 }}>After tax + social security</div>
+              <div style={{ filter: isPro ? 'none' : 'blur(8px)', userSelect: isPro ? 'auto' : 'none' }}>
+                <div style={{ fontFamily: S.serif, fontSize: 38, color: '#fff', lineHeight: 1, marginBottom: 6 }}>{cs}{takeHomeAnnual.toLocaleString()}</div>
+                <div style={{ fontSize: 12, color: S.dim }}>~ {cs}{takeHomeMonthly.toLocaleString()} / month</div>
               </div>
               {!isPro && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Link href="/pro" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a0a0a] border-2 border-accent text-[10px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "2px 2px 0 #00ffd5" }}>
-                    <Lock className="w-3 h-3" /> Pro
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Link href="/pro" style={{ display: 'flex', alignItems: 'center', gap: 8, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    <Lock style={{ width: 12, height: 12 }} /> Unlock · Pro
                   </Link>
                 </div>
               )}
             </div>
 
-            <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-3">After all costs</p>
-              <div style={{ filter: isPro ? "none" : "blur(8px)", userSelect: isPro ? "auto" : "none" }}>
-                <p className={`font-heading text-4xl font-extrabold leading-none ${disposable > 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}>
+            {/* Disposable */}
+            <div style={{ position: 'relative', background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24, overflow: 'hidden' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 12 }}>After all costs</div>
+              <div style={{ filter: isPro ? 'none' : 'blur(8px)', userSelect: isPro ? 'auto' : 'none' }}>
+                <div style={{ fontFamily: S.serif, fontSize: 38, lineHeight: 1, marginBottom: 6, color: '#fff' }}>
                   {disposable > 0 ? "+" : ""}{cs}{Math.abs(disposable).toLocaleString()}
-                </p>
-                <p className="text-xs text-[#888880] mt-2">/ month {disposable > 0 ? "free" : "shortfall"}</p>
+                </div>
+                <div style={{ fontSize: 12, color: S.dim }}>/ month {disposable > 0 ? "free" : "shortfall"}</div>
               </div>
               {!isPro && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Link href="/pro" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0a0a0a] border-2 border-accent text-[10px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "2px 2px 0 #00ffd5" }}>
-                    <Lock className="w-3 h-3" /> Pro
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Link href="/pro" style={{ display: 'flex', alignItems: 'center', gap: 8, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    <Lock style={{ width: 12, height: 12 }} /> Unlock · Pro
                   </Link>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Monthly breakdown bar */}
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5">
-            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-4">
-              Monthly take-home · {cs}{takeHomeMonthly.toLocaleString()}
-            </p>
-            <div className="flex h-9 border-2 border-[#2a2a2a] overflow-hidden mb-4">
-              {(() => {
-                const total = takeHomeMonthly || 1;
-                const rPct = Math.round((data.costRentCityCentre / total) * 100);
-                const gPct = Math.round((data.costGroceriesMonthly / total) * 100);
-                const tPct = Math.round((data.costTransportMonthly / total) * 100);
-                const uPct = Math.round((data.costUtilitiesMonthly / total) * 100);
-                const freePct = Math.max(0, 100 - rPct - gPct - tPct - uPct);
-                return (
-                  <>
-                    <div style={{ width: rPct + "%", background: "#00ffd5" }} className="flex items-center justify-center text-[9px] font-extrabold text-[#0a0a0a] uppercase overflow-hidden px-1">{rPct > 8 ? "Rent" : ""}</div>
-                    <div style={{ width: gPct + "%", background: "#4ade80" }} className="border-l-2 border-[#0a0a0a]" />
-                    <div style={{ width: tPct + "%", background: "#facc15" }} className="border-l-2 border-[#0a0a0a]" />
-                    <div style={{ width: uPct + "%", background: "#a78bfa" }} className="border-l-2 border-[#0a0a0a]" />
-                    <div style={{ width: freePct + "%", background: "#1a1a1a" }} className="border-l-2 border-[#0a0a0a] flex items-center justify-center text-[9px] font-extrabold text-[#f0f0e8] uppercase overflow-hidden px-1">
-                      {freePct > 10 ? `Free ${cs}${Math.abs(disposable).toLocaleString()}` : ""}
-                    </div>
-                  </>
-                );
-              })()}
+          {/* Breakdown bar */}
+          <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 0 }}>
+              Monthly take-home breakdown · {cs}{takeHomeMonthly.toLocaleString()}
             </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[11px]">
+            <div style={{ height: 36, borderRadius: 8, overflow: 'hidden', display: 'flex', margin: '16px 0' }}>
+              <div style={{ width: rPct + '%', height: '100%', background: 'rgba(255,255,255,0.9)', transition: 'width 0.6s' }} />
+              <div style={{ width: gPct + '%', height: '100%', background: 'rgba(255,255,255,0.5)', transition: 'width 0.6s' }} />
+              <div style={{ width: tPct + '%', height: '100%', background: 'rgba(255,255,255,0.3)', transition: 'width 0.6s' }} />
+              <div style={{ width: uPct + '%', height: '100%', background: 'rgba(255,255,255,0.18)', transition: 'width 0.6s' }} />
+              <div style={{ width: freePct + '%', height: '100%', background: 'rgba(255,255,255,0.06)', transition: 'width 0.6s' }} />
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
               {[
-                { label: "Rent", val: data.costRentCityCentre, color: "#00ffd5" },
-                { label: "Groceries", val: data.costGroceriesMonthly, color: "#4ade80" },
-                { label: "Transport", val: data.costTransportMonthly, color: "#facc15" },
-                { label: "Utilities", val: data.costUtilitiesMonthly, color: "#a78bfa" },
-              ].map((item) => (
-                <span key={item.label} className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5" style={{ background: item.color }} />
-                  <span className="font-bold">{item.label}</span>
-                  <span className="text-[#888880]">{cs}{item.val.toLocaleString()}</span>
-                </span>
+                { label: 'Rent', val: data.costRentCityCentre, bg: 'rgba(255,255,255,0.9)' },
+                { label: 'Groceries', val: data.costGroceriesMonthly, bg: 'rgba(255,255,255,0.5)' },
+                { label: 'Transport', val: data.costTransportMonthly, bg: 'rgba(255,255,255,0.3)' },
+                { label: 'Utilities', val: data.costUtilitiesMonthly, bg: 'rgba(255,255,255,0.18)' },
+                { label: 'Free', val: Math.abs(disposable), bg: 'rgba(255,255,255,0.3)' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: S.dim }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.bg, flexShrink: 0 }} />
+                  {item.label} <span style={{ color: 'rgba(255,255,255,0.6)', marginLeft: 4 }}>{cs}{item.val.toLocaleString()}</span>
+                </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── FITS / DOESN'T FIT ─────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">What fits, what doesn't</h2>
-          <div className="grid lg:grid-cols-2 gap-5">
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-              <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
-                <p className="text-[10px] font-bold text-[#4ade80] uppercase tracking-widest">Fits · {wins.length}</p>
+        {/* ── WHAT FITS / DOESN'T ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>What fits, what doesn't</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {/* Fits */}
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
+                Fits · {wins.length}
               </div>
-              {wins.length === 0 && <p className="px-5 py-4 text-sm text-[#888880]">No strong matches found for your criteria.</p>}
+              {wins.length === 0 && <p style={{ padding: '16px 20px', fontSize: 13, color: S.dim }}>No strong matches found for your criteria.</p>}
               {wins.map((w, i) => (
-                <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < wins.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                  <Check className="w-4 h-4 text-[#4ade80] flex-shrink-0 mt-0.5" />
-                  <div><p className="text-sm font-bold">{w.title}</p><p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p></div>
+                <div key={i} style={{ display: 'flex', gap: 14, padding: '16px 20px', borderBottom: i < wins.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+                  <span style={{ flexShrink: 0, marginTop: 2, fontSize: 14 }}>✓</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 3 }}>{w.title}</div>
+                    <div style={{ fontSize: 12, color: S.dim, lineHeight: 1.5 }}>{w.sub}</div>
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-              <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
-                <p className="text-[10px] font-bold text-[#f87171] uppercase tracking-widest">Watch out · {warnings.length}</p>
+            {/* Watch out */}
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                Watch out · {warnings.length}
               </div>
-              {warnings.length === 0 && <div className="px-5 py-4"><p className="text-sm text-[#888880]">No deal-breakers flagged.</p></div>}
+              {warnings.length === 0 && <p style={{ padding: '16px 20px', fontSize: 13, color: S.dim }}>No deal-breakers flagged.</p>}
               {warnings.map((w, i) => (
-                <div key={i} className={`flex gap-3 px-5 py-3.5 ${i < warnings.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                  <X className="w-4 h-4 text-[#f87171] flex-shrink-0 mt-0.5" />
-                  <div><p className="text-sm font-bold">{w.title}</p><p className="text-[11px] text-[#888880] mt-0.5">{w.sub}</p></div>
+                <div key={i} style={{ display: 'flex', gap: 14, padding: '16px 20px', borderBottom: i < warnings.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+                  <span style={{ flexShrink: 0, marginTop: 2, fontSize: 14, color: 'rgba(255,130,130,0.8)' }}>!</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 3 }}>{w.title}</div>
+                    <div style={{ fontSize: 12, color: S.dim, lineHeight: 1.5 }}>{w.sub}</div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── VISA PATH ──────────────────────────────────────────────────── */}
-        <section id="visa" className="py-14 border-t-2 border-[#2a2a2a]">
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">
-            Visa <span className="text-[#888880]">— your route</span>
-          </h2>
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-            <div className="grid grid-cols-3 border-b-2 border-[#2a2a2a]">
-              <div className="p-5 border-r-2 border-[#2a2a2a]">
-                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Top route</p>
-                <p className="font-heading text-lg font-extrabold text-accent leading-tight">{data.visaPopularRoutes?.[0] ?? "Work Permit"}</p>
+        {/* ── VISA PATH ── */}
+        <div id="visa" style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>
+              Visa — your route
+            </h2>
+          </div>
+          <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            {/* 3-col stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderBottom: `1px solid ${S.border}` }}>
+              <div style={{ padding: '22px 24px', borderRight: `1px solid ${S.border}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>Top route</div>
+                <div style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', marginBottom: 4 }}>{data.visaPopularRoutes?.[0] ?? "Work Permit"}</div>
+                {data.visaPopularRoutes?.[1] && <div style={{ fontSize: 12, color: S.dim }}>{data.visaPopularRoutes[1]}</div>}
               </div>
-              <div className="p-5 border-r-2 border-[#2a2a2a]">
-                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Difficulty</p>
-                <div className="flex items-center gap-2">
-                  <p className="font-heading text-xl font-extrabold" style={{ color: visaColor }}>{data.visaDifficulty}<span className="text-[#888880] text-sm">/5</span></p>
-                  <div className="flex gap-0.5">{[1,2,3,4,5].map(n => <span key={n} className="w-1.5 h-5" style={{ background: n <= data.visaDifficulty ? visaColor : "#1a1a1a" }} />)}</div>
+              <div style={{ padding: '22px 24px', borderRight: `1px solid ${S.border}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>Difficulty</div>
+                <div style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', marginBottom: 8 }}>
+                  {data.visaDifficulty}<span style={{ fontSize: 14, color: S.dim }}>/5</span>
                 </div>
-                <p className="text-[11px] text-[#888880] mt-1">{getVisaLabel(data.visaDifficulty)}</p>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[1,2,3,4,5].map(n => (
+                    <div key={n} style={{ width: 14, height: 4, borderRadius: 2, background: n <= data.visaDifficulty ? '#fff' : 'rgba(255,255,255,0.1)' }} />
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: S.dim, marginTop: 6 }}>{getVisaLabel(data.visaDifficulty)}</div>
               </div>
-              <div className="p-5">
-                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">Passport</p>
-                <p className="font-heading text-xl font-extrabold">{isEU ? <span className="text-[#4ade80]">EU ✓</span> : <span>{answers.passport ?? "—"}</span>}</p>
-                <p className="text-[11px] text-[#888880] mt-1">{isEU ? "Freedom of movement" : "Work permit required"}</p>
+              <div style={{ padding: '22px 24px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>Passport</div>
+                <div style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', marginBottom: 4 }}>
+                  {isEU ? "EU ✓" : (answers.passport ?? "—")}
+                </div>
+                <div style={{ fontSize: 12, color: S.dim }}>{isEU ? "Freedom of movement" : "Work permit required"}</div>
               </div>
             </div>
-            <div className="p-6">
-              <p className="text-xs text-[#888880] leading-relaxed mb-5">{data.visaNotes}</p>
+            {/* Body */}
+            <div style={{ padding: 24 }}>
+              <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.65, marginBottom: 18 }}>{data.visaNotes}</p>
               {data.visaPopularRoutes?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {data.visaPopularRoutes.map((r: string) => <span key={r} className="text-[10px] font-bold px-2 py-1 border-2 border-accent text-accent uppercase">{r}</span>)}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                  {data.visaPopularRoutes.map((r: string) => (
+                    <span key={r} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', border: `1px solid ${S.borderMd}`, borderRadius: 100, padding: '4px 12px', color: 'rgba(255,255,255,0.55)' }}>
+                      {r}
+                    </span>
+                  ))}
                 </div>
               )}
-              <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">Official immigration site →</a>
+              <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}>
+                Official immigration site →
+              </a>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── VISA CHECKLIST ─────────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Visa checklist</h2>
-            {!isPro && <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Pro — full list</span>}
+        {/* ── VISA CHECKLIST ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Visa checklist</h2>
+            <span style={{ fontSize: 12, color: S.dim }}>Documents you'll need</span>
           </div>
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-            <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Documents you'll need</p>
-            </div>
+          <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            {/* First 3 — always visible + interactive */}
             {visaDocs.slice(0, 3).map((doc, i) => (
-              <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#1a1a1a]">
-                <div className="w-4 h-4 border-2 border-[#2a2a2a] flex-shrink-0" />
-                <p className="text-sm font-bold">{doc}</p>
+              <div key={i} onClick={() => toggleCheck(i)}
+                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer' }}>
+                <div style={{ width: 18, height: 18, border: `1px solid ${checked[i] ? '#fff' : S.borderMd}`, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: checked[i] ? '#fff' : 'transparent', transition: 'background 0.15s' }}>
+                  {checked[i] && <span style={{ fontSize: 10, fontWeight: 700, color: '#0a0a0a' }}>✓</span>}
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 500, color: checked[i] ? S.dim : 'rgba(255,255,255,0.8)', textDecoration: checked[i] ? 'line-through' : 'none', textDecorationColor: S.dimmer }}>
+                  {doc}
+                </span>
               </div>
             ))}
-            <div className="relative">
-              <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
-                {visaDocs.slice(3).map((doc, i) => (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-[#1a1a1a] last:border-0">
-                    <div className="w-4 h-4 border-2 border-[#2a2a2a] flex-shrink-0" />
-                    <p className="text-sm font-bold">{doc}</p>
-                  </div>
-                ))}
+            {/* Remaining — blurred for free users */}
+            <div style={{ position: 'relative' }}>
+              <div style={{ filter: isPro ? 'none' : 'blur(5px)', userSelect: isPro ? 'auto' : 'none', pointerEvents: isPro ? 'auto' : 'none' }}>
+                {visaDocs.slice(3).map((doc, i) => {
+                  const idx = i + 3;
+                  return (
+                    <div key={idx} onClick={() => isPro && toggleCheck(idx)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: idx < visaDocs.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none', cursor: isPro ? 'pointer' : 'default' }}>
+                      <div style={{ width: 18, height: 18, border: `1px solid ${checked[idx] ? '#fff' : S.borderMd}`, borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: checked[idx] ? '#fff' : 'transparent' }}>
+                        {checked[idx] && <span style={{ fontSize: 10, fontWeight: 700, color: '#0a0a0a' }}>✓</span>}
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: checked[idx] ? S.dim : 'rgba(255,255,255,0.8)', textDecoration: checked[idx] ? 'line-through' : 'none' }}>
+                        {doc}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
               {!isPro && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-                    <Lock className="w-3.5 h-3.5" /> Full checklist — Pro
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Link href="/pro" style={{ display: 'flex', alignItems: 'center', gap: 8, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '14px 22px', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    <Lock style={{ width: 14, height: 14 }} /> Full checklist · Origio Pro
                   </Link>
                 </div>
               )}
             </div>
             {isPro && (
-              <div className="px-5 py-3 border-t border-[#1a1a1a] bg-[#0a0a0a]">
-                <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-accent uppercase tracking-wider hover:underline">
+              <div style={{ padding: '12px 20px', borderTop: `1px solid rgba(255,255,255,0.04)`, background: 'rgba(255,255,255,0.02)' }}>
+                <a href={data.visaOfficialUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
                   Official immigration site for full requirements →
                 </a>
               </div>
             )}
           </div>
-        </section>
+        </div>
 
-        {/* ── MOVE TIMELINE ──────────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Move timeline</h2>
-            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">{timeline.months}</p>
+        {/* ── MOVE TIMELINE ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Move timeline</h2>
+            <span style={{ fontSize: 12, color: S.dim }}>{timeline.months}</span>
           </div>
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-            <div className="border-b-2 border-[#2a2a2a] px-5 py-3">
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">
-                Realistic path to {country.name} — based on {isEU ? "EU freedom of movement" : `visa difficulty ${data.visaDifficulty}/5`}
-              </p>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {timeline.steps.map((step, i) => (
-              <div key={i} className={`flex items-start gap-4 px-5 py-4 ${i < timeline.steps.length - 1 ? "border-b border-[#111]" : ""}`}>
-                <div className="flex-shrink-0 flex flex-col items-center">
-                  <div className={`w-2.5 h-2.5 rounded-full mt-1 ${i === timeline.steps.length - 1 ? "bg-accent" : "bg-[#2a2a2a]"}`} />
-                  {i < timeline.steps.length - 1 && <div className="w-px flex-1 bg-[#1a1a1a] mt-1 h-full min-h-[20px]" />}
+              <div key={i} style={{ display: 'flex', gap: 20, paddingBottom: i < timeline.steps.length - 1 ? 28 : 0, position: 'relative' }}>
+                {/* Left col: dot + line */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 16 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: (step as any).final ? '#fff' : 'rgba(255,255,255,0.15)', border: `1px solid ${(step as any).final ? '#fff' : S.borderMd}`, flexShrink: 0, marginTop: 2 }} />
+                  {i < timeline.steps.length - 1 && (
+                    <div style={{ width: 1, flex: 1, background: S.border, marginTop: 4, minHeight: 20 }} />
+                  )}
                 </div>
-                <div className="pb-2">
-                  <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-1">{step.month}</p>
-                  <p className={`text-sm font-bold ${i === timeline.steps.length - 1 ? "text-accent" : "text-[#f0f0e8]"}`}>{step.action}</p>
+                {/* Content */}
+                <div style={{ paddingBottom: 2 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: S.dim, marginBottom: 4 }}>{step.month}</div>
+                  <div style={{ fontSize: 14, fontWeight: (step as any).final ? 700 : 500, color: (step as any).final ? '#fff' : 'rgba(255,255,255,0.85)' }}>{step.action}</div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-[#888880] mt-3 px-1">Estimates based on typical processing times. Check official sources for current wait times.</p>
-        </section>
+          <p style={{ fontSize: 11, color: S.dimmer, marginTop: 24 }}>Estimates based on typical processing times. Check official sources for current wait times.</p>
+        </div>
 
-        {/* ── COST REALITY ───────────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight">Monthly costs</h2>
-            <p className="text-xs text-[#888880] hidden md:block">vs your budget</p>
+        {/* ── MONTHLY COSTS ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Monthly costs</h2>
+            <span style={{ fontSize: 12, color: S.dim }}>vs your budget</span>
           </div>
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-            <div className="grid grid-cols-[1fr_120px_100px] bg-[#0a0a0a] border-b-2 border-[#2a2a2a] px-5 py-3">
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Category</p>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Est.</p>
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest text-right">Status</p>
+          <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            {/* Header row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '12px 22px', background: 'rgba(255,255,255,0.03)', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: S.dim }}>
+              <span>Category</span>
+              <span style={{ textAlign: 'right' }}>Est.</span>
+              <span style={{ textAlign: 'right' }}>Status</span>
             </div>
-            <div className="relative">
-              <div style={{ filter: isPro ? "none" : "blur(6px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ filter: isPro ? 'none' : 'blur(6px)', userSelect: isPro ? 'auto' : 'none', pointerEvents: isPro ? 'auto' : 'none' }}>
                 {[
-                  { label: "Rent (1-bed, city centre)", val: data.costRentCityCentre, budgetKey: "rent" },
-                  { label: "Groceries", val: data.costGroceriesMonthly, budgetKey: "food" },
-                  { label: "Transport", val: data.costTransportMonthly, budgetKey: "transport" },
-                  { label: "Utilities", val: data.costUtilitiesMonthly, budgetKey: "utilities" },
-                  { label: "Eating out (×20 meals)", val: data.costEatingOut * 20, budgetKey: "dining" },
+                  { label: "Rent (1-bed, city centre)", val: data.costRentCityCentre, isRent: true },
+                  { label: "Groceries", val: data.costGroceriesMonthly, isRent: false },
+                  { label: "Transport", val: data.costTransportMonthly, isRent: false },
+                  { label: "Utilities", val: data.costUtilitiesMonthly, isRent: false },
+                  { label: "Eating out (×20 meals)", val: data.costEatingOut * 20, isRent: false },
                 ].map((item, i, arr) => (
-                  <div key={item.label} className={`grid grid-cols-[1fr_120px_100px] px-5 py-3.5 items-center ${i < arr.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                    <span className="text-sm font-bold">{item.label}</span>
-                    <p className="font-heading text-sm font-extrabold text-right">{cs}{item.val.toLocaleString()}</p>
-                    <div className="flex justify-end">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 border-2"
-                        style={item.budgetKey === "rent" && !rentFits ? { borderColor: "#f87171", color: "#f87171" } : { borderColor: "#4ade80", color: "#4ade80" }}>
-                        {item.budgetKey === "rent" && !rentFits ? `+${Math.abs(rentPct)}%` : "OK"}
-                      </span>
+                  <div key={item.label} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '14px 22px', alignItems: 'center', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)' }}>{item.label}</span>
+                    <span style={{ fontFamily: S.serif, fontSize: 16, color: '#fff', textAlign: 'right' }}>{cs}{item.val.toLocaleString()}</span>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      {item.isRent && !rentFits ? (
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid', borderRadius: 100, padding: '3px 10px', borderColor: 'rgba(255,100,100,0.4)', color: 'rgba(255,130,130,0.8)' }}>
+                          +{Math.abs(rentPct)}%
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid', borderRadius: 100, padding: '3px 10px', borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.45)' }}>
+                          OK
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
               {!isPro && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-                    <Lock className="w-3.5 h-3.5" /> Unlock breakdown — Pro
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Link href="/pro" style={{ display: 'flex', alignItems: 'center', gap: 10, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '14px 22px', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
+                    <Lock style={{ width: 14, height: 14 }} /> Unlock full breakdown · Origio Pro
                   </Link>
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-[1fr_120px_100px] px-5 py-4 bg-[#0a0a0a] items-center border-t-2 border-[#2a2a2a]">
-              <p className="font-heading text-sm font-extrabold uppercase tracking-tight">Total monthly</p>
-              <p className="font-heading text-xl font-extrabold text-accent text-right">{cs}{monthlyTotal.toLocaleString()}</p>
-              <div className="flex justify-end">
-                <span className={`text-[10px] font-extrabold uppercase px-2 py-1 ${disposable >= 0 ? "bg-[#4ade80] text-[#0a0a0a]" : "bg-[#f87171] text-[#0a0a0a]"}`}>
+            {/* Total row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '16px 22px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderTop: `1px solid ${S.borderMd}` }}>
+              <span style={{ fontFamily: S.serif, fontSize: 18, color: '#fff' }}>Total monthly</span>
+              <span style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', textAlign: 'right' }}>{cs}{monthlyTotal.toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', background: '#fff', color: '#0a0a0a', borderRadius: 100, padding: '4px 12px', whiteSpace: 'nowrap' }}>
                   {disposable >= 0 ? `${cs}${disposable.toLocaleString()} free` : "Over budget"}
                 </span>
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── QUALITY SCORES ─────────────────────────────────────────────── */}
-        <section className="py-14 border-t-2 border-[#2a2a2a]">
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">Scored against your priorities</h2>
-          <div className="grid md:grid-cols-2 gap-5">
-            <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-              <div className="px-5 py-3 border-b-2 border-[#2a2a2a]">
-                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">Score breakdown</p>
+        {/* ── SCORES ── */}
+        <div style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Scored against your priorities</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {/* Score breakdown */}
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>
+                Score breakdown
               </div>
-              {scoreBreakdown.map((item, i) => {
-                const Icon = SCORE_ICONS[item.label] ?? Wifi;
-                const isUserPriority = priorities.includes(Object.entries(priorityLabelMap).find(([, v]) => v === item.label)?.[0] ?? "");
-                return (
-                  <div key={item.label} className={`flex items-center gap-4 px-5 py-3 ${i < scoreBreakdown.length - 1 ? "border-b border-[#1a1a1a]" : ""}`}>
-                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: item.color }} />
-                    <p className="text-xs font-bold uppercase tracking-wider text-[#888880] flex-1">{item.label}</p>
-                    <div className="w-28 h-1.5 bg-[#1a1a1a]"><div className="h-full" style={{ width: `${(item.value / item.maxValue) * 100}%`, background: item.color }} /></div>
-                    <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: item.color }}>{Math.round(item.value * 10) / 10}</p>
-                    {isUserPriority && isPro && <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-accent text-accent flex-shrink-0">★ You</span>}
-                    {isUserPriority && !isPro && <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 border border-[#2a2a2a] text-[#2a2a2a] flex-shrink-0 select-none" style={{ filter: "blur(3px)" }}>★ You</span>}
+              {scoreBreakdown.map((item, i) => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < scoreBreakdown.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+                  <span style={{ fontSize: 15, flexShrink: 0, width: 18, textAlign: 'center' }}>{SCORE_EMOJI[item.label] ?? "📊"}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: S.dim, flex: 1 }}>{item.label}</span>
+                  <div style={{ width: 80, height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 3, flexShrink: 0 }}>
+                    <div style={{ height: '100%', width: `${(item.value / item.maxValue) * 100}%`, background: '#fff', borderRadius: 3 }} />
                   </div>
-                );
-              })}
+                  <span style={{ fontFamily: S.serif, fontSize: 16, color: '#fff', minWidth: 28, textAlign: 'right' }}>{Math.round(item.value * 10) / 10}</span>
+                </div>
+              ))}
             </div>
-            <div className="relative border-2 border-[#2a2a2a] bg-[#0f0f0f] p-6 flex flex-col overflow-hidden">
-              <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-4">Your priorities</p>
-              <div style={{ filter: isPro ? "none" : "blur(5px)", userSelect: isPro ? "auto" : "none", pointerEvents: isPro ? "auto" : "none" }}>
+
+            {/* Priorities */}
+            <div style={{ position: 'relative', background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>
+                Your priorities
+              </div>
+              <div style={{ padding: 20, filter: isPro ? 'none' : 'blur(5px)', userSelect: isPro ? 'auto' : 'none', pointerEvents: isPro ? 'auto' : 'none' }}>
                 {priorities.length > 0 ? (
-                  <ol className="space-y-3">
+                  <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {priorities.map((p, i) => {
                       const label = priorityLabelMap[p] ?? p;
                       const score = scoreBreakdown.find(s => s.label === label);
                       return (
-                        <li key={p} className="flex items-center gap-3">
-                          <span className="font-heading text-2xl font-extrabold text-accent w-8">{String(i + 1).padStart(2, "0")}</span>
-                          <span className="flex-1 text-sm font-bold uppercase tracking-tight">{label}</span>
-                          {score && <span className="text-xs font-bold" style={{ color: scoreColor(score.value) }}>{Math.round(score.value * 10) / 10}</span>}
+                        <li key={p} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                          <span style={{ fontFamily: S.serif, fontSize: 28, color: 'rgba(255,255,255,0.18)', minWidth: 40, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1 }}>{label}</span>
+                          {score && <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>{Math.round(score.value * 10) / 10}</span>}
                         </li>
                       );
                     })}
                   </ol>
-                ) : <p className="text-sm text-[#888880]">No priorities selected in wizard.</p>}
+                ) : <p style={{ fontSize: 13, color: S.dim }}>No priorities selected in wizard.</p>}
               </div>
               {!isPro && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]/60">
-                  <Link href="/pro" className="flex items-center gap-2 px-4 py-2 bg-[#0a0a0a] border-2 border-accent text-[11px] font-extrabold text-accent uppercase tracking-wider" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-                    <Lock className="w-3.5 h-3.5" /> Your priorities — Pro
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(12,12,15,0.6)' }}>
+                  <Link href="/pro" style={{ display: 'flex', alignItems: 'center', gap: 8, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '14px 22px', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    <Lock style={{ width: 14, height: 14 }} /> Your priorities · Pro
                   </Link>
                 </div>
               )}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ── OTHER MATCHES ──────────────────────────────────────────────── */}
-        <section id="compare" className="py-14 border-t-2 border-[#2a2a2a]">
-          <h2 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-8">Your other matches</h2>
-          <div className="grid md:grid-cols-2 gap-5 mb-8">
+        {/* ── OTHER MATCHES ── */}
+        <div id="compare" style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Your other matches</h2>
+          </div>
+
+          {/* Top 2 match cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             {otherMatches.slice(0, 2).map((m, i) => (
               <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
-                className="border-2 border-[#2a2a2a] bg-[#0f0f0f] p-5 hover:border-accent transition-all group block" style={{ boxShadow: "3px 3px 0 #2a2a2a" }}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl">{m.country.flagEmoji}</span>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#888880]">#{i + 2}</span>
+                style={{ display: 'block', background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24, textDecoration: 'none', transition: 'border-color 0.2s, background 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = S.borderMd; (e.currentTarget as HTMLElement).style.background = '#101014'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = S.border; (e.currentTarget as HTMLElement).style.background = S.card; }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontSize: 36 }}>{m.country.flagEmoji}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dimmer }}>#{i + 2}</span>
                 </div>
-                <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-1">{i + 2 === 2 ? "2nd" : "3rd"} best match</p>
-                <p className="font-heading text-2xl font-extrabold uppercase">{m.country.name}</p>
-                <div className="flex items-baseline gap-2 mt-3">
-                  <span className="font-heading text-3xl font-extrabold" style={{ color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}<span className="text-[#888880] text-base">%</span></span>
-                  <span className="text-[11px] text-[#888880]">match</span>
+                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dim, marginBottom: 4 }}>
+                  {i + 2 === 2 ? "2nd best match" : "3rd best match"}
                 </div>
-                <div className="mt-4 pt-4 border-t border-[#2a2a2a] flex items-center justify-between">
-                  <span className="text-[11px] text-[#888880]">{sym(m.country.currency)}{(m.country.data[userRole.salaryKey] as number).toLocaleString()} · {getVisaLabel(m.country.data.visaDifficulty)}</span>
-                  <span className="text-[11px] font-bold text-accent uppercase tracking-wider group-hover:translate-x-1 transition-transform">View →</span>
+                <div style={{ fontFamily: S.serif, fontSize: 26, color: '#fff', marginBottom: 12 }}>{m.country.name}</div>
+                <div>
+                  <span style={{ fontFamily: S.serif, fontSize: 42, color: '#fff', lineHeight: 1 }}>{m.matchPercent}</span>
+                  <span style={{ fontSize: 12, color: S.dim, display: 'inline-block', marginLeft: 4 }}>% match</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, marginTop: 14, borderTop: `1px solid ${S.border}` }}>
+                  <span style={{ fontSize: 12, color: S.dim }}>{sym(m.country.currency)}{(m.country.data[userRole.salaryKey] as number).toLocaleString()} · {getVisaLabel(m.country.data.visaDifficulty)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>View report →</span>
                 </div>
               </Link>
             ))}
           </div>
 
-          <div className="border-2 border-[#2a2a2a] bg-[#0f0f0f] overflow-hidden">
-            <div className="px-5 py-4 border-b-2 border-[#2a2a2a] flex items-center justify-between">
-              <p className="text-[10px] font-bold text-[#f0f0e8] uppercase tracking-widest">22 more countries · ranked for you</p>
-              <span className="text-[11px] font-bold text-[#888880] uppercase tracking-wider">Pro · €19.99</span>
+          {/* All countries table */}
+          <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', borderBottom: `1px solid ${S.border}` }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>22 more countries · ranked for you</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: S.dimmer }}>Pro · €19.99</span>
             </div>
+
             {isPro ? (
-              <div>
-                {otherMatches.slice(2).length === 0 ? (
-                  <div className="px-5 py-6 text-center">
-                    <p className="text-sm text-[#888880]">Run the wizard to generate your full ranking.</p>
-                    <Link href="/wizard" className="inline-block mt-3 text-[11px] font-bold text-accent uppercase tracking-widest hover:underline">Run quiz →</Link>
-                  </div>
-                ) : (
-                  otherMatches.slice(2).map((m, i) => (
-                    <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
-                      className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a] hover:bg-[#0d0d0d] transition-colors last:border-0">
-                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(i + 4).padStart(2, "0")}</span>
-                      <span className="text-xl">{m.country.flagEmoji}</span>
-                      <span className="text-sm font-bold flex-1 uppercase tracking-tight">{m.country.name}</span>
-                      <div className="w-32 h-1.5 bg-[#1a1a1a]">
-                        <div className="h-full" style={{ width: `${m.matchPercent}%`, background: matchPercentColor(m.matchPercent) }} />
-                      </div>
-                      <p className="font-heading text-sm font-extrabold w-10 text-right" style={{ color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</p>
-                    </Link>
-                  ))
-                )}
-              </div>
+              otherMatches.slice(2).length === 0 ? (
+                <div style={{ padding: '24px 22px', textAlign: 'center' }}>
+                  <p style={{ fontSize: 13, color: S.dim, marginBottom: 12 }}>Run the wizard to generate your full ranking.</p>
+                  <Link href="/wizard" style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Run quiz →</Link>
+                </div>
+              ) : (
+                otherMatches.slice(2).map((m, i) => (
+                  <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 22px', borderBottom: `1px solid rgba(255,255,255,0.04)`, textDecoration: 'none', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: S.dimmer, minWidth: 24 }}>{String(i + 4).padStart(2, "0")}</span>
+                    <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.8)', flex: 1 }}>{m.country.name}</span>
+                    <div style={{ width: 100, height: 2, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
+                      <div style={{ width: `${m.matchPercent}%`, height: '100%', background: 'rgba(255,255,255,0.4)', borderRadius: 2 }} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', minWidth: 36, textAlign: 'right' }}>{m.matchPercent}%</span>
+                  </Link>
+                ))
+              )
             ) : (
-              <div className="relative">
-                <div style={{ filter: "blur(4px) saturate(0.4)", opacity: 0.5, pointerEvents: "none" }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ filter: 'blur(4px) saturate(0.2)', opacity: 0.4, pointerEvents: 'none' }}>
                   {[4,5,6,7,8].map(n => (
-                    <div key={n} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#1a1a1a]">
-                      <span className="font-heading text-xs font-extrabold text-[#888880] w-6">{String(n).padStart(2, "0")}</span>
-                      <span className="text-xl">🌍</span>
-                      <span className="text-sm font-bold flex-1">———</span>
-                      <div className="w-32 h-1.5 bg-[#1a1a1a]"><div className="h-full bg-[#4ade80]" style={{ width: `${90 - n * 4}%` }} /></div>
-                      <p className="font-heading text-sm font-extrabold w-10 text-right">{90 - n * 4}%</p>
+                    <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 22px', borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: S.dimmer, minWidth: 24 }}>{String(n).padStart(2,'0')}</span>
+                      <span style={{ fontSize: 20 }}>🌍</span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.8)', flex: 1 }}>———</span>
+                      <div style={{ width: 100, height: 2, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
+                        <div style={{ width: `${90 - n * 4}%`, height: '100%', background: 'rgba(255,255,255,0.4)', borderRadius: 2 }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', minWidth: 36, textAlign: 'right' }}>{90 - n * 4}%</span>
                     </div>
                   ))}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00ffd5" }}>
-                    <Lock className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-[11px] font-extrabold text-accent uppercase tracking-wider">22 more countries — Pro</span>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: S.bg, border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '14px 22px' }}>
+                    <Lock style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.7)' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>22 more countries — Origio Pro</span>
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Upgrade CTA */}
             {!isPro && (
-              <div className="px-5 py-5 border-t-2 border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0a]">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '20px 22px', background: 'rgba(255,255,255,0.03)', borderTop: `1px solid ${S.borderMd}`, flexWrap: 'wrap' }}>
                 <div>
-                  <p className="font-heading text-xl font-extrabold uppercase tracking-tight">See all 25 — €19.99 once</p>
-                  <p className="text-[11px] text-[#888880] mt-0.5">Full ranking · salary calculator · visa checklist · 3-country compare</p>
+                  <div style={{ fontFamily: S.serif, fontSize: 20, color: '#fff', marginBottom: 3 }}>See all 25 — €19.99 once</div>
+                  <div style={{ fontSize: 12, color: S.dim }}>Full ranking · salary calculator · visa checklist · 3-country compare</div>
                 </div>
-                <Link href="/pro" className="px-6 py-3 text-sm font-heading font-extrabold uppercase tracking-wide bg-accent text-[#0a0a0a] border-2 border-accent" style={{ boxShadow: "3px 3px 0 #00aa90" }}>Upgrade</Link>
+                <Link href="/pro"
+                  style={{ display: 'inline-flex', alignItems: 'center', background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '12px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 20px rgba(255,255,255,0.12)' }}>
+                  Upgrade to Pro
+                </Link>
               </div>
             )}
           </div>
-        </section>
-
-      </main>
-
-      <footer className="border-t-2 border-[#2a2a2a] py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-accent border-2 border-[#f0f0e8]" />
-            <span className="font-heading font-extrabold uppercase tracking-tight">Origio</span>
-            <span className="text-[#888880] text-[11px] uppercase tracking-widest font-bold ml-2">© 2026</span>
-          </div>
-          <div className="flex items-center gap-5 text-[11px] uppercase tracking-widest font-bold text-[#888880]">
-            <Link href="/privacy" className="hover:text-[#f0f0e8] transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-[#f0f0e8] transition-colors">Terms</Link>
-          </div>
         </div>
-      </footer>
+
+      </div>
+
+      {/* Footer — reuse existing component */}
+      <Footer />
     </div>
   );
 }
