@@ -164,7 +164,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
               <span className="nav-search-btn-kbd">/</span>
             </button>
           )}
-          <Link href="/guides"            className="nav-link-item">Guides</Link>
           <Link href="/salary-calculator" className="nav-link-item">Calculator</Link>
           <Link href="/blog"              className="nav-link-item">Blog</Link>
           <Link href="/about"             className="nav-link-item">About</Link>

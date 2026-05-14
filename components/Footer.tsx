@@ -9,7 +9,6 @@ export default function Footer() {
         { href: "/compare", label: "Compare Countries" },
         { href: "/pro",     label: "Origio Pro" },
         { href: "/blog",    label: "Blog" },
-        { href: "/guides",  label: "Relocation Guides" },
       ],
     },
     {
