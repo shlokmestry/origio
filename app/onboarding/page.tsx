@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ArrowRight, Search, Check } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Search, Check, X } from 'lucide-react'
 
 type PassportDesign = {
   name: string; flag: string; bgColor: string; accentColor: string
@@ -49,25 +49,42 @@ const PASSPORTS: Record<string, PassportDesign> = {
 
 const PASSPORT_LIST = Object.entries(PASSPORTS).map(([slug, d]) => ({ slug, ...d }))
 
-function PassportSVG({ design, small }: { design: PassportDesign; small?: boolean }) {
+const JOB_SUGGESTIONS = [
+  'Software Engineer', 'Nurse', 'Teacher', 'Designer', 'Marketing',
+  'Accountant', 'Student', 'Freelancer', 'Consultant', 'Doctor',
+]
+
+const S = {
+  bg: '#050508',
+  card: '#0d0d10',
+  border: 'rgba(255,255,255,0.08)',
+  borderMd: 'rgba(255,255,255,0.14)',
+  borderInput: 'rgba(255,255,255,0.10)',
+  dim: 'rgba(255,255,255,0.38)',
+  dimmer: 'rgba(255,255,255,0.18)',
+  serif: "'DM Serif Display', Georgia, serif",
+  sans: "'Inter', sans-serif",
+}
+
+function PassportSVG({ design }: { design: PassportDesign }) {
   const pid = `p-${design.name.replace(/\W/g, '')}`
-  const patterns: Record<string, JSX.Element> = {
+  const patterns: Record<string, React.ReactElement> = {
     lines: <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.4" opacity="0.15" /></pattern>,
     dots: <pattern id={pid} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r="1" fill={design.accentColor} opacity="0.2" /></pattern>,
     waves: <pattern id={pid} x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse"><path d="M0 10 Q10 0 20 10 Q30 20 40 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" /></pattern>,
     grid: <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" /><line x1="0" y1="0" x2="20" y2="0" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" /></pattern>,
   }
   return (
-    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
       <defs>{patterns[design.pattern]}</defs>
-      <rect x="0" y="0" width="200" height="280" rx="4" fill={design.bgColor} />
-      <rect x="0" y="0" width="200" height="280" rx="4" fill={`url(#${pid})`} />
+      <rect x="0" y="0" width="200" height="280" rx="6" fill={design.bgColor} />
+      <rect x="0" y="0" width="200" height="280" rx="6" fill={`url(#${pid})`} />
       <rect x="0" y="0" width="200" height="4" fill={design.accentColor} opacity="0.5" />
       <rect x="0" y="276" width="200" height="4" fill={design.accentColor} opacity="0.5" />
       <circle cx="100" cy="110" r="36" fill={design.accentColor} opacity="0.1" />
       <circle cx="100" cy="110" r="32" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.35" />
       <text x="100" y="120" textAnchor="middle" fontSize="30" fill={design.textColor} opacity="0.9">{design.emblem}</text>
-      <text x="100" y="168" textAnchor="middle" fontSize={small ? "7" : "8"} fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">{design.name.toUpperCase()}</text>
+      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">{design.name.toUpperCase()}</text>
       <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="serif">{design.coverText}</text>
       <text x="100" y="225" textAnchor="middle" fontSize="22" opacity="0.9">{design.flag}</text>
       <rect x="10" y="248" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
@@ -111,99 +128,136 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-text-primary flex flex-col">
+    <div style={{ minHeight: '100vh', background: S.bg, color: '#fff', fontFamily: S.sans, display: 'flex', flexDirection: 'column' }}>
 
-      {/* Logo */}
-      <div className="flex items-center justify-center gap-2.5 pt-10 pb-8">
-        <div className="w-4 h-4 bg-accent border-2 border-text-primary" />
-        <span className="font-heading text-xl font-extrabold uppercase tracking-tight">Origio</span>
+      {/* ── Logo ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '40px 0 32px' }}>
+        <div style={{ width: 14, height: 14, background: '#fff', borderRadius: 3 }} />
+        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#fff' }}>Origio</span>
       </div>
 
-      {/* Progress */}
-      <div className="flex items-center justify-center gap-0 mb-10">
-        <div className={`h-1.5 w-20 border-r border-[#0a0a0a] transition-all ${step >= 1 ? 'bg-accent' : 'bg-[#2a2a2a]'}`} />
-        <div className={`h-1.5 w-20 transition-all ${step >= 2 ? 'bg-accent' : 'bg-[#2a2a2a]'}`} />
+      {/* ── Progress dots ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 56 }}>
+        {[1, 2].map(n => (
+          <div key={n} style={{
+            height: 2, width: 48, borderRadius: 2, transition: 'background 0.4s ease',
+            background: step > n ? 'rgba(255,255,255,0.85)' : step === n ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.10)',
+          }} />
+        ))}
       </div>
 
-      <div className="flex-1 flex items-start justify-center px-4 pb-12">
-        <div className="w-full max-w-lg">
+      {/* ── Stage ── */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '0 24px 80px' }}>
+        <div style={{ width: '100%', maxWidth: 520 }}>
 
-          {/* Step 1 — Passport */}
+          {/* ── Step 1: Passport ── */}
           {step === 1 && (
-            <div className="animate-fade-up" style={{ opacity: 0, animationFillMode: 'forwards' }}>
-              <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-3">step 1 of 2</p>
-              <h1 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2">
+            <div style={{ animation: 'fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: S.dim, marginBottom: 14 }}>
+                Step 1 of 2
+              </p>
+              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, lineHeight: 1.08, color: '#fff', marginBottom: 10 }}>
                 Which passport do you hold?
               </h1>
-              <p className="text-text-muted text-sm mb-8 font-medium">
+              <p style={{ fontSize: 13, fontWeight: 500, color: S.dim, lineHeight: 1.6, marginBottom: 28 }}>
                 This helps us show you the most relevant visa routes and options.
               </p>
 
-              <div className="flex gap-6">
-                {/* Selector */}
-                <div className="flex-1">
-                  <div className="relative mb-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                    <input placeholder="Search country..." value={passportSearch}
+              <div style={{ display: 'flex', gap: 20 }}>
+                {/* Left: search + list */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* Selected pill */}
+                  {selectedPassport && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.16)`, borderRadius: 100, marginBottom: 10 }}>
+                      <span style={{ fontSize: 18 }}>{selectedPassport.flag}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{selectedPassport.name}</span>
+                      <button onClick={() => setPassportSlug(null)}
+                        style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <X style={{ width: 9, height: 9, color: 'rgba(255,255,255,0.7)' }} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Search input */}
+                  <div style={{ position: 'relative', marginBottom: 8 }}>
+                    <Search style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: S.dimmer, pointerEvents: 'none' }} />
+                    <input
+                      type="text"
+                      placeholder="Search country..."
+                      value={passportSearch}
                       onChange={e => setPassportSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors font-medium" />
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 12, padding: '13px 16px 13px 42px', fontSize: 14, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+                      onFocus={e => (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.35)'}
+                      onBlur={e => (e.target as HTMLElement).style.borderColor = S.borderInput}
+                    />
                   </div>
-                  <div className="border-2 border-[#2a2a2a] max-h-72 overflow-y-auto">
+
+                  {/* Country list */}
+                  <div style={{ border: `1px solid ${S.border}`, borderRadius: 12, overflow: 'hidden', maxHeight: 240, overflowY: 'auto', background: S.card }}>
                     {filteredPassports.map(p => (
-                      <button key={p.slug} onClick={() => setPassportSlug(p.slug)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors border-b border-[#1a1a1a] last:border-0 ${
-                          passportSlug === p.slug
-                            ? 'bg-accent/10 text-text-primary'
-                            : 'hover:bg-[#1a1a1a] text-text-muted hover:text-text-primary'
-                        }`}>
-                        <span className="text-lg">{p.flag}</span>
-                        <span className="flex-1 font-medium">{p.name}</span>
-                        {passportSlug === p.slug && <Check className="w-3.5 h-3.5 text-accent" />}
+                      <button key={p.slug} onClick={() => { setPassportSlug(p.slug); setPassportSearch('') }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: passportSlug === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
+                        onMouseEnter={e => { if (passportSlug !== p.slug) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
+                        onMouseLeave={e => { if (passportSlug !== p.slug) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                        <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{p.flag}</span>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: passportSlug === p.slug ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1 }}>{p.name}</span>
+                        {passportSlug === p.slug && (
+                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Check style={{ width: 9, height: 9, color: '#0a0a0a' }} />
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Passport preview */}
-                <div className="w-32 flex-shrink-0 flex flex-col items-center pt-1">
+                {/* Right: passport preview */}
+                <div style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
                   {selectedPassport ? (
-                    <div className="w-full animate-fade-in">
-                      <PassportSVG design={selectedPassport} small />
-                      <p className="text-center text-[10px] font-bold text-text-muted mt-2 uppercase tracking-wide">{selectedPassport.name}</p>
+                    <div style={{ width: '100%' }}>
+                      <PassportSVG design={selectedPassport} />
                     </div>
                   ) : (
-                    <div className="w-full h-44 border-2 border-dashed border-[#2a2a2a] flex flex-col items-center justify-center gap-2 p-3">
-                      <span className="text-3xl opacity-20">🛂</span>
-                      <p className="text-[10px] font-bold text-text-muted text-center uppercase tracking-wide">Select to preview</p>
+                    <div style={{ width: '100%', aspectRatio: '200/280', border: `1px dashed rgba(255,255,255,0.12)`, borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 28, opacity: 0.2 }}>🛂</span>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: S.dimmer, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Select to preview</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-8">
+              {/* Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>
                 <button onClick={() => { setPassportSlug(null); setStep(2) }}
-                  className="text-xs font-bold text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide">
-                 I'll do this later
+                  style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
+                  Skip for now
                 </button>
                 <button onClick={() => setStep(2)}
-                  className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide flex items-center gap-2">
-                  Next <ArrowRight className="w-4 h-4" />
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '13px 28px', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 16px rgba(255,255,255,0.10)', transition: 'background 0.15s, transform 0.1s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ebebeb'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
+                  Continue <ArrowRight style={{ width: 14, height: 14 }} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 2 — Job */}
+          {/* ── Step 2: Job title ── */}
           {step === 2 && (
-            <div className="animate-fade-up" style={{ opacity: 0, animationFillMode: 'forwards' }}>
-             <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest mb-3">step 2 of 2</p>
-              <h1 className="font-heading text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2">
+            <div style={{ animation: 'fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: S.dim, marginBottom: 14 }}>
+                Step 2 of 2
+              </p>
+              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, lineHeight: 1.08, color: '#fff', marginBottom: 10 }}>
                 What do you do?
               </h1>
-              <p className="text-text-muted text-sm mb-8 font-medium">
-                Tell us your job, field, or if you&apos;re a student — anything works.
+              <p style={{ fontSize: 13, fontWeight: 500, color: S.dim, lineHeight: 1.6, marginBottom: 28 }}>
+                Tell us your job, field, or if you're a student — anything works.
               </p>
 
+              {/* Job input */}
               <input
                 type="text"
                 placeholder="e.g. Software Engineer, Student, Marketing Manager..."
@@ -211,22 +265,42 @@ export default function OnboardingPage() {
                 onChange={e => setJobTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && jobTitle.trim().length >= 2) handleFinish() }}
                 autoFocus
-                className="w-full px-4 py-4 bg-[#1a1a1a] border-2 border-[#2a2a2a] focus:border-accent text-base text-text-primary placeholder:text-text-muted outline-none transition-colors mb-2 font-medium"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 12, padding: '14px 16px', fontSize: 15, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box', transition: 'border-color 0.2s, background 0.2s' }}
+                onFocus={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.35)'; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)' }}
+                onBlur={e => { (e.target as HTMLElement).style.borderColor = S.borderInput; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
               />
 
               {jobTitle.length > 0 && jobTitle.trim().length < 2 && (
-                <p className="text-xs font-bold text-rose-400 mb-6 uppercase tracking-wide">Please enter at least 2 characters</p>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,90,90,0.85)', marginTop: 10 }}>
+                  Please enter at least 2 characters
+                </p>
               )}
 
-              <div className="flex items-center justify-between mt-8">
+              {/* Job suggestion pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
+                {JOB_SUGGESTIONS.map(s => (
+                  <button key={s} onClick={() => setJobTitle(s)}
+                    style={{ fontSize: 12, fontWeight: 600, color: S.dim, border: `1px solid ${S.border}`, borderRadius: 100, padding: '5px 13px', background: 'transparent', cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s, background 0.15s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = S.dim; (e.currentTarget as HTMLElement).style.borderColor = S.border; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>
                 <button onClick={() => setStep(1)}
-                  className="ghost-button px-5 py-3 text-sm font-bold uppercase tracking-wide">
-                  Back
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
+                  <ArrowLeft style={{ width: 13, height: 13 }} /> Back
                 </button>
-                <button onClick={handleFinish}
-                  disabled={saving || jobTitle.trim().length < 2}
-                  className="cta-button px-8 py-3 text-sm font-bold uppercase tracking-wide disabled:opacity-40 disabled:transform-none disabled:shadow-none">
-                  {saving ? 'Saving...' : 'Finish Setup'}
+                <button onClick={handleFinish} disabled={saving || jobTitle.trim().length < 2}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '13px 32px', fontSize: 13, fontWeight: 700, cursor: jobTitle.trim().length >= 2 ? 'pointer' : 'default', opacity: (saving || jobTitle.trim().length < 2) ? 0.28 : 1, boxShadow: '0 2px 16px rgba(255,255,255,0.10)', transition: 'background 0.15s, transform 0.1s, opacity 0.2s' }}
+                  onMouseEnter={e => { if (jobTitle.trim().length >= 2 && !saving) { (e.currentTarget as HTMLElement).style.background = '#ebebeb'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' } }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
+                  {saving ? 'Saving...' : 'Finish setup'}
                 </button>
               </div>
             </div>
@@ -234,6 +308,14 @@ export default function OnboardingPage() {
 
         </div>
       </div>
+
+      {/* Fade-up keyframe */}
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

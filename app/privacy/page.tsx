@@ -2,8 +2,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
-import Image from 'next/image'
-import { ArrowLeft } from 'lucide-react'
+import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Origio',
@@ -12,145 +11,204 @@ export const metadata: Metadata = {
 
 const LAST_UPDATED = '19 April 2026'
 
+const S = {
+  bg: '#050508',
+  card: '#0c0c0f',
+  border: 'rgba(255,255,255,0.07)',
+  borderMd: 'rgba(255,255,255,0.12)',
+  dim: 'rgba(255,255,255,0.38)',
+  dimmer: 'rgba(255,255,255,0.2)',
+  serif: "'DM Serif Display', Georgia, serif",
+  sans: "'Inter', sans-serif",
+}
+
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-bg-primary">
-      <nav className="sticky top-0 z-50 glass-panel border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Image src="/origio_logo_dark_final.png" alt="Origio" width={96} height={24} style={{ height: 24, width: "auto" }} priority />
-          </Link>
-          <Link href="/" className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Globe
-          </Link>
-        </div>
-      </nav>
+    <main style={{ minHeight: '100vh', background: S.bg, color: '#fff', fontFamily: S.sans }}>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <div className="mb-12">
-          <p className="text-sm text-accent font-semibold uppercase tracking-wider mb-3">Legal</p>
-          <h1 className="font-heading text-4xl sm:text-5xl font-extrabold text-text-primary mb-4">Privacy Policy</h1>
-          <p className="text-text-muted">Last updated: {LAST_UPDATED}</p>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(100px,10vw,120px) clamp(20px,4vw,40px) 80px' }}>
+
+        {/* ── HEADER ── */}
+        <div style={{ marginBottom: 64, paddingBottom: 48, borderBottom: `1px solid ${S.border}` }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 16 }}>
+            Legal
+          </p>
+          <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(36px,6vw,60px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: '0 0 16px' }}>
+            Privacy Policy
+          </h1>
+          <p style={{ fontSize: 13, color: S.dimmer }}>Last updated: {LAST_UPDATED}</p>
         </div>
 
-        <div className="prose prose-invert max-w-none space-y-10 text-text-muted leading-relaxed">
+        {/* ── CONTENT ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
 
+          {/* Who we are */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Who we are</h2>
-            <p>Origio is a relocation research tool operated by Shlok Mestry, based in Ireland. We help people compare salaries, visas, cost of living and quality of life across 25 countries.</p>
-            <p className="mt-3">Contact: <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a></p>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Who we are</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              Origio is a relocation research tool operated by Shlok Mestry, based in Ireland. We help people compare salaries, visas, cost of living and quality of life across 25 countries.
+            </p>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75, marginTop: 12 }}>
+              Contact:{' '}
+              <a href="mailto:hello@findorigio.com" style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                hello@findorigio.com
+              </a>
+            </p>
           </section>
 
+          {/* What data we collect */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">What data we collect</h2>
-            <div className="space-y-4">
-              <div className="glass-panel rounded-xl p-5 border border-border">
-                <p className="font-semibold text-text-primary mb-2">Account data</p>
-                <p>When you create an account: your email address, name (optional), and password (hashed — we never see the plaintext). If you sign in with Google, we receive your name and email from Google.</p>
-              </div>
-              <div className="glass-panel rounded-xl p-5 border border-border">
-                <p className="font-semibold text-text-primary mb-2">Profile data</p>
-                <p>Information you choose to provide: passport country, job title. This is used to personalise your country recommendations.</p>
-              </div>
-              <div className="glass-panel rounded-xl p-5 border border-border">
-                <p className="font-semibold text-text-primary mb-2">Usage data</p>
-                <p>Quiz answers and results (stored to show your history), saved countries, and pages you visit. We use Google Analytics (GA4) to understand how the site is used — this data is anonymised and aggregated.</p>
-              </div>
-              <div className="glass-panel rounded-xl p-5 border border-border">
-                <p className="font-semibold text-text-primary mb-2">Payment data</p>
-                <p>If you upgrade to Pro, payments are processed by Stripe. We receive confirmation that payment was made but never see your card details. Stripe stores payment data under their own privacy policy.</p>
-              </div>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 20px' }}>What data we collect</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { title: 'Account data', body: 'When you create an account: your email address, name (optional), and password (hashed — we never see the plaintext). If you sign in with Google, we receive your name and email from Google.' },
+                { title: 'Profile data', body: 'Information you choose to provide: passport country, job title. This is used to personalise your country recommendations.' },
+                { title: 'Usage data', body: 'Quiz answers and results (stored to show your history), saved countries, and pages you visit. We use Google Analytics (GA4) to understand how the site is used — this data is anonymised and aggregated.' },
+                { title: 'Payment data', body: "If you upgrade to Pro, payments are processed by Stripe. We receive confirmation that payment was made but never see your card details. Stripe stores payment data under their own privacy policy." },
+              ].map(({ title, body }) => (
+                <div key={title} style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 12, padding: '18px 20px' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{title}</p>
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.7 }}>{body}</p>
+                </div>
+              ))}
             </div>
           </section>
 
+          {/* Why we collect it */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Why we collect it</h2>
-            <div className="space-y-2">
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 20px' }}>Why we collect it</h2>
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 12, overflow: 'hidden' }}>
               {[
                 ['Provide the service', 'To show you personalised country rankings, save your results, and maintain your account.'],
                 ['Process payments', 'To verify Pro upgrades and prevent fraud.'],
                 ['Improve the product', 'Aggregated analytics help us understand which features are useful and where users get stuck.'],
                 ['Communicate with you', 'To send transactional emails (account confirmation, payment receipt). We do not send marketing emails without your explicit consent.'],
-              ].map(([title, desc]) => (
-                <div key={title} className="flex items-start gap-3 py-2 border-b border-border last:border-0">
-                  <span className="text-xs font-bold text-accent uppercase tracking-wider pt-0.5 w-36 flex-shrink-0">{title}</span>
-                  <p className="text-sm">{desc}</p>
+              ].map(([title, desc], i, arr) => (
+                <div key={title} style={{ display: 'flex', gap: 16, padding: '16px 20px', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.05)` : 'none', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dimmer, paddingTop: 3, flexShrink: 0, width: 130 }}>{title}</span>
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.65 }}>{desc}</p>
                 </div>
               ))}
             </div>
           </section>
 
+          {/* Legal basis */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Legal basis (GDPR)</h2>
-            <p>We process your data under the following legal bases:</p>
-            <ul className="mt-3 space-y-2 list-disc list-inside">
-              <li><strong className="text-text-primary">Contract</strong> — processing necessary to provide the service you signed up for</li>
-              <li><strong className="text-text-primary">Legitimate interests</strong> — analytics to improve the product</li>
-              <li><strong className="text-text-primary">Legal obligation</strong> — keeping records for tax and legal compliance</li>
-            </ul>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Legal basis (GDPR)</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75, marginBottom: 16 }}>We process your data under the following legal bases:</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                ['Contract', 'Processing necessary to provide the service you signed up for.'],
+                ['Legitimate interests', 'Analytics to improve the product.'],
+                ['Legal obligation', 'Keeping records for tax and legal compliance.'],
+              ].map(([term, desc]) => (
+                <div key={term} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: S.dimmer, flexShrink: 0, marginTop: 8 }} />
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.65 }}><span style={{ color: '#fff', fontWeight: 600 }}>{term}</span> — {desc}</p>
+                </div>
+              ))}
+            </div>
           </section>
 
+          {/* Who we share with */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Who we share data with</h2>
-            <div className="space-y-2">
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 20px' }}>Who we share data with</h2>
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
               {[
-                ['Supabase', 'Our database and authentication provider. Data stored in EU region.'],
+                ['Supabase', 'Database and authentication provider. Data stored in EU region.'],
                 ['Stripe', 'Payment processing. PCI-DSS compliant.'],
                 ['Google Analytics', 'Anonymised usage analytics.'],
                 ['Resend', 'Transactional email delivery.'],
                 ['Vercel', 'Hosting and infrastructure.'],
-              ].map(([name, desc]) => (
-                <div key={name} className="flex items-start gap-3 py-2 border-b border-border last:border-0">
-                  <span className="text-sm font-semibold text-text-primary w-32 flex-shrink-0">{name}</span>
-                  <p className="text-sm">{desc}</p>
+              ].map(([name, desc], i, arr) => (
+                <div key={name} style={{ display: 'flex', gap: 16, padding: '14px 20px', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.05)` : 'none', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', flexShrink: 0, width: 130 }}>{name}</span>
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.6 }}>{desc}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-4">We do not sell your data to third parties. Ever.</p>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>We do not sell your data to third parties. Ever.</p>
           </section>
 
+          {/* Cookies */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Cookies</h2>
-            <p>We use one cookie: your authentication session, set by Supabase. This is strictly necessary for the site to function and does not require consent under GDPR. We do not use advertising or tracking cookies.</p>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Cookies</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              We use one cookie: your authentication session, set by Supabase. This is strictly necessary for the site to function and does not require consent under GDPR. We do not use advertising or tracking cookies.
+            </p>
           </section>
 
+          {/* Retention */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">How long we keep your data</h2>
-            <ul className="space-y-2 list-disc list-inside">
-              <li>Account data — until you delete your account</li>
-              <li>Quiz results and saved countries — until you delete your account</li>
-              <li>Payment records — 7 years (legal requirement)</li>
-              <li>Analytics data — 26 months (Google Analytics default)</li>
-            </ul>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>How long we keep your data</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                'Account data — until you delete your account',
+                'Quiz results and saved countries — until you delete your account',
+                'Payment records — 7 years (legal requirement)',
+                'Analytics data — 26 months (Google Analytics default)',
+              ].map((item) => (
+                <div key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: S.dimmer, flexShrink: 0, marginTop: 8 }} />
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.65 }}>{item}</p>
+                </div>
+              ))}
+            </div>
           </section>
 
+          {/* GDPR rights */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Your rights under GDPR</h2>
-            <p>As an EU resident you have the right to:</p>
-            <ul className="mt-3 space-y-2 list-disc list-inside">
-              <li><strong className="text-text-primary">Access</strong> — request a copy of your data</li>
-              <li><strong className="text-text-primary">Rectification</strong> — correct inaccurate data</li>
-              <li><strong className="text-text-primary">Erasure</strong> — delete your account and all associated data</li>
-              <li><strong className="text-text-primary">Portability</strong> — receive your data in a machine-readable format</li>
-              <li><strong className="text-text-primary">Objection</strong> — object to processing based on legitimate interests</li>
-            </ul>
-            <p className="mt-4">To exercise any of these rights, email <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a>. You can also delete your account directly from your profile settings — this immediately removes all your personal data.</p>
-            <p className="mt-3">You have the right to lodge a complaint with the Data Protection Commission (Ireland) at <a href="https://www.dataprotection.ie" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">dataprotection.ie</a>.</p>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Your rights under GDPR</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75, marginBottom: 16 }}>As an EU resident you have the right to:</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {[
+                ['Access', 'Request a copy of your data.'],
+                ['Rectification', 'Correct inaccurate data.'],
+                ['Erasure', 'Delete your account and all associated data.'],
+                ['Portability', 'Receive your data in a machine-readable format.'],
+                ['Objection', 'Object to processing based on legitimate interests.'],
+              ].map(([term, desc]) => (
+                <div key={term} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: S.dimmer, flexShrink: 0, marginTop: 8 }} />
+                  <p style={{ fontSize: 14, color: S.dim, lineHeight: 1.65 }}><span style={{ color: '#fff', fontWeight: 600 }}>{term}</span> — {desc}</p>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              To exercise any of these rights, email{' '}
+              <a href="mailto:hello@findorigio.com" style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 3 }}>hello@findorigio.com</a>.
+              You can also delete your account directly from your profile settings — this immediately removes all your personal data.
+            </p>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75, marginTop: 12 }}>
+              You have the right to lodge a complaint with the Data Protection Commission (Ireland) at{' '}
+              <a href="https://www.dataprotection.ie" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 3 }}>dataprotection.ie</a>.
+            </p>
           </section>
 
+          {/* Security */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Security</h2>
-            <p>We use industry-standard security practices: HTTPS everywhere, hashed passwords, JWT-based authentication, and strict Content Security Policy headers. No system is perfectly secure — if you discover a vulnerability please email us responsibly.</p>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Security</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              We use industry-standard security practices: HTTPS everywhere, hashed passwords, JWT-based authentication, and strict Content Security Policy headers. No system is perfectly secure — if you discover a vulnerability please email us responsibly.
+            </p>
           </section>
 
+          {/* Changes */}
           <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Changes to this policy</h2>
-            <p>We will update this page if our data practices change and notify users by email for material changes. The date at the top of this page always reflects the last update.</p>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Changes to this policy</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              We will update this page if our data practices change and notify users by email for material changes. The date at the top of this page always reflects the last update.
+            </p>
           </section>
 
-          <section>
-            <h2 className="font-heading text-xl font-bold text-text-primary mb-3">Contact</h2>
-            <p>Questions about this policy: <a href="mailto:hello@findorigio.com" className="text-accent hover:underline">hello@findorigio.com</a></p>
+          {/* Contact */}
+          <section style={{ paddingBottom: 8 }}>
+            <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(20px,3vw,26px)', fontWeight: 400, color: '#fff', margin: '0 0 16px' }}>Contact</h2>
+            <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.75 }}>
+              Questions about this policy:{' '}
+              <a href="mailto:hello@findorigio.com" style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 3 }}>hello@findorigio.com</a>
+            </p>
           </section>
 
         </div>

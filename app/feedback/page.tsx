@@ -3,11 +3,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 const MAX_CHARS = 300;
 
-
+const S = {
+  bg: '#050508',
+  card: '#0c0c0f',
+  border: 'rgba(255,255,255,0.07)',
+  borderMd: 'rgba(255,255,255,0.12)',
+  dim: 'rgba(255,255,255,0.38)',
+  dimmer: 'rgba(255,255,255,0.2)',
+  serif: "'DM Serif Display', Georgia, serif",
+  sans: "'Inter', sans-serif",
+};
 
 export default function FeedbackPage() {
   const [message, setMessage] = useState("");
@@ -34,127 +44,137 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8] flex flex-col">
+    <div style={{ minHeight: '100vh', background: S.bg, color: '#fff', fontFamily: S.sans, display: 'flex', flexDirection: 'column' }}>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0a] border-b-2 border-[#2a2a2a]">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-3.5 h-3.5 bg-[#00ffd5] border-2 border-[#f0f0e8]" />
-            <span className="font-heading text-base font-extrabold uppercase tracking-tight">Origio</span>
-          </Link>
-          <Link href="/" className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#888880] hover:text-[#f0f0e8] transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </Link>
-        </div>
-      </nav>
-
-      <main className="flex-1 max-w-xl mx-auto px-6 py-14 w-full">
+      <main style={{ flex: 1, maxWidth: 600, margin: '0 auto', width: '100%', padding: 'clamp(100px,10vw,120px) clamp(20px,4vw,40px) 80px' }}>
 
         {status === "done" ? (
-          /* ── Success ── */
-          <div className="text-center py-20">
-            <div className="w-12 h-12 border-2 border-[#00ffd5] flex items-center justify-center mx-auto mb-6">
-              <span className="text-[#00ffd5] text-xl font-extrabold">✓</span>
+          /* ── Success state ── */
+          <div style={{ textAlign: 'center', paddingTop: 40 }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 2px 20px rgba(255,255,255,0.15)' }}>
+              <span style={{ fontSize: 20, fontWeight: 700, color: '#0a0a0a' }}>✓</span>
             </div>
-            <h1 className="font-heading text-3xl font-extrabold uppercase tracking-tight mb-3">Got it.</h1>
-            <p className="text-[#888880] text-sm mb-2">Your message came through.</p>
+            <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(32px,5vw,48px)', fontWeight: 400, color: '#fff', margin: '0 0 12px' }}>
+              Got it.
+            </h1>
+            <p style={{ fontSize: 14, color: S.dim, marginBottom: 8, lineHeight: 1.6 }}>Your message came through.</p>
             {email && (
-              <p className="text-[#888880] text-sm mb-8">
-                We'll email <span className="text-[#f0f0e8] font-bold">{email}</span> when it's live.
+              <p style={{ fontSize: 14, color: S.dim, marginBottom: 36, lineHeight: 1.6 }}>
+                We'll email <span style={{ color: '#fff', fontWeight: 600 }}>{email}</span> when it's live.
               </p>
             )}
-            <Link href="/" className="text-[11px] font-bold text-[#00ffd5] uppercase tracking-widest hover:underline">
+            <Link href="/"
+              style={{ display: 'inline-flex', alignItems: 'center', background: '#fff', color: '#0a0a0a', borderRadius: 100, padding: '12px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 20px rgba(255,255,255,0.12)' }}>
               Back to Origio →
             </Link>
           </div>
+
         ) : (
           <>
             {/* ── Header ── */}
-            <div className="mb-10">
-              <p className="text-[10px] font-bold text-[#00ffd5] uppercase tracking-widest mb-3">Shape what we build next</p>
-              <h1 className="font-heading text-4xl font-extrabold uppercase tracking-tight mb-4">
+            <div style={{ marginBottom: 48 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 16 }}>
+                Shape what we build next
+              </p>
+              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(32px,5vw,52px)', fontWeight: 400, color: '#fff', lineHeight: 1.1, margin: '0 0 16px' }}>
                 Tell us what's missing.
               </h1>
-              <p className="text-[#888880] text-sm leading-relaxed">
+              <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.7, maxWidth: 440 }}>
                 25 countries, 8 quiz questions. We know it's not complete. Tell us what you want to see — countries, job roles, quiz questions, anything.
               </p>
             </div>
 
+            {/* ── Form card ── */}
+            <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 16, overflow: 'hidden' }}>
 
-
-            {/* ── Message ── */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[10px] font-bold text-[#888880] uppercase tracking-widest">
-                  Your message
-                </label>
-                <span className={`text-[10px] font-bold uppercase tracking-wide ${charsLeft < 50 ? "text-[#f87171]" : "text-[#888880]"}`}>
-                  {charsLeft} left
-                </span>
+              {/* Message field */}
+              <div style={{ padding: '24px 24px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>
+                    Your message
+                  </label>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: charsLeft < 50 ? 'rgba(255,130,130,0.8)' : S.dimmer }}>
+                    {charsLeft} left
+                  </span>
+                </div>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value.slice(0, MAX_CHARS))}
+                  placeholder="I want to see Thailand added. I'm a freelance designer moving to Southeast Asia..."
+                  rows={5}
+                  style={{
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: `1px solid ${S.border}`,
+                    borderRadius: 10, padding: '14px 16px', fontSize: 14, color: '#fff',
+                    outline: 'none', resize: 'none', lineHeight: 1.65, fontFamily: S.sans,
+                    boxSizing: 'border-box', transition: 'border-color 0.15s',
+                  }}
+                  onFocus={e => (e.target as HTMLElement).style.borderColor = S.borderMd}
+                  onBlur={e => (e.target as HTMLElement).style.borderColor = S.border}
+                />
               </div>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value.slice(0, MAX_CHARS))}
-                placeholder="I want to see Thailand added. I'm a freelance designer moving to Southeast Asia..."
-                rows={5}
-                className="w-full bg-[#111] border-2 border-[#2a2a2a] px-4 py-3 text-sm text-[#f0f0e8] placeholder:text-[#444] focus:outline-none focus:border-[#00ffd5] transition-colors resize-none font-mono leading-relaxed"
-              />
+
+              {/* Divider */}
+              <div style={{ height: 1, background: S.border, margin: '20px 0 0' }} />
+
+              {/* Email field */}
+              <div style={{ padding: '20px 24px 0' }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 10 }}>
+                  Email <span style={{ color: S.dimmer, textTransform: 'none', letterSpacing: 0, fontWeight: 400, fontSize: 12 }}>— optional</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: `1px solid ${S.border}`,
+                    borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#fff',
+                    outline: 'none', fontFamily: S.sans, boxSizing: 'border-box',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={e => (e.target as HTMLElement).style.borderColor = S.borderMd}
+                  onBlur={e => (e.target as HTMLElement).style.borderColor = S.border}
+                />
+                <p style={{ fontSize: 12, color: S.dimmer, marginTop: 8, lineHeight: 1.5 }}>
+                  We'll notify you when your requested feature goes live. No marketing, ever.
+                </p>
+              </div>
+
+              {/* Submit */}
+              <div style={{ padding: 24 }}>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!canSubmit}
+                  style={{
+                    width: '100%', padding: '14px 24px',
+                    background: canSubmit ? '#fff' : 'rgba(255,255,255,0.08)',
+                    color: canSubmit ? '#0a0a0a' : S.dimmer,
+                    border: 'none', borderRadius: 100,
+                    fontSize: 14, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                    transition: 'background 0.15s, color 0.15s',
+                    boxShadow: canSubmit ? '0 2px 20px rgba(255,255,255,0.12)' : 'none',
+                  }}
+                  onMouseEnter={e => { if (canSubmit) (e.currentTarget as HTMLElement).style.background = '#ececec'; }}
+                  onMouseLeave={e => { if (canSubmit) (e.currentTarget as HTMLElement).style.background = '#fff'; }}
+                >
+                  {status === "sending" ? "Sending..." : "Send feedback"}
+                </button>
+
+                {status === "error" && (
+                  <p style={{ fontSize: 12, color: 'rgba(255,130,130,0.8)', fontWeight: 600, textAlign: 'center', marginTop: 12 }}>
+                    Something went wrong. Email us at hello@findorigio.com
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* ── Email ── */}
-            <div className="mb-8">
-              <label className="block text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-2">
-                Email <span className="text-[#444] normal-case tracking-normal font-normal">— optional</span>
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-[#111] border-2 border-[#2a2a2a] px-4 py-3 text-sm text-[#f0f0e8] placeholder:text-[#444] focus:outline-none focus:border-[#00ffd5] transition-colors"
-              />
-              <p className="text-[11px] text-[#888880] mt-2">
-                Leave your email and we'll notify you when your requested country or feature goes live. No marketing, ever.
-              </p>
-            </div>
-
-            {/* ── Submit ── */}
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="w-full py-4 bg-[#00ffd5] text-[#0a0a0a] text-sm font-extrabold uppercase tracking-wide border-2 border-[#00ffd5] hover:bg-transparent hover:text-[#00ffd5] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[#00ffd5] disabled:hover:text-[#0a0a0a]"
-              style={{ boxShadow: canSubmit ? "3px 3px 0 #00aa90" : "none" }}
-            >
-              {status === "sending" ? "Sending..." : "Send feedback"}
-            </button>
-
-            {status === "error" && (
-              <p className="text-[11px] text-[#f87171] font-bold text-center mt-3">
-                Something went wrong. Email us directly at hello@findorigio.com
-              </p>
-            )}
           </>
         )}
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t-2 border-[#2a2a2a]">
-        <div className="max-w-4xl mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-[#00ffd5] border-2 border-[#f0f0e8]" />
-            <span className="font-heading text-sm font-extrabold uppercase tracking-tight">Origio</span>
-            <span className="text-[#888880] text-xs ml-2">© 2026</span>
-          </div>
-          <div className="flex items-center gap-5 text-xs font-bold text-[#888880] uppercase tracking-wide">
-            <Link href="/about" className="hover:text-[#f0f0e8] transition-colors">About</Link>
-            <Link href="/faq" className="hover:text-[#f0f0e8] transition-colors">FAQ</Link>
-            <Link href="/privacy" className="hover:text-[#f0f0e8] transition-colors">Privacy</Link>
-          </div>
-        </div>
-      </footer>
-
+      <Footer />
     </div>
   );
 }
