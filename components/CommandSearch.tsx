@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { Search, X, TrendingUp, DollarSign, Shield, Receipt, ArrowRight } from "lucide-react";
+import {
+  Search,
+  X,
+  DollarSign,
+  Shield,
+  Receipt,
+  TrendingUp,
+  ArrowRight,
+  Clock,
+} from "lucide-react";
+
 import { GlobeCountry } from "@/types";
 import { getScoreColor } from "@/lib/utils";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import SearchIllustration from "./SearchIllustration";
 
 interface CommandSearchProps {
   countries: GlobeCountry[];
@@ -21,10 +30,8 @@ interface QuickFilter {
   sort: (a: GlobeCountry, b: GlobeCountry) => number;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const RECENT_KEY = "origio_recent_searches";
-const MAX_RECENT = 3;
+const MAX_RECENT = 5;
 
 const PLACEHOLDERS = [
   "Search for Denmark...",
@@ -40,7 +47,8 @@ const QUICK_FILTERS: QuickFilter[] = [
     id: "salary",
     label: "Best salary",
     icon: DollarSign,
-    sort: (a, b) => b.salarySoftwareEngineer - a.salarySoftwareEngineer,
+    sort: (a, b) =>
+      b.salarySoftwareEngineer - a.salarySoftwareEngineer,
   },
   {
     id: "visa",
@@ -58,11 +66,11 @@ const QUICK_FILTERS: QuickFilter[] = [
     id: "quality",
     label: "Quality of life",
     icon: TrendingUp,
-    sort: (a, b) => b.scoreQualityOfLife - a.scoreQualityOfLife,
+    sort: (a, b) =>
+      b.scoreQualityOfLife - a.scoreQualityOfLife,
   },
 ];
 
-// Static continent lookup — avoids adding continent to GlobeCountry type
 const CONTINENT_MAP: Record<string, string> = {
   denmark: "Northern Europe",
   sweden: "Northern Europe",
@@ -91,317 +99,411 @@ const CONTINENT_MAP: Record<string, string> = {
   czechia: "Central Europe",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const S = {
+  card: "#0c0c0f",
+  border: "rgba(255,255,255,0.08)",
+  borderMd: "rgba(255,255,255,0.14)",
+  dim: "rgba(255,255,255,0.38)",
+  dimmer: "rgba(255,255,255,0.18)",
+  sans: "'Inter', sans-serif",
+};
 
 function getRecent(): string[] {
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function addRecent(slug: string) {
   try {
-    const prev = getRecent().filter(s => s !== slug);
-    localStorage.setItem(RECENT_KEY, JSON.stringify([slug, ...prev].slice(0, MAX_RECENT)));
+    const prev = getRecent().filter((s) => s !== slug);
+
+    localStorage.setItem(
+      RECENT_KEY,
+      JSON.stringify([slug, ...prev].slice(0, MAX_RECENT))
+    );
   } catch {}
 }
 
-// FIXED: strict match — only name start or exact word boundary, not substring of any word
+function clearRecent() {
+  try {
+    localStorage.removeItem(RECENT_KEY);
+  } catch {}
+}
+
 function matchesQuery(country: GlobeCountry, q: string): boolean {
   const query = q.toLowerCase().trim();
+
   if (!query) return false;
-  const name = country.name.toLowerCase();
-  const slug = country.slug.toLowerCase();
-  // name starts with query OR slug starts with query
-  // "de" → Denmark ✓, Sweden ✗
-  return name.startsWith(query) || slug.startsWith(query);
+
+  return (
+    country.name.toLowerCase().includes(query) ||
+    country.slug.toLowerCase().includes(query)
+  );
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const color = getScoreColor(score);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <div style={{
-        width: 28,
-        height: 3,
-        background: "#1a1a1a",
-        border: "1px solid #2a2a2a",
-      }}>
-        <div style={{
-          width: `${(score / 10) * 100}%`,
-          height: "100%",
-          background: color,
-        }} />
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      <div
+        style={{
+          width: 32,
+          height: 2,
+          background: "rgba(255,255,255,0.07)",
+          borderRadius: 2,
+        }}
+      >
+        <div
+          style={{
+            width: `${(score / 10) * 100}%`,
+            height: "100%",
+            background: "rgba(255,255,255,0.5)",
+            borderRadius: 2,
+          }}
+        />
       </div>
-      <span style={{
-        fontSize: 11,
-        fontFamily: "monospace",
-        fontWeight: 700,
-        color,
-        letterSpacing: "0.05em",
-      }}>
+
+      <span
+        style={{
+          fontSize: 11,
+          fontFamily: "monospace",
+          fontWeight: 700,
+          color: "rgba(255,255,255,0.5)",
+        }}
+      >
         {score.toFixed(1)}
       </span>
     </div>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
-export default function CommandSearch({ countries, onCountrySelect, open, onClose }: CommandSearchProps) {
+export default function CommandSearch({
+  countries,
+  onCountrySelect,
+  open,
+  onClose,
+}: CommandSearchProps) {
   const [query, setQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] =
+    useState<string | null>(null);
+
   const [cursor, setCursor] = useState(0);
-  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
-  const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
+
+  const [placeholder, setPlaceholder] =
+    useState(PLACEHOLDERS[0]);
+
+  const [recentSlugs, setRecentSlugs] =
+    useState<string[]>([]);
+
+  const [isTyping, setIsTyping] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
+
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Rotate placeholder
+  const typingTimer =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!open) return;
+
     let i = 0;
+
     const interval = setInterval(() => {
       i = (i + 1) % PLACEHOLDERS.length;
       setPlaceholder(PLACEHOLDERS[i]);
     }, 2500);
+
     return () => clearInterval(interval);
   }, [open]);
 
-  // Reset + focus on open
   useEffect(() => {
     if (open) {
       setRecentSlugs(getRecent());
+
       setCursor(0);
       setQuery("");
       setActiveFilter(null);
-      setTimeout(() => inputRef.current?.focus(), 50);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     }
   }, [open]);
 
-  // Filtered results — fixed match logic
+  const handleQueryChange = (val: string) => {
+    setQuery(val);
+
+    setCursor(0);
+
+    setActiveFilter(null);
+
+    setIsTyping(true);
+
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+    }
+
+    typingTimer.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 800);
+  };
+
   const results = useMemo(() => {
     if (activeFilter && !query.trim()) {
-      const filter = QUICK_FILTERS.find(f => f.id === activeFilter);
-      if (filter) return [...countries].sort(filter.sort).slice(0, 8);
+      const filter = QUICK_FILTERS.find(
+        (f) => f.id === activeFilter
+      );
+
+      if (filter) {
+        return [...countries]
+          .sort(filter.sort)
+          .slice(0, 8);
+      }
     }
 
     if (!query.trim() && !activeFilter) return [];
 
-    // Apply text filter first, then sort by moveScore
     return countries
-      .filter(c => matchesQuery(c, query))
+      .filter((c) => matchesQuery(c, query))
       .sort((a, b) => b.moveScore - a.moveScore)
       .slice(0, 8);
   }, [query, countries, activeFilter]);
 
-  const recentCountries = useMemo(() =>
-    recentSlugs
-      .map(slug => countries.find(c => c.slug === slug))
-      .filter(Boolean) as GlobeCountry[],
+  const recentCountries = useMemo(
+    () =>
+      recentSlugs
+        .map((slug) =>
+          countries.find((c) => c.slug === slug)
+        )
+        .filter(Boolean) as GlobeCountry[],
     [recentSlugs, countries]
   );
 
   const showResults = results.length > 0;
-  const showRecent = !query && !activeFilter && recentCountries.length > 0;
-  const showFilters = !query || activeFilter;
+
+  const showRecent =
+    !query &&
+    !activeFilter &&
+    recentCountries.length > 0;
 
   const allItems = useMemo(
-    () => showResults ? results : showRecent ? recentCountries : [],
+    () =>
+      showResults
+        ? results
+        : showRecent
+        ? recentCountries
+        : [],
     [showResults, results, showRecent, recentCountries]
   );
 
-  const select = useCallback((slug: string) => {
-    addRecent(slug);
-    onCountrySelect(slug);
-    onClose();
-    setQuery("");
-  }, [onCountrySelect, onClose]);
+  const select = useCallback(
+    (slug: string) => {
+      addRecent(slug);
 
-  // Keyboard nav
+      onCountrySelect(slug);
+
+      onClose();
+
+      setQuery("");
+    },
+    [onCountrySelect, onClose]
+  );
+
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
-      if (e.key === "ArrowDown") { e.preventDefault(); setCursor(c => Math.min(c + 1, allItems.length - 1)); }
-      if (e.key === "ArrowUp") { e.preventDefault(); setCursor(c => Math.max(c - 1, 0)); }
-      if (e.key === "Enter" && allItems[cursor]) select(allItems[cursor].slug);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, allItems, cursor, select, onClose]);
 
-  // Scroll cursor into view
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+
+        setCursor((c) =>
+          Math.min(c + 1, allItems.length - 1)
+        );
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+
+        setCursor((c) => Math.max(c - 1, 0));
+      }
+
+      if (e.key === "Enter" && allItems[cursor]) {
+        select(allItems[cursor].slug);
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () =>
+      window.removeEventListener("keydown", handler);
+  }, [
+    open,
+    allItems,
+    cursor,
+    select,
+    onClose,
+  ]);
+
   useEffect(() => {
-    listRef.current?.querySelector(`[data-index="${cursor}"]`)?.scrollIntoView({ block: "nearest" });
+    listRef.current
+      ?.querySelector(`[data-index="${cursor}"]`)
+      ?.scrollIntoView({
+        block: "nearest",
+      });
   }, [cursor]);
 
   if (!open) return null;
 
+  const illustrationVisible =
+    query.length > 0 || !!activeFilter;
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingTop: "15vh",
-        paddingLeft: 16,
-        paddingRight: 16,
-        background: "rgba(0,0,0,0.75)",
-        backdropFilter: "blur(6px)",
-      }}
-      onClick={onClose}
-    >
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          background: "rgba(0,0,0,0.82)",
+          backdropFilter: "blur(10px)",
+        }}
+      />
+
+      {/* Wrapper */}
       <div
         style={{
-          width: "100%",
-          maxWidth: 580,
-          background: "#0f0f0f",
-          border: "2px solid #2a2a2a",
-          boxShadow: "6px 6px 0 #00ffd5",
-          overflow: "hidden",
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Input row */}
-        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 101,
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          padding: "14px 16px",
-          borderBottom: "2px solid #2a2a2a",
-        }}>
-          <Search style={{ width: 16, height: 16, color: "#666660", flexShrink: 0 }} />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => { setQuery(e.target.value); setCursor(0); setActiveFilter(null); }}
-            placeholder={placeholder}
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        {/* Illustration */}
+{/* Illustration */}
+<div
+  className="search-illustration-wrap"
+  style={{
+    position: "fixed",
+    left: "48px",
+bottom: "48px",
+width: "280px",   // ⬆ explicitly set to 280px
+height: "280px",  
+
+    opacity: illustrationVisible ? 1 : 0,
+
+    transform: illustrationVisible
+      ? "translateY(0px) scale(1)"
+      : "translateY(14px) scale(0.92)",
+
+    transition:
+      "all 0.35s cubic-bezier(0.22,1,0.36,1)",
+
+    pointerEvents: "none",
+
+    zIndex: 0,
+  }}
+>
+  <SearchIllustration
+    isTyping={isTyping}
+    isVisible={illustrationVisible}
+  />
+</div>
+
+        {/* Modal */}
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            width: "calc(100vw - 32px)",
+            maxWidth: 720,
+            pointerEvents: "auto",
+            animation:
+              "slideUp 0.3s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <div
             style={{
-              flex: 1,
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              color: "#f0f0e8",
-              fontSize: 14,
-              fontFamily: "Satoshi, sans-serif",
+              background: S.card,
+              border: `1px solid ${S.borderMd}`,
+              borderRadius: 22,
+              overflow: "hidden",
+              boxShadow:
+                "0 32px 80px rgba(0,0,0,0.7)",
             }}
-          />
-          {query && (
-            <button
-              onClick={() => { setQuery(""); setCursor(0); }}
-              style={{ color: "#666660", cursor: "pointer", background: "none", border: "none", padding: 0, display: "flex" }}
+          >
+            {/* Input */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "18px 22px",
+                borderBottom: `1px solid ${S.border}`,
+              }}
             >
-              <X style={{ width: 16, height: 16 }} />
-            </button>
-          )}
-          <kbd style={{
-            padding: "2px 6px",
-            fontSize: 10,
-            fontFamily: "monospace",
-            border: "1px solid #2a2a2a",
-            color: "#666660",
-            background: "#1a1a1a",
-          }}>ESC</kbd>
-        </div>
+              <Search
+                size={16}
+                color={S.dimmer}
+              />
 
-        <div style={{ maxHeight: "55vh", overflowY: "auto" }} ref={listRef}>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) =>
+                  handleQueryChange(e.target.value)
+                }
+                placeholder={placeholder}
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "#fff",
+                  fontSize: 15,
+                  fontWeight: 500,
+                  fontFamily: S.sans,
+                }}
+              />
 
-          {/* Quick filters */}
-          {showFilters && (
-            <div style={{ padding: "12px 16px 8px" }}>
-              <p style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "#666660",
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-                marginBottom: 8,
-                fontFamily: "Cabinet Grotesk, sans-serif",
-              }}>
-                Quick filters
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {QUICK_FILTERS.map(f => {
-                  const Icon = f.icon;
-                  const active = activeFilter === f.id;
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => { setActiveFilter(active ? null : f.id); setCursor(0); setQuery(""); }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "5px 10px",
-                        fontSize: 11,
-                        fontFamily: "Cabinet Grotesk, sans-serif",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        cursor: "pointer",
-                        border: active ? "2px solid #00ffd5" : "2px solid #2a2a2a",
-                        background: active ? "rgba(0,255,213,0.08)" : "transparent",
-                        color: active ? "#00ffd5" : "#888880",
-                        boxShadow: active ? "2px 2px 0 #00ffd5" : "2px 2px 0 #2a2a2a",
-                        transition: "all 0.1s ease",
-                      }}
-                    >
-                      <Icon style={{ width: 11, height: 11 }} />
-                      {f.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Recent */}
-          {showRecent && (
-            <div style={{ padding: "8px 16px 4px" }}>
-              <p style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "#666660",
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-                marginBottom: 6,
-                fontFamily: "Cabinet Grotesk, sans-serif",
-              }}>
-                Recent
-              </p>
-              {recentCountries.map((c, i) => (
-                <ResultRow
-                  key={c.slug}
-                  country={c}
-                  index={i}
-                  active={cursor === i}
-                  onSelect={select}
-                  onHover={setCursor}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Results */}
-          {showResults && (
-            <div style={{ padding: "8px 0 4px" }}>
-              {activeFilter && (
-                <p style={{
+              <kbd
+                style={{
+                  padding: "3px 8px",
                   fontSize: 10,
-                  fontWeight: 700,
-                  color: "#666660",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  padding: "0 16px 8px",
-                  fontFamily: "Cabinet Grotesk, sans-serif",
-                }}>
-                  {QUICK_FILTERS.find(f => f.id === activeFilter)?.label}
-                </p>
-              )}
+                  borderRadius: 6,
+                  color: S.dimmer,
+                  border: `1px solid ${S.border}`,
+                }}
+              >
+                ESC
+              </kbd>
+            </div>
+
+            {/* Results */}
+            <div
+              ref={listRef}
+              style={{
+                maxHeight: "52vh",
+                overflowY: "auto",
+              }}
+            >
               {results.map((c, i) => (
                 <ResultRow
                   key={c.slug}
@@ -412,60 +514,45 @@ export default function CommandSearch({ countries, onCountrySelect, open, onClos
                   onHover={setCursor}
                 />
               ))}
-            </div>
-          )}
 
-          {/* No results */}
-          {query && results.length === 0 && (
-            <div style={{ padding: "32px 16px", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: "#666660", fontFamily: "Satoshi, sans-serif" }}>
-                No countries matching &ldquo;{query}&rdquo;
-              </p>
+              {!query && (
+                <div
+                  style={{
+                    padding: "36px",
+                    textAlign: "center",
+                    color: S.dim,
+                  }}
+                >
+                  25 countries. Start typing.
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Empty — no query, no recent, no filter */}
-          {!query && !activeFilter && recentCountries.length === 0 && (
-            <div style={{ padding: "24px 16px", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: "#666660", fontFamily: "Satoshi, sans-serif" }}>
-                25 countries. Start typing.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: "8px 16px",
-          borderTop: "2px solid #1a1a1a",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}>
-          {[
-            { key: "↑↓", label: "navigate" },
-            { key: "↵", label: "select" },
-            { key: "esc", label: "close" },
-          ].map(({ key, label }) => (
-            <span key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <kbd style={{
-                padding: "1px 5px",
-                fontSize: 10,
-                fontFamily: "monospace",
-                border: "1px solid #2a2a2a",
-                color: "#666660",
-                background: "#1a1a1a",
-              }}>{key}</kbd>
-              <span style={{ fontSize: 10, color: "#444440", fontFamily: "Satoshi, sans-serif" }}>{label}</span>
-            </span>
-          ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0px);
+          }
+        }
+
+        @media (max-width: 1200px) {
+          .search-illustration-wrap {
+            display: none;
+          }
+        }
+      `}</style>
+    </>
   );
 }
-
-// ─── Result row ───────────────────────────────────────────────────────────────
 
 function ResultRow({
   country,
@@ -473,14 +560,9 @@ function ResultRow({
   active,
   onSelect,
   onHover,
-}: {
-  country: GlobeCountry;
-  index: number;
-  active: boolean;
-  onSelect: (slug: string) => void;
-  onHover: (i: number) => void;
-}) {
-  const continent = CONTINENT_MAP[country.slug] ?? "";
+}: any) {
+  const continent =
+    CONTINENT_MAP[country.slug] ?? "";
 
   return (
     <button
@@ -492,52 +574,51 @@ function ResultRow({
         display: "flex",
         alignItems: "center",
         gap: 12,
-        padding: "10px 16px",
-        background: active ? "rgba(0,255,213,0.05)" : "transparent",
-        borderLeft: active ? "2px solid #00ffd5" : "2px solid transparent",
-        borderRight: "none",
-        borderTop: "none",
-        borderBottom: "1px solid #1a1a1a",
+        padding: "11px 20px",
+        background: active
+          ? "rgba(255,255,255,0.05)"
+          : "transparent",
+        border: "none",
+        borderBottom:
+          "1px solid rgba(255,255,255,0.04)",
         cursor: "pointer",
         textAlign: "left",
-        transition: "all 0.1s ease",
       }}
     >
-      {/* Flag */}
-      <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{country.flagEmoji}</span>
+      <span style={{ fontSize: 20 }}>
+        {country.flagEmoji}
+      </span>
 
-      {/* Name + continent */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: "#f0f0e8",
-          fontFamily: "Cabinet Grotesk, sans-serif",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          margin: 0,
-        }}>
+      <div style={{ flex: 1 }}>
+        <p
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#fff",
+            margin: 0,
+          }}
+        >
           {country.name}
         </p>
-        {continent && (
-          <p style={{
+
+        <p
+          style={{
             fontSize: 11,
-            color: "#666660",
-            fontFamily: "Satoshi, sans-serif",
+            color: "rgba(255,255,255,0.3)",
             margin: 0,
-            marginTop: 1,
-          }}>
-            {continent}
-          </p>
-        )}
+          }}
+        >
+          {continent}
+        </p>
       </div>
 
-      {/* Score bar */}
       <ScoreBar score={country.moveScore} />
 
-      {/* Arrow on active */}
       {active && (
-        <ArrowRight style={{ width: 13, height: 13, color: "#00ffd5", flexShrink: 0 }} />
+        <ArrowRight
+          size={13}
+          color="rgba(255,255,255,0.6)"
+        />
       )}
     </button>
   );
