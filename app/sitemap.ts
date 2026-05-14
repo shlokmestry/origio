@@ -26,7 +26,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/wizard`, lastModified: NOW, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${BASE}/guides`, lastModified: NOW, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/blog`, lastModified: NOW, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/compare`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/salary-calculator`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
