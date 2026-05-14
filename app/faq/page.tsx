@@ -1,9 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 import Footer from "@/components/Footer";
-
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import Nav from "@/components/Nav";
 
 const faqs = [
@@ -44,50 +42,103 @@ const faqs = [
   },
 ];
 
+const S = {
+  bg: '#050508',
+  card: '#0c0c0f',
+  border: 'rgba(255,255,255,0.07)',
+  borderMd: 'rgba(255,255,255,0.12)',
+  dim: 'rgba(255,255,255,0.38)',
+  dimmer: 'rgba(255,255,255,0.2)',
+  serif: "'DM Serif Display', Georgia, serif",
+  sans: "'Inter', sans-serif",
+};
+
 export default function FAQPage() {
   const [open, setOpen] = useState<string | null>(null);
   const toggle = (key: string) => setOpen(open === key ? null : key);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-text-primary">
+    <div style={{ minHeight: '100vh', background: S.bg, color: '#fff', fontFamily: S.sans }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(100px,10vw,120px) clamp(20px,4vw,40px) 80px' }}>
 
-        {/* Header */}
-        <div className="mb-12 border-b-2 border-[#2a2a2a] pb-8">
-          <p className="text-xs font-bold text-accent uppercase tracking-widest mb-3">Help</p>
-          <h1 className="font-heading text-4xl sm:text-5xl font-extrabold uppercase tracking-tight mb-3">
-            FAQ
+        {/* ── HEADER ── */}
+        <div style={{ marginBottom: 64 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 16 }}>
+            Help
+          </p>
+          <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(36px,6vw,64px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: '0 0 20px' }}>
+            Frequently asked questions
           </h1>
-          <p className="text-text-muted text-sm font-medium">
+          <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.6, maxWidth: 480 }}>
             Everything you need to know about Origio, the data, and how Find My Country works.
           </p>
         </div>
 
-        <div className="space-y-10">
+        {/* ── FAQ SECTIONS ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
           {faqs.map((section) => (
             <div key={section.category}>
-              <h2 className="font-heading text-xs font-bold text-accent uppercase tracking-widest mb-4 border-l-2 border-accent pl-3">
+              {/* Section label */}
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dimmer, marginBottom: 12 }}>
                 {section.category}
-              </h2>
-              <div className="space-y-0 border-2 border-[#2a2a2a]">
+              </p>
+
+              {/* Items card */}
+              <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
                 {section.items.map((item, i) => {
                   const key = section.category + item.q;
                   const isOpen = open === key;
                   return (
-                    <div key={key} className={i < section.items.length - 1 ? "border-b-2 border-[#2a2a2a]" : ""}>
+                    <div key={key} style={{ borderBottom: i < section.items.length - 1 ? `1px solid rgba(255,255,255,0.05)` : 'none' }}>
+                      {/* Question row */}
                       <button
                         onClick={() => toggle(key)}
-                        className="w-full flex items-center justify-between px-5 py-4 text-left text-sm font-bold hover:bg-[#1a1a1a] transition-colors uppercase tracking-wide"
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                          padding: '20px 24px',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                       >
-                        <span className="text-text-primary">{item.q}</span>
-                        {isOpen
-                          ? <ChevronUp className="w-4 h-4 text-accent flex-shrink-0 ml-4" />
-                          : <ChevronDown className="w-4 h-4 text-text-muted flex-shrink-0 ml-4" />}
+                        <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', lineHeight: 1.4, flex: 1 }}>
+                          {item.q}
+                        </span>
+                        {/* +/− toggle */}
+                        <span style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          background: isOpen ? '#fff' : 'rgba(255,255,255,0.06)',
+                          border: `1px solid ${isOpen ? '#fff' : S.borderMd}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0, fontSize: 16, fontWeight: 400,
+                          color: isOpen ? '#0a0a0a' : 'rgba(255,255,255,0.5)',
+                          transition: 'background 0.15s, color 0.15s',
+                          lineHeight: 1,
+                        }}>
+                          {isOpen ? '−' : '+'}
+                        </span>
                       </button>
+
+                      {/* Answer */}
                       {isOpen && (
-                        <div className="px-5 pb-5 text-sm text-text-muted leading-relaxed border-t border-[#1a1a1a] pt-3">
+                        <div style={{
+                          padding: '0 24px 20px',
+                          fontSize: 14,
+                          color: S.dim,
+                          lineHeight: 1.7,
+                          borderTop: `1px solid rgba(255,255,255,0.04)`,
+                          paddingTop: 16,
+                        }}>
                           {item.a}
                         </div>
                       )}
@@ -99,15 +150,38 @@ export default function FAQPage() {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-16 border-2 border-accent p-8 text-center" style={{ boxShadow: "6px 6px 0 #00ffd5" }}>
-          <h3 className="font-heading text-xl font-extrabold text-text-primary uppercase tracking-tight mb-2">Still have questions?</h3>
-          <p className="text-text-muted text-sm mb-6">Email us and we'll get back to you.</p>
-          <a href="mailto:notshlokmestry@gmail.com" className="cta-button px-6 py-3 text-sm font-bold uppercase tracking-wide inline-flex">
-            Contact Us
+        {/* ── CONTACT CTA ── */}
+        <div style={{ marginTop: 72, background: S.card, border: `1px solid ${S.borderMd}`, borderRadius: 20, padding: 'clamp(32px,5vw,48px)', textAlign: 'center' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 16 }}>
+            Still have questions?
+          </p>
+          <h3 style={{ fontFamily: S.serif, fontSize: 'clamp(22px,3vw,32px)', fontWeight: 400, color: '#fff', lineHeight: 1.1, margin: '0 0 12px' }}>
+            We'll get back to you.
+          </h3>
+          <p style={{ fontSize: 14, color: S.dim, marginBottom: 28, lineHeight: 1.6 }}>
+            Email us and we'll respond within a day.
+          </p>
+          <a
+            href="mailto:notshlokmestry@gmail.com"
+            style={{
+              display: 'inline-flex', alignItems: 'center',
+              background: '#fff', color: '#0a0a0a',
+              border: 'none', borderRadius: 100,
+              padding: '13px 32px',
+              fontSize: 14, fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 2px 20px rgba(255,255,255,0.12)',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#ececec'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = '#fff'}
+          >
+            Contact us
           </a>
         </div>
+
       </main>
+
       <Footer />
     </div>
   );

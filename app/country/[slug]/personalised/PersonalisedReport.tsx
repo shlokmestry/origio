@@ -798,11 +798,11 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               )}
             </div>
             {/* Total row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '16px 22px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderTop: `1px solid ${S.borderMd}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', background: 'rgba(255,255,255,0.03)', borderTop: `1px solid ${S.borderMd}`, gap: 16, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: S.serif, fontSize: 18, color: '#fff' }}>Total monthly</span>
-              <span style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', textAlign: 'right' }}>{cs}{monthlyTotal.toLocaleString()}</span>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', background: '#fff', color: '#0a0a0a', borderRadius: 100, padding: '4px 12px', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <span style={{ fontFamily: S.serif, fontSize: 22, color: '#fff' }}>{cs}{monthlyTotal.toLocaleString()}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', background: '#fff', color: '#0a0a0a', borderRadius: 100, padding: '5px 14px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {disposable >= 0 ? `${cs}${disposable.toLocaleString()} free` : "Over budget"}
                 </span>
               </div>
