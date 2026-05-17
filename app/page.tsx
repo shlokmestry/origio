@@ -7,56 +7,53 @@ import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import AuroraBackground from "@/components/AuroraBackground";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { ArrowLeft } from "lucide-react";
 
-// ─── Flicker word ──────────────────────────────────────────────────────────
-const FLICKER_WORDS = [
-  "India", "UK", "Ireland", "Australia", "America",
-  "Canada", "Germany", "Japan", "Portugal", "Singapore",
-];
+// ─── Slow country cycle → settles on "Belong" ─────────────────────────────
+const CYCLE_WORDS = ["Portugal", "Germany", "Japan", "Canada", "Singapore"];
 
 function FlickerWord() {
-  const [word, setWord]       = useState("Belong");
-  const [visible, setVisible] = useState(true);
+  const [word, setWord]       = useState(CYCLE_WORDS[0]);
+  const [visible, setVisible] = useState(false);
   const [done, setDone]       = useState(false);
-  const s = useRef({ count: 0, idx: 0, started: false });
 
   useEffect(() => {
-    if (s.current.started) return;
-    s.current.started = true;
-    const TOTAL = 18;
-    let tid: ReturnType<typeof setTimeout>;
+    const start = setTimeout(() => {
+      setVisible(true);
+      let idx = 0;
 
-    function flicker() {
-      if (s.current.count >= TOTAL) {
+      function next() {
         setVisible(false);
-        tid = setTimeout(() => { setWord("Belong"); setVisible(true); setDone(true); }, 70);
-        return;
+        setTimeout(() => {
+          idx++;
+          if (idx >= CYCLE_WORDS.length) {
+            setWord("Belong");
+            setDone(true);
+            setVisible(true);
+          } else {
+            setWord(CYCLE_WORDS[idx]);
+            setVisible(true);
+            setTimeout(next, 800);
+          }
+        }, 400);
       }
-      setVisible(false);
-      tid = setTimeout(() => {
-        setWord(FLICKER_WORDS[s.current.idx % FLICKER_WORDS.length]);
-        s.current.idx++;
-        s.current.count++;
-        setVisible(true);
-        const p = s.current.count / TOTAL;
-        tid = setTimeout(flicker, p < 0.5 ? 280 : p < 0.8 ? 160 : 90);
-      }, 70);
-    }
 
-    tid = setTimeout(flicker, 600);
-    return () => clearTimeout(tid);
+      setTimeout(next, 800);
+    }, 400);
+
+    return () => clearTimeout(start);
   }, []);
 
   return (
     <span style={{
       opacity:    visible ? 1 : 0,
-      transition: "opacity 0.06s ease",
+      transition: done ? "opacity 0.9s ease, color 0.6s ease" : "opacity 0.35s ease",
       fontStyle:  done ? "italic" : "normal",
-      color:      done ? "#00ffd5" : "#ffffff",
+      color:      done ? "#00ffd5" : "rgba(255,255,255,0.75)",
       display:    "inline",
     }}>
       {word}
@@ -74,7 +71,8 @@ function StretchHeadline() {
     function fit() {
       if (!el) return;
       el.style.fontSize = "100px";
-      const scale = (window.innerWidth * 0.97) / el.scrollWidth;
+      const containerW = el.parentElement?.offsetWidth ?? window.innerWidth;
+      const scale = (containerW * 0.96) / el.scrollWidth;
       el.style.fontSize = `${Math.floor(100 * scale)}px`;
     }
     fit();
@@ -92,7 +90,7 @@ function StretchHeadline() {
       whiteSpace:      "nowrap",
       textAlign:       "center",
       width:           "100%",
-      transform:       "scaleY(1.2)",
+      transform:       "scaleY(1.15)",
       transformOrigin: "center center",
       userSelect:      "none",
     }}>
@@ -100,190 +98,6 @@ function StretchHeadline() {
     </div>
   );
 }
-
-// ─── Paper plane + dotted trail ────────────────────────────────────────────
-function PaperPlane({ containerRef }: { containerRef: React.RefObject<HTMLElement | null> }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const planeRef  = useRef<HTMLDivElement>(null);
-  const stateRef  = useRef({
-    // Position
-    x: 0, y: 0,
-    // Velocity
-    vx: 2.2, vy: -0.8,
-    // Angle (radians, 0 = pointing right)
-    angle: 0,
-    // Angular velocity — gives natural banking
-    angularVel: 0,
-    // Lift/drag physics
-    speed: 2.2,
-    trail: [] as { x: number; y: number }[],
-    frameCount: 0,
-    nextInputIn: 180,   // frames until next "gust" input
-  });
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvasEl = canvasRef.current;
-    const planeEl  = planeRef.current;
-    const heroEl   = containerRef.current;
-    if (!canvasEl || !planeEl || !heroEl) return;
-
-    const canvas: HTMLCanvasElement = canvasEl;
-    const plane:  HTMLDivElement    = planeEl;
-    const hero:   HTMLElement       = heroEl;
-    const ctx = canvas.getContext("2d")!;
-    const s   = stateRef.current;
-
-    // Paper plane constants
-    const DRAG         = 0.012;   // air resistance — slows over time
-    const LIFT         = 0.018;   // lift keeps it from stalling
-    const GRAVITY      = 0.035;   // gentle downward pull
-    const ANG_DAMPING  = 0.92;    // angular velocity decays (stops spinning)
-    const MAX_ANG_VEL  = 0.04;    // max rotation speed
-    const TARGET_SPEED = 2.4;     // natural cruise speed
-    const PW           = 52;      // plane size
-    const EDGE         = 110;
-
-    function resize() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      canvas.width = w; canvas.height = h;
-      if (s.x === 0) {
-        s.x = w * 0.3;
-        s.y = h * 0.4;
-        // Launch angle: slightly up-right
-        s.angle = -0.3;
-        s.vx = Math.cos(s.angle) * TARGET_SPEED;
-        s.vy = Math.sin(s.angle) * TARGET_SPEED;
-      }
-    }
-
-    function applyGust() {
-      // Random angular impulse — feels like a gust of wind banking the plane
-      const gustStrength = (Math.random() - 0.5) * 0.06;
-      s.angularVel += gustStrength;
-      // Clamp
-      s.angularVel = Math.max(-MAX_ANG_VEL, Math.min(MAX_ANG_VEL, s.angularVel));
-    }
-
-    function applyEdgeAvoidance() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      // Soft walls — angular nudge away from edges
-      const m = EDGE;
-      if (s.x < m)       s.angularVel -= 0.008 * ((m - s.x) / m);
-      if (s.x > w - m)   s.angularVel += 0.008 * ((s.x - (w - m)) / m);
-      if (s.y < m)       s.angularVel += 0.006 * ((m - s.y) / m);
-      if (s.y > h - m)   s.angularVel -= 0.006 * ((s.y - (h - m)) / m);
-    }
-
-    function tick() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      s.frameCount++;
-
-      // Random gusts every N frames
-      if (s.frameCount >= s.nextInputIn) {
-        applyGust();
-        s.frameCount  = 0;
-        s.nextInputIn = 120 + Math.random() * 240;
-      }
-
-      // Edge avoidance every frame
-      applyEdgeAvoidance();
-
-      // Update angle from angular velocity
-      s.angularVel *= ANG_DAMPING;
-      s.angle      += s.angularVel;
-
-      // Derive velocity direction from angle — plane flies nose-forward
-      const currentSpeed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-
-      // Lift: perpendicular to motion, scales with speed
-      const liftX = -Math.sin(s.angle) * LIFT * currentSpeed;
-      const liftY =  Math.cos(s.angle) * LIFT * currentSpeed;
-
-      // Drag: opposes motion
-      const dragX = -s.vx * DRAG;
-      const dragY = -s.vy * DRAG;
-
-      // Gravity: always pulls down
-      const gravX = 0;
-      const gravY = GRAVITY;
-
-      // Speed correction — gently maintain cruise speed
-      const speedErr  = TARGET_SPEED - currentSpeed;
-      const thrustX   = Math.cos(s.angle) * speedErr * 0.04;
-      const thrustY   = Math.sin(s.angle) * speedErr * 0.04;
-
-      // Steer velocity toward nose direction (plane can't fly sideways)
-      const noseX = Math.cos(s.angle);
-      const noseY = Math.sin(s.angle);
-      const slip  = 0.08; // how quickly velocity aligns to nose
-      s.vx += (noseX * currentSpeed - s.vx) * slip + dragX + liftX + gravX + thrustX;
-      s.vy += (noseY * currentSpeed - s.vy) * slip + dragY + liftY + gravY + thrustY;
-
-      // Move
-      s.x += s.vx;
-      s.y += s.vy;
-
-      // Hard bounce off walls — flip angular velocity for natural rebound
-      if (s.x < PW)     { s.x = PW;     s.vx = Math.abs(s.vx);  s.angle = -s.angle * 0.6; s.angularVel *= -0.5; }
-      if (s.x > w - PW) { s.x = w - PW; s.vx = -Math.abs(s.vx); s.angle = Math.PI - s.angle; s.angularVel *= -0.5; }
-      if (s.y < PW)     { s.y = PW;     s.vy = Math.abs(s.vy);  s.angularVel *= -0.4; }
-      if (s.y > h - PW) { s.y = h - PW; s.vy = -Math.abs(s.vy) * 0.7; s.angularVel *= -0.4; }
-
-      // DOM
-      plane.style.left      = `${s.x - PW / 2}px`;
-      plane.style.top       = `${s.y - PW / 2}px`;
-      plane.style.transform = `rotate(${s.angle * 180 / Math.PI}deg)`;
-
-      // Trail — emitted from TAIL of plane
-      const tailX = s.x - Math.cos(s.angle) * (PW * 0.5);
-      const tailY = s.y - Math.sin(s.angle) * (PW * 0.5);
-      s.trail.push({ x: tailX, y: tailY });
-      if (s.trail.length > 110) s.trail.shift();
-
-      // Draw trail
-      ctx.clearRect(0, 0, w, h);
-      for (let i = 0; i < s.trail.length; i++) {
-        if (i % 4 !== 0) continue;
-        const t        = s.trail[i];
-        const progress = i / s.trail.length;
-        const r        = 1.0 + progress * 1.8;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${progress * 0.38})`;
-        ctx.fill();
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    resize();
-    window.addEventListener("resize", resize);
-    rafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", resize);
-    };
-  }, [containerRef]);
-
-  return (
-    <>
-      <canvas ref={canvasRef} style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:3 }} />
-      <div ref={planeRef} style={{ position:"absolute", width:52, height:52, pointerEvents:"none", zIndex:4 }}>
-        <svg viewBox="0 0 64 64" style={{ width:"100%", height:"100%" }}>
-          {/* Main body: nose=right(60,32), tail=left(4,10 & 4,54) */}
-          <polygon points="60,32 4,10 20,32 4,54" fill="white" opacity="0.95" />
-          {/* Folded belly panel */}
-          <polygon points="60,32 4,10 28,36" fill="rgba(255,255,255,0.45)" />
-          {/* Centre crease from nose to tail */}
-          <line x1="60" y1="32" x2="20" y2="32" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
-        </svg>
-      </div>
-    </>
-  );
-}
-
 
 // ─── Main ──────────────────────────────────────────────────────────────────
 export default function Home() {
@@ -417,60 +231,71 @@ export default function Home() {
       <section
         ref={heroRef}
         style={{
-          position: "relative",
-          minHeight: "100vh",
-          background: "#0a0a0a",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          position:       "relative",
+          minHeight:      "100vh",
+          background:     "#0a0a0a",
+          overflow:       "hidden",
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
           justifyContent: "center",
-          padding: "120px 0 80px",
+          padding:        "clamp(80px,12vh,140px) 0 clamp(60px,8vh,100px)",
         }}
       >
-        {/* Animated gradient background */}
-        <div className="hero-gradient-bg" />
-        {/* Plane + trail behind everything */}
-        <PaperPlane containerRef={heroRef} />
+        {/* Aurora — z-index 1, behind everything */}
+        <AuroraBackground />
 
-        {/* Text content — above plane */}
+        {/* Text — z-index 5, above aurora */}
         <div style={{
-          position: "relative", zIndex: 5,
-          display: "flex", flexDirection: "column", alignItems: "center", width: "100%",
+          position:      "relative",
+          zIndex:        5,
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          width:         "100%",
+          padding:       "0 16px",
         }}>
-          {/* Full-width stretched headline */}
-          <div style={{ width: "100%", overflow: "visible", paddingBottom: "0.18em", marginBottom: 48 }}>
+          <div style={{
+            width:         "100%",
+            overflow:      "visible",
+            paddingBottom: "0.18em",
+            marginBottom:  "clamp(28px,4vh,52px)",
+          }}>
             <StretchHeadline />
           </div>
 
-          {/* Subtitle */}
           <p style={{
-            fontFamily: "Satoshi, sans-serif",
-            fontSize: "clamp(16px, 1.8vw, 22px)",
-            color: "rgba(255,255,255,0.48)",
-            fontWeight: 400,
-            lineHeight: 1.55,
-            textAlign: "center",
-            maxWidth: 520,
-            marginBottom: 44,
+            fontFamily:   "Inter, sans-serif",
+            fontSize:     "clamp(14px, 1.5vw, 18px)",
+            color:        "rgba(255,255,255,0.42)",
+            fontWeight:   400,
+            lineHeight:   1.65,
+            textAlign:    "center",
+            maxWidth:     460,
+            marginBottom: "clamp(32px,4vh,48px)",
+            padding:      "0 8px",
           }}>
-            Salaries, visas, cost of living and quality of life<br />
+            Salaries, visas, cost of living and quality of life
             personalised to your job and passport.
           </p>
 
-          {/* White pill CTA */}
           <button
             onClick={() => router.push("/wizard")}
-            className="hero-cta-white"
             style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              background: "#ffffff", color: "#0a0a0a",
-              fontFamily: "Satoshi, sans-serif",
-              fontSize: 16, fontWeight: 600,
-              padding: "16px 64px", borderRadius: 100,
-              border: "none", cursor: "pointer",
-              letterSpacing: "0.01em",
-              boxShadow: "0 2px 24px rgba(255,255,255,0.14)",
+              display:        "inline-flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              background:     "#ffffff",
+              color:          "#0a0a0a",
+              fontFamily:     "Inter, sans-serif",
+              fontSize:       "clamp(13px,1.4vw,15px)",
+              fontWeight:     700,
+              padding:        "clamp(12px,1.5vh,16px) clamp(36px,5vw,60px)",
+              borderRadius:   100,
+              border:         "none",
+              cursor:         "pointer",
+              letterSpacing:  "0.02em",
+              boxShadow:      "0 2px 24px rgba(255,255,255,0.12)",
             }}
           >
             Find My Country
@@ -481,23 +306,32 @@ export default function Home() {
       {/* ── SECTION 2: GLOBE ── */}
       <section
         style={{
-          width: "100%", height: "100svh", minHeight: 520,
-          position: "relative", background: "#0a0a0a",
+          width:      "100%",
+          height:     "100svh",
+          minHeight:  480,
+          position:   "relative",
+          background: "#0a0a0a",
         }}
         aria-label="Interactive globe"
       >
-        {/* Animated gradient background */}
-        <div className="hero-gradient-bg" />
+        {/* Subtle aurora behind globe too */}
+        <AuroraBackground />
+
         <p style={{
-          position: "absolute", top: 20, left: 24, zIndex: 10,
-          fontSize: 9, fontFamily: "monospace",
-          color: "rgba(255,255,255,0.18)",
-          textTransform: "uppercase", letterSpacing: "0.3em",
+          position:      "absolute",
+          top:           16,
+          left:          20,
+          zIndex:        10,
+          fontSize:      9,
+          fontFamily:    "monospace",
+          color:         "rgba(255,255,255,0.18)",
+          textTransform: "uppercase",
+          letterSpacing: "0.3em",
           pointerEvents: "none",
         }}>
           Drag · click a country
         </p>
-        <div style={{ position: "absolute", inset: 0, touchAction: "none" }}>
+        <div style={{ position: "absolute", inset: 0, touchAction: "none", zIndex: 5 }}>
           <Globe
             countries={globeCountries}
             onCountrySelect={handleCountrySelect}
