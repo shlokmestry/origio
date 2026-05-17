@@ -33,21 +33,21 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Scripts
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
-              // Styles — added MapTiler for map styles
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com",
+              // Styles
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
-              // Images — added picsum.photos for blog cover images
+              // Images
               "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos",
               // Fonts
-              "font-src 'self' https://api.fontshare.com https://fonts.gstatic.com",
-              // Connections — added MapTiler tile + API endpoints
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
+              "font-src 'self' data: https://api.fontshare.com https://fonts.gstatic.com",
+              // Connections — added region1.google-analytics.com + analytics.google.com
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
               // Stripe
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self' https://checkout.stripe.com",
-              // Workers — MapLibre uses web workers for tile processing
+              // Workers
               "worker-src 'self' blob:",
             ].join("; "),
           },
