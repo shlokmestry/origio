@@ -359,7 +359,7 @@ function WizardInner() {
       // Increment run counter — non-blocking, don't await
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
-          supabase.rpc("increment_quiz_runs", { user_id: session.user.id }).catch(() => {});
+          void supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
         } else {
           const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1));
