@@ -227,17 +227,26 @@ function WizardInner() {
   const [isSignedIn, setIsSignedIn]   = useState(false);
 
   useEffect(() => {
+    // Hard fallback — if anything hangs, unblock wizard after 4s
+    const fallback = setTimeout(() => setGateChecked(true), 4000);
+
     async function checkGate() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("supabase_timeout")), 3500)
+          ),
+        ]);
+
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored);
           setIsSignedIn(false);
           if (stored >= ANON_MAX_RUNS) setGateType("anon");
-          setGateChecked(true);
           return;
         }
+
         setIsSignedIn(true);
         const { data: profile } = await supabase
           .from("profiles")
@@ -252,9 +261,11 @@ function WizardInner() {
       } catch (err) {
         console.error("Gate check failed:", err);
       } finally {
+        clearTimeout(fallback);
         setGateChecked(true);
       }
     }
+
     checkGate();
   }, []);
 
