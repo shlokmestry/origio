@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
+import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowLeft, Mail, MessageSquare, AlertCircle, Lightbulb, Database } from 'lucide-react'
+import { Mail, AlertCircle, Lightbulb, Database, MessageSquare } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Contact ~ Origio',
+  title: 'Contact — Origio',
   description: 'Get in touch with the Origio team for data corrections, payment issues, feature requests, or anything else.',
 }
 
@@ -39,7 +39,7 @@ const TOPICS = [
 const TIPS = [
   {
     label: 'Payment issues',
-    tip: 'Include the email address you used to sign up and the approximate date of purchase.',
+    tip: 'Include the email you used to sign up and the approximate date of purchase.',
   },
   {
     label: 'Data corrections',
@@ -53,177 +53,132 @@ const TIPS = [
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-[#050508] text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8] flex flex-col" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      {/* ── Nav ── */}
-      <nav className="sticky top-0 z-50 bg-[#050508]/90 backdrop-blur border-b border-white/[0.08]">
-        <div className="max-w-[760px] mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center hover:opacity-70 transition-opacity">
-            <Image
-              src="/origio_logo_dark_final.png"
-              alt="Origio"
-              width={96}
-              height={24}
-              style={{ height: 24, width: 'auto' }}
-              priority
-            />
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back
-          </Link>
-        </div>
-      </nav>
-
-      <div className="max-w-[760px] mx-auto px-6 sm:px-10 py-16 sm:py-24">
-
-        {/* ── Header ── */}
-        <div className="mb-16">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-4">
+      {/* ── PAGE HEADER ── */}
+      <div className="border-b border-[#2a2a2a]">
+        <div className="max-w-[900px] mx-auto px-8 pt-28 pb-12">
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#f0f0e8]/40 mb-4">
             Contact
           </p>
           <h1
-            className="text-[clamp(40px,6vw,64px)] font-normal leading-none text-white mb-5"
+            className="text-[clamp(44px,5.5vw,68px)] font-normal leading-none text-[#f0f0e8] mb-5"
             style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
           >
             Get in touch
           </h1>
-          <p className="text-[14px] font-medium text-white/40 leading-relaxed max-w-md">
+          <p className="text-[14px] font-medium text-[#f0f0e8]/40 leading-relaxed max-w-md">
             Origio is a solo project. Every message goes directly to me — Shlok.
             I read and respond to everything.
           </p>
         </div>
+      </div>
 
-        {/* ── Email card ── */}
-        <section className="mb-12">
-          <a
-            href="mailto:hello@findorigio.com"
-            className="group flex items-center gap-5 bg-[#0d0d10] border border-white/[0.08] px-7 py-6 hover:border-white/20 transition-colors"
-            style={{ textDecoration: 'none' }}
-          >
-            <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-white/[0.08] bg-white/[0.04] group-hover:bg-white/[0.07] transition-colors">
-              <Mail className="w-5 h-5 text-[#4de6cc]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1">Email</p>
-              <p
-                className="text-[18px] font-normal text-white group-hover:text-[#4de6cc] transition-colors"
-                style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
-              >
-                hello@findorigio.com
-              </p>
-              <p className="text-[11px] font-medium text-white/30 mt-0.5">
-                Typical response within 24–48 hours
-              </p>
-            </div>
-            <ArrowLeft className="w-3.5 h-3.5 text-white/30 rotate-180 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-          </a>
-        </section>
+      {/* ── CONTENT ── */}
+      <div className="max-w-[900px] mx-auto px-8 py-14 flex-1 w-full">
 
-        {/* ── Topics ── */}
-        <section className="mb-12">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-5">
+        {/* ── EMAIL CARD ── */}
+        <a
+          href="mailto:hello@findorigio.com"
+          className="group flex items-center gap-5 bg-[#111] border border-[#2a2a2a] px-7 py-6 mb-10 hover:border-[#00ffd5]/40 transition-colors"
+          style={{ textDecoration: 'none', boxShadow: '3px 3px 0px #1a1a1a' }}
+        >
+          <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-[#2a2a2a] bg-[#00ffd5]/[0.06] group-hover:bg-[#00ffd5]/[0.1] transition-colors">
+            <Mail className="w-5 h-5 text-[#00ffd5]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f0f0e8]/40 mb-1">Direct email</p>
+            <p
+              className="text-[20px] font-normal text-[#f0f0e8] group-hover:text-[#00ffd5] transition-colors"
+              style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
+            >
+              hello@findorigio.com
+            </p>
+            <p className="text-[11px] font-medium text-[#f0f0e8]/30 mt-1">
+              Typical response within 24–48 hours
+            </p>
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#00ffd5]/0 group-hover:text-[#00ffd5] transition-colors flex-shrink-0">
+            Write →
+          </span>
+        </a>
+
+        {/* ── TOPICS ── */}
+        <div className="mb-10">
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#f0f0e8]/35 mb-5">
             What can I help with?
           </p>
-          <div className="grid sm:grid-cols-2 gap-px bg-white/[0.06] border border-white/[0.06]">
-            {TOPICS.map(({ icon: Icon, title, subject, description }) => (
+          <div className="border border-[#2a2a2a] overflow-hidden" style={{ boxShadow: '3px 3px 0px #1a1a1a' }}>
+            {TOPICS.map(({ icon: Icon, title, subject, description }, i) => (
               <a
                 key={title}
                 href={`mailto:hello@findorigio.com?subject=${encodeURIComponent(subject)}`}
-                className="group flex flex-col gap-3 bg-[#050508] px-6 py-6 hover:bg-[#0d0d10] transition-colors"
-                style={{ textDecoration: 'none' }}
+                className="group flex items-start gap-5 px-6 py-5 hover:bg-[#111] transition-colors"
+                style={{
+                  textDecoration: 'none',
+                  borderBottom: i < TOPICS.length - 1 ? '1px solid #1a1a1a' : 'none',
+                }}
               >
-                <div className="w-8 h-8 flex items-center justify-center border border-white/[0.08] bg-white/[0.04] group-hover:border-[#4de6cc]/30 group-hover:bg-[#4de6cc]/[0.06] transition-colors">
-                  <Icon className="w-3.5 h-3.5 text-white/40 group-hover:text-[#4de6cc] transition-colors" />
+                <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center border border-[#2a2a2a] bg-[#0a0a0a] group-hover:border-[#00ffd5]/30 group-hover:bg-[#00ffd5]/[0.05] transition-colors mt-0.5">
+                  <Icon className="w-3.5 h-3.5 text-[#f0f0e8]/30 group-hover:text-[#00ffd5] transition-colors" />
                 </div>
-                <div>
-                  <p className="text-[12px] font-bold text-white uppercase tracking-[0.06em] mb-1">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-bold text-[#f0f0e8] uppercase tracking-[0.08em] mb-1">
                     {title}
                   </p>
-                  <p className="text-[11px] font-medium text-white/40 leading-relaxed">
+                  <p className="text-[12px] font-medium text-[#f0f0e8]/40 leading-relaxed">
                     {description}
                   </p>
                 </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#f0f0e8]/0 group-hover:text-[#00ffd5]/60 transition-colors flex-shrink-0 pt-1">
+                  →
+                </span>
               </a>
             ))}
           </div>
-        </section>
+        </div>
 
-        {/* ── Tips ── */}
-        <section className="mb-16">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-5">
+        {/* ── TIPS ── */}
+        <div className="mb-14">
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#f0f0e8]/35 mb-5">
             Tips for faster replies
           </p>
-          <div className="bg-[#0d0d10] border border-white/[0.08]">
+          <div className="border border-[#2a2a2a] overflow-hidden bg-[#111]" style={{ boxShadow: '3px 3px 0px #1a1a1a' }}>
             {TIPS.map(({ label, tip }, i) => (
               <div
                 key={label}
-                className={`flex items-start gap-5 px-6 py-5 ${i < TIPS.length - 1 ? 'border-b border-white/[0.06]' : ''}`}
+                className="flex items-start gap-6 px-6 py-5"
+                style={{ borderBottom: i < TIPS.length - 1 ? '1px solid #1a1a1a' : 'none' }}
               >
-                <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#4de6cc] pt-0.5 w-28 flex-shrink-0">
+                <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#00ffd5] pt-0.5 w-32 flex-shrink-0">
                   {label}
                 </span>
-                <p className="text-[12px] font-medium text-white/40 leading-relaxed">{tip}</p>
+                <p className="text-[12px] font-medium text-[#f0f0e8]/40 leading-relaxed">{tip}</p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
 
-        {/* ── Footer links ── */}
-        <div className="flex items-center gap-5 pt-8 border-t border-white/[0.08]">
-          <span className="text-[11px] text-white/30 font-medium">Also useful:</span>
+        {/* ── FOOTER LINKS ── */}
+        <div className="flex items-center gap-6 pt-8 border-t border-[#2a2a2a]">
+          <span className="text-[11px] text-[#f0f0e8]/25 font-medium">Also useful:</span>
           <Link
             href="/faq"
-            className="text-[11px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+            className="text-[11px] font-bold uppercase tracking-widest text-[#f0f0e8]/40 hover:text-[#f0f0e8] transition-colors"
           >
             FAQ
           </Link>
           <Link
             href="/about"
-            className="text-[11px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+            className="text-[11px] font-bold uppercase tracking-widest text-[#f0f0e8]/40 hover:text-[#f0f0e8] transition-colors"
           >
             About
           </Link>
         </div>
-
       </div>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/[0.08] mt-4">
-        <div className="max-w-[760px] mx-auto px-6 sm:px-10 py-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/origio_logo_dark_final.png"
-              alt="Origio"
-              width={80}
-              height={20}
-              style={{ height: 20, width: 'auto' }}
-            />
-            <span className="text-[10px] text-white/20 font-medium">© 2026</span>
-          </div>
-          <div className="flex items-center gap-6">
-            {[
-              { href: '/about', label: 'About' },
-              { href: '/faq', label: 'FAQ' },
-              { href: '/contact', label: 'Contact', active: true },
-            ].map(({ href, label, active }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-[10px] font-bold uppercase tracking-widest transition-colors"
-                style={{ color: active ? '#4de6cc' : 'rgba(255,255,255,0.3)' }}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </footer>
-
       <Footer />
-    </main>
+    </div>
   )
 }

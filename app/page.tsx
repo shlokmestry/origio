@@ -12,51 +12,54 @@ import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
 import { ArrowLeft } from "lucide-react";
 
-// ─── Flicker word ──────────────────────────────────────────────────────────
-const FLICKER_WORDS = [
-  "India", "UK", "Ireland", "Australia", "America",
-  "Canada", "Germany", "Japan", "Portugal", "Singapore",
-];
+// ─── Slow country cycle → settles on "Belong" ─────────────────────────────
+const CYCLE_WORDS = ["Portugal", "Germany", "Japan", "Canada", "Singapore"];
 
 function FlickerWord() {
-  const [word, setWord]       = useState("Belong");
-  const [visible, setVisible] = useState(true);
+  const [word, setWord]       = useState(CYCLE_WORDS[0]);
+  const [visible, setVisible] = useState(false);
   const [done, setDone]       = useState(false);
-  const s = useRef({ count: 0, idx: 0, started: false });
 
   useEffect(() => {
-    if (s.current.started) return;
-    s.current.started = true;
-    const TOTAL = 18;
-    let tid: ReturnType<typeof setTimeout>;
+    // Brief delay before first word appears
+    const start = setTimeout(() => {
+      setVisible(true);
+      let idx = 0;
 
-    function flicker() {
-      if (s.current.count >= TOTAL) {
+      function next() {
+        // Fade out current word
         setVisible(false);
-        tid = setTimeout(() => { setWord("Belong"); setVisible(true); setDone(true); }, 70);
-        return;
+        setTimeout(() => {
+          idx++;
+          if (idx >= CYCLE_WORDS.length) {
+            // Final word: "Belong" — italic cyan, slower fade in
+            setWord("Belong");
+            setDone(true);
+            setVisible(true);
+          } else {
+            setWord(CYCLE_WORDS[idx]);
+            setVisible(true);
+            // Each country visible for 1.8s
+            setTimeout(next, 1800);
+          }
+        }, 500); // fade-out duration
       }
-      setVisible(false);
-      tid = setTimeout(() => {
-        setWord(FLICKER_WORDS[s.current.idx % FLICKER_WORDS.length]);
-        s.current.idx++;
-        s.current.count++;
-        setVisible(true);
-        const p = s.current.count / TOTAL;
-        tid = setTimeout(flicker, p < 0.5 ? 280 : p < 0.8 ? 160 : 90);
-      }, 70);
-    }
 
-    tid = setTimeout(flicker, 600);
-    return () => clearTimeout(tid);
+      // First country visible for 1.8s
+      setTimeout(next, 1800);
+    }, 500);
+
+    return () => clearTimeout(start);
   }, []);
 
   return (
     <span style={{
       opacity:    visible ? 1 : 0,
-      transition: "opacity 0.06s ease",
+      transition: done
+        ? "opacity 0.9s ease, color 0.6s ease"
+        : "opacity 0.45s ease",
       fontStyle:  done ? "italic" : "normal",
-      color:      done ? "#00ffd5" : "#ffffff",
+      color:      done ? "#00ffd5" : "rgba(255,255,255,0.75)",
       display:    "inline",
     }}>
       {word}
@@ -106,19 +109,14 @@ function PaperPlane({ containerRef }: { containerRef: React.RefObject<HTMLElemen
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const planeRef  = useRef<HTMLDivElement>(null);
   const stateRef  = useRef({
-    // Position
     x: 0, y: 0,
-    // Velocity
-    vx: 2.2, vy: -0.8,
-    // Angle (radians, 0 = pointing right)
+    vx: 0, vy: 0,
     angle: 0,
-    // Angular velocity — gives natural banking
     angularVel: 0,
-    // Lift/drag physics
-    speed: 2.2,
     trail: [] as { x: number; y: number }[],
     frameCount: 0,
-    nextInputIn: 180,   // frames until next "gust" input
+    nextGustIn: 200,
+    initialized: false,
   });
   const rafRef = useRef<number>(0);
 
@@ -128,129 +126,110 @@ function PaperPlane({ containerRef }: { containerRef: React.RefObject<HTMLElemen
     const heroEl   = containerRef.current;
     if (!canvasEl || !planeEl || !heroEl) return;
 
-    const canvas: HTMLCanvasElement = canvasEl;
-    const plane:  HTMLDivElement    = planeEl;
-    const hero:   HTMLElement       = heroEl;
-    const ctx = canvas.getContext("2d")!;
-    const s   = stateRef.current;
+    const canvas = canvasEl;
+    const plane  = planeEl;
+    const hero   = heroEl;
+    const ctx    = canvas.getContext("2d")!;
+    const s      = stateRef.current;
 
-    // Paper plane constants
-    const DRAG         = 0.012;   // air resistance — slows over time
-    const LIFT         = 0.018;   // lift keeps it from stalling
-    const GRAVITY      = 0.035;   // gentle downward pull
-    const ANG_DAMPING  = 0.92;    // angular velocity decays (stops spinning)
-    const MAX_ANG_VEL  = 0.04;    // max rotation speed
-    const TARGET_SPEED = 2.4;     // natural cruise speed
-    const PW           = 52;      // plane size
-    const EDGE         = 110;
+    const DRAG         = 0.008;
+    const LIFT         = 0.014;
+    const GRAVITY      = 0.022;
+    const ANG_DAMPING  = 0.94;
+    const MAX_ANG_VEL  = 0.028;
+    const TARGET_SPEED = 1.6;
+    const SLIP         = 0.05;
+    const PW           = 48;
+    const EDGE         = 140;
+    const TRAIL_MAX    = 220;
+    const TRAIL_SKIP   = 2;
 
     function resize() {
       const w = hero.offsetWidth, h = hero.offsetHeight;
       canvas.width = w; canvas.height = h;
-      if (s.x === 0) {
-        s.x = w * 0.3;
-        s.y = h * 0.4;
-        // Launch angle: slightly up-right
-        s.angle = -0.3;
+      if (!s.initialized) {
+        s.initialized = true;
+        s.x = w * 0.18;
+        s.y = h * 0.35;
+        s.angle = 0.15;
         s.vx = Math.cos(s.angle) * TARGET_SPEED;
         s.vy = Math.sin(s.angle) * TARGET_SPEED;
       }
     }
 
     function applyGust() {
-      // Random angular impulse — feels like a gust of wind banking the plane
-      const gustStrength = (Math.random() - 0.5) * 0.06;
-      s.angularVel += gustStrength;
-      // Clamp
+      const strength = (Math.random() - 0.48) * 0.038;
+      s.angularVel += strength;
       s.angularVel = Math.max(-MAX_ANG_VEL, Math.min(MAX_ANG_VEL, s.angularVel));
     }
 
     function applyEdgeAvoidance() {
       const w = hero.offsetWidth, h = hero.offsetHeight;
-      // Soft walls — angular nudge away from edges
       const m = EDGE;
-      if (s.x < m)       s.angularVel -= 0.008 * ((m - s.x) / m);
-      if (s.x > w - m)   s.angularVel += 0.008 * ((s.x - (w - m)) / m);
-      if (s.y < m)       s.angularVel += 0.006 * ((m - s.y) / m);
-      if (s.y > h - m)   s.angularVel -= 0.006 * ((s.y - (h - m)) / m);
+      if (s.x < m)     s.angularVel -= 0.006 * ((m - s.x) / m);
+      if (s.x > w - m) s.angularVel += 0.006 * ((s.x - (w - m)) / m);
+      if (s.y < m)     s.angularVel += 0.005 * ((m - s.y) / m);
+      if (s.y > h - m) s.angularVel -= 0.005 * ((s.y - (h - m)) / m);
     }
 
     function tick() {
       const w = hero.offsetWidth, h = hero.offsetHeight;
       s.frameCount++;
 
-      // Random gusts every N frames
-      if (s.frameCount >= s.nextInputIn) {
+      if (s.frameCount >= s.nextGustIn) {
         applyGust();
-        s.frameCount  = 0;
-        s.nextInputIn = 120 + Math.random() * 240;
+        s.frameCount = 0;
+        s.nextGustIn = 180 + Math.random() * 300;
       }
 
-      // Edge avoidance every frame
       applyEdgeAvoidance();
 
-      // Update angle from angular velocity
       s.angularVel *= ANG_DAMPING;
       s.angle      += s.angularVel;
 
-      // Derive velocity direction from angle — plane flies nose-forward
-      const currentSpeed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-
-      // Lift: perpendicular to motion, scales with speed
-      const liftX = -Math.sin(s.angle) * LIFT * currentSpeed;
-      const liftY =  Math.cos(s.angle) * LIFT * currentSpeed;
-
-      // Drag: opposes motion
-      const dragX = -s.vx * DRAG;
-      const dragY = -s.vy * DRAG;
-
-      // Gravity: always pulls down
-      const gravX = 0;
-      const gravY = GRAVITY;
-
-      // Speed correction — gently maintain cruise speed
-      const speedErr  = TARGET_SPEED - currentSpeed;
-      const thrustX   = Math.cos(s.angle) * speedErr * 0.04;
-      const thrustY   = Math.sin(s.angle) * speedErr * 0.04;
-
-      // Steer velocity toward nose direction (plane can't fly sideways)
+      const speed  = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+      const liftX  = -Math.sin(s.angle) * LIFT * speed;
+      const liftY  =  Math.cos(s.angle) * LIFT * speed;
+      const dragX  = -s.vx * DRAG;
+      const dragY  = -s.vy * DRAG;
+      const gravY  =  GRAVITY;
+      const speedErr = TARGET_SPEED - speed;
+      const thrustX  = Math.cos(s.angle) * speedErr * 0.03;
+      const thrustY  = Math.sin(s.angle) * speedErr * 0.03;
       const noseX = Math.cos(s.angle);
       const noseY = Math.sin(s.angle);
-      const slip  = 0.08; // how quickly velocity aligns to nose
-      s.vx += (noseX * currentSpeed - s.vx) * slip + dragX + liftX + gravX + thrustX;
-      s.vy += (noseY * currentSpeed - s.vy) * slip + dragY + liftY + gravY + thrustY;
+      s.vx += (noseX * speed - s.vx) * SLIP + dragX + liftX + thrustX;
+      s.vy += (noseY * speed - s.vy) * SLIP + dragY + liftY + gravY + thrustY;
 
-      // Move
       s.x += s.vx;
       s.y += s.vy;
 
-      // Hard bounce off walls — flip angular velocity for natural rebound
-      if (s.x < PW)     { s.x = PW;     s.vx = Math.abs(s.vx);  s.angle = -s.angle * 0.6; s.angularVel *= -0.5; }
-      if (s.x > w - PW) { s.x = w - PW; s.vx = -Math.abs(s.vx); s.angle = Math.PI - s.angle; s.angularVel *= -0.5; }
-      if (s.y < PW)     { s.y = PW;     s.vy = Math.abs(s.vy);  s.angularVel *= -0.4; }
-      if (s.y > h - PW) { s.y = h - PW; s.vy = -Math.abs(s.vy) * 0.7; s.angularVel *= -0.4; }
+      if (s.x < PW)     { s.x = PW;     s.vx =  Math.abs(s.vx) * 0.7;  s.angle = -s.angle * 0.5;    s.angularVel *= -0.4; }
+      if (s.x > w - PW) { s.x = w - PW; s.vx = -Math.abs(s.vx) * 0.7;  s.angle = Math.PI - s.angle; s.angularVel *= -0.4; }
+      if (s.y < PW)     { s.y = PW;     s.vy =  Math.abs(s.vy) * 0.6;  s.angularVel *= -0.35; }
+      if (s.y > h - PW) { s.y = h - PW; s.vy = -Math.abs(s.vy) * 0.6;  s.angularVel *= -0.35; }
 
-      // DOM
       plane.style.left      = `${s.x - PW / 2}px`;
       plane.style.top       = `${s.y - PW / 2}px`;
       plane.style.transform = `rotate(${s.angle * 180 / Math.PI}deg)`;
 
-      // Trail — emitted from TAIL of plane
-      const tailX = s.x - Math.cos(s.angle) * (PW * 0.5);
-      const tailY = s.y - Math.sin(s.angle) * (PW * 0.5);
-      s.trail.push({ x: tailX, y: tailY });
-      if (s.trail.length > 110) s.trail.shift();
+      if (s.frameCount % TRAIL_SKIP === 0) {
+        const tailX = s.x - Math.cos(s.angle) * (PW * 0.48);
+        const tailY = s.y - Math.sin(s.angle) * (PW * 0.48);
+        s.trail.push({ x: tailX, y: tailY });
+        if (s.trail.length > TRAIL_MAX) s.trail.shift();
+      }
 
-      // Draw trail
       ctx.clearRect(0, 0, w, h);
       for (let i = 0; i < s.trail.length; i++) {
-        if (i % 4 !== 0) continue;
+        if (i % 3 !== 0) continue;
         const t        = s.trail[i];
         const progress = i / s.trail.length;
-        const r        = 1.0 + progress * 1.8;
+        const r        = 0.8 + progress * 1.6;
+        const opacity  = progress * 0.28;
         ctx.beginPath();
         ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${progress * 0.38})`;
+        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
         ctx.fill();
       }
 
@@ -269,15 +248,12 @@ function PaperPlane({ containerRef }: { containerRef: React.RefObject<HTMLElemen
 
   return (
     <>
-      <canvas ref={canvasRef} style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:3 }} />
-      <div ref={planeRef} style={{ position:"absolute", width:52, height:52, pointerEvents:"none", zIndex:4 }}>
-        <svg viewBox="0 0 64 64" style={{ width:"100%", height:"100%" }}>
-          {/* Main body: nose=right(60,32), tail=left(4,10 & 4,54) */}
-          <polygon points="60,32 4,10 20,32 4,54" fill="white" opacity="0.95" />
-          {/* Folded belly panel */}
-          <polygon points="60,32 4,10 28,36" fill="rgba(255,255,255,0.45)" />
-          {/* Centre crease from nose to tail */}
-          <line x1="60" y1="32" x2="20" y2="32" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+      <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3 }} />
+      <div ref={planeRef} style={{ position: "absolute", width: 48, height: 48, pointerEvents: "none", zIndex: 4 }}>
+        <svg viewBox="0 0 64 64" style={{ width: "100%", height: "100%" }}>
+          <polygon points="60,32 4,10 20,32 4,54" fill="white" opacity="0.92" />
+          <polygon points="60,32 4,10 28,36" fill="rgba(255,255,255,0.38)" />
+          <line x1="60" y1="32" x2="20" y2="32" stroke="rgba(0,0,0,0.12)" strokeWidth="1" />
         </svg>
       </div>
     </>
@@ -356,8 +332,8 @@ export default function Home() {
     if (country) { setSelectedCountry(country); setShowHero(false); }
   }, [allCountries]);
 
-  const handleClosePanel = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
-  const handleBackToHome = useCallback(() => {
+  const handleClosePanel    = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
+  const handleBackToHome    = useCallback(() => {
     setSelectedSlug(null); setSelectedCountry(null);
     setShowHero(true); setHighlightedSlugs([]); setWizardMatches([]);
   }, []);
@@ -428,49 +404,43 @@ export default function Home() {
           padding: "120px 0 80px",
         }}
       >
-        {/* Animated gradient background */}
         <div className="hero-gradient-bg" />
-        {/* Plane + trail behind everything */}
         <PaperPlane containerRef={heroRef} />
 
-        {/* Text content — above plane */}
         <div style={{
           position: "relative", zIndex: 5,
           display: "flex", flexDirection: "column", alignItems: "center", width: "100%",
         }}>
-          {/* Full-width stretched headline */}
           <div style={{ width: "100%", overflow: "visible", paddingBottom: "0.18em", marginBottom: 48 }}>
             <StretchHeadline />
           </div>
 
-          {/* Subtitle */}
           <p style={{
-            fontFamily: "Satoshi, sans-serif",
-            fontSize: "clamp(16px, 1.8vw, 22px)",
-            color: "rgba(255,255,255,0.48)",
+            fontFamily: "Inter, sans-serif",
+            fontSize: "clamp(14px, 1.5vw, 18px)",
+            color: "rgba(255,255,255,0.4)",
             fontWeight: 400,
-            lineHeight: 1.55,
+            lineHeight: 1.6,
             textAlign: "center",
-            maxWidth: 520,
+            maxWidth: 480,
             marginBottom: 44,
           }}>
-            Salaries, visas, cost of living and quality of life<br />
+            Salaries, visas, cost of living and quality of life
             personalised to your job and passport.
           </p>
 
-          {/* White pill CTA */}
           <button
             onClick={() => router.push("/wizard")}
             className="hero-cta-white"
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               background: "#ffffff", color: "#0a0a0a",
-              fontFamily: "Satoshi, sans-serif",
-              fontSize: 16, fontWeight: 600,
-              padding: "16px 64px", borderRadius: 100,
+              fontFamily: "Inter, sans-serif",
+              fontSize: 15, fontWeight: 700,
+              padding: "15px 56px", borderRadius: 100,
               border: "none", cursor: "pointer",
-              letterSpacing: "0.01em",
-              boxShadow: "0 2px 24px rgba(255,255,255,0.14)",
+              letterSpacing: "0.02em",
+              boxShadow: "0 2px 24px rgba(255,255,255,0.12)",
             }}
           >
             Find My Country
@@ -486,7 +456,6 @@ export default function Home() {
         }}
         aria-label="Interactive globe"
       >
-        {/* Animated gradient background */}
         <div className="hero-gradient-bg" />
         <p style={{
           position: "absolute", top: 20, left: 24, zIndex: 10,
