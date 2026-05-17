@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { ArrowRightLeft, Lock, Star } from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
@@ -167,9 +167,7 @@ function MetricRow({
     defined.length > 1 ? (higherIsBetter ? Math.min(...defined) : Math.max(...defined)) : best;
   const maxV = Math.max(...defined.map(Math.abs), 1);
 
-  // always render 3 cols: A, B, C(locked or real)
-  const colCount = isPro ? 3 : 3; // always 3 cols so grids stay aligned
-  const gridCols = `${LABEL_W}px repeat(${colCount}, 1fr)`;
+  const gridCols = `${LABEL_W}px repeat(3, 1fr)`;
 
   return (
     <div className="grid border-b border-white/[0.04] last:border-b-0" style={{ gridTemplateColumns: gridCols }}>
@@ -237,12 +235,11 @@ function MetricRow({
 // ── SectionRow ────────────────────────────────────────────────────────────────
 
 function SectionRow({ label, isPro }: { label: string; isPro: boolean }) {
-  const colCount = isPro ? 3 : 3;
   return (
     <div
       className="grid border-b border-white/[0.05]"
       style={{
-        gridTemplateColumns: `${LABEL_W}px repeat(${colCount}, 1fr)`,
+        gridTemplateColumns: `${LABEL_W}px repeat(3, 1fr)`,
         background: "rgba(255,255,255,0.016)",
       }}
     >
@@ -286,7 +283,7 @@ function VisaCard({ country, color }: { country: CountryWithData; color: string 
 
 export default function ComparePageClient() {
   const searchParams = useSearchParams();
-  const fetchedRef = useRef(false);
+  const pathname = usePathname();
 
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [slugA, setSlugA] = useState<string | null>(null);
@@ -294,8 +291,10 @@ export default function ComparePageClient() {
   const [slugC, setSlugC] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
   const [isPro, setIsPro] = useState(false);
-  const [proChecked, setProChecked] = useState(false);
+  // FIX: start true so we never render a black screen while checking
+  const [proChecked, setProChecked] = useState(true);
 
+  // FIX: re-run on pathname change so soft nav works
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
@@ -305,14 +304,15 @@ export default function ComparePageClient() {
           .eq("id", session.user.id)
           .single();
         setIsPro(data?.is_pro ?? false);
+      } else {
+        setIsPro(false);
       }
       setProChecked(true);
     });
-  }, []);
+  }, [pathname]); // re-check on every nav
 
+  // FIX: removed fetchedRef so countries re-fetch on soft nav
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
     fetch("/api/countries")
       .then((r) => r.json())
       .then((data: CountryWithData[]) => {
@@ -326,7 +326,7 @@ export default function ComparePageClient() {
         setSlugC(pC && valid.includes(pC) ? pC : valid[2] ?? null);
       })
       .catch(console.error);
-  }, [searchParams]);
+  }, [pathname, searchParams]); // re-fetch on every nav
 
   const countryA = allCountries.find((c) => c.slug === slugA) ?? null;
   const countryB = allCountries.find((c) => c.slug === slugB) ?? null;
@@ -346,19 +346,15 @@ export default function ComparePageClient() {
   const g = (c: CountryWithData | null, k: string): number | null =>
     c ? ((c.data as unknown as Record<string, unknown>)[k] as number) ?? null : null;
 
-  // always pass 3 values; MetricRow handles locked state
   const trio = (k: string): (number | null)[] => [
     g(countryA, k),
     g(countryB, k),
     isPro ? g(countryC, k) : null,
   ];
 
-  // The shared grid template used by EVERY section: label + A + B + C
-  // Always 3 data cols so sticky header aligns with table rows
   const TABLE_GRID = `${LABEL_W}px repeat(3, 1fr)`;
 
-  if (!proChecked) return <div className="min-h-screen bg-[#050508]" />;
-
+  // FIX: removed black-screen guard — render shell immediately, data fills in
   return (
     <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
       <Nav countries={globeCountries} onCountrySelect={() => {}} />
@@ -387,7 +383,6 @@ export default function ComparePageClient() {
 
           {/* ── SELECTORS CARD ── */}
           <div className="bg-[#0d0d10] border border-white/[0.09] p-5 mb-0">
-            {/* Row 1: Role + Country A + Country B + (Country C or locked) */}
             <div
               className="grid gap-4 mb-4"
               style={{
@@ -516,7 +511,6 @@ export default function ComparePageClient() {
         <div className="sticky top-0 z-20 border-b border-white/[0.1] bg-[#050508]">
           <div className="max-w-[1100px] mx-auto px-8">
             <div style={{ display: "grid", gridTemplateColumns: TABLE_GRID }}>
-              {/* empty label cell */}
               <div style={{ minHeight: 72 }} />
 
               {/* Country A header */}
@@ -541,7 +535,7 @@ export default function ComparePageClient() {
                 </div>
               </div>
 
-              {/* Country C header — pro or locked */}
+              {/* Country C header */}
               {isPro && countryC ? (
                 <div className="border-l border-white/[0.05] px-6 py-4">
                   <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 6 }}>{countryC.flagEmoji}</div>
