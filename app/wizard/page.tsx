@@ -317,9 +317,22 @@ function WizardInner() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res       = await fetch("/api/countries");
+      // Fetch countries with 8s timeout
+      const countriesCtrl = new AbortController();
+      const countriesTimeout = setTimeout(() => countriesCtrl.abort(), 8000);
+      let res: Response;
+      try {
+        res = await fetch("/api/countries", { signal: countriesCtrl.signal, cache: "no-store" });
+        clearTimeout(countriesTimeout);
+      } catch (e) {
+        clearTimeout(countriesTimeout);
+        throw new Error("Failed to load country data. Please try again.");
+      }
+      if (!res.ok) throw new Error(`Countries API error: ${res.status}`);
       const countries: CountryWithData[] = await res.json();
-      let matches     = scoreCountriesForWizard(countries, answers as WizardAnswers);
+      let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
+
+      // Validate results — silent fail, 3s timeout
       try {
         const controller = new AbortController();
         const timeout    = setTimeout(() => controller.abort(), 3000);
@@ -341,15 +354,18 @@ function WizardInner() {
             ];
           }
         }
-      } catch { /* silent */ }
+      } catch { /* silent — validation is best-effort */ }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
-      } else {
-        const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-        localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1));
-      }
+      // Increment run counter — non-blocking, don't await
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          supabase.rpc("increment_quiz_runs", { user_id: session.user.id }).catch(() => {});
+        } else {
+          const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
+          localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1));
+        }
+      }).catch(() => {});
+
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
