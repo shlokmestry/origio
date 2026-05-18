@@ -440,7 +440,7 @@ export default function SuccessClient() {
               letterSpacing: '0.22em', textTransform: 'uppercase',
               color:         '#ff4f4f', marginBottom: 22,
             }}>
-              // ERR_402 · payment incomplete
+              {'// ERR_402 · payment incomplete'}
             </p>
             <h1 style={{
               fontFamily:    "'DM Serif Display', Georgia, serif",
