@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect, Component } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
@@ -103,59 +103,6 @@ const DEAL_BREAKERS = [
   { key: "none",     label: "No deal breakers" },
 ];
 
-// ── Error boundary ─────────────────────────────────────────────────────────
-class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { error: null };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-  render() {
-    if (this.state.error) {
-      return (
-        <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32 }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT }}>Error</div>
-          <p style={{ color: DIM, fontSize: 14, maxWidth: 400, textAlign: "center", lineHeight: 1.6 }}>
-            Something went wrong loading the quiz. Please refresh the page.
-          </p>
-          <pre style={{ fontSize: 11, color: "#555", maxWidth: 500, overflow: "auto", background: PANEL, padding: 12, borderRadius: 8 }}>
-            {this.state.error.message}
-          </pre>
-          <button
-            onClick={() => window.location.reload()}
-            style={{ padding: "12px 24px", background: MINT, color: BG, border: "none", cursor: "pointer", fontFamily: MONO, fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}
-          >
-            Reload
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-// ── Loading spinner ────────────────────────────────────────────────────────
-function LoadingScreen() {
-  return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-        <div style={{ fontFamily: SERIF, fontSize: 22, color: FG, letterSpacing: "-0.02em" }}>
-          origio<span style={{ color: MINT }}>.</span>
-        </div>
-        <div style={{ width: 120, height: 2, background: LINE, overflow: "hidden" }}>
-          <div style={{ width: "40%", height: "100%", background: MINT, animation: "pulse 1.4s ease infinite" }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Shared UI ──────────────────────────────────────────────────────────────
 function EyebrowLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -167,7 +114,7 @@ function EyebrowLabel({ children }: { children: React.ReactNode }) {
 
 function StepHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h1 style={{ fontFamily: SERIF, fontSize: "clamp(38px, 5vw, 60px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 14px", color: FG, fontWeight: 400 }}>
+    <h1 className="wiz-step-heading" style={{ fontFamily: SERIF, fontSize: "clamp(38px, 5vw, 60px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 14px", color: FG, fontWeight: 400 }}>
       {children}
     </h1>
   );
@@ -213,10 +160,12 @@ function OptionCard({ selected, onClick, children, badge }: {
   );
 }
 
-// ── Inner wizard (separated so ErrorBoundary wraps it cleanly) ─────────────
-function WizardInner() {
+
+
+// ── Main ───────────────────────────────────────────────────────────────────
+export default function WizardPage() {
   const router = useRouter();
-  const [step, setStep]       = useState(1);
+  const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
@@ -227,66 +176,30 @@ function WizardInner() {
   const [isSignedIn, setIsSignedIn]   = useState(false);
 
   useEffect(() => {
-    // Hard fallback — if anything hangs, unblock wizard after 4s
-    const fallback = setTimeout(() => setGateChecked(true), 4000);
-
     async function checkGate() {
-      try {
-        const { data: { session } } = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("supabase_timeout")), 3500)
-          ),
-        ]);
-
-        if (!session?.user) {
-          const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-          setRunsUsed(stored);
-          setIsSignedIn(false);
-          if (stored >= ANON_MAX_RUNS) setGateType("anon");
-          return;
-        }
-
-        setIsSignedIn(true);
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("is_pro, quiz_runs_count")
-          .eq("id", session.user.id)
-          .single();
-        const pro  = profile?.is_pro ?? false;
-        const runs = profile?.quiz_runs_count ?? 0;
-        setIsPro(pro);
-        setRunsUsed(runs);
-        if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
-      } catch (err) {
-        console.error("Gate check failed:", err);
-      } finally {
-        clearTimeout(fallback);
-        setGateChecked(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
+        setRunsUsed(stored); setIsSignedIn(false);
+        if (stored >= ANON_MAX_RUNS) setGateType("anon");
+        setGateChecked(true); return;
       }
+      setIsSignedIn(true);
+      const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
+      const pro  = profile?.is_pro ?? false;
+      const runs = profile?.quiz_runs_count ?? 0;
+      setIsPro(pro); setRunsUsed(runs);
+      if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
+      setGateChecked(true);
     }
-
     checkGate();
   }, []);
 
   const isJobOffer = answers.moveReason === "job";
-  const getNextStep = (cur: number) => {
-    if (cur === 2 && isJobOffer) return 3;
-    if (cur === 3 && isJobOffer) return 7;
-    return cur + 1;
-  };
-  const getPrevStep = (cur: number) => {
-    if (cur === 7 && isJobOffer) return 3;
-    if (cur === 3 && isJobOffer) return 2;
-    return cur - 1;
-  };
+  const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
+  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
-  const getEffectiveStep = () => {
-    if (!isJobOffer) return step;
-    if (step <= 3) return step;
-    if (step >= 7) return step - 3;
-    return step;
-  };
+  const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
   const progress   = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
   const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
@@ -304,75 +217,35 @@ function WizardInner() {
     return false;
   };
 
-  const handleNext = () => {
-    const next = getNextStep(step);
-    if (next <= TOTAL_STEPS) setStep(next);
-    else handleSubmit();
-  };
-  const handleBack = () => {
-    if (step === 1) router.push("/");
-    else setStep(getPrevStep(step));
-  };
+  const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
+  const handleBack = () => { if (step === 1) router.push("/"); else setStep(getPrevStep(step)); };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Fetch countries with 8s timeout
-      const countriesCtrl = new AbortController();
-      const countriesTimeout = setTimeout(() => countriesCtrl.abort(), 8000);
-      let res: Response;
-      try {
-        res = await fetch("/api/countries", { signal: countriesCtrl.signal, cache: "no-store" });
-        clearTimeout(countriesTimeout);
-      } catch (e) {
-        clearTimeout(countriesTimeout);
-        throw new Error("Failed to load country data. Please try again.");
-      }
-      if (!res.ok) throw new Error(`Countries API error: ${res.status}`);
+      const res       = await fetch("/api/countries");
       const countries: CountryWithData[] = await res.json();
-      let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
-
-      // Validate results — silent fail, 3s timeout
+      let matches     = scoreCountriesForWizard(countries, answers as WizardAnswers);
       try {
         const controller = new AbortController();
         const timeout    = setTimeout(() => controller.abort(), 3000);
-        const vRes       = await fetch("/api/validate-results", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ matches, answers }),
-          signal: controller.signal,
-        });
+        const vRes       = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: controller.signal });
         clearTimeout(timeout);
         if (vRes.ok) {
           const v = await vRes.json();
           if (!v.valid && v.flaggedCountries?.length > 0) {
             const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
-            matches = [
-              ...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())),
-              ...matches.filter(m => flagged.includes(m.country.name.toLowerCase()))
-                .map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) })),
-            ];
+            matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
           }
         }
-      } catch { /* silent — validation is best-effort */ }
-
-      // Increment run counter — non-blocking, don't await
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          void supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
-        } else {
-          const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-          localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1));
-        }
-      }).catch(() => {});
-
+      } catch { /* silent */ }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
+      else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); setLoading(false); }
   };
 
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
@@ -380,19 +253,15 @@ function WizardInner() {
   const totalSteps    = getEffectiveTotalSteps();
   const stepPad       = (n: number) => String(n).padStart(2, "0");
 
-  // ── Loading gate check ─────────────────────────────────────────────────
-  if (!gateChecked) return <LoadingScreen />;
+  if (!gateChecked) return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 120, height: 2, background: LINE }}>
+        <div style={{ width: "40%", height: "100%", background: MINT, animation: "pulse 1.5s infinite" }} />
+      </div>
+    </div>
+  );
 
-  // ── Gate walls ─────────────────────────────────────────────────────────
-  if (gateType) {
-    return (
-      <QuizGate
-        type={gateType}
-        runsUsed={runsUsed}
-        maxRuns={gateType === "anon" ? ANON_MAX_RUNS : FREE_MAX_RUNS}
-      />
-    );
-  }
+  if (gateType) return <QuizGate type={gateType} runsUsed={runsUsed} maxRuns={gateType === "anon" ? ANON_MAX_RUNS : FREE_MAX_RUNS} />;
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
@@ -404,13 +273,19 @@ function WizardInner() {
           .wiz-layout  { grid-template-columns: 1fr !important; }
           .wiz-sidebar { display: none !important; }
         }
+        @media(max-width:600px){
+          .wiz-grid-2  { grid-template-columns: 1fr !important; }
+          .wiz-header-inner { padding: 12px 18px !important; }
+          .wiz-main { padding: 32px 18px 100px !important; }
+          .wiz-step-heading { font-size: clamp(28px,8vw,44px) !important; }
+          .wiz-nav-btns { gap: 10px !important; }
+        }
       `}</style>
 
-      {/* ── Header ── */}
+      {/* ── Header ────────────────────────────────────────────────────────── */}
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,10,0.80)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={handleBack}
-            style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+        <div className="wiz-header-inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={handleBack} style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.color = FG)}
             onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
             <ArrowLeft size={14} /> Back
@@ -435,10 +310,10 @@ function WizardInner() {
         </div>
       </header>
 
-      {/* ── Main layout ── */}
-      <main className="wiz-layout" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px 120px", display: "grid", gridTemplateColumns: "240px 1fr", gap: "48px 52px", alignItems: "start" }}>
+      {/* ── Main ──────────────────────────────────────────────────────────── */}
+      <main className="wiz-layout wiz-main" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px 120px", display: "grid", gridTemplateColumns: "240px 1fr", gap: "48px 52px", alignItems: "start" }}>
 
-        {/* ── Sidebar ── */}
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <aside className="wiz-sidebar" style={{ position: "sticky", top: 88, alignSelf: "start" }}>
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 18 }}>
             ✦ Quiz · 8 questions
@@ -470,22 +345,18 @@ function WizardInner() {
           </div>
         </aside>
 
-        {/* ── Step content ── */}
+        {/* ── Step content ────────────────────────────────────────────────── */}
         <section key={step} style={{ animation: "fadeUp 0.38s ease both", maxWidth: 660 }}>
-
           {/* Step 1 */}
           {step === 1 && (
             <>
               <EyebrowLabel>Step 01 · Origin</EyebrowLabel>
               <StepHeading>Where are you <Mint>from?</Mint></StepHeading>
               <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
-              <select
-                value={answers.passport ?? ""}
-                onChange={e => setAnswers({ ...answers, passport: e.target.value })}
+              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
                 style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
                 onFocus={e => (e.currentTarget.style.borderColor = MINT)}
-                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}
-              >
+                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
                 <option value="" disabled>Select your passport country</option>
                 {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
               </select>
@@ -522,7 +393,7 @@ function WizardInner() {
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
               <StepHeading>What's your <Mint>job?</Mint></StepHeading>
               <StepSub>Used to show realistic salary expectations per country.</StepSub>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+              <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {JOB_ROLES.map(r => (
                   <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
                     badge={<span style={{ fontSize: 20, flexShrink: 0 }}>{r.emoji}</span>}>
@@ -539,7 +410,7 @@ function WizardInner() {
               <EyebrowLabel>Step 04 · Priorities</EyebrowLabel>
               <StepHeading>What matters <Mint>most?</Mint></StepHeading>
               <StepSub>Pick at least 3, in order of importance. The first one you tap carries the highest weight.</StepSub>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+              <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {[
                   { key: "salary",        label: "High salary" },
                   { key: "affordability", label: "Low cost of living" },
@@ -550,14 +421,11 @@ function WizardInner() {
                   { key: "healthcare",    label: "Good healthcare" },
                   { key: "english",       label: "English-speaking" },
                 ].map(opt => {
-                  const idx      = answers.priorities?.indexOf(opt.key) ?? -1;
+                  const idx = answers.priorities?.indexOf(opt.key) ?? -1;
                   const selected = idx !== -1;
                   return (
                     <OptionCard key={opt.key} selected={selected}
-                      onClick={() => {
-                        const cur = answers.priorities ?? [];
-                        setAnswers({ ...answers, priorities: selected ? cur.filter(x => x !== opt.key) : [...cur, opt.key] });
-                      }}
+                      onClick={() => { const cur = answers.priorities ?? []; setAnswers({ ...answers, priorities: selected ? cur.filter(x => x !== opt.key) : [...cur, opt.key] }); }}
                       badge={
                         <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "italic", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {selected ? idx + 1 : "·"}
@@ -665,35 +533,20 @@ function WizardInner() {
             </>
           )}
 
-          {/* Nav buttons */}
-          <div style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={handleBack}
-              style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
+          {/* Nav */}
+          <div className="wiz-nav-btns" style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#3a3a3a"; }}
               onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = LINE; }}>
               <ArrowLeft size={14} /> Back
             </button>
             <button onClick={handleNext} disabled={!canProceed() || loading}
               style={{ padding: "14px 28px", borderRadius: 999, background: canProceed() && !loading ? MINT : "#1a1a1a", color: canProceed() && !loading ? BG : DIM, border: "none", cursor: canProceed() && !loading ? "pointer" : "not-allowed", fontFamily: MONO, fontSize: 12, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", boxShadow: canProceed() && !loading ? "0 4px 20px rgba(0,255,213,0.18)" : "none" }}>
-              {loading
-                ? "Finding matches..."
-                : isLastStep
-                  ? <><Sparkles size={14} /> Find my country</>
-                  : <>Next <ArrowRight size={14} /></>
-              }
+              {loading ? "Finding matches..." : isLastStep ? <><Sparkles size={14} /> Find my country</> : <>Next <ArrowRight size={14} /></>}
             </button>
           </div>
         </section>
       </main>
     </div>
-  );
-}
-
-// ── Root export ────────────────────────────────────────────────────────────
-export default function WizardPage() {
-  return (
-    <ErrorBoundary>
-      <WizardInner />
-    </ErrorBoundary>
   );
 }

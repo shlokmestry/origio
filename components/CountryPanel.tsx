@@ -68,6 +68,16 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
 
   return (
     <>
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 560px) {
+          .cp-body-grid { grid-template-columns: 1fr !important; }
+          .cp-cost-grid  { grid-template-columns: 1fr 1fr !important; }
+          .cp-cta-grid   { grid-template-columns: 1fr !important; }
+          .cp-modal      { max-height: 88vh !important; border-radius: 16px 16px 0 0 !important; }
+          .cp-wrap       { padding: 0 !important; align-items: flex-end !important; }
+        }
+      `}</style>
       {/* Backdrop */}
       <div
         onClick={handleClose}
@@ -85,6 +95,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
 
       {/* Modal container — centered */}
       <div
+        className="cp-wrap"
         style={{
           position: "fixed",
           inset: 0,
@@ -97,6 +108,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
         }}
       >
         <div
+          className="cp-modal"
           style={{
             pointerEvents: "auto",
             width: "100%",
@@ -197,7 +209,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
 
             {/* Top two-col: Move Score bar + Score Breakdown */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div className="cp-body-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
               {/* Left: Move Score + Job Role + Salary */}
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -347,7 +359,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
               <p style={{ margin: "0 0 10px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 Cost of Living
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div className="cp-cost-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {[
                   { label: "Rent (1BR)", value: currencySymbol + data.costRentCityCentre.toLocaleString() + "/mo" },
                   { label: "Meal Out", value: currencySymbol + data.costEatingOut.toLocaleString() },
@@ -377,7 +389,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             </div>
 
             {/* CTAs */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", borderTop: "1px solid #1a1a1a", paddingTop: "16px" }}>
+            <div className="cp-cta-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", borderTop: "1px solid #1a1a1a", paddingTop: "16px" }}>
               <button
                 onClick={handleFullReport}
                 style={{

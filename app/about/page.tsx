@@ -145,13 +145,17 @@ function NewspaperSpoof() {
         </span>
       </div>
 
-      <div style={{
-        borderBottom: "1px solid rgba(240,240,232,0.15)",
-        marginBottom: 32,
-        padding: "4px 0",
-        display: "flex",
-        gap: 24,
-      }}>
+      <div
+        style={{
+          borderBottom: "1px solid rgba(240,240,232,0.15)",
+          marginBottom: 32,
+          padding: "4px 0",
+          display: "flex",
+          gap: 24,
+          overflowX: "auto",
+        }}
+        className="newspaper-tags"
+      >
         {["BREAKING", "SALARY NEWS", "VISA CHAOS", "COST OF LIVING SPECIAL"].map(tag => (
           <span key={tag} style={{
             fontFamily: "monospace", fontSize: 9,
@@ -410,6 +414,18 @@ function AlgorithmScribble() {
 export default function AboutPage() {
   return (
     <div style={{ background: "#0a0a0a", color: "#f0f0e8", minHeight: "100vh" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .about-factor-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0 !important; }
+          .about-factor-item { border-right: none !important; border-bottom: 1px solid #1a1a1a; }
+          .newspaper-tags { display: none !important; }
+          .newspaper-crossmark { left: -20px !important; }
+          .about-howit-header { flex-direction: column !important; gap: 10px !important; }
+        }
+        @media (min-width: 641px) and (max-width: 900px) {
+          .about-factor-grid { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+      `}</style>
       <GrainOverlay />
       <Nav countries={[]} onCountrySelect={() => {}} />
 
@@ -615,13 +631,16 @@ export default function AboutPage() {
 
             {/* Brief factor explainers */}
             <FadeIn delay={200}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: 1,
-                marginTop: 56,
-                border: "1px solid #1a1a1a",
-              }}>
+              <div
+                className="about-factor-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(5, 1fr)",
+                  gap: 1,
+                  marginTop: 56,
+                  border: "1px solid #1a1a1a",
+                }}
+              >
                 {[
                   { label: "Salary", color: "#00ffd5", desc: "Median gross for your job role in local currency, sourced from national labour stats." },
                   { label: "Cost of Living", color: "#a78bfa", desc: "Rent, groceries, transport, utilities — indexed against your salary to show real affordability." },
@@ -629,7 +648,7 @@ export default function AboutPage() {
                   { label: "Quality of Life", color: "#34d399", desc: "Healthcare, internet, climate, culture — drawn from EIU, Numbeo, and WHO data." },
                   { label: "Safety", color: "#f472b6", desc: "Crime index, political stability, and expat safety reports weighted together." },
                 ].map((f, i) => (
-                  <div key={f.label} style={{
+                  <div key={f.label} className="about-factor-item" style={{
                     padding: "24px 20px",
                     borderRight: i < 4 ? "1px solid #1a1a1a" : "none",
                   }}>
