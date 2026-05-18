@@ -221,7 +221,6 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
 
   return (
     <div style={{ border: `1px solid #2a2a2a`, background: PANEL, overflow: "hidden" }}>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderBottom: `1px solid ${LINE}`, background: BG }}>
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>
           Estimated take-home · {jobRoleDef.label} · {match.country.name}
@@ -230,8 +229,6 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
           Take-home · {match.country.data.incomeTaxRateMid}%
         </span>
       </div>
-
-      {/* In Switzerland heading */}
       <div style={{ padding: "16px 18px 0" }}>
         <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 6 }}>
           In {match.country.name}
@@ -240,8 +237,6 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
           In <em style={{ color: MINT, fontStyle: "italic" }}>{match.country.name}</em>
         </h3>
       </div>
-
-      {/* Rows */}
       <div style={{ padding: "8px 0" }}>
         <div style={rowStyle}>
           <span style={labelStyle}>Gross salary</span>
@@ -260,8 +255,6 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
           <span style={{ ...labelStyle, color: FG }}>Net monthly</span>
           <span style={{ fontFamily: SERIF, fontSize: 20, color: MINT }}>{cs}{netMonthly.toLocaleString()}/mo</span>
         </div>
-
-        {/* Locked rows */}
         <div style={{ position: "relative" }}>
           <div style={{ filter: isPro ? "none" : "blur(4px)", opacity: isPro ? 1 : 0.15, pointerEvents: isPro ? "auto" : "none", userSelect: isPro ? "auto" : "none" }}>
             <div style={rowStyle}>
@@ -279,22 +272,46 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
                 <Lock size={12} style={{ color: DIM }} />
                 <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>Full breakdown</span>
               </div>
-              <Link href="/pro" style={{
-                fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-                color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
-              }}>
+              <Link href="/pro" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
                 Pro →
               </Link>
             </div>
           )}
         </div>
       </div>
-
       <div style={{ padding: "10px 18px", borderTop: `1px solid ${LINE}` }}>
         <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", lineHeight: 1.6, margin: 0 }}>
           * Estimate based on mid-bracket income tax rate. Social security, local taxes, and deductions vary. Verify with official sources before relocating.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ── Session expired screen ─────────────────────────────────────────────────
+function SessionExpired() {
+  const router = useRouter();
+  return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 28, padding: "0 24px", textAlign: "center" }}>
+      <span style={{ fontSize: 48 }}>🌍</span>
+      <div>
+        <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,42px)", fontWeight: 400, color: FG, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
+          Your session <em style={{ color: MINT, fontStyle: "italic" }}>expired</em>
+        </h2>
+        <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 340, margin: "0 auto" }}>
+          We couldn't find your results — this usually happens after a page refresh or opening from a new tab. Retake the quiz to see your matches again (takes 2 minutes).
+        </p>
+      </div>
+      <button
+        onClick={() => router.push("/wizard")}
+        style={{
+          fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+          padding: "13px 28px", background: MINT, color: BG, border: "none",
+          borderRadius: 999, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
+          boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
+        }}>
+        Retake quiz →
+      </button>
     </div>
   );
 }
@@ -310,6 +327,7 @@ export default function WizardResultsPage() {
   const [revealed, setRevealed]       = useState(false);
   const [user, setUser]               = useState<User | null>(null);
   const [isPro, setIsPro]             = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -322,26 +340,69 @@ export default function WizardResultsPage() {
   }, []);
 
   useEffect(() => {
-    const raw        = sessionStorage.getItem("wizardMatches");
-    const answersRaw = sessionStorage.getItem("wizardAnswers");
-    if (!raw) { router.push("/wizard"); return; }
-    try {
-      setMatches(JSON.parse(raw));
-      if (answersRaw) setAnswers(JSON.parse(answersRaw));
-    } catch { router.push("/wizard"); return; }
+    async function load() {
+      // 1. Try sessionStorage first
+      const raw        = sessionStorage.getItem("wizardMatches");
+      const answersRaw = sessionStorage.getItem("wizardAnswers");
 
-    let progress = 0, stepIndex = 0;
-    const interval = setInterval(() => {
-      progress += 2;
-      setLoadingProgress(progress);
-      if (progress % 20 === 0 && stepIndex < LOADING_STEPS.length - 1) { stepIndex++; setLoadingStep(stepIndex); }
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => { setIsLoading(false); setTimeout(() => setRevealed(true), 100); }, 400);
+      if (raw) {
+        try {
+          setMatches(JSON.parse(raw));
+          if (answersRaw) setAnswers(JSON.parse(answersRaw));
+        } catch {
+          setSessionExpired(true);
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // 2. Session empty — try Supabase for logged-in users
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const { data: result } = await supabase
+              .from("wizard_results")
+              .select("answers, top_countries")
+              .eq("user_id", session.user.id)
+              .maybeSingle();
+
+            if (result?.top_countries && result.top_countries.length > 0) {
+              // We have saved results — but top_countries are lightweight slugs,
+              // not full CountryMatch objects. Show what we can and let
+              // the user retake if they want full data.
+              if (result.answers) setAnswers(result.answers);
+              // Show session expired UI with a note that we found their account
+              setSessionExpired(true);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Supabase fallback failed:", err);
+        }
+
+        // 3. Nothing found anywhere — show expired screen
+        setSessionExpired(true);
+        setIsLoading(false);
+        return;
       }
-    }, 30);
-    return () => clearInterval(interval);
-  }, [router]);
+
+      // Animate loading bar
+      let progress = 0, stepIndex = 0;
+      const interval = setInterval(() => {
+        progress += 2;
+        setLoadingProgress(progress);
+        if (progress % 20 === 0 && stepIndex < LOADING_STEPS.length - 1) { stepIndex++; setLoadingStep(stepIndex); }
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => { setIsLoading(false); setTimeout(() => setRevealed(true), 100); }, 400);
+        }
+      }, 30);
+      return () => clearInterval(interval);
+    }
+
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!isLoading && matches.length > 0 && user) {
@@ -369,28 +430,18 @@ export default function WizardResultsPage() {
     router.push("/");
   };
 
-  const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches  = isPro ? matches.slice(0, 25) : matches.slice(0, 8);
-  const lockedCount     = 25 - visibleMatches.length;
-  const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
-  const matchSlugs      = matches.map(m => m.country.slug);
-  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
-
   // ── Loading screen ────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 36, padding: "0 24px" }}>
-        {/* Pulsing mint dot */}
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: MINT, boxShadow: `0 0 16px ${MINT}`, animation: "pulse 1.2s ease-in-out infinite" }} />
         <style>{`@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:0.5}}`}</style>
-
         <div style={{ textAlign: "center" }}>
           <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12 }}>◆ Computing</p>
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,48px)", fontWeight: 400, letterSpacing: "-0.02em", color: FG, margin: 0 }}>
             Finding your <em style={{ color: MINT, fontStyle: "italic" }}>country…</em>
           </h2>
         </div>
-
         <div style={{ width: "100%", maxWidth: 320 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <p key={loadingStep} style={{ fontFamily: SANS, fontSize: 13, color: DIM, margin: 0 }}>{LOADING_STEPS[loadingStep]}</p>
@@ -404,7 +455,17 @@ export default function WizardResultsPage() {
     );
   }
 
-  if (matches.length === 0) return null;
+  // ── Session expired ───────────────────────────────────────────────────────
+  if (sessionExpired) return <SessionExpired />;
+
+  if (matches.length === 0) return <SessionExpired />;
+
+  const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
+  const visibleMatches  = isPro ? matches.slice(0, 25) : matches.slice(0, 8);
+  const lockedCount     = 25 - visibleMatches.length;
+  const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
+  const matchSlugs      = matches.map(m => m.country.slug);
+  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
 
   const top      = matches[0];
   const pctColor = matchPercentColor(top.matchPercent);
@@ -430,7 +491,6 @@ export default function WizardResultsPage() {
           .res-outer   { padding: 0 16px !important; }
         }
       `}</style>
-      {/* Subtle radial glow */}
       <div style={{
         position: "fixed", top: 0, right: 0, width: 600, height: 600,
         background: "radial-gradient(ellipse at 80% 0%, #00ffd508 0%, transparent 55%)",
@@ -454,14 +514,12 @@ export default function WizardResultsPage() {
           onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
           <ArrowLeft size={14} /> Retake
         </button>
-
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: FG }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: MINT, display: "inline-block" }} />
           <span style={{ fontFamily: SERIF, fontSize: 20, letterSpacing: "-0.02em" }}>
             origio<span style={{ color: MINT }}>.</span>
           </span>
         </Link>
-
         <button onClick={handleViewOnGlobe} style={{
           background: "none", border: "none", cursor: "pointer",
           fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
@@ -477,32 +535,20 @@ export default function WizardResultsPage() {
 
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
-
-          {/* Left */}
           <div>
             <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: MINT }}>●</span> Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
             </p>
-
-            {/* Flag + Name */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>
               <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>
-              <h1 style={{
-                fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)",
-                fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92,
-                margin: 0, color: FG,
-              }}>
+              <h1 style={{ fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92, margin: 0, color: FG }}>
                 {top.country.name}
               </h1>
             </div>
-
-            {/* Match % */}
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 24 }}>
               <span style={{ fontFamily: SERIF, fontSize: 48, color: pctColor }}>{top.matchPercent}%</span>
               <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM }}>match for your profile</span>
             </div>
-
-            {/* Stat strip — 4 col hairline grid */}
             {topSalary && (
               <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE, marginBottom: 24 }}>
                 {[
@@ -518,8 +564,6 @@ export default function WizardResultsPage() {
                 ))}
               </div>
             )}
-
-            {/* Reason chips */}
             {top.reasons.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
                 {top.reasons.map(r => (
@@ -533,8 +577,6 @@ export default function WizardResultsPage() {
                 ))}
               </div>
             )}
-
-            {/* CTAs */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <Link href={`/country/${top.country.slug}/personalised`} style={{
                 fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
@@ -557,8 +599,6 @@ export default function WizardResultsPage() {
               </button>
             </div>
           </div>
-
-          {/* Right — Take-home card */}
           <div style={{ position: "sticky", top: 80 }}>
             <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
           </div>
@@ -567,15 +607,11 @@ export default function WizardResultsPage() {
         {/* ── PODIUM ────────────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-              ◆ Podium
-            </p>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
               Your <em style={{ color: MINT, fontStyle: "italic" }}>top three</em>
             </h2>
           </div>
-
-          {/* 3-col hairline grid */}
           <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
             {matches.slice(0, 3).map((m, i) => {
               const mcs   = getCurrencySymbol(m.country.currency);
@@ -607,7 +643,6 @@ export default function WizardResultsPage() {
               );
             })}
           </div>
-
           {isPro && (
             <div style={{ marginTop: 20 }}>
               <Link href={compareHref} style={{
@@ -630,54 +665,27 @@ export default function WizardResultsPage() {
               What this <em style={{ color: MINT, fontStyle: "italic" }}>means</em>
             </h2>
           </div>
-
           <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE }}>
             {[
               {
                 label: "Best salary",
-                value: (() => {
-                  if (!jobRoleDef) return "—";
-                  const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0];
-                  return `${best.country.flagEmoji} ${best.country.name}`;
-                })(),
-                sub: (() => {
-                  if (!jobRoleDef) return "";
-                  const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0];
-                  return `${getCurrencySymbol(best.country.currency)}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr`;
-                })(),
+                value: (() => { if (!jobRoleDef) return "—"; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${best.country.flagEmoji} ${best.country.name}`; })(),
+                sub: (() => { if (!jobRoleDef) return ""; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${getCurrencySymbol(best.country.currency)}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr`; })(),
               },
               {
                 label: "Easiest visa",
-                value: (() => {
-                  const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
-                  return `${e.country.flagEmoji} ${e.country.name}`;
-                })(),
-                sub: (() => {
-                  const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0];
-                  return getVisaLabel(e.country.data.visaDifficulty);
-                })(),
+                value: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return `${e.country.flagEmoji} ${e.country.name}`; })(),
+                sub: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return getVisaLabel(e.country.data.visaDifficulty); })(),
               },
               {
                 label: "Lowest rent",
-                value: (() => {
-                  const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0];
-                  return `${c.country.flagEmoji} ${c.country.name}`;
-                })(),
-                sub: (() => {
-                  const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0];
-                  return `${getCurrencySymbol(c.country.currency)}${c.country.data.costRentCityCentre.toLocaleString()}/mo`;
-                })(),
+                value: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${c.country.flagEmoji} ${c.country.name}`; })(),
+                sub: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${getCurrencySymbol(c.country.currency)}${c.country.data.costRentCityCentre.toLocaleString()}/mo`; })(),
               },
               {
                 label: "Safest",
-                value: (() => {
-                  const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
-                  return `${s.country.flagEmoji} ${s.country.name}`;
-                })(),
-                sub: (() => {
-                  const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0];
-                  return `${s.country.data.scoreSafety}/10`;
-                })(),
+                value: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.flagEmoji} ${s.country.name}`; })(),
+                sub: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.data.scoreSafety}/10`; })(),
               },
             ].map(item => (
               <div key={item.label} style={{ background: BG, padding: "20px 22px" }}>
@@ -702,8 +710,6 @@ export default function WizardResultsPage() {
               {visibleMatches.length} of 25 visible
             </span>
           </div>
-
-          {/* Rows */}
           <div style={{ borderTop: `1px solid ${LINE}` }}>
             {visibleMatches.map((m, i) => {
               const mcs    = getCurrencySymbol(m.country.currency);
@@ -733,7 +739,6 @@ export default function WizardResultsPage() {
                         </div>
                       )}
                     </div>
-                    {/* Hairline match bar */}
                     <div className="res-row-bar" style={{ height: 2, background: "#111", width: "100%", position: "relative" }}>
                       <div style={{
                         position: "absolute", top: 0, left: 0,
@@ -750,18 +755,11 @@ export default function WizardResultsPage() {
               );
             })}
           </div>
-
-          {/* Lock overlay */}
           {!isPro && lockedCount > 0 && (
             <div style={{ position: "relative" }}>
-              {/* Blurred ghost rows */}
               <div style={{ filter: "blur(4px)", opacity: 0.4, pointerEvents: "none", userSelect: "none" }}>
                 {[visibleMatches.length + 1, visibleMatches.length + 2, visibleMatches.length + 3].map((n, i) => (
-                  <div key={n} style={{
-                    display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px",
-                    alignItems: "center", gap: 14, padding: "14px 10px",
-                    borderBottom: `1px solid #0f0f0f`, opacity: 1 - i * 0.25,
-                  }}>
+                  <div key={n} style={{ display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px", alignItems: "center", gap: 14, padding: "14px 10px", borderBottom: `1px solid #0f0f0f`, opacity: 1 - i * 0.25 }}>
                     <span style={{ fontFamily: MONO, fontSize: 11, color: "#1a1a1a", textAlign: "right" }}>{String(n).padStart(2, "0")}</span>
                     <span style={{ fontSize: 20 }}>🌍</span>
                     <div>
@@ -773,8 +771,6 @@ export default function WizardResultsPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Centered lock card */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 0 32px" }}>
                 <div style={{ border: `1px solid ${MINT}`, background: BG, padding: "28px 32px", textAlign: "center", maxWidth: 360, width: "100%" }}>
                   <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
@@ -800,14 +796,10 @@ export default function WizardResultsPage() {
               </div>
             </div>
           )}
-
           {isPro && matches.length >= 3 && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 25 countries ranked for you</p>
-              <Link href={compareHref} style={{
-                fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase",
-                color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s",
-              }}
+              <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = MINT)}
                 onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
                 Compare top 3 <ArrowRight size={13} />
@@ -840,18 +832,12 @@ export default function WizardResultsPage() {
         )}
       </div>
 
-      {/* ── FOOTER ────────────────────────────────────────────────────────────
-          Reuses the same footer pattern as all other pages — coordinate ticker,
-          giant serif CTA, two buttons. Import your shared <Footer /> component
-          here if you have one, otherwise this inline version matches exactly. */}
+      {/* ── FOOTER ────────────────────────────────────────────────────────────  */}
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: "64px 32px", textAlign: "center" }}>
         <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", color: "#444", marginBottom: 20 }}>
           51.5074° N · 0.1278° W <span style={{ color: MINT }}>→</span> 47.3769° N · 8.5417° E
         </p>
-        <h2 style={{
-          fontFamily: SERIF, fontSize: "clamp(36px,6vw,64px)", fontWeight: 400,
-          letterSpacing: "-0.02em", margin: "0 0 32px", lineHeight: 1.05, color: FG,
-        }}>
+        <h2 style={{ fontFamily: SERIF, fontSize: "clamp(36px,6vw,64px)", fontWeight: 400, letterSpacing: "-0.02em", margin: "0 0 32px", lineHeight: 1.05, color: FG }}>
           Your move starts <em style={{ color: MINT, fontStyle: "italic" }}>somewhere.</em>
         </h2>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
