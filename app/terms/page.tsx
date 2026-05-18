@@ -2,7 +2,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
-import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'Terms of Service — Origio',
@@ -95,11 +94,35 @@ const S = {
 export default function TermsPage() {
   return (
     <main style={{ minHeight: '100vh', background: S.bg, color: S.text, fontFamily: S.sans }}>
-      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(100px,10vw,120px) clamp(20px,4vw,40px) 80px' }}>
+      {/* ── Static nav — no function props ── */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'rgba(10,10,10,0.88)',
+        backdropFilter: 'blur(14px)',
+        borderBottom: '1px solid #1a1a1a',
+      }}>
+        <div style={{
+          maxWidth: 760, margin: '0 auto',
+          padding: '0 32px', height: 64,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: S.accent, display: 'inline-block' }} />
+            <span style={{ fontFamily: S.serif, fontSize: 20, color: S.text, letterSpacing: '-0.02em' }}>
+              origio<span style={{ color: S.accent }}>.</span>
+            </span>
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <Link href="/contact" style={{ fontFamily: S.sans, fontSize: 13, fontWeight: 500, color: 'rgba(240,240,232,0.45)', textDecoration: 'none' }}>Contact</Link>
+            <Link href="/privacy" style={{ fontFamily: S.sans, fontSize: 13, fontWeight: 500, color: 'rgba(240,240,232,0.45)', textDecoration: 'none' }}>Privacy</Link>
+          </div>
+        </div>
+      </nav>
 
-        {/* ── HEADER ── */}
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 80px' }}>
+
+        {/* Header */}
         <div style={{ marginBottom: 64, paddingBottom: 48, borderBottom: `1px solid ${S.border}` }}>
           <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: S.dim, marginBottom: 16 }}>
             Legal
@@ -110,11 +133,10 @@ export default function TermsPage() {
           <p style={{ fontSize: 12, color: S.dimmer, fontWeight: 600, letterSpacing: '0.04em' }}>Last updated: {LAST_UPDATED}</p>
         </div>
 
-        {/* ── SECTIONS ── */}
+        {/* Sections */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
           {SECTIONS.map((sec) => (
             <section key={sec.n}>
-              {/* Section heading */}
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 16 }}>
                 <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: S.accent, flexShrink: 0 }}>
                   {sec.n}.
@@ -124,9 +146,7 @@ export default function TermsPage() {
                 </h2>
               </div>
 
-              {/* Body text — split on \n\n for paragraphs */}
               {sec.body && sec.body.split('\n\n').map((para, i) => {
-                // Replace email inline
                 if (sec.hasEmail && para.includes('hello@findorigio.com')) {
                   const parts = para.split('hello@findorigio.com')
                   return (
@@ -146,7 +166,6 @@ export default function TermsPage() {
                 )
               })}
 
-              {/* List items */}
               {sec.list && (
                 <div style={{ border: `1px solid ${S.border}`, overflow: 'hidden', marginTop: 12, boxShadow: '3px 3px 0 #1a1a1a' }}>
                   {sec.list.map((item, i) => (
@@ -164,7 +183,6 @@ export default function TermsPage() {
             </section>
           ))}
 
-          {/* Footer nav links */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, paddingTop: 32, borderTop: `1px solid ${S.border}` }}>
             <span style={{ fontSize: 11, color: S.dimmer, fontWeight: 500 }}>Also useful:</span>
             <Link href="/privacy" style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: S.dim, textDecoration: 'none' }}>Privacy Policy</Link>
