@@ -39,7 +39,7 @@ const nextConfig = {
               // Images — added api.producthunt.com for PH badge
               "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com",
               // Fonts
-              "font-src 'self' data: https://api.fontshare.com https://fonts.gstatic.com",
+              
               // Connections
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
               // Stripe
