@@ -234,7 +234,7 @@ export default function Home() {
           position:       "relative",
           minHeight:      "100vh",
           background:     "#0a0a0a",
-          overflow:       "hidden",
+          /* overflow hidden removed — clips aurora canvas */
           display:        "flex",
           flexDirection:  "column",
           alignItems:     "center",
