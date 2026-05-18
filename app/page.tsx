@@ -4,13 +4,11 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
-import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import AuroraBackground from "@/components/AuroraBackground";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
-import { CountryMatch } from "@/lib/wizard";
 import { ArrowLeft } from "lucide-react";
 
 // ─── Slow country cycle → settles on "Belong" ─────────────────────────────
@@ -104,14 +102,13 @@ export default function Home() {
   const router  = useRouter();
   const heroRef = useRef<HTMLElement>(null);
 
-  const [selectedSlug, setSelectedSlug]         = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry]   = useState<CountryWithData | null>(null);
-  const [showHero, setShowHero]                 = useState(true);
-  const [allCountries, setAllCountries]         = useState<CountryWithData[]>([]);
-  const [selectedRole, setSelectedRole]         = useState<JobRole>("softwareEngineer");
+  const [selectedSlug, setSelectedSlug]       = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryWithData | null>(null);
+  const [showHero, setShowHero]               = useState(true);
+  const [allCountries, setAllCountries]       = useState<CountryWithData[]>([]);
+  const [selectedRole, setSelectedRole]       = useState<JobRole>("softwareEngineer");
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
-  const [wizardMatches, setWizardMatches]       = useState<CountryMatch[]>([]);
-  const [savedSlugs, setSavedSlugs]             = useState<string[]>([]);
+  const [savedSlugs, setSavedSlugs]           = useState<string[]>([]);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -137,13 +134,12 @@ export default function Home() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem("highlightedCountries");
-    const matchesRaw = sessionStorage.getItem("wizardMatches");
     if (raw) {
       const slugs: string[] = JSON.parse(raw);
       setHighlightedSlugs(slugs);
       setShowHero(false);
       sessionStorage.removeItem("highlightedCountries");
-      if (matchesRaw) setWizardMatches(JSON.parse(matchesRaw));
+      sessionStorage.removeItem("wizardMatches");
       if (slugs[0]) {
         setTimeout(() => {
           const country = allCountries.find(c => c.slug === slugs[0]);
@@ -173,7 +169,7 @@ export default function Home() {
   const handleClosePanel = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
   const handleBackToHome = useCallback(() => {
     setSelectedSlug(null); setSelectedCountry(null);
-    setShowHero(true); setHighlightedSlugs([]); setWizardMatches([]);
+    setShowHero(true); setHighlightedSlugs([]);
   }, []);
 
   useEffect(() => {
@@ -189,21 +185,12 @@ export default function Home() {
 
   const overlays = (
     <>
-      {wizardMatches.length > 0 && !selectedSlug && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60">
-          <WizardMatchesPanel
-            matches={wizardMatches} allCountries={allCountries} selectedRole={selectedRole}
-            onCountrySelect={slug => { handleCountrySelect(slug); setWizardMatches([]); }}
-            onClose={() => { setWizardMatches([]); setHighlightedSlugs([]); }}
-          />
-        </div>
-      )}
       <div className="fixed bottom-0 right-0 z-50 pointer-events-none">
         <div className="pointer-events-auto">
           <CountryPanel country={selectedCountry} onClose={handleClosePanel} selectedRole={selectedRole} onRoleChange={setSelectedRole} />
         </div>
       </div>
-      {!showHero && !selectedSlug && wizardMatches.length === 0 && (
+      {!showHero && !selectedSlug && (
         <div className="home-hint-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
           <button
             onClick={handleBackToHome}
@@ -234,7 +221,6 @@ export default function Home() {
           position:       "relative",
           minHeight:      "100vh",
           background:     "#0a0a0a",
-          /* overflow hidden removed — clips aurora canvas */
           display:        "flex",
           flexDirection:  "column",
           alignItems:     "center",
@@ -242,10 +228,8 @@ export default function Home() {
           padding:        "clamp(80px,12vh,140px) 0 clamp(60px,8vh,100px)",
         }}
       >
-        {/* Aurora — z-index 1, behind everything */}
         <AuroraBackground />
 
-        {/* Text — z-index 5, above aurora */}
         <div style={{
           position:      "relative",
           zIndex:        5,
@@ -315,7 +299,6 @@ export default function Home() {
         }}
         aria-label="Interactive globe"
       >
-        {/* Subtle aurora behind globe too */}
         <AuroraBackground />
 
         <p style={{
