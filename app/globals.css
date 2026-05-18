@@ -268,6 +268,16 @@ select.brutal-input         { appearance: none; cursor: pointer; }
   }
 }
 
+/* ─── Mobile responsive overrides ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Globe section: shorter on mobile so users can scroll past it */
+  .globe-section { height: 65svh !important; min-height: 360px !important; }
+  /* Homepage bottom hint pill: smaller padding on mobile */
+  .home-hint-bar { bottom: 16px !important; gap: 6px !important; }
+  .home-hint-bar > div { padding: 8px 14px !important; }
+  .home-hint-bar > button { padding: 8px 14px !important; }
+}
+
 /* ─── Noise overlay (compat) ─────────────────────────────────────────────── */
 .noise-overlay::after { display: none; }
 

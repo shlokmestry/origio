@@ -7,6 +7,7 @@ import CountryPanel from "@/components/CountryPanel";
 import WizardMatchesPanel from "@/components/WizardMatchesPanel";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import AuroraBackground from "@/components/AuroraBackground";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 import { CountryMatch } from "@/lib/wizard";
@@ -21,33 +22,28 @@ function FlickerWord() {
   const [done, setDone]       = useState(false);
 
   useEffect(() => {
-    // Brief delay before first word appears
     const start = setTimeout(() => {
       setVisible(true);
       let idx = 0;
 
       function next() {
-        // Fade out current word
         setVisible(false);
         setTimeout(() => {
           idx++;
           if (idx >= CYCLE_WORDS.length) {
-            // Final word: "Belong" — italic cyan, slower fade in
             setWord("Belong");
             setDone(true);
             setVisible(true);
           } else {
             setWord(CYCLE_WORDS[idx]);
             setVisible(true);
-            // Each country visible for 1.8s
-            setTimeout(next, 1800);
+            setTimeout(next, 800);
           }
-        }, 500); // fade-out duration
+        }, 400);
       }
 
-      // First country visible for 1.8s
-      setTimeout(next, 1800);
-    }, 500);
+      setTimeout(next, 800);
+    }, 400);
 
     return () => clearTimeout(start);
   }, []);
@@ -55,9 +51,7 @@ function FlickerWord() {
   return (
     <span style={{
       opacity:    visible ? 1 : 0,
-      transition: done
-        ? "opacity 0.9s ease, color 0.6s ease"
-        : "opacity 0.45s ease",
+      transition: done ? "opacity 0.9s ease, color 0.6s ease" : "opacity 0.35s ease",
       fontStyle:  done ? "italic" : "normal",
       color:      done ? "#00ffd5" : "rgba(255,255,255,0.75)",
       display:    "inline",
@@ -77,7 +71,8 @@ function StretchHeadline() {
     function fit() {
       if (!el) return;
       el.style.fontSize = "100px";
-      const scale = (window.innerWidth * 0.97) / el.scrollWidth;
+      const containerW = el.parentElement?.offsetWidth ?? window.innerWidth;
+      const scale = (containerW * 0.96) / el.scrollWidth;
       el.style.fontSize = `${Math.floor(100 * scale)}px`;
     }
     fit();
@@ -95,7 +90,7 @@ function StretchHeadline() {
       whiteSpace:      "nowrap",
       textAlign:       "center",
       width:           "100%",
-      transform:       "scaleY(1.2)",
+      transform:       "scaleY(1.15)",
       transformOrigin: "center center",
       userSelect:      "none",
     }}>
@@ -103,163 +98,6 @@ function StretchHeadline() {
     </div>
   );
 }
-
-// ─── Paper plane + dotted trail ────────────────────────────────────────────
-function PaperPlane({ containerRef }: { containerRef: React.RefObject<HTMLElement | null> }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const planeRef  = useRef<HTMLDivElement>(null);
-  const stateRef  = useRef({
-    x: 0, y: 0,
-    vx: 0, vy: 0,
-    angle: 0,
-    angularVel: 0,
-    trail: [] as { x: number; y: number }[],
-    frameCount: 0,
-    nextGustIn: 200,
-    initialized: false,
-  });
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvasEl = canvasRef.current;
-    const planeEl  = planeRef.current;
-    const heroEl   = containerRef.current;
-    if (!canvasEl || !planeEl || !heroEl) return;
-
-    const canvas = canvasEl;
-    const plane  = planeEl;
-    const hero   = heroEl;
-    const ctx    = canvas.getContext("2d")!;
-    const s      = stateRef.current;
-
-    const DRAG         = 0.008;
-    const LIFT         = 0.014;
-    const GRAVITY      = 0.022;
-    const ANG_DAMPING  = 0.94;
-    const MAX_ANG_VEL  = 0.028;
-    const TARGET_SPEED = 1.6;
-    const SLIP         = 0.05;
-    const PW           = 48;
-    const EDGE         = 140;
-    const TRAIL_MAX    = 220;
-    const TRAIL_SKIP   = 2;
-
-    function resize() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      canvas.width = w; canvas.height = h;
-      if (!s.initialized) {
-        s.initialized = true;
-        s.x = w * 0.18;
-        s.y = h * 0.35;
-        s.angle = 0.15;
-        s.vx = Math.cos(s.angle) * TARGET_SPEED;
-        s.vy = Math.sin(s.angle) * TARGET_SPEED;
-      }
-    }
-
-    function applyGust() {
-      const strength = (Math.random() - 0.48) * 0.038;
-      s.angularVel += strength;
-      s.angularVel = Math.max(-MAX_ANG_VEL, Math.min(MAX_ANG_VEL, s.angularVel));
-    }
-
-    function applyEdgeAvoidance() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      const m = EDGE;
-      if (s.x < m)     s.angularVel -= 0.006 * ((m - s.x) / m);
-      if (s.x > w - m) s.angularVel += 0.006 * ((s.x - (w - m)) / m);
-      if (s.y < m)     s.angularVel += 0.005 * ((m - s.y) / m);
-      if (s.y > h - m) s.angularVel -= 0.005 * ((s.y - (h - m)) / m);
-    }
-
-    function tick() {
-      const w = hero.offsetWidth, h = hero.offsetHeight;
-      s.frameCount++;
-
-      if (s.frameCount >= s.nextGustIn) {
-        applyGust();
-        s.frameCount = 0;
-        s.nextGustIn = 180 + Math.random() * 300;
-      }
-
-      applyEdgeAvoidance();
-
-      s.angularVel *= ANG_DAMPING;
-      s.angle      += s.angularVel;
-
-      const speed  = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-      const liftX  = -Math.sin(s.angle) * LIFT * speed;
-      const liftY  =  Math.cos(s.angle) * LIFT * speed;
-      const dragX  = -s.vx * DRAG;
-      const dragY  = -s.vy * DRAG;
-      const gravY  =  GRAVITY;
-      const speedErr = TARGET_SPEED - speed;
-      const thrustX  = Math.cos(s.angle) * speedErr * 0.03;
-      const thrustY  = Math.sin(s.angle) * speedErr * 0.03;
-      const noseX = Math.cos(s.angle);
-      const noseY = Math.sin(s.angle);
-      s.vx += (noseX * speed - s.vx) * SLIP + dragX + liftX + thrustX;
-      s.vy += (noseY * speed - s.vy) * SLIP + dragY + liftY + gravY + thrustY;
-
-      s.x += s.vx;
-      s.y += s.vy;
-
-      if (s.x < PW)     { s.x = PW;     s.vx =  Math.abs(s.vx) * 0.7;  s.angle = -s.angle * 0.5;    s.angularVel *= -0.4; }
-      if (s.x > w - PW) { s.x = w - PW; s.vx = -Math.abs(s.vx) * 0.7;  s.angle = Math.PI - s.angle; s.angularVel *= -0.4; }
-      if (s.y < PW)     { s.y = PW;     s.vy =  Math.abs(s.vy) * 0.6;  s.angularVel *= -0.35; }
-      if (s.y > h - PW) { s.y = h - PW; s.vy = -Math.abs(s.vy) * 0.6;  s.angularVel *= -0.35; }
-
-      plane.style.left      = `${s.x - PW / 2}px`;
-      plane.style.top       = `${s.y - PW / 2}px`;
-      plane.style.transform = `rotate(${s.angle * 180 / Math.PI}deg)`;
-
-      if (s.frameCount % TRAIL_SKIP === 0) {
-        const tailX = s.x - Math.cos(s.angle) * (PW * 0.48);
-        const tailY = s.y - Math.sin(s.angle) * (PW * 0.48);
-        s.trail.push({ x: tailX, y: tailY });
-        if (s.trail.length > TRAIL_MAX) s.trail.shift();
-      }
-
-      ctx.clearRect(0, 0, w, h);
-      for (let i = 0; i < s.trail.length; i++) {
-        if (i % 3 !== 0) continue;
-        const t        = s.trail[i];
-        const progress = i / s.trail.length;
-        const r        = 0.8 + progress * 1.6;
-        const opacity  = progress * 0.28;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
-        ctx.fill();
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    resize();
-    window.addEventListener("resize", resize);
-    rafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", resize);
-    };
-  }, [containerRef]);
-
-  return (
-    <>
-      <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3 }} />
-      <div ref={planeRef} style={{ position: "absolute", width: 48, height: 48, pointerEvents: "none", zIndex: 4 }}>
-        <svg viewBox="0 0 64 64" style={{ width: "100%", height: "100%" }}>
-          <polygon points="60,32 4,10 20,32 4,54" fill="white" opacity="0.92" />
-          <polygon points="60,32 4,10 28,36" fill="rgba(255,255,255,0.38)" />
-          <line x1="60" y1="32" x2="20" y2="32" stroke="rgba(0,0,0,0.12)" strokeWidth="1" />
-        </svg>
-      </div>
-    </>
-  );
-}
-
 
 // ─── Main ──────────────────────────────────────────────────────────────────
 export default function Home() {
@@ -332,8 +170,8 @@ export default function Home() {
     if (country) { setSelectedCountry(country); setShowHero(false); }
   }, [allCountries]);
 
-  const handleClosePanel    = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
-  const handleBackToHome    = useCallback(() => {
+  const handleClosePanel = useCallback(() => { setSelectedSlug(null); setSelectedCountry(null); }, []);
+  const handleBackToHome = useCallback(() => {
     setSelectedSlug(null); setSelectedCountry(null);
     setShowHero(true); setHighlightedSlugs([]); setWizardMatches([]);
   }, []);
@@ -366,7 +204,7 @@ export default function Home() {
         </div>
       </div>
       {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+        <div className="home-hint-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
           <button
             onClick={handleBackToHome}
             className="bg-[#1a1a1a] border border-white/10 px-4 py-2.5 flex items-center gap-2 text-xs font-bold text-white/50 hover:text-white hover:border-white/25 transition-colors rounded-full uppercase tracking-widest"
@@ -393,37 +231,49 @@ export default function Home() {
       <section
         ref={heroRef}
         style={{
-          position: "relative",
-          minHeight: "100vh",
-          background: "#0a0a0a",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          position:       "relative",
+          minHeight:      "100vh",
+          background:     "#0a0a0a",
+          /* overflow hidden removed — clips aurora canvas */
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
           justifyContent: "center",
-          padding: "120px 0 80px",
+          padding:        "clamp(80px,12vh,140px) 0 clamp(60px,8vh,100px)",
         }}
       >
-        <div className="hero-gradient-bg" />
-        <PaperPlane containerRef={heroRef} />
+        {/* Aurora — z-index 1, behind everything */}
+        <AuroraBackground />
 
+        {/* Text — z-index 5, above aurora */}
         <div style={{
-          position: "relative", zIndex: 5,
-          display: "flex", flexDirection: "column", alignItems: "center", width: "100%",
+          position:      "relative",
+          zIndex:        5,
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          width:         "100%",
+          padding:       "0 16px",
         }}>
-          <div style={{ width: "100%", overflow: "visible", paddingBottom: "0.18em", marginBottom: 48 }}>
+          <div style={{
+            width:         "100%",
+            overflow:      "visible",
+            paddingBottom: "0.18em",
+            marginBottom:  "clamp(28px,4vh,52px)",
+          }}>
             <StretchHeadline />
           </div>
 
           <p style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: "clamp(14px, 1.5vw, 18px)",
-            color: "rgba(255,255,255,0.4)",
-            fontWeight: 400,
-            lineHeight: 1.6,
-            textAlign: "center",
-            maxWidth: 480,
-            marginBottom: 44,
+            fontFamily:   "Inter, sans-serif",
+            fontSize:     "clamp(14px, 1.5vw, 18px)",
+            color:        "rgba(255,255,255,0.42)",
+            fontWeight:   400,
+            lineHeight:   1.65,
+            textAlign:    "center",
+            maxWidth:     460,
+            marginBottom: "clamp(32px,4vh,48px)",
+            padding:      "0 8px",
           }}>
             Salaries, visas, cost of living and quality of life
             personalised to your job and passport.
@@ -431,16 +281,21 @@ export default function Home() {
 
           <button
             onClick={() => router.push("/wizard")}
-            className="hero-cta-white"
             style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              background: "#ffffff", color: "#0a0a0a",
-              fontFamily: "Inter, sans-serif",
-              fontSize: 15, fontWeight: 700,
-              padding: "15px 56px", borderRadius: 100,
-              border: "none", cursor: "pointer",
-              letterSpacing: "0.02em",
-              boxShadow: "0 2px 24px rgba(255,255,255,0.12)",
+              display:        "inline-flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              background:     "#ffffff",
+              color:          "#0a0a0a",
+              fontFamily:     "Inter, sans-serif",
+              fontSize:       "clamp(13px,1.4vw,15px)",
+              fontWeight:     700,
+              padding:        "clamp(12px,1.5vh,16px) clamp(36px,5vw,60px)",
+              borderRadius:   100,
+              border:         "none",
+              cursor:         "pointer",
+              letterSpacing:  "0.02em",
+              boxShadow:      "0 2px 24px rgba(255,255,255,0.12)",
             }}
           >
             Find My Country
@@ -450,23 +305,34 @@ export default function Home() {
 
       {/* ── SECTION 2: GLOBE ── */}
       <section
+        className="globe-section"
         style={{
-          width: "100%", height: "100svh", minHeight: 520,
-          position: "relative", background: "#0a0a0a",
+          width:      "100%",
+          height:     "100svh",
+          minHeight:  480,
+          position:   "relative",
+          background: "#0a0a0a",
         }}
         aria-label="Interactive globe"
       >
-        <div className="hero-gradient-bg" />
+        {/* Subtle aurora behind globe too */}
+        <AuroraBackground />
+
         <p style={{
-          position: "absolute", top: 20, left: 24, zIndex: 10,
-          fontSize: 9, fontFamily: "monospace",
-          color: "rgba(255,255,255,0.18)",
-          textTransform: "uppercase", letterSpacing: "0.3em",
+          position:      "absolute",
+          top:           16,
+          left:          20,
+          zIndex:        10,
+          fontSize:      9,
+          fontFamily:    "monospace",
+          color:         "rgba(255,255,255,0.18)",
+          textTransform: "uppercase",
+          letterSpacing: "0.3em",
           pointerEvents: "none",
         }}>
           Drag · click a country
         </p>
-        <div style={{ position: "absolute", inset: 0, touchAction: "none" }}>
+        <div style={{ position: "absolute", inset: 0, touchAction: "none", zIndex: 5 }}>
           <Globe
             countries={globeCountries}
             onCountrySelect={handleCountrySelect}

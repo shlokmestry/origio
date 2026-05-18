@@ -419,6 +419,17 @@ export default function WizardResultsPage() {
       transform: revealed ? "translateY(0)" : "translateY(16px)",
       transition: "opacity 0.5s ease, transform 0.5s ease",
     }}>
+      <style>{`
+        @media (max-width: 700px) {
+          .res-hero    { grid-template-columns: 1fr !important; }
+          .res-podium  { grid-template-columns: 1fr !important; }
+          .res-stats4  { grid-template-columns: 1fr 1fr !important; }
+          .res-row     { grid-template-columns: 28px 24px 1fr 44px !important; gap: 8px !important; }
+          .res-row-bar { display: none !important; }
+          .res-nav     { padding: 12px 18px !important; }
+          .res-outer   { padding: 0 16px !important; }
+        }
+      `}</style>
       {/* Subtle radial glow */}
       <div style={{
         position: "fixed", top: 0, right: 0, width: 600, height: 600,
@@ -427,7 +438,7 @@ export default function WizardResultsPage() {
       }} />
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
-      <nav style={{
+      <nav className="res-nav" style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)",
         borderBottom: `1px solid ${LINE}`,
@@ -462,10 +473,10 @@ export default function WizardResultsPage() {
         </button>
       </nav>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 0", position: "relative", zIndex: 1 }}>
+      <div className="res-outer" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 0", position: "relative", zIndex: 1 }}>
 
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
-        <section style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
+        <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
 
           {/* Left */}
           <div>
@@ -493,7 +504,7 @@ export default function WizardResultsPage() {
 
             {/* Stat strip — 4 col hairline grid */}
             {topSalary && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE, marginBottom: 24 }}>
+              <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE, marginBottom: 24 }}>
                 {[
                   { label: "Salary", value: `${cs}${topSalary.toLocaleString()}` },
                   { label: "Tax", value: `${top.country.data.incomeTaxRateMid}%` },
@@ -565,7 +576,7 @@ export default function WizardResultsPage() {
           </div>
 
           {/* 3-col hairline grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
+          <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
             {matches.slice(0, 3).map((m, i) => {
               const mcs   = getCurrencySymbol(m.country.currency);
               const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
@@ -620,7 +631,7 @@ export default function WizardResultsPage() {
             </h2>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE }}>
+          <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE }}>
             {[
               {
                 label: "Best salary",
@@ -707,6 +718,7 @@ export default function WizardResultsPage() {
                       borderBottom: `1px solid #0f0f0f`, textDecoration: "none",
                       transition: "background 0.12s",
                     }}
+                    className="res-row"
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                     <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, textAlign: "right", color: isTop3 ? RANK_COLORS[i] : "#2a2a2a" }}>
@@ -722,7 +734,7 @@ export default function WizardResultsPage() {
                       )}
                     </div>
                     {/* Hairline match bar */}
-                    <div style={{ height: 2, background: "#111", width: "100%", position: "relative" }}>
+                    <div className="res-row-bar" style={{ height: 2, background: "#111", width: "100%", position: "relative" }}>
                       <div style={{
                         position: "absolute", top: 0, left: 0,
                         height: "100%", width: `${m.matchPercent}%`,

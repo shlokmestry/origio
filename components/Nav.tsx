@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Search, Zap, LogIn, User } from "lucide-react";
+import { Search, Zap, LogIn, User, Menu, X } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -14,8 +14,9 @@ interface NavProps {
 }
 
 export default function Nav({ countries = [], onCountrySelect }: NavProps) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [user, setUser]             = useState<SupabaseUser | null>(null);
+  const [searchOpen, setSearchOpen]       = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser]                   = useState<SupabaseUser | null>(null);
   const [isPro, setIsPro]           = useState(false);
 
   const fetchProStatus = useCallback(async (userId: string) => {
@@ -138,11 +139,43 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           background: transparent; border: 1.5px solid rgba(0,255,213,0.35); color: #00ffd5;
         }
         .nav-auth-pill.pro-user:hover { background: rgba(0,255,213,0.06); }
+        .nav-mobile-btn {
+          display: none; align-items: center; justify-content: center;
+          width: 38px; height: 38px; background: transparent;
+          border: none; cursor: pointer; color: rgba(255,255,255,0.55);
+          transition: color 0.15s; flex-shrink: 0;
+        }
+        .nav-mobile-btn:hover { color: #fff; }
         @media (max-width: 768px) {
           .nav-pill { top: 12px; height: 46px; }
           .nav-links-inner { display: none; }
           .nav-logo-pill { height: 38px; }
           .nav-auth-pill { height: 38px; padding: 0 14px; font-size: 12px; }
+          .nav-mobile-btn { display: flex; }
+        }
+        .mobile-menu {
+          display: none; position: fixed; inset: 0; z-index: 200;
+          background: #0a0a0a; flex-direction: column;
+          padding: 0; overflow-y: auto;
+        }
+        .mobile-menu.open { display: flex; }
+        .mobile-menu-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 18px 24px; border-bottom: 1px solid #1a1a1a;
+        }
+        .mobile-menu-link {
+          display: flex; align-items: center; gap: 12px;
+          padding: 18px 24px; font-size: 22px; font-weight: 700;
+          color: rgba(255,255,255,0.7); text-decoration: none;
+          font-family: 'DM Serif Display', Georgia, serif;
+          border-bottom: 1px solid #111; transition: color 0.15s;
+          letter-spacing: -0.01em;
+        }
+        .mobile-menu-link:hover { color: #fff; }
+        .mobile-menu-link.pro { color: #00ffd5; }
+        .mobile-menu-footer {
+          padding: 24px; margin-top: auto;
+          border-top: 1px solid #1a1a1a;
         }
       `}</style>
 
@@ -175,6 +208,15 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           )}
         </div>
 
+        {/* Mobile hamburger */}
+        <button
+          className="nav-mobile-btn"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu size={18} />
+        </button>
+
         {user ? (
           <a href="/profile" className={`nav-auth-pill${isPro ? " pro-user" : ""}`}>
             <User size={13} />
@@ -188,6 +230,66 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           </a>
         )}
       </nav>
+
+      {/* Mobile full-screen menu */}
+      <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="Mobile navigation">
+        <div className="mobile-menu-header">
+          <Link href="/" className="nav-logo-pill" onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: "none" }}>
+            <span className="nav-logo-sq" />
+            <span className="nav-logo-text">Origio</span>
+          </Link>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            style={{ background: "none", border: "1px solid #2a2a2a", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            aria-label="Close menu"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div style={{ padding: "8px 0", flex: 1 }}>
+          {countries.length > 0 && (
+            <button
+              onClick={() => { setMobileMenuOpen(false); setSearchOpen(true); }}
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "18px 24px", background: "none", border: "none", borderBottom: "1px solid #111", cursor: "pointer", textAlign: "left" }}
+            >
+              <Search size={18} style={{ color: "rgba(255,255,255,0.4)", flexShrink: 0 }} />
+              <span style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: "'DM Serif Display', Georgia, serif", letterSpacing: "-0.01em" }}>Search countries</span>
+            </button>
+          )}
+          <Link href="/wizard"             className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
+          <Link href="/compare"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
+          <Link href="/salary-calculator" className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Calculator</Link>
+          <Link href="/blog"              className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
+          <Link href="/about"             className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>About</Link>
+          {!isPro && (
+            <Link href="/pro" className="mobile-menu-link pro" onClick={() => setMobileMenuOpen(false)}>
+              <Zap size={16} /> Origio Pro
+            </Link>
+          )}
+        </div>
+
+        <div className="mobile-menu-footer">
+          {user ? (
+            <a href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: isPro ? "transparent" : "#fff", borderRadius: 100, color: isPro ? "#00ffd5" : "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14, border: isPro ? "1.5px solid rgba(0,255,213,0.4)" : "none" }}
+            >
+              <User size={15} />
+              {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
+              {isPro && <span style={{ fontSize: 10, letterSpacing: "0.12em", marginLeft: 4 }}>PRO</span>}
+            </a>
+          ) : (
+            <a href="/signin"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: "#fff", borderRadius: 100, color: "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14 }}
+            >
+              <LogIn size={15} />
+              Sign In
+            </a>
+          )}
+        </div>
+      </div>
 
       {/* CommandSearch modal — centered, with illustration */}
       <CommandSearch
