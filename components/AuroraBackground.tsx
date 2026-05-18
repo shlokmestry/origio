@@ -36,14 +36,14 @@ export default function AuroraBackground() {
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
 
+    // Use window dimensions — more reliable than parent element
     function resize() {
-      const parent = canvas!.parentElement;
-      const w = parent?.offsetWidth  ?? window.innerWidth;
-      const h = parent?.offsetHeight ?? window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
       canvas!.width  = Math.floor(w * 0.75);
       canvas!.height = Math.floor(h * 0.75);
-      canvas!.style.width  = w + "px";
-      canvas!.style.height = h + "px";
+      canvas!.style.width  = "100%";
+      canvas!.style.height = "100%";
       gl!.viewport(0, 0, canvas!.width, canvas!.height);
     }
 
@@ -92,15 +92,10 @@ export default function AuroraBackground() {
       }
 
       vec3 palette(float t) {
-        // Heavily biased toward black — colour only at peaks
         vec3 col = vec3(0.0);
-        // Deep black-teal base
         col = mix(col, vec3(0.00,0.08,0.08), smoothstep(0.0,0.45,t));
-        // Teal bloom — only at high noise values
         col = mix(col, vec3(0.00,0.55,0.48), smoothstep(0.45,0.65,t));
-        // Brief violet tip
         col = mix(col, vec3(0.32,0.24,0.46), smoothstep(0.65,0.80,t));
-        // White diffusion — rare
         col = mix(col, vec3(0.80,0.88,0.92), smoothstep(0.80,1.00,t));
         return col;
       }
@@ -109,10 +104,8 @@ export default function AuroraBackground() {
         vec2 uv = gl_FragCoord.xy / u_res;
         float aspect = u_res.x / u_res.y;
         vec2 p = vec2(uv.x*aspect, uv.y) * 1.6;
-
         float t = u_time * 0.001;
 
-        // Mouse pull in p-space
         vec2 mUV  = vec2(u_mouse.x*aspect, u_mouse.y) * 1.6;
         float dist = length(p - mUV);
         vec2 mPull = (dist > 0.001)
@@ -121,19 +114,13 @@ export default function AuroraBackground() {
 
         float n = warp(p, t, mPull);
 
-        // Vertical mask — keep bottom darker
         float mask = smoothstep(0.0,0.5,uv.y)*0.4
                    + smoothstep(1.0,0.5,uv.y)*0.6;
         n *= mask;
-
-        // Aggressive power curve — crush midtones → most screen stays dark
         n = pow(n, 2.2);
 
         vec3 col = palette(n);
-
-        // Low alpha ceiling — aurora is a hint, not a wash
         float alpha = smoothstep(0.05, 0.40, n) * 0.55;
-
         gl_FragColor = vec4(col * alpha, alpha);
       }
     `;
