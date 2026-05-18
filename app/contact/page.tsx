@@ -78,9 +78,9 @@ export default function ContactPage() {
       <div className="max-w-[900px] mx-auto px-8 py-14 flex-1 w-full">
 
         {/* Email card */}
-        <a href="mailto:hello@findorigio.com" style={{ textDecoration: 'none' }}
+        <a href="mailto:hello@findorigio.com"
           className="group flex items-center gap-5 bg-[#111] border border-[#2a2a2a] px-7 py-6 mb-10 hover:border-[#00ffd5]/40 transition-colors"
-          style={{ boxShadow: '3px 3px 0px #1a1a1a' }}>
+          style={{ textDecoration: 'none', boxShadow: '3px 3px 0px #1a1a1a' }}>
           <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-[#2a2a2a] bg-[#00ffd5]/[0.06] group-hover:bg-[#00ffd5]/[0.1] transition-colors">
             <Mail className="w-5 h-5 text-[#00ffd5]" />
           </div>
