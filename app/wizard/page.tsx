@@ -114,7 +114,7 @@ function EyebrowLabel({ children }: { children: React.ReactNode }) {
 
 function StepHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h1 style={{ fontFamily: SERIF, fontSize: "clamp(38px, 5vw, 60px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 14px", color: FG, fontWeight: 400 }}>
+    <h1 className="wiz-step-heading" style={{ fontFamily: SERIF, fontSize: "clamp(38px, 5vw, 60px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 14px", color: FG, fontWeight: 400 }}>
       {children}
     </h1>
   );
@@ -273,11 +273,18 @@ export default function WizardPage() {
           .wiz-layout  { grid-template-columns: 1fr !important; }
           .wiz-sidebar { display: none !important; }
         }
+        @media(max-width:600px){
+          .wiz-grid-2  { grid-template-columns: 1fr !important; }
+          .wiz-header-inner { padding: 12px 18px !important; }
+          .wiz-main { padding: 32px 18px 100px !important; }
+          .wiz-step-heading { font-size: clamp(28px,8vw,44px) !important; }
+          .wiz-nav-btns { gap: 10px !important; }
+        }
       `}</style>
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,10,0.80)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="wiz-header-inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={handleBack} style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.color = FG)}
             onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
@@ -304,7 +311,7 @@ export default function WizardPage() {
       </header>
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main className="wiz-layout" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px 120px", display: "grid", gridTemplateColumns: "240px 1fr", gap: "48px 52px", alignItems: "start" }}>
+      <main className="wiz-layout wiz-main" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px 120px", display: "grid", gridTemplateColumns: "240px 1fr", gap: "48px 52px", alignItems: "start" }}>
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <aside className="wiz-sidebar" style={{ position: "sticky", top: 88, alignSelf: "start" }}>
@@ -386,7 +393,7 @@ export default function WizardPage() {
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
               <StepHeading>What's your <Mint>job?</Mint></StepHeading>
               <StepSub>Used to show realistic salary expectations per country.</StepSub>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+              <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {JOB_ROLES.map(r => (
                   <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
                     badge={<span style={{ fontSize: 20, flexShrink: 0 }}>{r.emoji}</span>}>
@@ -403,7 +410,7 @@ export default function WizardPage() {
               <EyebrowLabel>Step 04 · Priorities</EyebrowLabel>
               <StepHeading>What matters <Mint>most?</Mint></StepHeading>
               <StepSub>Pick at least 3, in order of importance. The first one you tap carries the highest weight.</StepSub>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+              <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {[
                   { key: "salary",        label: "High salary" },
                   { key: "affordability", label: "Low cost of living" },
@@ -527,7 +534,7 @@ export default function WizardPage() {
           )}
 
           {/* Nav */}
-          <div style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="wiz-nav-btns" style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#3a3a3a"; }}
               onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = LINE; }}>

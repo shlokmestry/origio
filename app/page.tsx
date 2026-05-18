@@ -204,7 +204,7 @@ export default function Home() {
         </div>
       </div>
       {!showHero && !selectedSlug && wizardMatches.length === 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+        <div className="home-hint-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
           <button
             onClick={handleBackToHome}
             className="bg-[#1a1a1a] border border-white/10 px-4 py-2.5 flex items-center gap-2 text-xs font-bold text-white/50 hover:text-white hover:border-white/25 transition-colors rounded-full uppercase tracking-widest"
@@ -305,6 +305,7 @@ export default function Home() {
 
       {/* ── SECTION 2: GLOBE ── */}
       <section
+        className="globe-section"
         style={{
           width:      "100%",
           height:     "100svh",

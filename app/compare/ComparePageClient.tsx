@@ -361,11 +361,24 @@ export default function ComparePageClient() {
 
   return (
     <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
+      <style>{`
+        @media (max-width: 700px) {
+          .cmp-selectors-grid { grid-template-columns: 1fr 1fr !important; }
+          .cmp-table-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .cmp-table-inner { min-width: 580px; }
+          .cmp-visa-grid   { grid-template-columns: 1fr !important; }
+          .cmp-page-header { padding: 100px 20px 24px !important; }
+          .cmp-table-wrap  { padding: 20px 16px 40px !important; }
+        }
+        @media (max-width: 480px) {
+          .cmp-selectors-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <Nav countries={globeCountries} onCountrySelect={() => {}} />
 
       {/* ── PAGE HEADER ── */}
       <div className="border-b border-white/[0.07]">
-        <div className="max-w-[1100px] mx-auto px-8 pt-28 pb-10">
+        <div className="cmp-page-header max-w-[1100px] mx-auto px-8 pt-28 pb-10">
           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
             Side by Side
           </p>
@@ -389,7 +402,7 @@ export default function ComparePageClient() {
           <div className="bg-[#0d0d10] border border-white/[0.09] p-5 mb-0">
             {/* Row 1: Role + Country A + Country B + (Country C or locked) */}
             <div
-              className="grid gap-4 mb-4"
+              className="cmp-selectors-grid grid gap-4 mb-4"
               style={{
                 gridTemplateColumns: isPro
                   ? "1fr 1fr 1fr 1fr"
@@ -566,8 +579,9 @@ export default function ComparePageClient() {
 
       {/* ── TABLE ── */}
       {countryA && countryB && (
-        <div className="max-w-[1100px] mx-auto px-8 py-10 flex-1 w-full">
-          <div className="border border-white/[0.07] overflow-hidden">
+        <div className="cmp-table-wrap max-w-[1100px] mx-auto px-8 py-10 flex-1 w-full">
+          <div className="cmp-table-outer">
+            <div className="cmp-table-inner border border-white/[0.07] overflow-hidden">
 
             <SectionRow label="Salary" isPro={isPro} />
             <MetricRow
@@ -597,12 +611,13 @@ export default function ComparePageClient() {
             <MetricRow label="Difficulty" isPro={isPro} higherIsBetter={false} format={(v) => `${getVisaLabel(v)} · ${v}/5`} values={trio("visaDifficulty")} />
             <MetricRow label="Move score" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("moveScore")} />
           </div>
+          </div>
 
           {/* ── VISA NOTES ── */}
           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35 mt-10 mb-4">
             Visa Notes
           </p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="cmp-visa-grid grid grid-cols-3 gap-3">
             <VisaCard country={countryA} color={COL_A} />
             <VisaCard country={countryB} color={COL_B} />
             {isPro && countryC ? (
