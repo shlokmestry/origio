@@ -36,11 +36,11 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com",
               // Styles
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
-              // Images
-              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos",
+              // Images — added api.producthunt.com for PH badge
+              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com",
               // Fonts
               "font-src 'self' data: https://api.fontshare.com https://fonts.gstatic.com",
-              // Connections — added region1.google-analytics.com + analytics.google.com
+              // Connections
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
               // Stripe
               "frame-src https://js.stripe.com https://hooks.stripe.com",
