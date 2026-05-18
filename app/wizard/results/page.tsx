@@ -316,6 +316,90 @@ function SessionExpired() {
   );
 }
 
+// ── Save results banner — only shown to logged-out users ───────────────────
+function SaveResultsBanner() {
+  const [signingIn, setSigningIn] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setSigningIn(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/wizard/results` },
+      });
+    } catch {
+      setSigningIn(false);
+    }
+  };
+
+  if (dismissed) return null;
+
+  return (
+    <div
+      className="save-banner"
+      style={{
+        background: "#0d0d0d",
+        borderBottom: `1px solid #2a2a2a`,
+        padding: "13px 32px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 15 }}>💾</span>
+        <span style={{ fontFamily: SANS, fontSize: 13, color: FG, fontWeight: 600 }}>
+          Save your ranking
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>
+          — sign in so you can come back to your results anytime
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={signingIn}
+          style={{
+            fontFamily: SANS, fontSize: 13, fontWeight: 600,
+            padding: "8px 16px",
+            background: FG, color: "#111",
+            border: "none", cursor: signingIn ? "not-allowed" : "pointer",
+            display: "inline-flex", alignItems: "center", gap: 8,
+            opacity: signingIn ? 0.7 : 1,
+            transition: "opacity 0.15s",
+            flexShrink: 0,
+          }}
+        >
+          {/* Google G SVG */}
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          {signingIn ? "Signing in…" : "Sign in with Google"}
+        </button>
+        <button
+          onClick={() => setDismissed(true)}
+          aria-label="Dismiss"
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "#333", padding: "8px", display: "flex", alignItems: "center",
+            transition: "color 0.15s", flexShrink: 0,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = DIM)}
+          onMouseLeave={e => (e.currentTarget.style.color = "#333")}
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function WizardResultsPage() {
   const router = useRouter();
@@ -329,6 +413,7 @@ export default function WizardResultsPage() {
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
 
+  // Auth — also listens for post-OAuth redirect sign-in
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -337,11 +422,21 @@ export default function WizardResultsPage() {
         setIsPro(data?.is_pro ?? false);
       }
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        setUser(session.user);
+        const { data } = await supabase.from("profiles").select("is_pro").eq("id", session.user.id).single();
+        setIsPro(data?.is_pro ?? false);
+        // auto-save fires via the save useEffect below once user state updates
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
     async function load() {
-      // 1. Try sessionStorage first
       const raw        = sessionStorage.getItem("wizardMatches");
       const answersRaw = sessionStorage.getItem("wizardAnswers");
 
@@ -355,7 +450,6 @@ export default function WizardResultsPage() {
           return;
         }
       } else {
-        // 2. Session empty — try Supabase for logged-in users
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
@@ -366,11 +460,7 @@ export default function WizardResultsPage() {
               .maybeSingle();
 
             if (result?.top_countries && result.top_countries.length > 0) {
-              // We have saved results — but top_countries are lightweight slugs,
-              // not full CountryMatch objects. Show what we can and let
-              // the user retake if they want full data.
               if (result.answers) setAnswers(result.answers);
-              // Show session expired UI with a note that we found their account
               setSessionExpired(true);
               setIsLoading(false);
               return;
@@ -380,13 +470,11 @@ export default function WizardResultsPage() {
           console.error("Supabase fallback failed:", err);
         }
 
-        // 3. Nothing found anywhere — show expired screen
         setSessionExpired(true);
         setIsLoading(false);
         return;
       }
 
-      // Animate loading bar
       let progress = 0, stepIndex = 0;
       const interval = setInterval(() => {
         progress += 2;
@@ -404,6 +492,7 @@ export default function WizardResultsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-save whenever user becomes available (including post-OAuth redirect)
   useEffect(() => {
     if (!isLoading && matches.length > 0 && user) {
       const save = async () => {
@@ -430,7 +519,7 @@ export default function WizardResultsPage() {
     router.push("/");
   };
 
-  // ── Loading screen ────────────────────────────────────────────────────────
+  // ── Loading screen ─────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 36, padding: "0 24px" }}>
@@ -455,9 +544,7 @@ export default function WizardResultsPage() {
     );
   }
 
-  // ── Session expired ───────────────────────────────────────────────────────
   if (sessionExpired) return <SessionExpired />;
-
   if (matches.length === 0) return <SessionExpired />;
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
@@ -467,12 +554,11 @@ export default function WizardResultsPage() {
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
 
-  const top      = matches[0];
-  const pctColor = matchPercentColor(top.matchPercent);
-  const cs       = getCurrencySymbol(top.country.currency);
+  const top       = matches[0];
+  const pctColor  = matchPercentColor(top.matchPercent);
+  const cs        = getCurrencySymbol(top.country.currency);
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
 
-  // ── Page ──────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight: "100vh", background: BG, color: FG, fontFamily: SANS,
@@ -489,15 +575,17 @@ export default function WizardResultsPage() {
           .res-row-bar { display: none !important; }
           .res-nav     { padding: 12px 18px !important; }
           .res-outer   { padding: 0 16px !important; }
+          .save-banner { padding: 12px 16px !important; flex-direction: column !important; align-items: flex-start !important; }
         }
       `}</style>
+
       <div style={{
         position: "fixed", top: 0, right: 0, width: 600, height: 600,
         background: "radial-gradient(ellipse at 80% 0%, #00ffd508 0%, transparent 55%)",
         pointerEvents: "none", zIndex: 0,
       }} />
 
-      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
+      {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <nav className="res-nav" style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)",
@@ -531,9 +619,12 @@ export default function WizardResultsPage() {
         </button>
       </nav>
 
+      {/* ── Save results banner — only for logged-out users ────────────────── */}
+      {!user && <SaveResultsBanner />}
+
       <div className="res-outer" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 0", position: "relative", zIndex: 1 }}>
 
-        {/* ── HERO ──────────────────────────────────────────────────────────── */}
+        {/* ── HERO ────────────────────────────────────────────────────────── */}
         <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
           <div>
             <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }}>
@@ -604,7 +695,7 @@ export default function WizardResultsPage() {
           </div>
         </section>
 
-        {/* ── PODIUM ────────────────────────────────────────────────────────── */}
+        {/* ── PODIUM ──────────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
@@ -614,7 +705,7 @@ export default function WizardResultsPage() {
           </div>
           <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
             {matches.slice(0, 3).map((m, i) => {
-              const mcs   = getCurrencySymbol(m.country.currency);
+              const mcs    = getCurrencySymbol(m.country.currency);
               const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
               return (
                 <div key={m.country.slug} style={{ background: BG, padding: "24px" }}>
@@ -657,7 +748,7 @@ export default function WizardResultsPage() {
           )}
         </section>
 
-        {/* ── AT A GLANCE ───────────────────────────────────────────────────── */}
+        {/* ── AT A GLANCE ─────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ At a glance</p>
@@ -697,7 +788,7 @@ export default function WizardResultsPage() {
           </div>
         </section>
 
-        {/* ── FULL RANKING ──────────────────────────────────────────────────── */}
+        {/* ── FULL RANKING ────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0 80px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
@@ -808,7 +899,7 @@ export default function WizardResultsPage() {
           )}
         </section>
 
-        {/* ── FILTERED OUT ──────────────────────────────────────────────────── */}
+        {/* ── FILTERED OUT ────────────────────────────────────────────────── */}
         {excludedCountries.length > 0 && (
           <section style={{ padding: "52px 0", borderTop: `1px solid ${LINE}` }}>
             <div style={{ marginBottom: 28 }}>
@@ -832,7 +923,7 @@ export default function WizardResultsPage() {
         )}
       </div>
 
-      {/* ── FOOTER ────────────────────────────────────────────────────────────  */}
+      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: "64px 32px", textAlign: "center" }}>
         <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", color: "#444", marginBottom: 20 }}>
           51.5074° N · 0.1278° W <span style={{ color: MINT }}>→</span> 47.3769° N · 8.5417° E
