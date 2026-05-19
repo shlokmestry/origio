@@ -167,6 +167,7 @@ export default function WizardPage() {
   const router = useRouter();
   const [step, setStep]     = useState(1);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
   const [gateChecked, setGateChecked] = useState(false);
@@ -177,20 +178,26 @@ export default function WizardPage() {
 
   useEffect(() => {
     async function checkGate() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
-        setRunsUsed(stored); setIsSignedIn(false);
-        if (stored >= ANON_MAX_RUNS) setGateType("anon");
-        setGateChecked(true); return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
+          setRunsUsed(stored); setIsSignedIn(false);
+          if (stored >= ANON_MAX_RUNS) setGateType("anon");
+          setGateChecked(true); return;
+        }
+        setIsSignedIn(true);
+        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
+        const pro  = profile?.is_pro ?? false;
+        const runs = profile?.quiz_runs_count ?? 0;
+        setIsPro(pro); setRunsUsed(runs);
+        if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
+      } catch (err) {
+        // Network / Supabase error — allow the quiz to proceed rather than hanging forever
+        console.error("checkGate error:", err);
+      } finally {
+        setGateChecked(true);
       }
-      setIsSignedIn(true);
-      const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
-      const pro  = profile?.is_pro ?? false;
-      const runs = profile?.quiz_runs_count ?? 0;
-      setIsPro(pro); setRunsUsed(runs);
-      if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
-      setGateChecked(true);
     }
     checkGate();
   }, []);
@@ -222,15 +229,37 @@ export default function WizardPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setSubmitError(null);
     try {
-      const res       = await fetch("/api/countries");
-      const countries: CountryWithData[] = await res.json();
-      let matches     = scoreCountriesForWizard(countries, answers as WizardAnswers);
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+      let res: Response;
       try {
-        const controller = new AbortController();
-        const timeout    = setTimeout(() => controller.abort(), 3000);
-        const vRes       = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: controller.signal });
-        clearTimeout(timeout);
+        res = await fetch("/api/countries", { signal: controller.signal });
+        clearTimeout(fetchTimeout);
+      } catch {
+        clearTimeout(fetchTimeout);
+        setSubmitError("Couldn't reach the server. Check your connection and try again.");
+        setLoading(false);
+        return;
+      }
+      if (!res.ok) {
+        setSubmitError(`Server error (${res.status}). Please try again.`);
+        setLoading(false);
+        return;
+      }
+      const countries: CountryWithData[] = await res.json();
+      if (!Array.isArray(countries) || countries.length === 0) {
+        setSubmitError("Couldn't load country data. Please try again.");
+        setLoading(false);
+        return;
+      }
+      let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
+      try {
+        const vController = new AbortController();
+        const vTimeout    = setTimeout(() => vController.abort(), 3000);
+        const vRes        = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: vController.signal });
+        clearTimeout(vTimeout);
         if (vRes.ok) {
           const v = await vRes.json();
           if (!v.valid && v.flaggedCountries?.length > 0) {
@@ -238,14 +267,20 @@ export default function WizardPage() {
             matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
           }
         }
-      } catch { /* silent */ }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
-      else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
+      } catch { /* silent — validation is non-critical */ }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
+        else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
+      } catch { /* silent — run tracking is non-critical */ }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
-    } catch (err) { console.error(err); setLoading(false); }
+    } catch (err) {
+      console.error("handleSubmit error:", err);
+      setSubmitError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
@@ -545,6 +580,11 @@ export default function WizardPage() {
               {loading ? "Finding matches..." : isLastStep ? <><Sparkles size={14} /> Find my country</> : <>Next <ArrowRight size={14} /></>}
             </button>
           </div>
+          {submitError && (
+            <p style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: "#ef4444", textAlign: "center" }}>
+              ⚠ {submitError}
+            </p>
+          )}
         </section>
       </main>
     </div>
