@@ -133,3 +133,79 @@ export const JOB_ROLES: {
 ]
 
 // Keep old exports for any files that still reference them
+
+// ─── CITIES ───────────────────────────────────────────────────
+
+export interface Neighbourhood {
+  name: string;
+  vibe: string;
+  avgRent: number;
+  goodFor: string[];
+}
+
+export interface CityData {
+  costRentCityCentre: number;
+  costRentOutside: number;
+  costGroceriesMonthly: number;
+  costTransportMonthly: number;
+  costEatingOut: number;
+  costUtilitiesMonthly: number;
+  costGymMonthly: number;
+  costCoworkingMonthly: number;
+  salarySoftwareEngineer: number;
+  salaryDoctor: number;
+  salaryNurse: number;
+  salaryDataScientist: number;
+  salaryProductManager: number;
+  salaryDevOps: number;
+  salaryCybersecurity: number;
+  salaryUXDesigner: number;
+  salaryFinancialAnalyst: number;
+  salaryLawyer: number;
+  salaryArchitect: number;
+  salaryCivilEngineer: number;
+  salaryPharmacist: number;
+  salaryTeacher: number;
+  salaryAccountant: number;
+  salaryHRManager: number;
+  salarySalesManager: number;
+  salaryMarketingManager: number;
+  salaryElectrician: number;
+  salaryChef: number;
+  scoreQualityOfLife: number;
+  scoreSafety: number;
+  scoreHealthcare: number;
+  scoreInternetSpeed: number;
+  scoreWalkability: number;
+  scoreNightlife: number;
+  scoreExpatFriendliness: number;
+  climateSummerAvgC: number;
+  climateWinterAvgC: number;
+  climateRainyDaysPerYear: number;
+  climateDescription: string;
+  neighbourhoods: Neighbourhood[];
+  visaNotes: string;
+  visaOfficialUrl: string;
+  incomeTaxRateMid: number;
+  localTaxNote: string | null;
+  moveScore: number;
+  lastVerified: string;
+  dataSources: string;
+}
+
+export interface City {
+  id: string;
+  slug: string;
+  name: string;
+  countrySlug: string;
+  countryName: string;
+  flagEmoji: string;
+  continent: string;
+  language: string;
+  currency: string;
+  timezone: string;
+  population: string;
+  coverImageUrl: string | null;
+  tagline: string;
+  data: CityData;
+}

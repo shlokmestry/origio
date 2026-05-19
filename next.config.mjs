@@ -11,6 +11,64 @@ const nextConfig = {
     return config;
   },
 
+  // Image optimization for remote sources
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.pexels.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pixabay.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.pixabay.com",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "fastly.picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "unpkg.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.maptiler.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.maptiler.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.maptiles.io",
+      },
+      {
+        protocol: "https",
+        hostname: "api.producthunt.com",
+      },
+    ],
+  },
+
   async headers() {
     return [
       {
@@ -36,12 +94,12 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com",
               // Styles
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://cdn.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
-              // Images
-              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com",
+              // Images — added Unsplash, Pexels, Pixabay for city monument images
+              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com https://images.unsplash.com https://images.pexels.com https://pixabay.com https://cdn.pixabay.com",
               // Fonts
               "font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com https://fonts.gstatic.com",
-              // Connections
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com",
+              // Connections — added Unsplash, Pexels, Pixabay APIs
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://api.unsplash.com https://api.pexels.com https://pixabay.com",
               // Stripe
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
