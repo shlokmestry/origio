@@ -106,6 +106,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           transition: color 0.15s, background 0.15s; font-family: 'Satoshi', sans-serif;
         }
         .nav-link-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .nav-link-item.active { color: #fff; background: rgba(255,255,255,0.08); }
         .nav-link-pro { color: #00ffd5 !important; display: flex; align-items: center; gap: 4px; }
         .nav-link-pro:hover { background: rgba(0,255,213,0.08) !important; }
         .nav-search-btn {
@@ -201,6 +202,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
               <span className="nav-search-btn-kbd">/</span>
             </button>
           )}
+          <Link href="/cities"            className="nav-link-item">Cities</Link>
           <Link href="/salary-calculator" className="nav-link-item">Calculator</Link>
           <Link href="/blog"              className="nav-link-item">Blog</Link>
           <Link href="/about"             className="nav-link-item">About</Link>
@@ -235,21 +237,9 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
       </nav>
 
       {/* Product Hunt badge — fixed top-right, hidden on mobile */}
-      <a
-        href="https://www.producthunt.com/products/origio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-origio"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="ph-badge"
-        aria-label="Origio on Product Hunt"
-      >
+      <a href="https://www.producthunt.com/products/origio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-origio" target="_blank" rel="noopener noreferrer" className="ph-badge" aria-label="Origio on Product Hunt">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt="Origio - A personalized way to discover where to live | Product Hunt"
-          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1138152&theme=dark&t=1779092788392"
-          width={250}
-          height={54}
-          style={{ display: "block" }}
-        />
+        <img alt="Origio - A personalized way to discover where to live | Product Hunt" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1138152&theme=dark&t=1779092788392" width={250} height={54} style={{ display: "block" }} />
       </a>
 
       {/* Mobile full-screen menu */}
@@ -279,6 +269,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
             </button>
           )}
           <Link href="/wizard"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
+          <Link href="/cities"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Cities</Link>
           <Link href="/compare"           className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
           <Link href="/salary-calculator" className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Calculator</Link>
           <Link href="/blog"              className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
