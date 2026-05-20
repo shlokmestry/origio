@@ -1,6 +1,6 @@
 // app/api/feedback/route.ts
 import { NextResponse } from "next/server";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { rateLimit } from "@/lib/rate-limit";
 
 function escapeHtml(str: string): string {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const safeEmail = email ? escapeHtml(email) : null
 
     // Email yourself
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "Origio Feedback <onboarding@resend.dev>",
       to: "shlok@findorigio.com",
       subject: `New feedback${safeEmail ? ` from ${safeEmail}` : " (anonymous)"}`,
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     // If email provided, send them a confirmation
     if (safeEmail && email.includes("@")) {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: "Shlok at Origio <onboarding@resend.dev>",
         to: email,
         subject: "Got your feedback — thanks",

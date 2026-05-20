@@ -5,13 +5,13 @@ import { mapRowToCountry } from '@/lib/mappers'
 
 export const dynamic = 'force-dynamic'
 
-// Server-side client — avoids using the browser client in an API route
-const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export async function GET() {
+  // Initialised inside the handler so env vars are guaranteed to be set at runtime
+  const supabaseServer = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const { data: countries, error: countriesError } = await supabaseServer
     .from('countries')
     .select('*')
