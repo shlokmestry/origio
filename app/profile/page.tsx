@@ -146,6 +146,8 @@ export default function ProfilePage() {
       setLoading(false)
     }
     loadData()
+  // router from useRouter is stable — safe to omit from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading])
 
   const openEdit = () => {
