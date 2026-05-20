@@ -4,11 +4,10 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { rateLimit } from '@/lib/rate-limit'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-})
-
 export async function POST(request: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-03-25.dahlia',
+  })
   // Rate limit: max 5 checkout sessions per minute
   const limited = await rateLimit(request, { name: 'checkout', maxRequests: 5, windowSeconds: 60 })
   if (limited) return limited
