@@ -1,12 +1,18 @@
 // app/api/countries/route.ts
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { mapRowToCountry } from '@/lib/mappers'
 
 export const dynamic = 'force-dynamic'
 
+// Server-side client — avoids using the browser client in an API route
+const supabaseServer = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export async function GET() {
-  const { data: countries, error: countriesError } = await supabase
+  const { data: countries, error: countriesError } = await supabaseServer
     .from('countries')
     .select('*')
     .order('name')
@@ -16,7 +22,7 @@ export async function GET() {
     return NextResponse.json({ error: countriesError.message }, { status: 500 })
   }
 
-  const { data: countryData, error: dataError } = await supabase
+  const { data: countryData, error: dataError } = await supabaseServer
     .from('country_data')
     .select('*')
 

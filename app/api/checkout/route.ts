@@ -30,7 +30,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const origin = request.headers.get('origin') ?? 'https://findorigio.com'
+  const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
+  const requestOrigin = request.headers.get('origin') ?? ''
+  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',

@@ -176,6 +176,24 @@ export default function WizardPage() {
   const [isPro, setIsPro]             = useState(false);
   const [isSignedIn, setIsSignedIn]   = useState(false);
 
+  // Clear stale results whenever the wizard page is opened so expired
+  // sessionStorage data can't resurface on the results page.
+  useEffect(() => {
+    sessionStorage.removeItem("wizardMatches");
+    sessionStorage.removeItem("wizardAnswers");
+  }, []);
+
+  // Advance on Enter key when the current step is complete
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && canProceed() && !loading) {
+        handleNext();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
+
   useEffect(() => {
     async function checkGate() {
       try {
@@ -268,11 +286,13 @@ export default function WizardPage() {
           }
         }
       } catch { /* silent — validation is non-critical */ }
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
-        else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
-      } catch { /* silent — run tracking is non-critical */ }
+      if (matches.length > 0) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
+          else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
+        } catch { /* silent — run tracking is non-critical */ }
+      }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       router.push("/wizard/results");
@@ -351,7 +371,7 @@ export default function WizardPage() {
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <aside className="wiz-sidebar" style={{ position: "sticky", top: 88, alignSelf: "start" }}>
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 18 }}>
-            ✦ Quiz · 8 questions
+            ✦ Quiz · {totalSteps} questions
           </div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}>
             {STEP_LABELS.map((label, i) => {
