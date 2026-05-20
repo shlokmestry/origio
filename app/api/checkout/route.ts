@@ -4,11 +4,10 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { rateLimit } from '@/lib/rate-limit'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-})
-
 export async function POST(request: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-03-25.dahlia',
+  })
   // Rate limit: max 5 checkout sessions per minute
   const limited = await rateLimit(request, { name: 'checkout', maxRequests: 5, windowSeconds: 60 })
   if (limited) return limited
@@ -30,7 +29,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const origin = request.headers.get('origin') ?? 'https://findorigio.com'
+  const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
+  const requestOrigin = request.headers.get('origin') ?? ''
+  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',

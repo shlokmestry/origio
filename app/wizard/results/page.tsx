@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X } from "lucide-react";
-import { CountryMatch, WizardAnswers } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers, TO_USD } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
+import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -53,21 +54,6 @@ function getCurrencySymbol(currency: string): string {
   };
   return s[currency] ?? currency + " ";
 }
-
-function getVisaLabel(d: number) {
-  if (d <= 1) return "Easy";
-  if (d <= 2) return "Straightforward";
-  if (d <= 3) return "Moderate";
-  if (d <= 4) return "Difficult";
-  return "Very hard";
-}
-
-const TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
-  NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
-  NOK: 0.093, SEK: 0.096, DKK: 0.145,
-  JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
-};
 
 function toUSD(amount: number, currency: string): number {
   return amount * (TO_USD[currency] ?? 1);
@@ -457,6 +443,8 @@ export default function WizardResultsPage() {
               .from("wizard_results")
               .select("answers, top_countries")
               .eq("user_id", session.user.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
               .maybeSingle();
 
             if (result?.top_countries && result.top_countries.length > 0) {
@@ -501,12 +489,7 @@ export default function WizardResultsPage() {
             slug: m.country.slug, name: m.country.name,
             flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
           }));
-          const { data: existing } = await supabase.from("wizard_results").select("id").eq("user_id", user.id).maybeSingle();
-          if (existing) {
-            await supabase.from("wizard_results").update({ top_countries: topCountries, answers, created_at: new Date().toISOString() }).eq("id", existing.id);
-          } else {
-            await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
-          }
+          await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
         } catch (err) { console.error("Failed to save:", err); }
       };
       save();
