@@ -1,21 +1,5 @@
 /* ── Cities page editorial design ── */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
-
-:root {
-  --c-bg:      #040407;
-  --c-ink:     #f0f0ed;
-  --c-dim:     #6b6b66;
-  --c-dimmer:  #3a3a36;
-  --c-rule:    #1e1e1c;
-  --c-amber:   #f0b07a;
-  --c-teal:    #4de6cc;
-  --c-rose:    #f87171;
-  --c-green:   #4ade80;
-  --c-cream:   #f4f1e8;
-  --c-cream-dk:#e8e4d8;
-}
-
 .page {
   background: var(--c-bg);
   color: var(--c-ink);
