@@ -18,9 +18,6 @@ const adminSupabase = createClient(
 )
 
 export async function POST(request: Request) {
-  // Rate limit: max 20 webhook calls per minute (Stripe retries can burst)
-  const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
-  if (limited) return limited
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
 
@@ -36,6 +33,10 @@ export async function POST(request: Request) {
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
+
+  // Rate limit after signature verification so legitimate Stripe retries aren't blocked
+  const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
+  if (limited) return limited
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session

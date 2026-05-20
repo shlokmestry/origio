@@ -127,6 +127,8 @@ export default function ProfilePage() {
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle(),
           supabase.from('profiles')
             .select('passport_slug, job_title, onboarded, is_pro')
@@ -139,12 +141,12 @@ export default function ProfilePage() {
         const p = profileRes.data ?? null
         setProfile(p)
         if (p) { setEditJobTitle(p.job_title ?? ''); setEditPassport(p.passport_slug) }
-        if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
+        if (p && !p.onboarded) { router.push('/onboarding'); return }
       } catch { setLoadError(true) }
       setLoading(false)
     }
     loadData()
-  }, [user, authLoading, router])
+  }, [user, authLoading])
 
   const openEdit = () => {
     setEditName(displayName)
@@ -186,11 +188,13 @@ export default function ProfilePage() {
 
   const removeSave = async (id: string) => {
     if (!user) return
-    await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
+    const snapshot = savedCountries
     setSavedCountries(prev => prev.filter(s => s.id !== id))
+    const { error } = await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
+    if (error) setSavedCountries(snapshot)
   }
 
-  const signOut = async () => { await supabase.auth.signOut(); window.location.href = '/' }
+  const signOut = async () => { await supabase.auth.signOut(); router.push('/') }
 
   const deleteAccount = async () => {
     if (!user) return
@@ -208,7 +212,7 @@ export default function ProfilePage() {
         setDeleteLoading(false); return
       }
       await supabase.auth.signOut()
-      window.location.href = '/'
+      router.push('/')
     } catch {
       setDeleteError('Network error. Please try again.')
       setDeleteLoading(false)
