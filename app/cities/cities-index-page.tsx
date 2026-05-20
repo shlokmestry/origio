@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
 import CitiesIndexClient from "./CitiesIndexClient";
-import type { CityListItem } from "./CitiesIndexClient";
+import type { CityItem as CityListItem } from "./CitiesIndexClient";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,7 +36,7 @@ async function getCities(): Promise<CityListItem[]> {
     return [];
   }
 
-  return (data ?? []) as CityListItem[];
+  return (data ?? []) as unknown as CityListItem[];
 }
 
 export const metadata: Metadata = {
