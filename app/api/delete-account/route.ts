@@ -1,18 +1,17 @@
 // app/api/delete-account/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { resend } from '@/lib/resend'
+import { getResend } from '@/lib/resend'
 import AccountDeleted from '@/emails/AccountDeleted'
 import { createElement } from 'react'
 import { rateLimit } from '@/lib/rate-limit'
 
-const adminClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
-
 export async function DELETE(request: Request) {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
   // Rate limit: max 2 deletion attempts per minute
   const limited = await rateLimit(request, { name: 'delete-account', maxRequests: 2, windowSeconds: 60 })
   if (limited) return limited
@@ -46,7 +45,7 @@ export async function DELETE(request: Request) {
   // Send deletion confirmation AFTER successful deletion (best-effort — don't block on failure)
   const userName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'there'
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'Origio <noreply@findorigio.com>',
       to: user.email!,
       subject: 'Your Origio account has been deleted',

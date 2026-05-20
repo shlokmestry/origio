@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
+import { getVisaLabel } from "@/lib/utils";
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -18,14 +19,6 @@ const COL_C = "#c4b5fd";
 const LABEL_W = 200; // px — label column width, shared everywhere
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-function getVisaLabel(d: number) {
-  if (d <= 1) return "Easy";
-  if (d <= 2) return "Moderate";
-  if (d <= 3) return "Challenging";
-  if (d <= 4) return "Difficult";
-  return "Very Hard";
-}
 
 // ── ChevronDown SVG ───────────────────────────────────────────────────────────
 

@@ -35,17 +35,17 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
     if (!/^[a-z]+(-[a-z]+)*$/.test(countrySlug)) return
     setLoading(true)
     if (saved) {
-      await supabase
+      const { error } = await supabase
         .from('saved_countries')
         .delete()
         .eq('user_id', userId)
         .eq('country_slug', countrySlug)
-      setSaved(false)
+      if (!error) setSaved(false)
     } else {
-      await supabase
+      const { error } = await supabase
         .from('saved_countries')
         .insert({ user_id: userId, country_slug: countrySlug })
-      setSaved(true)
+      if (!error) setSaved(true)
     }
     setLoading(false)
   }

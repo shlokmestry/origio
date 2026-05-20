@@ -64,7 +64,7 @@ const STRONG_HEALTHCARE_COUNTRIES = [
   "united-kingdom", "ireland", "portugal", "spain", "italy",
 ];
 
-const TO_USD: Record<string, number> = {
+export const TO_USD: Record<string, number> = {
   USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
   NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
   NOK: 0.093, SEK: 0.096, DKK: 0.145,
