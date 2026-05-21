@@ -861,7 +861,15 @@
   color: var(--c-ink);
 }
 .ccLineIt { margin-left: 40px; }
-.ccIt { font-style: italic; }
+.ccIt {
+  font-style: italic;
+  background-image: linear-gradient(var(--c-amber), var(--c-amber));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 3px;
+  transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ccLink:hover .ccIt { background-size: 100% 3px; }
 .ccMeta {
   display: flex; justify-content: space-between; align-items: center;
   margin-top: 28px;
