@@ -23,6 +23,7 @@ type WizardResult = {
 }
 type Profile = {
   passport_slug: string | null
+  second_passport_slug: string | null
   job_title: string | null
   onboarded: boolean
   is_pro: boolean
@@ -97,6 +98,9 @@ export default function ProfilePage() {
   const [editName, setEditName] = useState('')
   const [editJobTitle, setEditJobTitle] = useState('')
   const [editPassport, setEditPassport] = useState<string | null>(null)
+  const [editSecondPassport, setEditSecondPassport] = useState<string | null>(null)
+  const [secondPassportSearch, setSecondPassportSearch] = useState('')
+  const [showSecondPassportEdit, setShowSecondPassportEdit] = useState(false)
   const [passportSearch, setPassportSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -131,7 +135,7 @@ export default function ProfilePage() {
             .limit(1)
             .maybeSingle(),
           supabase.from('profiles')
-            .select('passport_slug, job_title, onboarded, is_pro')
+            .select('passport_slug, second_passport_slug, job_title, onboarded, is_pro')
             .eq('id', userId)
             .maybeSingle(),
         ])
@@ -140,7 +144,12 @@ export default function ProfilePage() {
         setWizardResult(wizardRes.data ?? null)
         const p = profileRes.data ?? null
         setProfile(p)
-        if (p) { setEditJobTitle(p.job_title ?? ''); setEditPassport(p.passport_slug) }
+        if (p) {
+          setEditJobTitle(p.job_title ?? '')
+          setEditPassport(p.passport_slug)
+          setEditSecondPassport(p.second_passport_slug)
+          setShowSecondPassportEdit(!!p.second_passport_slug)
+        }
         if (p && !p.onboarded) { router.push('/onboarding'); return }
       } catch { setLoadError(true) }
       setLoading(false)
@@ -154,7 +163,10 @@ export default function ProfilePage() {
     setEditName(displayName)
     setEditJobTitle(profile?.job_title ?? '')
     setEditPassport(profile?.passport_slug ?? null)
+    setEditSecondPassport(profile?.second_passport_slug ?? null)
+    setShowSecondPassportEdit(!!profile?.second_passport_slug)
     setPassportSearch('')
+    setSecondPassportSearch('')
     setSaveError('')
     setEditing(true)
   }
@@ -169,7 +181,7 @@ export default function ProfilePage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
       const { error: profileError } = await supabase.from('profiles')
-        .update({ job_title: editJobTitle.trim() || null, passport_slug: editPassport })
+        .update({ job_title: editJobTitle.trim() || null, passport_slug: editPassport, second_passport_slug: editSecondPassport })
         .eq('id', user.id)
       if (profileError) throw profileError
       if (editName.trim()) {
@@ -181,7 +193,7 @@ export default function ProfilePage() {
         } catch (e) { console.error('Name update failed:', e) }
       }
       setDisplayName(editName.trim() || displayName)
-      setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport } : prev)
+      setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport, second_passport_slug: editSecondPassport } : prev)
       setEditing(false)
     } catch (err: any) {
       setSaveError(err?.message || 'Failed to save. Please try again.')
@@ -235,6 +247,10 @@ export default function ProfilePage() {
     (user?.identities ?? []).every((id: any) => id.provider === 'google')
 
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
+  const secondPassportData = profile?.second_passport_slug ? PASSPORT_FLAGS[profile.second_passport_slug] : null
+  const filteredSecondPassports = PASSPORT_LIST.filter(p =>
+    p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== editPassport
+  )
   const isPro = profile?.is_pro ?? false
   const topMatch = wizardResult?.top_countries?.[0]
   const memberSince = user?.created_at ? formatDate(user.created_at) : null
@@ -312,7 +328,12 @@ export default function ProfilePage() {
                 {passportData && (
                   <>
                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'inline-block' }} />
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{passportData.flag} {passportData.name}</span>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                      {passportData.flag} {passportData.name}
+                      {secondPassportData && (
+                        <span style={{ marginLeft: 6 }}>· {secondPassportData.flag} {secondPassportData.name}</span>
+                      )}
+                    </span>
                   </>
                 )}
                 {memberSince && (
@@ -675,6 +696,60 @@ export default function ProfilePage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Second Passport */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                    Second Passport
+                  </label>
+                  {!showSecondPassportEdit && (
+                    <button onClick={() => setShowSecondPassportEdit(true)}
+                      style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      + Add
+                    </button>
+                  )}
+                  {showSecondPassportEdit && (
+                    <button onClick={() => { setShowSecondPassportEdit(false); setEditSecondPassport(null); setSecondPassportSearch('') }}
+                      style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {showSecondPassportEdit && (
+                  <>
+                    {editSecondPassport && (
+                      <div className="flex items-center justify-between mb-2"
+                        style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>
+                          {PASSPORT_FLAGS[editSecondPassport]?.flag} {PASSPORT_FLAGS[editSecondPassport]?.name}
+                        </span>
+                        <button onClick={() => setEditSecondPassport(null)}
+                          style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative mb-2">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                      <input placeholder="Search second passport..." value={secondPassportSearch}
+                        onChange={e => setSecondPassportSearch(e.target.value)}
+                        style={{ width: '100%', paddingLeft: 36, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                      {filteredSecondPassports.slice(0, 20).map(p => (
+                        <button key={p.slug} onClick={() => { setEditSecondPassport(p.slug); setSecondPassportSearch('') }}
+                          className="w-full flex items-center gap-2.5 text-left"
+                          style={{ padding: '10px 14px', fontSize: 13, background: editSecondPassport === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', color: editSecondPassport === p.slug ? '#fff' : 'rgba(255,255,255,0.6)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', width: '100%' }}>
+                          <span>{p.flag}</span>
+                          <span style={{ flex: 1, fontWeight: 500 }}>{p.name}</span>
+                          {editSecondPassport === p.slug && <Check className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

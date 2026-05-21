@@ -4,6 +4,7 @@ import { normalise } from "@/lib/utils";
 
 export interface WizardAnswers {
   passport: string;
+  secondPassport?: string;
   moveReason: string;
   jobRole: string;
   priorities: string[];
@@ -208,12 +209,23 @@ export function scoreCountriesForWizard(
 
     // ── SHARED BONUSES ───────────────────────────────────────────
     const passportLower = (answers.passport ?? "").toLowerCase();
-    const isEU = EU_PASSPORTS.includes(passportLower);
+    const secondPassportLower = (answers.secondPassport ?? "").toLowerCase();
+    const isEU = EU_PASSPORTS.includes(passportLower) || (secondPassportLower && EU_PASSPORTS.includes(secondPassportLower));
+    const euPassportLabel = EU_PASSPORTS.includes(passportLower)
+      ? "your EU passport"
+      : "your second EU passport";
     if (isEU && EUROPEAN_COUNTRIES.includes(country.slug)) {
       score += 0.5;
-      reasons.push("Easy visa with your EU passport");
+      reasons.push(`Easy visa with ${euPassportLabel}`);
     }
-    if (data.visaDifficulty <= 2 && !reasons.includes("Easy visa with your EU passport")) {
+    // dual passport visa bonus: use whichever passport has easier access
+    if (secondPassportLower && data.visaDifficulty >= 3) {
+      score += 0.3;
+      if (!reasons.some(r => r.toLowerCase().includes("visa"))) {
+        reasons.push("Dual passport gives you more visa routes");
+      }
+    }
+    if (data.visaDifficulty <= 2 && !reasons.some(r => r.toLowerCase().includes("visa"))) {
       reasons.push("Straightforward visa process");
     }
     if (answers.priorities?.includes("english") && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) {

@@ -100,6 +100,9 @@ export default function OnboardingPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [passportSearch, setPassportSearch] = useState('')
   const [passportSlug, setPassportSlug] = useState<string | null>(null)
+  const [secondPassportSlug, setSecondPassportSlug] = useState<string | null>(null)
+  const [secondPassportSearch, setSecondPassportSearch] = useState('')
+  const [showSecondPassport, setShowSecondPassport] = useState(false)
   const [jobTitle, setJobTitle] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -113,15 +116,20 @@ export default function OnboardingPage() {
   }, [router])
 
   const filteredPassports = PASSPORT_LIST.filter(p =>
-    p.name.toLowerCase().includes(passportSearch.toLowerCase())
+    p.name.toLowerCase().includes(passportSearch.toLowerCase()) && p.slug !== secondPassportSlug
+  )
+  const filteredSecondPassports = PASSPORT_LIST.filter(p =>
+    p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== passportSlug
   )
   const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
+  const selectedSecondPassport = secondPassportSlug ? PASSPORTS[secondPassportSlug] : null
 
   const handleFinish = async () => {
     if (!userId || jobTitle.trim().length < 2) return
     setSaving(true)
     await supabase.from('profiles').upsert({
       id: userId, passport_slug: passportSlug,
+      second_passport_slug: secondPassportSlug,
       job_title: jobTitle.trim(), onboarded: true,
     }, { onConflict: 'id' })
     router.push('/profile')
@@ -225,6 +233,60 @@ export default function OnboardingPage() {
                   )}
                 </div>
               </div>
+
+              {/* Second passport toggle */}
+              {passportSlug && (
+                <div style={{ marginTop: 20 }}>
+                  {!showSecondPassport ? (
+                    <button onClick={() => setShowSecondPassport(true)}
+                      style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', color: S.dim, background: 'rgba(255,255,255,0.04)', border: `1px dashed rgba(255,255,255,0.14)`, borderRadius: 10, padding: '10px 16px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'border-color 0.15s, color 0.15s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = S.dim }}>
+                      + Add second passport
+                    </button>
+                  ) : (
+                    <div style={{ border: `1px solid rgba(255,255,255,0.10)`, borderRadius: 12, padding: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>Second Passport</span>
+                        <button onClick={() => { setShowSecondPassport(false); setSecondPassportSlug(null); setSecondPassportSearch('') }}
+                          style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dimmer, background: 'none', border: 'none', cursor: 'pointer' }}>
+                          Remove
+                        </button>
+                      </div>
+                      {selectedSecondPassport && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 100, marginBottom: 8 }}>
+                          <span style={{ fontSize: 16 }}>{selectedSecondPassport.flag}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{selectedSecondPassport.name}</span>
+                          <button onClick={() => setSecondPassportSlug(null)}
+                            style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <X style={{ width: 8, height: 8, color: 'rgba(255,255,255,0.7)' }} />
+                          </button>
+                        </div>
+                      )}
+                      <div style={{ position: 'relative', marginBottom: 6 }}>
+                        <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, color: S.dimmer, pointerEvents: 'none' }} />
+                        <input type="text" placeholder="Search country..." value={secondPassportSearch}
+                          onChange={e => setSecondPassportSearch(e.target.value)}
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 10, padding: '11px 14px 11px 36px', fontSize: 13, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ border: `1px solid ${S.border}`, borderRadius: 10, overflow: 'hidden', maxHeight: 180, overflowY: 'auto', background: S.card }}>
+                        {filteredSecondPassports.map(p => (
+                          <button key={p.slug} onClick={() => { setSecondPassportSlug(p.slug); setSecondPassportSearch('') }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: secondPassportSlug === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer', textAlign: 'left' }}>
+                            <span style={{ fontSize: 16 }}>{p.flag}</span>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: secondPassportSlug === p.slug ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1 }}>{p.name}</span>
+                            {secondPassportSlug === p.slug && (
+                              <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Check style={{ width: 8, height: 8, color: '#0a0a0a' }} />
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>

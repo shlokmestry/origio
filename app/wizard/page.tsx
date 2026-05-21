@@ -415,6 +415,21 @@ export default function WizardPage() {
                 <option value="" disabled>Select your passport country</option>
                 {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
               </select>
+              {answers.passport && (
+                <div style={{ marginTop: 12 }}>
+                  <select
+                    value={answers.secondPassport ?? ""}
+                    onChange={e => setAnswers({ ...answers, secondPassport: e.target.value || undefined })}
+                    style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.secondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
+                    onFocus={e => (e.currentTarget.style.borderColor = MINT)}
+                    onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
+                    <option value="">+ Second passport (optional)</option>
+                    {PASSPORTS.filter(p => p.toLowerCase() !== answers.passport).map(p => (
+                      <option key={p} value={p.toLowerCase()}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </>
           )}
 
