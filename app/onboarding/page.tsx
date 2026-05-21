@@ -124,6 +124,24 @@ export default function OnboardingPage() {
   const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
   const selectedSecondPassport = secondPassportSlug ? PASSPORTS[secondPassportSlug] : null
 
+  const NO_DUAL_SLUGS: Record<string, string> = {
+    'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+    'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+    'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+    'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+    'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+    'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+    'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+    'south-korea': 'South Korea generally does not permit dual citizenship for adults. Exceptions apply in limited circumstances.',
+  }
+
+  const dualConflictWarning = (() => {
+    if (!passportSlug || !secondPassportSlug) return null
+    if (NO_DUAL_SLUGS[passportSlug]) return { country: PASSPORTS[passportSlug]?.name, message: NO_DUAL_SLUGS[passportSlug] }
+    if (NO_DUAL_SLUGS[secondPassportSlug]) return { country: PASSPORTS[secondPassportSlug]?.name, message: NO_DUAL_SLUGS[secondPassportSlug] }
+    return null
+  })()
+
   const handleFinish = async () => {
     if (!userId || jobTitle.trim().length < 2) return
     setSaving(true)
@@ -285,6 +303,18 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Dual citizenship conflict warning */}
+              {dualConflictWarning && (
+                <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,200,50,0.06)', border: '1px solid rgba(255,200,50,0.22)', borderRadius: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.85)', marginBottom: 4 }}>
+                    ⚠ {dualConflictWarning.country} — No Dual Citizenship
+                  </p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                    {dualConflictWarning.message}
+                  </p>
                 </div>
               )}
 

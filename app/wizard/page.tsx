@@ -42,6 +42,17 @@ const PASSPORTS = [
   "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
 ];
 
+const NO_DUAL_CITIZENSHIP: Record<string, string> = {
+  'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+  'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+  'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+  'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+  'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+  'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+  'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+  'south korea': 'South Korea generally does not permit dual citizenship for adults.',
+};
+
 function getRentBudgets(passport: string) {
   const p = passport.toLowerCase();
   if (p === "india") return {
@@ -428,6 +439,20 @@ export default function WizardPage() {
                       <option key={p} value={p.toLowerCase()}>{p}</option>
                     ))}
                   </select>
+                  {answers.secondPassport && (() => {
+                    const conflict = NO_DUAL_CITIZENSHIP[answers.passport!] ? answers.passport! : NO_DUAL_CITIZENSHIP[answers.secondPassport] ? answers.secondPassport : null
+                    if (!conflict) return null
+                    return (
+                      <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(255,200,50,0.05)', border: '1px solid rgba(255,200,50,0.2)', borderRadius: 10 }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.8)', marginBottom: 3 }}>
+                          ⚠ No dual citizenship
+                        </p>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+                          {NO_DUAL_CITIZENSHIP[conflict]}
+                        </p>
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
             </>

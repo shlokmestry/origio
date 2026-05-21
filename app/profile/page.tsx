@@ -246,11 +246,27 @@ export default function ProfilePage() {
   const isGoogleUser = user?.app_metadata?.provider === 'google' ||
     (user?.identities ?? []).every((id: any) => id.provider === 'google')
 
+  const NO_DUAL_CITIZENSHIP: Record<string, string> = {
+    'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+    'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+    'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+    'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+    'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+    'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+    'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+    'south-korea': 'South Korea generally does not permit dual citizenship for adults.',
+  }
+
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
   const secondPassportData = profile?.second_passport_slug ? PASSPORT_FLAGS[profile.second_passport_slug] : null
   const filteredSecondPassports = PASSPORT_LIST.filter(p =>
     p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== editPassport
   )
+  const editDualConflict = editPassport && editSecondPassport
+    ? (NO_DUAL_CITIZENSHIP[editPassport] ? { slug: editPassport, message: NO_DUAL_CITIZENSHIP[editPassport] }
+      : NO_DUAL_CITIZENSHIP[editSecondPassport] ? { slug: editSecondPassport, message: NO_DUAL_CITIZENSHIP[editSecondPassport] }
+      : null)
+    : null
   const isPro = profile?.is_pro ?? false
   const topMatch = wizardResult?.top_countries?.[0]
   const memberSince = user?.created_at ? formatDate(user.created_at) : null
@@ -752,6 +768,13 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+
+            {editDualConflict && (
+              <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(255,200,50,0.05)', border: '1px solid rgba(255,200,50,0.2)', borderRadius: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.8)', marginBottom: 3 }}>⚠ No dual citizenship</p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>{editDualConflict.message}</p>
+              </div>
+            )}
 
             {saveError && <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginTop: 12 }}>{saveError}</p>}
 
