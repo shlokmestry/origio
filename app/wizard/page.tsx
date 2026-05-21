@@ -348,7 +348,12 @@ export default function WizardPage() {
       if (matches.length > 0) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
+          if (session?.user) {
+            await supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
+            if (answers.secondPassport !== undefined) {
+              await supabase.from("profiles").update({ second_passport_slug: answers.secondPassport || null }).eq("id", session.user.id);
+            }
+          }
           else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
         } catch { /* silent — run tracking is non-critical */ }
       }

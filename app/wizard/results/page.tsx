@@ -553,7 +553,7 @@ export default function WizardResultsPage() {
     if (!hasDualPassport) return null;
     const p1IsEU = EU_PASSPORT_SLUGS.has(effectivePrimary);
     const p2IsEU = effectiveSecondary ? EU_PASSPORT_SLUGS.has(effectiveSecondary) : false;
-    if (EU_COUNTRY_SLUGS.has(countrySlug) && !p1IsEU && p2IsEU) return answers.secondPassport!;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && !p1IsEU && p2IsEU) return effectiveSecondary ?? null;
     if (EU_COUNTRY_SLUGS.has(countrySlug) && p1IsEU) return effectivePrimary;
     const t1 = getPassportStrength(effectivePrimary);
     const t2 = effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4;

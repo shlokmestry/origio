@@ -279,8 +279,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     const monthlyTotal = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
     const disposable = takeHomeMonthly - monthlyTotal;
     const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
-    const { primary: _ep2 } = resolveEffectivePassports((answers.passport ?? "").toLowerCase(), (answers.secondPassport ?? "").toLowerCase() || undefined);
-    const isEU = EU_PASSPORTS.includes(_ep2) || (answers.secondPassport ? EU_PASSPORTS.includes(answers.secondPassport.toLowerCase()) : false);
+    const { primary: _ep2, secondary: _es2 } = resolveEffectivePassports((answers.passport ?? "").toLowerCase(), (answers.secondPassport ?? "").toLowerCase() || undefined);
+    const isEU = EU_PASSPORTS.includes(_ep2) || (_es2 ? EU_PASSPORTS.includes(_es2) : false);
     const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
     setHeadlineLoading(true);
     const controller = new AbortController();
