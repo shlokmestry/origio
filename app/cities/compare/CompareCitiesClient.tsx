@@ -4,6 +4,8 @@ import { Fragment, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './compare.module.css'
+import Nav from '@/components/Nav'
+import Footer from '@/components/Footer'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -330,24 +332,9 @@ export default function CompareCitiesClient() {
   return (
     <div className={styles.page}>
 
-      {/* NAV */}
-      <nav className={styles.nav}>
-        <div className={styles.navInner}>
-          <Link href="/" className={styles.navLogo}>
-            <div className={styles.navLogoMark}><span /></div>
-            <span className={styles.navLogoText}>Origio</span>
-          </Link>
-          <span className={styles.navCenter}>
-            <span className={styles.crumb}>Origio / Cities /</span> The Race
-          </span>
-          <div className={styles.navRight}>
-            <Link href="/cities" className={styles.nbtn}>← Back to cities</Link>
-            <Link href="/onboarding" className={styles.nbtn}>Find My City</Link>
-          </div>
-        </div>
-      </nav>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <main className={styles.folio}>
+      <main className={styles.folio} style={{ paddingTop: 80 }}>
         {/* Registration marks */}
         <span className={styles.regTl} />
         <span className={styles.regTr} />
@@ -567,6 +554,7 @@ export default function CompareCitiesClient() {
           <span>All numbers real · sourced Q1 2026</span>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }
