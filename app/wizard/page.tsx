@@ -201,6 +201,7 @@ export default function WizardPage() {
   useEffect(() => {
     sessionStorage.removeItem("wizardMatches");
     sessionStorage.removeItem("wizardAnswers");
+    sessionStorage.removeItem("wizardCountries");
   }, []);
 
   // Advance on Enter key when the current step is complete
@@ -222,6 +223,15 @@ export default function WizardPage() {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
           if (stored >= ANON_MAX_RUNS) setGateType("anon");
+          // restore passport context if they were mid-flow
+          try {
+            const pctx = sessionStorage.getItem("wizardPassportContext");
+            if (pctx) {
+              const { passport, secondPassport } = JSON.parse(pctx);
+              if (passport) { setIntroPassport(passport); setHasDualPassport(!!secondPassport); }
+              if (secondPassport) setIntroSecondPassport(secondPassport);
+            }
+          } catch { /* ignore */ }
           setGateChecked(true); return;
         }
         setIsSignedIn(true);
@@ -269,9 +279,12 @@ export default function WizardPage() {
   );
 
   const startQuiz = () => {
-    // carry passport selections from intro into step 1 answers
     if (introPassport) {
       setAnswers(prev => ({ ...prev, passport: introPassport, secondPassport: introSecondPassport || undefined }));
+      // persist for anonymous users who sign up mid-flow
+      try {
+        sessionStorage.setItem("wizardPassportContext", JSON.stringify({ passport: introPassport, secondPassport: introSecondPassport || null }));
+      } catch { /* ignore */ }
     }
     setStep(1);
   };
@@ -341,6 +354,7 @@ export default function WizardPage() {
       }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
+      sessionStorage.setItem("wizardCountries", JSON.stringify(countries));
       router.push("/wizard/results");
     } catch (err) {
       console.error("handleSubmit error:", err);

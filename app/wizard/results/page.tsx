@@ -561,6 +561,20 @@ export default function WizardResultsPage() {
     return null; // primary drives it — no need to call it out
   }
 
+  // Delta: where would top match rank without the second passport?
+  const passportDelta = (() => {
+    if (!hasDualPassport || !answers.secondPassport) return null;
+    try {
+      const countriesRaw = sessionStorage.getItem("wizardCountries");
+      if (!countriesRaw) return null;
+      const countries = JSON.parse(countriesRaw);
+      const withoutSecond = scoreCountriesForWizard(countries, { ...answers, secondPassport: undefined } as WizardAnswers);
+      const topSlug = matches[0]?.country.slug;
+      const rankWithout = withoutSecond.findIndex(m => m.country.slug === topSlug) + 1;
+      return rankWithout > 1 ? rankWithout : null;
+    } catch { return null; }
+  })();
+
   const top       = matches[0];
   const pctColor  = matchPercentColor(top.matchPercent);
   const cs        = getCurrencySymbol(top.country.currency);
@@ -638,12 +652,20 @@ export default function WizardResultsPage() {
               <span style={{ color: MINT }}>●</span> Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
             </p>
             {hasDualPassport && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "7px 14px", border: `1px solid rgba(0,255,213,0.2)`, marginBottom: 28 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "7px 14px", border: `1px solid rgba(0,255,213,0.2)`, marginBottom: 28, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport power</span>
                 <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT }}>TIER {passportTier}</span>
                 <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
                 <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{PASSPORT_TIER_LABEL[passportTier].split("—")[1]?.trim()}</span>
                 {tierUpgraded && <span style={{ fontFamily: MONO, fontSize: 10, color: MINT }}>↑ from Tier {rawPrimaryTier}</span>}
+                {passportDelta && (
+                  <>
+                    <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,200,50,0.8)" }}>
+                      Without second passport: #{passportDelta}
+                    </span>
+                  </>
+                )}
               </div>
             )}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>

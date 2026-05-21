@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
+import { getPassportStrength, resolveEffectivePassports } from '@/lib/wizard'
 import Nav from '@/components/Nav'
 import {
   LogOut, Trash2, Sparkles, Pencil,
@@ -257,6 +258,15 @@ export default function ProfilePage() {
     'south-korea': 'South Korea generally does not permit dual citizenship for adults.',
   }
 
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"])
+  const EU_COUNTRY_SLUGS  = new Set(["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"])
+  const savedPassportCtx = (() => {
+    if (!profile?.passport_slug) return null
+    const { primary, secondary } = resolveEffectivePassports(profile.passport_slug, profile.second_passport_slug ?? undefined)
+    const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4
+    const isEU = EU_PASSPORT_SLUGS.has(primary) || (secondary ? EU_PASSPORT_SLUGS.has(secondary) : false)
+    return { tier, isEU, hasDual: !!profile.second_passport_slug }
+  })()
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
   const secondPassportData = profile?.second_passport_slug ? PASSPORT_FLAGS[profile.second_passport_slug] : null
   const filteredSecondPassports = PASSPORT_LIST.filter(p =>
@@ -518,6 +528,9 @@ export default function ProfilePage() {
               <>
                 {savedCountries.slice(0, 6).map(s => {
                   const countryData = PASSPORT_FLAGS[s.country_slug]
+                  const isEUCountry = EU_COUNTRY_SLUGS.has(s.country_slug)
+                  const showEUBadge = savedPassportCtx?.isEU && isEUCountry
+                  const showDualBadge = savedPassportCtx?.hasDual && !showEUBadge && savedPassportCtx.tier <= 2
                   return (
                     <div key={s.id} className="group flex items-center gap-3 transition-colors"
                       style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
@@ -530,6 +543,16 @@ export default function ProfilePage() {
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}>
                         {countryData?.name ?? formatSlug(s.country_slug)}
                       </a>
+                      {showEUBadge && (
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00ffd5', border: '1px solid rgba(0,255,213,0.25)', padding: '2px 6px', flexShrink: 0 }}>
+                          EU ✓
+                        </span>
+                      )}
+                      {showDualBadge && (
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(0,255,213,0.6)', flexShrink: 0 }}>
+                          T{savedPassportCtx!.tier}
+                        </span>
+                      )}
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginRight: 8 }}>{formatDateShort(s.created_at)}</span>
                       {/* Hover actions */}
                       <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
