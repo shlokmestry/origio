@@ -1,11 +1,13 @@
 'use client'
 
-import { Fragment, useState, useCallback } from 'react'
+import { Fragment, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './compare.module.css'
 
-// ── City cost data (EUR baseline, sourced Q1 2026) ────────────────────────────
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'intnet' | 'health'
 
 interface CityData {
   slug: string
@@ -15,8 +17,6 @@ interface CityData {
   flag: string
   costs: Record<CostKey, number>
 }
-
-type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'intnet' | 'health'
 
 const CITIES: CityData[] = [
   { slug:'lisbon',    code:'LIS', name:'Lisbon',    country:'Portugal',       flag:'🇵🇹', costs:{rent:1200,groc:280,dine:180,util:85, gym:45, intnet:35, health:40} },
@@ -35,14 +35,14 @@ const CITIES: CityData[] = [
 
 const LEDGER_MAX = 4
 
-const COST_ROWS: { key: CostKey; label: string; hint: string }[] = [
-  { key:'rent',   label:'Rent · 1BR centre',  hint:'monthly' },
-  { key:'groc',   label:'Groceries',          hint:'pantry + market' },
-  { key:'dine',   label:'Dining out',         hint:'~12 meals / mo' },
-  { key:'util',   label:'Utilities',          hint:'power, water, heat' },
-  { key:'gym',    label:'Gym',                hint:'monthly membership' },
-  { key:'intnet', label:'Internet / co-work', hint:'home + a day desk' },
-  { key:'health', label:'Healthcare',         hint:'avg out-of-pocket' },
+const COST_ROWS: { key: CostKey; label: string; hint: string; color: string }[] = [
+  { key:'rent',   label:'Rent',      hint:'1BR centre',    color:'#a8651e' },
+  { key:'groc',   label:'Groceries', hint:'pantry+market', color:'#5f6d2d' },
+  { key:'dine',   label:'Dining',    hint:'~12 meals',     color:'#1f5a4d' },
+  { key:'util',   label:'Utilities', hint:'power+heat',    color:'#3b485c' },
+  { key:'gym',    label:'Gym',       hint:'monthly',       color:'#6f3e6b' },
+  { key:'intnet', label:'Internet',  hint:'+ co-work',     color:'#a04c2a' },
+  { key:'health', label:'Health',    hint:'out-of-pocket', color:'#b03c4e' },
 ]
 
 type CurrencyKey = 'eur' | 'usd' | 'gbp' | 'jpy'
@@ -52,8 +52,19 @@ const CURR_LABEL: Record<CurrencyKey, string> = { eur:'EUR €', usd:'USD $', gb
 const CURR_CYCLE: CurrencyKey[] = ['eur', 'usd', 'gbp', 'jpy']
 
 function fmt(n: number, currency: CurrencyKey): string {
-  const v = n * RATES[currency]
-  return SYMBOL[currency] + Math.round(v).toLocaleString()
+  return SYMBOL[currency] + Math.round(n * RATES[currency]).toLocaleString()
+}
+
+function fmtCompact(n: number, currency: CurrencyKey): string {
+  const v = Math.round(n * RATES[currency])
+  if (v >= 1000) return SYMBOL[currency] + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+  return SYMBOL[currency] + v
+}
+
+function niceMax(v: number): number {
+  if (v <= 2000) return Math.ceil(v / 500) * 500
+  if (v <= 6000) return Math.ceil(v / 1000) * 1000
+  return Math.ceil(v / 2000) * 2000
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -67,15 +78,79 @@ export default function CompareCitiesClient() {
       const slugs = fromUrl.split(',').filter(s => CITIES.some(c => c.slug === s))
       if (slugs.length >= 2) return slugs.slice(0, LEDGER_MAX)
     }
-    return ['lisbon', 'berlin', 'tokyo']
+    return ['lisbon', 'berlin', 'london']
   })
 
   const [currency, setCurrency] = useState<CurrencyKey>('eur')
+  const [isolated, setIsolated] = useState<CostKey | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // ── Derived data ──────────────────────────────────────────────────────────
+
+  const picks = useMemo(
+    () => selected.map(s => CITIES.find(c => c.slug === s)).filter(Boolean) as CityData[],
+    [selected]
+  )
+
+  const totals = useMemo(
+    () => picks.map(c => COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0)),
+    [picks]
+  )
+
+  const indexed = useMemo(
+    () => picks
+      .map((c, i) => ({ c, total: totals[i] }))
+      .sort((a, b) => a.total - b.total),
+    [picks, totals]
+  )
+
+  const isoTotals = useMemo(
+    () => picks.map(c => isolated ? c.costs[isolated] : totals[picks.indexOf(c)]),
+    [picks, isolated, totals]
+  )
+
+  const scaleMax = useMemo(
+    () => niceMax(isoTotals.length ? Math.max(...isoTotals) : 5000),
+    [isoTotals]
+  )
+
+  const minT = indexed.length ? indexed[0].total : 0
+  const maxT = indexed.length ? indexed[indexed.length - 1].total : 0
+
+  // Scale ticks (0..5)
+  const scaleTicks = useMemo(() => {
+    const TICKS = 5
+    return Array.from({ length: TICKS + 1 }, (_, i) => ({
+      pct: (i / TICKS) * 100,
+      label: i === 0 ? '0' : fmtCompact((scaleMax * i) / TICKS, currency),
+    }))
+  }, [scaleMax, currency])
+
+  // Verdict
+  const verdict = useMemo(() => {
+    if (indexed.length < 2) return null
+    const cheapest = indexed[0]
+    const dearest  = indexed[indexed.length - 1]
+    const gap = dearest.total - cheapest.total
+    const gapPct = Math.round((dearest.total / cheapest.total - 1) * 100)
+    const yearGap = gap * 12
+    let bigRow = COST_ROWS[0]
+    let bigDelta = 0
+    COST_ROWS.forEach(r => {
+      const d = dearest.c.costs[r.key] - cheapest.c.costs[r.key]
+      if (Math.abs(d) > Math.abs(bigDelta)) { bigDelta = d; bigRow = r }
+    })
+    return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
+  }, [indexed])
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   const toggleCity = useCallback((slug: string) => {
     setSelected(prev => {
-      if (prev.includes(slug)) return prev.filter(s => s !== slug)
+      if (prev.includes(slug)) {
+        if (prev.length <= 2) return prev
+        return prev.filter(s => s !== slug)
+      }
       if (prev.length >= LEDGER_MAX) return prev
       return [...prev, slug]
     })
@@ -85,27 +160,172 @@ export default function CompareCitiesClient() {
     setCurrency(prev => CURR_CYCLE[(CURR_CYCLE.indexOf(prev) + 1) % CURR_CYCLE.length])
   }, [])
 
+  const toggleIsolate = useCallback((key: CostKey) => {
+    setIsolated(prev => prev === key ? null : key)
+  }, [])
+
   const reset = useCallback(() => {
-    setSelected(['lisbon', 'berlin', 'tokyo'])
+    setSelected(['lisbon', 'berlin', 'london'])
     setCurrency('eur')
+    setIsolated(null)
   }, [])
 
   const copyTable = useCallback(() => {
-    const picks = selected.map(s => CITIES.find(c => c.slug === s)).filter(Boolean) as CityData[]
     if (picks.length < 2) return
     const lines: string[] = [['Category', ...picks.map(p => p.name)].join('\t')]
     COST_ROWS.forEach(r => {
       lines.push([r.label, ...picks.map(p => p.costs[r.key] === 0 ? 'free' : fmt(p.costs[r.key], currency))].join('\t'))
     })
-    const totals = picks.map(c => COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0))
-    lines.push(['TOTAL / MO', ...totals.map(t => fmt(t, currency))].join('\t'))
+    const tots = picks.map(c => COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0))
+    lines.push(['TOTAL / MO', ...tots.map(t => fmt(t, currency))].join('\t'))
     navigator.clipboard.writeText(lines.join('\n')).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 1400)
-  }, [selected, currency])
+  }, [picks, currency])
 
-  const picks = selected.map(s => CITIES.find(c => c.slug === s)).filter(Boolean) as CityData[]
-  const cols = picks.length
+  // ── Render helpers ────────────────────────────────────────────────────────
+
+  function renderRaceRow(c: CityData, total: number, rank: number) {
+    const isCheap = total === minT && minT !== maxT
+    const isDear  = total === maxT && minT !== maxT && picks.length >= 3
+    const isoVal  = isolated ? c.costs[isolated] : total
+    const widthPct = (isoVal / scaleMax) * 100
+
+    const rowCls = [
+      styles.raceRow,
+      isCheap ? styles.isCheap : '',
+      isDear  ? styles.isDear  : '',
+    ].filter(Boolean).join(' ')
+
+    // Segments: when isolated, only the isolated seg; otherwise all
+    const visibleRows = isolated
+      ? COST_ROWS.filter(r => r.key === isolated)
+      : COST_ROWS
+
+    // Delta text
+    let deltaEl: React.ReactNode
+    if (isolated) {
+      deltaEl = `only ${COST_ROWS.find(r => r.key === isolated)!.label.toLowerCase()}`
+    } else if (isCheap) {
+      deltaEl = <span className={styles.deltaDown}>↓ baseline · cheapest</span>
+    } else if (total === minT) {
+      deltaEl = <span className={styles.deltaBase}>— baseline —</span>
+    } else {
+      const overPct = Math.round((total / minT - 1) * 100)
+      const overAbs = fmt(total - minT, currency)
+      deltaEl = <span className={styles.deltaUp}>+{overPct}% · {overAbs}/mo over №1</span>
+    }
+
+    return (
+      <div key={c.slug} className={rowCls}>
+        {/* Podium tag */}
+        {(isCheap || isDear) && (
+          <div className={styles.rrTagStrip}>
+            <span className={styles.squig}>↳ {isCheap ? 'cheapest of the bunch' : 'steepest month'}</span>
+            <span className={styles.ruler} />
+            <span className={styles.tail}>{isCheap ? '↓ winner' : '↓ ouch'}</span>
+          </div>
+        )}
+
+        {/* Left: rank + city */}
+        <div className={styles.rrL}>
+          <span className={styles.rrRank}>№{rank + 1}</span>
+          <div className={styles.rrId}>
+            <span className={styles.rrFlag}>{c.flag}</span>
+            <span className={styles.rrName}>{c.name}</span>
+            <span className={styles.rrMeta}>{c.country} · {c.code}</span>
+          </div>
+        </div>
+
+        {/* Centre: bar */}
+        <div className={styles.rrTrack}>
+          <div className={styles.rrBar} style={{ width: `${widthPct.toFixed(2)}%` }}>
+            {visibleRows
+              .filter(r => c.costs[r.key] > 0)
+              .map(r => {
+                const v = c.costs[r.key]
+                const pct = v / total
+                const showLbl = pct > 0.13 || !!isolated
+                const showVal = pct > 0.18 || !!isolated
+                return (
+                  <div
+                    key={r.key}
+                    className={[styles.rrSeg, isolated === r.key ? styles.rrSegLit : ''].filter(Boolean).join(' ')}
+                    style={{ flexGrow: v, background: r.color }}
+                  >
+                    {showLbl && <span className={styles.rrSegLbl}>{r.label}</span>}
+                    {showVal && <span className={styles.rrSegVal}>{fmt(v, currency)}</span>}
+                    <span className={styles.rrSegTip}>{r.label} · {fmt(v, currency)} / mo</span>
+                  </div>
+                )
+              })}
+          </div>
+        </div>
+
+        {/* Right: total + delta */}
+        <div className={styles.rrR}>
+          <span className={styles.rrTotal}>
+            {fmt(isolated ? c.costs[isolated] : total, currency)}
+          </span>
+          <span className={styles.rrDelta}>{deltaEl}</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Build race list with inter-row annotations
+  const raceElements = useMemo(() => {
+    if (picks.length < 2) return null
+    const els: React.ReactNode[] = []
+
+    indexed.forEach(({ c, total }, rank) => {
+      els.push(renderRaceRow(c, total, rank))
+
+      // Annotation after cheapest: rent gap to dearest
+      if (!isolated && rank === 0 && indexed.length >= 2) {
+        const dearest = indexed[indexed.length - 1]
+        const rentGap = dearest.c.costs.rent - c.costs.rent
+        if (rentGap > 200) {
+          els.push(
+            <div key="annot-rent" className={styles.annotRow}>
+              <div className={styles.annotL}>rent alone ↗</div>
+              <div className={styles.annotC}>
+                <span className={styles.annotCArr}>↘</span>
+                <span>
+                  <span className={styles.annotStrong}>{fmt(rentGap, currency)}/mo</span>{' '}
+                  gap on rent · {c.name} vs {dearest.c.name}
+                </span>
+              </div>
+              <div className={styles.annotR}></div>
+            </div>
+          )
+        }
+      }
+
+      // Annotation after dearest: yearly gap
+      if (!isolated && rank === indexed.length - 1) {
+        const totalGap = total - indexed[0].total
+        if (totalGap > 500) {
+          els.push(
+            <div key="annot-year" className={styles.annotRow}>
+              <div className={styles.annotL}></div>
+              <div className={styles.annotC}></div>
+              <div className={styles.annotR}>
+                ↗{' '}
+                <span className={styles.annotStrong}>{fmt(totalGap * 12, currency)}</span>
+                /year — a flight home, every month
+              </div>
+            </div>
+          )
+        }
+      }
+    })
+
+    return els
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indexed, isolated, currency, minT, maxT, picks.length, scaleMax])
+
+  // ── JSX ───────────────────────────────────────────────────────────────────
 
   return (
     <div className={styles.page}>
@@ -118,7 +338,7 @@ export default function CompareCitiesClient() {
             <span className={styles.navLogoText}>Origio</span>
           </Link>
           <span className={styles.navCenter}>
-            <span className={styles.crumb}>Origio / Cities /</span> Compare
+            <span className={styles.crumb}>Origio / Cities /</span> The Race
           </span>
           <div className={styles.navRight}>
             <Link href="/cities" className={styles.nbtn}>← Back to cities</Link>
@@ -127,203 +347,226 @@ export default function CompareCitiesClient() {
         </div>
       </nav>
 
-      <div className={styles.pageWrap}>
+      <main className={styles.folio}>
+        {/* Registration marks */}
+        <span className={styles.regTl} />
+        <span className={styles.regTr} />
+        <span className={styles.regBl} />
+        <span className={styles.regBr} />
 
-        <Link href="/cities" className={styles.backLink}>
-          <span className={styles.backArr}>←</span> Cities · The Atlas
-        </Link>
+        {/* Folio strip */}
+        <div className={styles.folioStrip}>
+          <span>
+            <span className={styles.pulse} />
+            Origio Comparative Bureau · <span className={styles.folioIt}>Folio III</span> · 2026 Q1
+          </span>
+          <span>Cost of living, drawn to scale · <span className={styles.folioIt}>no axis lies</span></span>
+        </div>
 
-        {/* PRE-HEAD */}
-        <section className={`${styles.preHead} ${styles.fu}`}>
-          <p className={styles.preEyebrow}>III · A ledger of everyday life</p>
-          <h1 className={styles.preTitle}>
-            The math, <span className={styles.it}>on paper.</span>
+        {/* Headline */}
+        <header className={`${styles.raceHead} ${styles.fu}`}>
+          <div className={styles.eyebrow}>
+            <span className={styles.eyebrowNum}>3</span>
+            The Race · Cost of living, side by side
+          </div>
+          <h1 className={styles.raceH1}>
+            <span className={styles.it}>Whose month</span><br />
+            costs <span className={styles.amberText}>more?</span>{' '}
+            <span className={styles.grey}>Drawn to scale —</span>{' '}
+            <span className={styles.stamp}>No axis lies</span>
           </h1>
-          <p className={styles.preSub}>
-            Add up to four cities — rent, groceries, the gym, the doctor — and see what a real
-            month adds up to. Double-entered, sourced quarterly.
-          </p>
-        </section>
+        </header>
 
-        {/* LEDGER */}
-        <section className={`${styles.ledgerSection} ${styles.fu}`}>
-          <div className={styles.ledgerPaper}>
-            <span className={styles.metaTl}>ORG-LDG · 2026.Q1 · Folio III</span>
-            <span className={styles.metaTr}>
-              Double-entry · numbers in {currency.toUpperCase()}
-            </span>
-
-            <p className={styles.ledgerEyebrow}>Compare</p>
-            <h2 className={styles.ledgerTitle}>Side by <span className={styles.it}>side</span>.</h2>
-            <p className={styles.ledgerSub}>
-              Pick cities below in{' '}
-              <button type="button" className={styles.currToggle} onClick={nextCurrency}>
-                {CURR_LABEL[currency]} ⇄
-              </button>
-              {' '}— the table re-tallies in real time.
-            </p>
-
-            {/* CITY PICKER */}
-            <div className={styles.ledgerPicker}>
-              <span className={styles.ledgerPickerLbl}>Compare</span>
-              {CITIES.map(c => {
-                const isOn = selected.includes(c.slug)
-                const atMax = selected.length >= LEDGER_MAX && !isOn
-                return (
-                  <button
-                    key={c.slug}
-                    type="button"
-                    className={`${styles.ledgerChip}${isOn ? ' ' + styles.ledgerChipOn : ''}`}
-                    disabled={atMax}
-                    onClick={() => toggleCity(c.slug)}
-                  >
-                    <span className={styles.chFlag}>{c.flag}</span>
-                    {c.name}
-                  </button>
-                )
-              })}
-              <span className={styles.ledgerCap}>
-                <span className={styles.capNum}>{selected.length}</span> / 4 selected
-              </span>
-            </div>
-
-            {/* TABLE */}
-            {picks.length < 2 ? (
-              <div className={styles.ledgerEmpty}>
-                Pick at least two cities above to compare.
-                <span>— or three, or four —</span>
-              </div>
-            ) : (
-              <div className={styles.ledgerTable}>
-                <div
-                  className={styles.ltGrid}
-                  style={{ gridTemplateColumns: `200px repeat(${cols}, minmax(140px, 1fr))` }}
-                >
-                  {/* Header */}
-                  <div className={styles.ltHCat}>Category</div>
-                  {picks.map(c => (
-                    <div key={c.slug} className={styles.ltHCity}>
-                      <span className={styles.ltHFlag}>{c.flag}</span>
-                      <span className={styles.ltHName}>{c.name}</span>
-                      <span className={styles.ltHIso}>{c.country} · {c.code}</span>
-                    </div>
-                  ))}
-
-                  {/* Data rows */}
-                  {COST_ROWS.map(r => {
-                    const vals = picks.map(c => c.costs[r.key])
-                    const nonZero = vals.filter(v => v > 0)
-                    const min = nonZero.length ? Math.min(...nonZero) : 0
-                    const max = nonZero.length > 1 ? Math.max(...nonZero) : 0
-                    return (
-                      <Fragment key={r.key}>
-                        <div className={styles.ltRowLabel}>
-                          {r.label}
-                          <span className={styles.ltHint}>{r.hint}</span>
-                        </div>
-                        {picks.map(c => {
-                          const v = c.costs[r.key]
-                          const isCheap = v === min && min !== max && v > 0
-                          const isDear  = v === max && min !== max && cols >= 3 && v > 0
-                          const isZero  = v === 0
-                          const cls = [
-                            styles.ltCell,
-                            isCheap ? styles.cheap : '',
-                            isDear  ? styles.dear  : '',
-                            isZero  ? styles.zero  : '',
-                          ].filter(Boolean).join(' ')
-                          return (
-                            <div key={c.slug + '-' + r.key} className={cls}>
-                              {isZero ? 'free' : fmt(v, currency)}
-                            </div>
-                          )
-                        })}
-                      </Fragment>
-                    )
-                  })}
-
-                  {/* Total row */}
-                  {(() => {
-                    const totals = picks.map(c =>
-                      COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0)
-                    )
-                    const minT = Math.min(...totals)
-                    const maxT = Math.max(...totals)
-                    return (
-                      <Fragment key="totals">
-                        <div className={styles.ltTotalLabel}>
-                          Total / month
-                          <span className={styles.ltTotalSub}>7 line-items, all-in</span>
-                        </div>
-                        {picks.map((c, i) => {
-                          const t = totals[i]
-                          const isCheapest = t === minT && minT !== maxT
-                          const isPriciest = t === maxT && minT !== maxT && cols >= 3
-                          let annot = '· baseline'
-                          if (isCheapest) annot = '★ best deal'
-                          else if (isPriciest) annot = '· steepest'
-                          else if (minT !== maxT) annot = '+' + Math.round((t / minT - 1) * 100) + '% over cheapest'
-                          return (
-                            <div
-                              key={c.slug + '-total'}
-                              className={[
-                                styles.ltTotal,
-                                isCheapest ? styles.ltTotalCheapest : '',
-                                isPriciest  ? styles.ltTotalPriciest  : '',
-                              ].filter(Boolean).join(' ')}
-                            >
-                              {fmt(t, currency)}
-                              <span className={styles.ltTotalAnnot}>{annot}</span>
-                            </div>
-                          )
-                        })}
-                      </Fragment>
-                    )
-                  })()}
-                </div>
-              </div>
-            )}
-
-            {/* ACTIONS */}
-            <div className={styles.ledgerActions}>
-              <button type="button" className={styles.ledgerBtn} onClick={copyTable}>
-                {copied ? '✓ Copied' : '⧉ Copy table'}
-              </button>
-              <button
-                type="button"
-                className={`${styles.ledgerBtn} ${styles.ledgerBtnGhost}`}
-                onClick={() => window.print()}
-              >
-                ↓ Print / PDF
-              </button>
-              <button
-                type="button"
-                className={`${styles.ledgerBtn} ${styles.ledgerBtnGhost}`}
-                onClick={reset}
-              >
-                ↻ Reset
-              </button>
-            </div>
-
-            <div className={styles.ledgerFootNote}>
-              <span>Sourced quarterly · local journalists · 2026.Q1</span>
-              <span className={styles.footIt}>All numbers are real. The worst case is.</span>
-            </div>
+        {/* Sub */}
+        <section className={`${styles.raceSub} ${styles.fu}`}>
+          <div className={styles.raceSubL}>
+            Pick up to four cities below. The longer the bar, the steeper the rent, the heavier
+            the grocery cart. Numbers in{' '}
+            <button type="button" className={styles.currToggle} onClick={nextCurrency}>
+              {CURR_LABEL[currency]} ⇄
+            </button>{' '}
+            — re-tallied as you switch.
+          </div>
+          <div className={styles.raceSubR}>
+            <span className={styles.raceSubRIt}>Verified Q1 2026</span>
+            Local journalists · double-entered<br />
+            Sourced quarterly · seven line-items
           </div>
         </section>
 
-      </div>
+        {/* Pick strip */}
+        <section className={styles.pickStrip}>
+          <div className={styles.pickRow}>
+            <span className={styles.pickLbl}>
+              <span className={styles.pickLblArr}>→</span> Pick cities
+            </span>
+            {CITIES.map(c => {
+              const isOn = selected.includes(c.slug)
+              const atMax = selected.length >= LEDGER_MAX && !isOn
+              const minReached = selected.length <= 2 && isOn
+              return (
+                <button
+                  key={c.slug}
+                  type="button"
+                  className={`${styles.pickChip}${isOn ? ' ' + styles.pickChipOn : ''}`}
+                  disabled={atMax || minReached}
+                  onClick={() => toggleCity(c.slug)}
+                >
+                  <span className={styles.chFlag}>{c.flag}</span>
+                  {c.name}
+                </button>
+              )
+            })}
+            <span className={styles.pickCap}>
+              <span className={styles.pickCapNum}>{selected.length}</span> of 4 selected
+            </span>
+          </div>
 
-      {/* FOOTER */}
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <Link href="/" className={styles.footerLogo}>
-            <div className={styles.footerLogoMark}><span /></div>
-            <span className={styles.footerLogoText}>Origio</span>
-          </Link>
-          <p className={styles.footerNote}>Data last verified · May 2026 · Local sources per city</p>
+          {/* Legend */}
+          <div className={styles.legendRow}>
+            <span className={styles.legendLbl}>
+              <span className={styles.legendLblArr}>↳</span> Categories · click to isolate
+            </span>
+            {COST_ROWS.map(r => (
+              <button
+                key={r.key}
+                type="button"
+                className={[
+                  styles.legendKey,
+                  isolated === r.key ? styles.legendKeyOn : '',
+                  isolated && isolated !== r.key ? styles.legendKeyDim : '',
+                ].filter(Boolean).join(' ')}
+                onClick={() => toggleIsolate(r.key)}
+              >
+                <span className={styles.lkSw} style={{ background: r.color }} />
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Race section */}
+        <section className={styles.race}>
+          {/* Scale ruler */}
+          <div className={styles.scale}>
+            <div className={styles.scaleL}>Scale · linear · {currency.toUpperCase()}/mo</div>
+            <div className={styles.scaleTrack}>
+              {scaleTicks.map((t, i) => (
+                <Fragment key={i}>
+                  <span
+                    className={`${styles.scaleTick} ${styles.scaleTickMajor}`}
+                    style={{ left: `${t.pct}%` }}
+                  />
+                  <span
+                    className={styles.scaleLabel}
+                    style={{ left: `${t.pct}%` }}
+                  >
+                    {t.label}
+                  </span>
+                </Fragment>
+              ))}
+            </div>
+            <div className={styles.scaleR}>→ steeper</div>
+          </div>
+
+          {/* Race list */}
+          <div className={styles.raceList}>
+            {picks.length < 2 ? (
+              <div className={styles.raceEmpty}>
+                Pick at least two cities above.
+                <span>— or three, or four —</span>
+              </div>
+            ) : raceElements}
+          </div>
+        </section>
+
+        {/* Verdict */}
+        <section className={styles.verdict}>
+          <div>
+            <div className={styles.verdictEyebrow}>→ The Verdict</div>
+            {!verdict ? (
+              <p className={styles.verdictText}>Pick two cities to see what a month really costs.</p>
+            ) : (
+              <p className={styles.verdictText}>
+                A month in{' '}
+                <strong><span className={styles.it}>{verdict.dearest.c.name}</span></strong> costs{' '}
+                <span className={styles.it}>{fmt(verdict.gap, currency)}</span> more than{' '}
+                <strong><span className={styles.it}>{verdict.cheapest.c.name}</span></strong>.{' '}
+                Over a year that&rsquo;s{' '}
+                <span className={styles.strike}>a small inheritance</span>{' '}
+                <span className={styles.it}>{fmt(verdict.yearGap, currency)}</span>.
+              </p>
+            )}
+          </div>
+
+          <div className={styles.verdictR}>
+            {verdict ? (
+              <>
+                <div className={`${styles.vrCard} ${styles.vrCardCheap}`}>
+                  <div className={styles.vrLbl}>→ Best deal</div>
+                  <div className={styles.vrBody}>
+                    <span className={styles.it}>{verdict.cheapest.c.name}</span> ·{' '}
+                    <span className={`${styles.vrBig} ${styles.vrBigCheap}`}>
+                      {fmt(verdict.cheapest.total, currency)}
+                    </span><br />
+                    a month, all-in.
+                  </div>
+                </div>
+                <div className={`${styles.vrCard} ${styles.vrCardDear}`}>
+                  <div className={styles.vrLbl}>→ Steepest</div>
+                  <div className={styles.vrBody}>
+                    <span className={styles.it}>{verdict.dearest.c.name}</span> ·{' '}
+                    <span className={`${styles.vrBig} ${styles.vrBigDear}`}>
+                      +{verdict.gapPct}%
+                    </span><br />
+                    over №1 every month.
+                  </div>
+                </div>
+                <div className={styles.vrCard}>
+                  <div className={styles.vrLbl}>→ Biggest gap · single line</div>
+                  <div className={styles.vrBody}>
+                    <span className={styles.it}>{verdict.bigRow.label}</span> ·{' '}
+                    <span className={styles.vrBig}>
+                      {fmt(Math.abs(verdict.bigDelta), currency)}
+                    </span><br />
+                    between №1 and last.
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </section>
+
+        {/* Actions */}
+        <section className={styles.actions}>
+          <button type="button" className={styles.actBtn} onClick={copyTable}>
+            {copied ? '✓ Copied' : '⧉ Copy table'}
+          </button>
+          <button
+            type="button"
+            className={`${styles.actBtn} ${styles.actBtnGhost}`}
+            onClick={() => window.print()}
+          >
+            ↓ Print / PDF
+          </button>
+          <button
+            type="button"
+            className={`${styles.actBtn} ${styles.actBtnGhost}`}
+            onClick={reset}
+          >
+            ↻ Reset
+          </button>
+          <span className={styles.spacer} />
+          <span className={styles.note}>Bring this to your accountant.</span>
+        </section>
+
+        {/* Bureau */}
+        <div className={styles.bureau}>
+          <span>Origio · Comparative Bureau · est. 2024</span>
+          <span className={styles.seal}>— it is what it is —</span>
+          <span>All numbers real · sourced Q1 2026</span>
         </div>
-      </footer>
+      </main>
     </div>
   )
 }
