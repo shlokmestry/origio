@@ -204,8 +204,10 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
   const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), [])
 
-  // All 12 live cities for the ledger panel
-  const liveCities = enriched.slice(0, 12)
+  // Ledger: all 12 live cities ranked by move score (highest = most trending)
+  const liveCities = useMemo(() =>
+    enriched.slice().sort((a, b) => (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0)),
+  [enriched])
 
   return (
     <div className={styles.page}>
@@ -262,28 +264,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
               </div>
               <div className={styles.ledgerFoot}>
                 <span>More cities — every 90 days</span>
-                <span>↓ Pick a country</span>
+                <span>↓ Scroll to explore</span>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* INTRO ROW */}
-        <section className={`${styles.introRow} ${styles.fu} ${styles.d2}`}>
-          <div className={styles.introBlock}>
-            <p className={styles.introEyebrow}>What you&apos;ll see</p>
-            <h2 className={styles.introTitle}>Honest <span className={styles.it}>numbers</span>.</h2>
-            <p className={styles.introText}>Rent that a real person pays. Salary your role actually earns. Climate you&apos;ll actually feel. Sources at the bottom of each city.</p>
-          </div>
-          <div className={styles.introBlock}>
-            <p className={styles.introEyebrow} style={{ color:'var(--c-teal)' }}>Refresh cadence</p>
-            <h2 className={styles.introTitle}>Verified <span className={styles.it}>quarterly</span>.</h2>
-            <p className={styles.introText}>Local journalists and finance contacts in every market re-check rent, payroll and immigration policy four times a year.</p>
-          </div>
-          <div className={styles.introBlock}>
-            <p className={styles.introEyebrow} style={{ color:'var(--c-green)' }}>How to filter</p>
-            <h2 className={styles.introTitle}>Build a <span className={styles.it}>sentence</span>.</h2>
-            <p className={styles.introText}>Use the &ldquo;Take me somewhere&rdquo; tool below — pick climate, budget, and vibe — the list re-sorts instantly.</p>
           </div>
         </section>
 
