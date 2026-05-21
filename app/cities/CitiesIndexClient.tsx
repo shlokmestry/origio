@@ -5,6 +5,8 @@ import Link from 'next/link'
 import styles from './cities.module.css'
 import { City } from '@/types'
 import { supabase } from '@/lib/supabase'
+import Nav from '@/components/Nav'
+import Footer from '@/components/Footer'
 
 export type CityItem = City
 
@@ -226,24 +228,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   [enriched])
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} style={{ paddingTop: 80 }}>
 
-      {/* NAV */}
-      <nav className={styles.nav}>
-        <div className={styles.navInner}>
-          <Link href="/" className={styles.navLogo}>
-            <div className={styles.navLogoMark}><span /></div>
-            <span className={styles.navLogoText}>Origio</span>
-          </Link>
-          <span className={styles.navCenter}>
-            <span className={styles.crumb}>Origio /</span> Cities
-          </span>
-          <div className={styles.navRight}>
-            <Link href="/compare" className={styles.nbtn}>Compare</Link>
-            <Link href="/onboarding" className={styles.nbtn}>Find My City</Link>
-          </div>
-        </div>
-      </nav>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
       <div className={styles.pageInner}>
 
@@ -466,18 +453,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
       </div>
 
-      {/* FOOTER */}
-      <footer>
-        <div className={styles.footer}>
-          <div className={styles.footerInner}>
-            <Link href="/" className={styles.footerLogo}>
-              <div className={styles.footerLogoMark}><span /></div>
-              <span className={styles.footerLogoText}>Origio</span>
-            </Link>
-            <p className={styles.footerNote}>Data last verified · May 2026 · Local sources per city</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
