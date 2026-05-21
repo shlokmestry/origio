@@ -176,10 +176,19 @@ function OptionCard({ selected, onClick, children, badge }: {
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function WizardPage() {
   const router = useRouter();
-  const [step, setStep]     = useState(1);
+  const [step, setStep]     = useState(0);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
+
+  // dual-passport intro state (step 0)
+  const [hasDualPassport, setHasDualPassport] = useState<boolean | null>(null);
+  const [introPassport, setIntroPassport] = useState('');
+  const [introSecondPassport, setIntroSecondPassport] = useState('');
+  const [introPassportSearch, setIntroPassportSearch] = useState('');
+  const [introSecondPassportSearch, setIntroSecondPassportSearch] = useState('');
+  const [showIntroPassportList, setShowIntroPassportList] = useState(false);
+  const [showIntroSecondList, setShowIntroSecondList] = useState(false);
 
   const [gateChecked, setGateChecked] = useState(false);
   const [gateType, setGateType]       = useState<"anon" | "free" | null>(null);
@@ -236,10 +245,32 @@ export default function WizardPage() {
   const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
   const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
-  const progress   = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
+  const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
   const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
   const runsLeft   = isPro ? null : Math.max(0, maxRuns - runsUsed);
+
+  const introDualConflict = (() => {
+    if (!introPassport || !introSecondPassport) return null;
+    if (NO_DUAL_CITIZENSHIP[introPassport]) return NO_DUAL_CITIZENSHIP[introPassport];
+    if (NO_DUAL_CITIZENSHIP[introSecondPassport]) return NO_DUAL_CITIZENSHIP[introSecondPassport];
+    return null;
+  })();
+
+  const introPassportOptions = PASSPORTS.map(p => p.toLowerCase()).filter(p =>
+    p.includes(introPassportSearch.toLowerCase()) && p !== introSecondPassport
+  );
+  const introSecondOptions = PASSPORTS.map(p => p.toLowerCase()).filter(p =>
+    p.includes(introSecondPassportSearch.toLowerCase()) && p !== introPassport
+  );
+
+  const startQuiz = () => {
+    // carry passport selections from intro into step 1 answers
+    if (introPassport) {
+      setAnswers(prev => ({ ...prev, passport: introPassport, secondPassport: introSecondPassport || undefined }));
+    }
+    setStep(1);
+  };
 
   const canProceed = () => {
     if (step === 1) return !!answers.passport;
@@ -254,7 +285,7 @@ export default function WizardPage() {
   };
 
   const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
-  const handleBack = () => { if (step === 1) router.push("/"); else setStep(getPrevStep(step)); };
+  const handleBack = () => { if (step === 1) setStep(0); else if (step === 0) router.push("/"); else setStep(getPrevStep(step)); };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -413,6 +444,113 @@ export default function WizardPage() {
 
         {/* ── Step content ────────────────────────────────────────────────── */}
         <section key={step} style={{ animation: "fadeUp 0.38s ease both", maxWidth: 660 }}>
+
+          {/* ── Step 0: Dual passport intro ──────────────────────────────── */}
+          {step === 0 && (
+            <>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", border: `1px solid ${LINE}`, fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: MINT, marginBottom: 20 }}>
+                ✦ Before we start
+              </div>
+              <StepHeading>Do you hold <Mint>more than one passport?</Mint></StepHeading>
+              <StepSub>Dual citizenship can significantly change your visa access and which countries are viable. We factor both passports into your results.</StepSub>
+
+              <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
+                <OptionCard selected={hasDualPassport === false} onClick={() => { setHasDualPassport(false); setIntroSecondPassport(''); }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: FG }}>No — one passport</div>
+                  <div style={{ fontSize: 13, color: DIM }}>I hold citizenship of a single country</div>
+                </OptionCard>
+                <OptionCard selected={hasDualPassport === true} onClick={() => setHasDualPassport(true)}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: FG }}>Yes — dual / multiple passports</div>
+                  <div style={{ fontSize: 13, color: DIM }}>I hold citizenship of two or more countries</div>
+                </OptionCard>
+              </div>
+
+              {hasDualPassport !== null && (
+                <div style={{ display: "grid", gap: 12, marginBottom: 28 }}>
+                  {/* Primary passport */}
+                  <div>
+                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, marginBottom: 8 }}>
+                      Primary passport
+                    </div>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder="Search country..."
+                        value={introPassport ? PASSPORTS.find(p => p.toLowerCase() === introPassport) ?? introPassport : introPassportSearch}
+                        onFocus={() => { setShowIntroPassportList(true); if (introPassport) setIntroPassportSearch(''); }}
+                        onBlur={() => setTimeout(() => setShowIntroPassportList(false), 150)}
+                        onChange={e => { setIntroPassportSearch(e.target.value); setIntroPassport(''); setShowIntroPassportList(true); }}
+                        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introPassport ? MINT : LINE}`, borderRadius: 10, color: introPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                      />
+                      {showIntroPassportList && (
+                        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                          {introPassportOptions.map(slug => {
+                            const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
+                            return (
+                              <button key={slug} onMouseDown={() => { setIntroPassport(slug); setIntroPassportSearch(''); setShowIntroPassportList(false); }}
+                                style={{ width: "100%", padding: "10px 16px", background: introPassport === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: introPassport === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" }}>
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Second passport — only if dual selected */}
+                  {hasDualPassport && (
+                    <div>
+                      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, marginBottom: 8 }}>
+                        Second passport
+                      </div>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search country..."
+                          value={introSecondPassport ? PASSPORTS.find(p => p.toLowerCase() === introSecondPassport) ?? introSecondPassport : introSecondPassportSearch}
+                          onFocus={() => { setShowIntroSecondList(true); if (introSecondPassport) setIntroSecondPassportSearch(''); }}
+                          onBlur={() => setTimeout(() => setShowIntroSecondList(false), 150)}
+                          onChange={e => { setIntroSecondPassportSearch(e.target.value); setIntroSecondPassport(''); setShowIntroSecondList(true); }}
+                          style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introSecondPassport ? MINT : LINE}`, borderRadius: 10, color: introSecondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                        />
+                        {showIntroSecondList && (
+                          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                            {introSecondOptions.map(slug => {
+                              const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
+                              return (
+                                <button key={slug} onMouseDown={() => { setIntroSecondPassport(slug); setIntroSecondPassportSearch(''); setShowIntroSecondList(false); }}
+                                  style={{ width: "100%", padding: "10px 16px", background: introSecondPassport === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: introSecondPassport === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" }}>
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dual citizenship conflict warning */}
+                  {introDualConflict && (
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                      <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ No dual citizenship</p>
+                      <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6 }}>{introDualConflict}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={startQuiz}
+                disabled={hasDualPassport === null}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, background: hasDualPassport === null ? LINE : MINT, color: BG, border: "none", padding: "15px 32px", fontFamily: MONO, fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", cursor: hasDualPassport === null ? "default" : "pointer", opacity: hasDualPassport === null ? 0.4 : 1, transition: "background 0.15s, opacity 0.15s" }}>
+                Start quiz <ArrowRight size={14} />
+              </button>
+              <p style={{ fontSize: 12, color: DIM, marginTop: 12 }}>You can also add your passport on the next question — skip if you prefer.</p>
+            </>
+          )}
+
           {/* Step 1 */}
           {step === 1 && (
             <>
@@ -426,33 +564,12 @@ export default function WizardPage() {
                 <option value="" disabled>Select your passport country</option>
                 {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
               </select>
-              {answers.passport && (
-                <div style={{ marginTop: 12 }}>
-                  <select
-                    value={answers.secondPassport ?? ""}
-                    onChange={e => setAnswers({ ...answers, secondPassport: e.target.value || undefined })}
-                    style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.secondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
-                    onFocus={e => (e.currentTarget.style.borderColor = MINT)}
-                    onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
-                    <option value="">+ Second passport (optional)</option>
-                    {PASSPORTS.filter(p => p.toLowerCase() !== answers.passport).map(p => (
-                      <option key={p} value={p.toLowerCase()}>{p}</option>
-                    ))}
-                  </select>
-                  {answers.secondPassport && (() => {
-                    const conflict = NO_DUAL_CITIZENSHIP[answers.passport!] ? answers.passport! : NO_DUAL_CITIZENSHIP[answers.secondPassport] ? answers.secondPassport : null
-                    if (!conflict) return null
-                    return (
-                      <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(255,200,50,0.05)', border: '1px solid rgba(255,200,50,0.2)', borderRadius: 10 }}>
-                        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.8)', marginBottom: 3 }}>
-                          ⚠ No dual citizenship
-                        </p>
-                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
-                          {NO_DUAL_CITIZENSHIP[conflict]}
-                        </p>
-                      </div>
-                    )
-                  })()}
+              {answers.secondPassport && (
+                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM }}>+ second passport:</span>
+                  <span style={{ fontSize: 13, color: MINT }}>{PASSPORTS.find(p => p.toLowerCase() === answers.secondPassport) ?? answers.secondPassport}</span>
+                  <button onClick={() => setAnswers({ ...answers, secondPassport: undefined })}
+                    style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
                 </div>
               )}
             </>
