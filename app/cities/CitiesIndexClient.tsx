@@ -420,7 +420,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
         {/* COMPARE CTA */}
         <section className={`${styles.compareCta} ${styles.fu} ${styles.d4}`}>
-          <Link href="/compare" className={styles.ccLink}>
+          <Link href="/cities/compare" className={styles.ccLink}>
             <span className={styles.ccEyebrow}>III · A ledger of everyday life</span>
             <span className={styles.ccHeadline}>
               <span className={styles.ccLine}>Compare the</span>
