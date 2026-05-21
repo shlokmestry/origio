@@ -40,11 +40,14 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
   "switzerland": 1, "portugal": 1, "ireland": 1, "belgium": 1,
   "new-zealand": 1, "australia": 1, "japan": 1, "singapore": 1,
   "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1,
+  // space-variant aliases (wizard PASSPORTS array uses .toLowerCase())
+  "new zealand": 1, "united kingdom": 1, "usa": 1, "south korea": 1,
   // Tier 2
   "poland": 2, "romania": 2, "malaysia": 2, "brazil": 2, "uae": 2,
   "mexico": 2, "chile": 2, "argentina": 2,
   // Tier 3
   "china": 3, "india": 3, "turkey": 3, "south-africa": 3, "ukraine": 3,
+  "south africa": 3,
   "philippines": 3, "indonesia": 3, "vietnam": 3, "thailand": 3,
   // Tier 4 — most restricted
   "nigeria": 4, "pakistan": 4, "ghana": 4,
@@ -64,7 +67,7 @@ export const PASSPORT_TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
 // Countries that do not allow dual citizenship
 export const NO_DUAL_CITIZENSHIP_SLUGS = new Set([
   "india", "china", "japan", "singapore", "uae",
-  "indonesia", "malaysia", "south-korea",
+  "indonesia", "malaysia", "south-korea", "south korea",
 ]);
 
 // If a no-dual passport is paired with another, the user has renounced the no-dual one.
