@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Calculator } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { WizardAnswers, CountryMatch } from "@/lib/wizard";
+import { WizardAnswers, CountryMatch, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
 import { getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
 import Nav from "@/components/Nav";
@@ -66,7 +66,7 @@ function getFallbackNarrative(slug: string, name: string, cs: string, grossSalar
   return `${g} gross, ${disp} left after costs. Enough to live. Check if it's enough to stay.`;
 }
 
-function getMoveTimeline(visaDifficulty: number, isEU: boolean) {
+function getMoveTimeline(visaDifficulty: number, isEU: boolean, passportTier?: 1|2|3|4) {
   const now = new Date();
   const add = (m: number) => {
     const d = new Date(now);
@@ -84,39 +84,41 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean) {
       ],
     };
   }
+  // Tier 1 passport → shave 1–2 months off processing times
+  const tierBonus = passportTier === 1 ? 1 : 0;
   if (visaDifficulty <= 2) {
     return {
-      months: "3–6 months",
+      months: tierBonus ? "2–4 months" : "3–6 months",
       steps: [
         { month: add(0), action: "Gather documents — passport, bank statements, proof of income" },
         { month: add(1), action: "Submit visa application at consulate" },
-        { month: add(2), action: "Processing period (2–4 months typical)" },
-        { month: add(5), action: "Visa issued — book flights, sort accommodation" },
-        { month: add(6), action: "You're in.", final: true },
+        { month: add(2), action: `Processing period (${tierBonus ? "1–3" : "2–4"} months typical)${tierBonus ? " — strong passport speeds processing" : ""}` },
+        { month: add(4 - tierBonus), action: "Visa issued — book flights, sort accommodation" },
+        { month: add(5 - tierBonus), action: "You're in.", final: true },
       ],
     };
   }
   if (visaDifficulty <= 3) {
     return {
-      months: "6–12 months",
+      months: tierBonus ? "5–10 months" : "6–12 months",
       steps: [
         { month: add(0), action: "Secure job offer or employer sponsor" },
         { month: add(2), action: "Employer submits work permit application" },
-        { month: add(4), action: "Processing period (3–6 months)" },
-        { month: add(9), action: "Permit issued — arrange relocation" },
-        { month: add(11), action: "You're in.", final: true },
+        { month: add(3), action: `Processing period (${tierBonus ? "2–5" : "3–6"} months)${tierBonus ? " — Tier 1 passport reduces friction" : ""}` },
+        { month: add(8 - tierBonus), action: "Permit issued — arrange relocation" },
+        { month: add(10 - tierBonus), action: "You're in.", final: true },
       ],
     };
   }
   return {
-    months: "12–18 months",
+    months: tierBonus ? "10–15 months" : "12–18 months",
     steps: [
       { month: add(0), action: "Begin job search — employer sponsorship essential" },
       { month: add(4), action: "Job offer secured" },
       { month: add(5), action: "Visa application submitted with full documentation" },
-      { month: add(10), action: "Processing + possible interview or biometrics" },
-      { month: add(15), action: "Visa issued" },
-      { month: add(17), action: "You're in.", final: true },
+      { month: add(9 - tierBonus), action: `Processing + possible interview or biometrics${tierBonus ? " (Tier 1 passport may expedite)" : ""}` },
+      { month: add(13 - tierBonus), action: "Visa issued" },
+      { month: add(15 - tierBonus), action: "You're in.", final: true },
     ],
   };
 }
@@ -277,7 +279,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     const monthlyTotal = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
     const disposable = takeHomeMonthly - monthlyTotal;
     const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
-    const isEU = EU_PASSPORTS.includes((answers.passport ?? "").toLowerCase());
+    const { primary: _ep2 } = resolveEffectivePassports((answers.passport ?? "").toLowerCase(), (answers.secondPassport ?? "").toLowerCase() || undefined);
+    const isEU = EU_PASSPORTS.includes(_ep2) || (answers.secondPassport ? EU_PASSPORTS.includes(answers.secondPassport.toLowerCase()) : false);
     const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
     setHeadlineLoading(true);
     const controller = new AbortController();
@@ -327,7 +330,16 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const monthlyTotal = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut * 20 + data.costUtilitiesMonthly;
   const disposable = takeHomeMonthly - monthlyTotal;
   const disposableUSD = disposable * (TO_USD[country.currency] ?? 1);
-  const isEU = EU_PASSPORTS.includes((answers.passport ?? "").toLowerCase());
+  const { primary: effectivePrimary, secondary: effectiveSecondary } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const isEU = EU_PASSPORTS.includes(effectivePrimary) || (effectiveSecondary ? EU_PASSPORTS.includes(effectiveSecondary) : false);
+  const euPassportLabel = EU_PASSPORTS.includes(effectivePrimary) ? effectivePrimary : (effectiveSecondary ?? effectivePrimary);
+  const passportTier = Math.min(getPassportStrength(effectivePrimary), effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4) as 1|2|3|4;
+  const rawPrimaryTier = getPassportStrength((answers.passport ?? "").toLowerCase());
+  const tierUpgraded = !!effectiveSecondary && passportTier < rawPrimaryTier;
+  const hasDualPassport = !!(answers.secondPassport);
   const isEnglish = ENGLISH_COUNTRIES.includes(country.slug);
   const dealBreakers = answers.dealBreakers ?? [];
   const hasEnglishFlag = dealBreakers.includes("english") && !isEnglish;
@@ -341,7 +353,8 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
 
   const wins: { title: string; sub: string }[] = [];
   if (grossSalary > 0) wins.push({ title: `${userRole.label} salary: ${cs}${grossSalary.toLocaleString()}/yr`, sub: `Take-home ~${cs}${takeHomeMonthly.toLocaleString()}/mo after ${data.incomeTaxRateMid}% tax` });
-  if (isEU && ["germany","netherlands","portugal","spain","ireland","france","italy","sweden","switzerland","norway","austria","finland","belgium","denmark"].includes(country.slug)) wins.push({ title: "Your passport makes the visa straightforward", sub: "EU/EFTA freedom of movement — no pre-approval needed in most cases." });
+  if (isEU && ["germany","netherlands","portugal","spain","ireland","france","italy","sweden","switzerland","norway","austria","finland","belgium","denmark"].includes(country.slug)) wins.push({ title: `${euPassportLabel} passport → free movement`, sub: "EU/EFTA freedom of movement — no pre-approval needed in most cases." });
+  if (hasDualPassport && tierUpgraded) wins.push({ title: `Dual passport upgrades your access to Tier ${passportTier}`, sub: `${PASSPORT_TIER_LABEL[passportTier]}. Your second passport opens doors your primary wouldn't.` });
   if (rentFits) wins.push({ title: "Rent fits your budget", sub: `${cs}${data.costRentCityCentre.toLocaleString()}/mo city centre — within your range.` });
   if (data.scoreSafety >= 8.5) wins.push({ title: `Safety score ${data.scoreSafety}/10`, sub: answers.priorities?.includes("safety") ? "You ranked this as a priority." : "One of the safer countries in the index." });
   if (data.scoreInternetSpeed >= 8 && answers.moveReason === "remote") wins.push({ title: `${data.scoreInternetSpeed}/10 internet speed`, sub: "Strong infrastructure for remote work." });
@@ -353,7 +366,13 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   if (hasEnglishFlag) warnings.push({ title: "Primary language is not English", sub: "You flagged English as a must. Day-to-day life will require learning the local language." });
   if (hasHighTaxFlag) warnings.push({ title: `Income tax ${data.incomeTaxRateMid}% is above your threshold`, sub: "You flagged low taxes as a priority. This country sits above 30%." });
   if (hasCrimeFlag) warnings.push({ title: "Crime rate below your threshold", sub: "You flagged low crime as a deal breaker. Check neighbourhood-level data before deciding." });
-  if (data.visaDifficulty >= 4 && !isEU) warnings.push({ title: `Visa difficulty: ${data.visaDifficulty}/5`, sub: "This country has restrictive immigration. Expect a longer, more expensive process." });
+  if (data.visaDifficulty >= 4 && !isEU) {
+    if (hasDualPassport && passportTier === 1) {
+      warnings.push({ title: `Visa difficulty: ${data.visaDifficulty}/5 — but your passport helps`, sub: "This country is restrictive, but your Tier 1 passport significantly reduces the barrier." });
+    } else {
+      warnings.push({ title: `Visa difficulty: ${data.visaDifficulty}/5`, sub: "This country has restrictive immigration. Expect a longer, more expensive process." });
+    }
+  }
 
   const priorities = answers.priorities ?? [];
   const priorityLabelMap: Record<string, string> = {
@@ -361,7 +380,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     safety: "Safety", visa: "Visa Access", tax: "Tax Efficiency",
   };
 
-  const timeline = getMoveTimeline(data.visaDifficulty, isEU);
+  const timeline = getMoveTimeline(data.visaDifficulty, isEU, passportTier);
   const visaDocs = getVisaChecklist(country.slug);
 
   // Breakdown bar %s
@@ -640,11 +659,19 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 <div style={{ fontSize: 12, color: S.dim, marginTop: 6 }}>{getVisaLabel(data.visaDifficulty)}</div>
               </div>
               <div style={{ padding: '22px 24px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>Passport</div>
-                <div style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', marginBottom: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>
+                  {hasDualPassport ? "Passports" : "Passport"}
+                </div>
+                <div style={{ fontFamily: S.serif, fontSize: 20, color: '#fff', marginBottom: 4 }}>
                   {isEU ? "EU ✓" : (answers.passport ?? "—")}
+                  {hasDualPassport && answers.secondPassport && (
+                    <span style={{ fontSize: 14, color: S.dim }}> + {answers.secondPassport}</span>
+                  )}
                 </div>
                 <div style={{ fontSize: 12, color: S.dim }}>{isEU ? "Freedom of movement" : "Work permit required"}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00ffd5', marginTop: 6, opacity: 0.8 }}>
+                  Tier {passportTier} strength{tierUpgraded ? ` ↑ from Tier ${rawPrimaryTier}` : ""}
+                </div>
               </div>
             </div>
             {/* Body */}

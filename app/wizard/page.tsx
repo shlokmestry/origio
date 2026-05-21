@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
 import { JOB_ROLES } from "@/types";
-import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
+import { WizardAnswers, scoreCountriesForWizard, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import QuizGate from "@/components/QuizGate";
@@ -225,11 +225,15 @@ export default function WizardPage() {
           setGateChecked(true); return;
         }
         setIsSignedIn(true);
-        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count, passport_slug, second_passport_slug").eq("id", session.user.id).single();
         const pro  = profile?.is_pro ?? false;
         const runs = profile?.quiz_runs_count ?? 0;
         setIsPro(pro); setRunsUsed(runs);
         if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
+        // pre-fill passport from profile
+        if (profile?.passport_slug) setIntroPassport(profile.passport_slug);
+        if (profile?.second_passport_slug) { setIntroSecondPassport(profile.second_passport_slug); setHasDualPassport(true); }
+        else if (profile?.passport_slug) setHasDualPassport(false);
       } catch (err) {
         // Network / Supabase error — allow the quiz to proceed rather than hanging forever
         console.error("checkGate error:", err);
@@ -530,6 +534,25 @@ export default function WizardPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Passport strength indicator */}
+                  {introPassport && (() => {
+                    const { primary: p, secondary: s } = resolveEffectivePassports(introPassport, introSecondPassport || undefined);
+                    const p1 = getPassportStrength(p);
+                    const p2 = s ? getPassportStrength(s) : null;
+                    const best = p2 ? Math.min(p1, p2) as 1|2|3|4 : p1;
+                    const upgraded = p2 && best < p1;
+                    return (
+                      <div style={{ padding: "12px 16px", background: "rgba(0,255,213,0.04)", border: `1px solid rgba(0,255,213,0.15)`, borderRadius: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: upgraded ? 6 : 0 }}>
+                          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport strength</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT, background: "rgba(0,255,213,0.1)", padding: "2px 8px", borderRadius: 4 }}>TIER {best}</span>
+                        </div>
+                        <p style={{ fontSize: 12, color: DIM, lineHeight: 1.5, margin: 0 }}>{PASSPORT_TIER_LABEL[best]}</p>
+                        {upgraded && <p style={{ fontSize: 11, color: MINT, marginTop: 4, margin: 0 }}>↑ Up from Tier {p1} with your second passport</p>}
+                      </div>
+                    );
+                  })()}
 
                   {/* Dual citizenship conflict warning */}
                   {introDualConflict && (

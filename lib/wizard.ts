@@ -50,8 +50,32 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
   "nigeria": 4, "pakistan": 4, "ghana": 4,
 };
 
-function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {
+export function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {
   return PASSPORT_STRENGTH[slug] ?? 3;
+}
+
+export const PASSPORT_TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
+  1: "Tier 1 — visa-free access to 180+ countries",
+  2: "Tier 2 — visa-free access to 140–179 countries",
+  3: "Tier 3 — visa-free access to 100–139 countries",
+  4: "Tier 4 — visa-free access to fewer than 100 countries",
+};
+
+// Countries that do not allow dual citizenship
+export const NO_DUAL_CITIZENSHIP_SLUGS = new Set([
+  "india", "china", "japan", "singapore", "uae",
+  "indonesia", "malaysia", "south-korea",
+]);
+
+// If a no-dual passport is paired with another, the user has renounced the no-dual one.
+// Return the passports that are actually valid for scoring.
+export function resolveEffectivePassports(primary: string, secondary?: string): { primary: string; secondary?: string } {
+  if (!secondary) return { primary };
+  const primaryNoD  = NO_DUAL_CITIZENSHIP_SLUGS.has(primary);
+  const secondNoD   = NO_DUAL_CITIZENSHIP_SLUGS.has(secondary);
+  if (primaryNoD && !secondNoD) return { primary: secondary }; // renounced primary
+  if (secondNoD && !primaryNoD) return { primary };            // renounced secondary
+  return { primary, secondary };                               // both allow dual (or both no-dual — edge case)
 }
 
 // Returns the effective (best) passport strength for scoring
@@ -157,11 +181,12 @@ export function scoreCountriesForWizard(
     return true;
   });
 
-  // ── Passport strength (best of primary + secondary) ─────────────
-  const primarySlug   = (answers.passport ?? "").toLowerCase();
-  const secondarySlug = (answers.secondPassport ?? "").toLowerCase() || undefined;
-  const strength      = effectiveStrength(primarySlug, secondarySlug);
-  const hasDual       = !!secondarySlug;
+  // ── Passport resolution (drop renounced no-dual passport) ───────
+  const rawPrimary   = (answers.passport ?? "").toLowerCase();
+  const rawSecondary = (answers.secondPassport ?? "").toLowerCase() || undefined;
+  const { primary: primarySlug, secondary: secondarySlug } = resolveEffectivePassports(rawPrimary, rawSecondary);
+  const strength = effectiveStrength(primarySlug, secondarySlug);
+  const hasDual  = !!secondarySlug;
 
   // ── SCORING ─────────────────────────────────────────────────────
   const results: CountryMatch[] = eligible.map((country) => {
