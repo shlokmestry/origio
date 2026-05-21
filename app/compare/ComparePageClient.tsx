@@ -321,6 +321,18 @@ export default function ComparePageClient() {
         }
       } else {
         setIsPro(false);
+        // anon: try sessionStorage for passport context
+        try {
+          const raw = sessionStorage.getItem("wizardAnswers");
+          if (raw) {
+            const a = JSON.parse(raw);
+            if (a?.passport) {
+              const { primary, secondary } = resolveEffectivePassports(a.passport.toLowerCase(), (a.secondPassport ?? "").toLowerCase() || undefined);
+              const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+              setPassportCtx({ tier, rawTier: getPassportStrength(a.passport.toLowerCase()), upgraded: !!secondary && tier < getPassportStrength(a.passport.toLowerCase()), hasDual: !!a.secondPassport });
+            }
+          }
+        } catch { /* ignore */ }
       }
       setProChecked(true);
     });
