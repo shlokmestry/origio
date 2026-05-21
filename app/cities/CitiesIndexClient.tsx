@@ -63,11 +63,6 @@ const CITY_EXTRAS: Record<string, CityExtra> = {
   'abu-dhabi':      { climateBand:'warm',      climate:'Desert',             vibes:['family','culture'],                                                                        status:'soon' },
 }
 
-const COUNTRY_CODES: Record<string, string> = {
-  Portugal:'PT', 'United Kingdom':'GB', Ireland:'IE', Netherlands:'NL',
-  Germany:'DE', Spain:'ES', 'United States':'US', Canada:'CA',
-  Singapore:'SG', Japan:'JP', Australia:'AU', UAE:'AE',
-}
 
 const CCY: Record<string, string> = {
   EUR:'€', GBP:'£', USD:'$', JPY:'¥', SGD:'S$', AUD:'A$', CAD:'CA$', AED:'AED ',
@@ -161,30 +156,21 @@ interface CitiesIndexClientProps {
 }
 
 export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [waitlistInput, setWaitlistInput] = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
   const prefsRef = useRef<HTMLDivElement>(null)
 
-  const enriched = useMemo(() => cities.map(c => ({ ...c, extra: CITY_EXTRAS[c.slug] })), [cities])
-
-  const countries = useMemo(() => {
-    const map = new Map<string, typeof enriched>()
-    for (const c of enriched) {
-      if (!map.has(c.countryName)) map.set(c.countryName, [])
-      map.get(c.countryName)!.push(c)
-    }
-    return Array.from(map.entries()).map(([name, cs]) => ({
-      name, code: COUNTRY_CODES[name] ?? name.slice(0,2).toUpperCase(),
-      flag: cs[0].flagEmoji, cities: cs,
-    }))
-  }, [enriched])
+  // Only cities with real data (live status)
+  const enriched = useMemo(() =>
+    cities
+      .map(c => ({ ...c, extra: CITY_EXTRAS[c.slug] }))
+      .filter(c => c.extra?.status === 'live'),
+  [cities])
 
   const filtered = useMemo(() => {
     let list = enriched.slice()
-    if (selectedCountry) list = list.filter(c => c.countryName === selectedCountry)
 
     if (filters.budget !== 'any') {
       list = list.filter(c => {
@@ -208,14 +194,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
       if (filters.safety   !== 'any') list = list.filter(c => !c.extra?.safety   || (safR[c.extra.safety]   ?? 0) >= (safR[filters.safety]   ?? 0))
     }
 
-    list.sort((a, b) => {
-      const aL = (a.extra?.status ?? 'soon') === 'live'
-      const bL = (b.extra?.status ?? 'soon') === 'live'
-      if (aL !== bL) return aL ? -1 : 1
-      return (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0)
-    })
+    list.sort((a, b) => (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0))
     return list
-  }, [enriched, selectedCountry, filters])
+  }, [enriched, filters])
 
   const setFilter = useCallback((key: keyof FilterState, val: string) => {
     setFilters(prev => ({ ...prev, [key]: val }))
@@ -223,16 +204,8 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
   const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), [])
 
-  function handleCountryClick(name: string) {
-    setSelectedCountry(prev => prev === name ? null : name)
-    if (selectedCountry !== name) setFilter('move', 'any')
-  }
-
-  const liveCities = useMemo(() =>
-    enriched.filter(c => (c.extra?.status ?? 'soon') === 'live').slice(0, 8),
-  [enriched])
-
-  const selCountry = selectedCountry ? countries.find(c => c.name === selectedCountry) : null
+  // All 12 live cities for the ledger panel
+  const liveCities = enriched.slice(0, 12)
 
   return (
     <div className={styles.page}>
@@ -260,7 +233,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         <section className={`${styles.heroFrame} ${styles.fu} ${styles.d1}`}>
           <div className={styles.heroInner}>
             <span className={`${styles.frameMeta} ${styles.frameMetaTl}`}>ORG-ATL · 2026.Q1 · Vol. 01</span>
-            <span className={`${styles.frameMeta} ${styles.frameMetaTr}`}><span className={styles.pulse} />LIVE INDEX</span>
             <span className={`${styles.frameMeta} ${styles.frameMetaBl}`}>SCALE 1 : 12 · MONO · SERIF</span>
             <span className={`${styles.frameMeta} ${styles.frameMetaBr}`}>PRINTED IN DARK MODE</span>
             <div className={styles.heroType}>
@@ -299,113 +271,31 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         {/* INTRO ROW */}
         <section className={`${styles.introRow} ${styles.fu} ${styles.d2}`}>
           <div className={styles.introBlock}>
-            <p className={styles.introEyebrow}>How this page works</p>
-            <h2 className={styles.introTitle}>Pick a <span className={styles.it}>country</span>.</h2>
-            <p className={styles.introText}>Every move starts with a passport. Choose where you have status, then narrow by budget, climate and the kind of life you&apos;re after.</p>
-          </div>
-          <div className={styles.introBlock}>
-            <p className={styles.introEyebrow} style={{ color:'var(--c-teal)' }}>What you&apos;ll see</p>
+            <p className={styles.introEyebrow}>What you&apos;ll see</p>
             <h2 className={styles.introTitle}>Honest <span className={styles.it}>numbers</span>.</h2>
             <p className={styles.introText}>Rent that a real person pays. Salary your role actually earns. Climate you&apos;ll actually feel. Sources at the bottom of each city.</p>
           </div>
           <div className={styles.introBlock}>
-            <p className={styles.introEyebrow} style={{ color:'var(--c-green)' }}>Refresh cadence</p>
+            <p className={styles.introEyebrow} style={{ color:'var(--c-teal)' }}>Refresh cadence</p>
             <h2 className={styles.introTitle}>Verified <span className={styles.it}>quarterly</span>.</h2>
             <p className={styles.introText}>Local journalists and finance contacts in every market re-check rent, payroll and immigration policy four times a year.</p>
           </div>
-        </section>
-
-        {/* STEP 1: ATLAS MANIFEST */}
-        <section className={`${styles.step} ${styles.manifest} ${styles.fu} ${styles.d2}`}>
-          <span className={styles.manifestNumeral} aria-hidden="true">{countries.length}</span>
-          <div className={styles.stepHead}>
-            <div>
-              <p className={styles.stepTag}><span className={styles.num}>1</span> Choose a country</p>
-              <h2 className={styles.stepTitle}>Where do you have a <span className={styles.it}>passport</span> — or a plan?</h2>
-            </div>
-            <p className={styles.stepAside}>
-              Manifest · {countries.length} entries · {selectedCountry ? `${selectedCountry} selected` : 'all visible'}
-            </p>
-          </div>
-
-          <div className={styles.manifestHead}>
-            <span>№</span><span>Country</span><span>Flag</span><span>ISO</span><span>Status</span>
-          </div>
-          <div className={styles.atlasList}>
-            {countries.map((c, i) => {
-              const liveCt = c.cities.filter(x => (x.extra?.status ?? 'soon') === 'live').length
-              const soonCt = c.cities.filter(x => (x.extra?.status ?? 'soon') === 'soon').length
-              return (
-                <button key={c.name} type="button"
-                  className={`${styles.atlasRow}${selectedCountry === c.name ? ' ' + styles.on : ''}`}
-                  onClick={() => handleCountryClick(c.name)}
-                >
-                  <span className={styles.arNum}>№{String(i+1).padStart(2,'0')}<span className={styles.mark}>✶</span></span>
-                  <span className={styles.arName}>{c.name}</span>
-                  <span className={styles.arFlag}>{c.flag}</span>
-                  <span className={styles.arCode}>{c.code}</span>
-                  <span className={styles.arMeta}>
-                    <span className={styles.live}>{liveCt} live</span>
-                    {soonCt > 0 && <><span className={styles.sep}>·</span><span className={styles.soon}>{soonCt} soon</span></>}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <div className={styles.manifestFoot}>
-            <span>— End of manifest · {countries.length} entries —</span>
-            <span className={styles.seal}>Verified <em>2026.Q1</em></span>
+          <div className={styles.introBlock}>
+            <p className={styles.introEyebrow} style={{ color:'var(--c-green)' }}>How to filter</p>
+            <h2 className={styles.introTitle}>Build a <span className={styles.it}>sentence</span>.</h2>
+            <p className={styles.introText}>Use the &ldquo;Take me somewhere&rdquo; tool below — pick climate, budget, and vibe — the list re-sorts instantly.</p>
           </div>
         </section>
 
-        {/* STEP 2: CITIES */}
-        <section className={`${styles.step} ${styles.fu} ${styles.d3}`}>
+        {/* CITIES */}
+        <section className={`${styles.step} ${styles.fu} ${styles.d2}`}>
           <div className={styles.stepHead}>
             <div>
-              <p className={styles.stepTag}><span className={styles.num}>2</span> Find your city</p>
+              <p className={styles.stepTag}><span className={styles.num}>1</span> Find your city</p>
               <h2 className={styles.stepTitle}>Here&rsquo;s what <span className={styles.it}>fits</span>.</h2>
             </div>
             <p className={styles.stepAside}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
           </div>
-
-          {/* Provenance */}
-          {selectedCountry && (
-            <div className={`${styles.provenance} ${styles.show}`}>
-              <p className={styles.provEyebrow}>A quick question — shapes your filters</p>
-              <p className={styles.provQ}>
-                This is a{' '}
-                <span className={`${styles.provPick}${filters.move === 'domestic' ? ' ' + styles.on : ''}`}
-                  tabIndex={0} onClick={() => setFilter('move', filters.move === 'domestic' ? 'any' : 'domestic')}
-                  onKeyDown={e => e.key === 'Enter' && setFilter('move', 'domestic')}>
-                  domestic move
-                </span>
-                <span className={styles.provSlash}>/</span>
-                <span className={`${styles.provPick}${filters.move === 'international' ? ' ' + styles.on : ''}`}
-                  tabIndex={0} onClick={() => setFilter('move', filters.move === 'international' ? 'any' : 'international')}
-                  onKeyDown={e => e.key === 'Enter' && setFilter('move', 'international')}>
-                  international move
-                </span>.
-              </p>
-              <p className={styles.provNote}>Picking <em>international</em> reveals visa, language, internet and safety filters.</p>
-            </div>
-          )}
-
-          {/* Selected strip */}
-          {selCountry && (
-            <div className={styles.selectedStrip}>
-              <span className={styles.selFlag}>{selCountry.flag}</span>
-              <div>
-                <div className={styles.selCountry}>You&apos;re browsing <span className={styles.it}>{selCountry.name}</span></div>
-                <div className={styles.selMeta}>
-                  {selCountry.cities.length} cities · {selCountry.cities.filter(c => (c.extra?.status ?? 'soon') === 'live').length} live · {selCountry.cities.filter(c => (c.extra?.status ?? 'soon') === 'soon').length} coming soon
-                </div>
-              </div>
-              <span className={styles.selSpacer} />
-              <button className={styles.selClear} onClick={() => { setSelectedCountry(null); resetFilters() }}>
-                ↺ Clear country · show all
-              </button>
-            </div>
-          )}
 
           {/* City grid */}
           {filtered.length > 0 ? (
@@ -513,29 +403,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                   {val:'family',label:'raise a family'},{val:'nightlife',label:'stay out late'},
                   {val:'culture',label:'live in culture'},{val:'beach',label:'be near the beach'},
                   {val:'budget',label:'live cheap'},
-                ]} />.
-              </div>
-              <div className={`${styles.prefsAddendum}${filters.move === 'international' ? ' ' + styles.show : ''}`}>
-                visa via{' '}
-                <PrefWord value={filters.visa} onChange={v => setFilter('visa', v)} options={[
-                  {val:'any',label:'any path'},{val:'visa-free',label:'visa-free'},
-                  {val:'nomad',label:'a digital-nomad visa'},{val:'sponsor',label:'employer sponsorship'},
-                  {val:'investor',label:'an investor visa'},{val:'income',label:'passive income'},
-                ]} />
-                , internet{' '}
-                <PrefWord value={filters.internet} onChange={v => setFilter('internet', v)} options={[
-                  {val:'any',label:'any speed'},{val:'excellent',label:'excellent'},
-                  {val:'good',label:'at least good'},{val:'ok',label:'just OK'},
-                ]} />
-                , English{' '}
-                <PrefWord value={filters.english} onChange={v => setFilter('english', v)} options={[
-                  {val:'any',label:'at any level'},{val:'very-high',label:'very widely spoken'},
-                  {val:'high',label:'widely spoken'},{val:'moderate',label:'passable'},
-                ]} />
-                , safety{' '}
-                <PrefWord value={filters.safety} alignRight onChange={v => setFilter('safety', v)} options={[
-                  {val:'any',label:'any score'},{val:'very-safe',label:'very safe'},
-                  {val:'safe',label:'at least safe'},{val:'moderate',label:'moderate'},
                 ]} />.
               </div>
               <div className={styles.prefsAside}>
