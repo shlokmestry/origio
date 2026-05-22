@@ -42,6 +42,249 @@ const fmt = (n: number | null, fallback = "—") =>
 const score = (n: number | null) =>
   n != null ? n.toFixed(1) : "—";
 
+type Narrative = {
+  scene1: { headline: JSX.Element | string; prose: JSX.Element | string };
+  scene2: { headline: JSX.Element | string; prose: JSX.Element | string };
+  scene3: { prose: JSX.Element | string };
+  scene4: { prose: JSX.Element | string };
+  scene5: { headline: JSX.Element | string };
+  scene7: { headline: JSX.Element | string; prose: JSX.Element | string };
+  scene8: { headline: JSX.Element | string };
+};
+
+function getCityNarrative(
+  city: CityFull,
+  d: import("./page").CityDataRow | null,
+  sym: string
+): Narrative {
+  const name = city.name;
+  const isZeroTax = d?.income_tax_rate_mid === 0;
+  const isHighTax = (d?.income_tax_rate_mid ?? 0) > 0.38;
+  const isMedTax = !isZeroTax && !isHighTax;
+  const isWalkable = (d?.score_walkability ?? 0) >= 7.5;
+  const isCarCity = (d?.score_walkability ?? 10) < 5;
+  const isHot = (d?.climate_summer_avg_c ?? 0) >= 35;
+  const isMild = (d?.climate_summer_avg_c ?? 0) < 25 && (d?.climate_winter_avg_c ?? 0) > 5;
+  const isCold = (d?.climate_winter_avg_c ?? 20) <= 0;
+  const isRainy = (d?.climate_rainy_days_per_year ?? 0) >= 130;
+  const isDry = (d?.climate_rainy_days_per_year ?? 999) <= 50;
+  const isHighNightlife = (d?.score_nightlife ?? 0) >= 8;
+  const isLowNightlife = (d?.score_nightlife ?? 10) <= 5;
+  const isSafe = (d?.score_safety ?? 0) >= 8.5;
+  const isExpat = (d?.score_expat_friendliness ?? 0) >= 8;
+  const nhCount = d?.neighbourhoods?.length ?? 0;
+  const taxPct = d?.income_tax_rate_mid != null
+    ? `${(d.income_tax_rate_mid * 100).toFixed(0)}%`
+    : "—";
+  const takeHome = d?.salary_software_engineer && d?.income_tax_rate_mid != null
+    ? Math.round((d.salary_software_engineer * (1 - d.income_tax_rate_mid)) / 12)
+    : null;
+
+  // SCENE 1 — Wake / Rent
+  const rentCompareProse = isZeroTax
+    ? <>The same square metres in London would cost double. {name} competes on price — and wins.</>
+    : isExpensive(d)
+    ? <>Not cheap. But for what it offers, it holds its own against London, Paris, or New York.</>
+    : <>The same apartment in London runs £3,200+. In New York, $3,800+. {name} is not that.</>;
+
+  const scene1: Narrative["scene1"] = {
+    headline: (
+      <>
+        {isHot ? "Before the heat arrives" : isCold ? "Winter light through the window" : "First light"}
+        . The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.
+      </>
+    ),
+    prose: (
+      <>
+        <p>
+          A one-bedroom in {name}, central:{" "}
+          <span className="pull">{sym}{fmt(d?.cost_rent_city_centre)} / month</span>.
+          Outside, 25 minutes by transit:{" "}
+          <span className="pull">{sym}{fmt(d?.cost_rent_outside)} / month</span>.
+          Utilities: <span className="pull">{sym}{fmt(d?.cost_utilities_monthly)}</span>.
+        </p>
+        <p>{rentCompareProse}</p>
+      </>
+    ),
+  };
+
+  // SCENE 2 — Commute
+  const scene2: Narrative["scene2"] = isCarCity
+    ? {
+        headline: (
+          <>
+            You need a car here. Transit exists.{" "}
+            <span className="it">Nobody uses it</span>.
+          </>
+        ),
+        prose: (
+          <p>
+            Transit pass: <span className="pull">{sym}{fmt(d?.cost_transport_monthly)} / month</span>,
+            but walkability is <span className="pull">{score(d?.score_walkability)} / 10</span> — most errands require a ride.
+            Safety: <span className="pull">{score(d?.score_safety)} / 10</span>.
+            {isSafe ? " One of the safer cities at this price point." : ""}
+          </p>
+        ),
+      }
+    : isWalkable
+    ? {
+        headline: (
+          <>
+            Most of {name} is{" "}
+            <span className="it">walkable</span>. Transit as backup.
+          </>
+        ),
+        prose: (
+          <p>
+            Monthly pass:{" "}
+            <span className="pull">{sym}{fmt(d?.cost_transport_monthly)} / month</span>.
+            Walkability: <span className="pull">{score(d?.score_walkability)} / 10</span> — most errands on foot.
+            Safety: <span className="pull">{score(d?.score_safety)} / 10</span>.
+            {isSafe ? " Low violent crime." : ""}
+          </p>
+        ),
+      }
+    : {
+        headline: (
+          <>
+            Monthly pass:{" "}
+            <span className="ac">{sym}{fmt(d?.cost_transport_monthly)}</span>.
+            The rest <span className="it">on foot</span>.
+          </>
+        ),
+        prose: (
+          <p>
+            Unlimited metro, bus, tram —{" "}
+            <span className="pull">{sym}{fmt(d?.cost_transport_monthly)} / month</span>.
+            Walkability: <span className="pull">{score(d?.score_walkability)} / 10</span>.
+            Safety: <span className="pull">{score(d?.score_safety)} / 10</span>.
+            {isSafe ? " Low violent crime." : ""}
+          </p>
+        ),
+      };
+
+  // SCENE 3 — Work
+  const taxProse = isZeroTax
+    ? <>Zero income tax. What you earn, you keep. Take-home: <span className="pull">{sym}{fmt(takeHome)} / month</span>.</>
+    : isHighTax
+    ? <>
+        After <span className="pull">{taxPct}</span> tax
+        {d?.local_tax_note ? ` plus ${d.local_tax_note}` : ""}, take-home is{" "}
+        <span className="pull">{sym}{fmt(takeHome)} / month</span>. High rate — but public services are priced in.
+      </>
+    : <>
+        After <span className="pull">{taxPct}</span> income tax
+        {d?.local_tax_note ? ` (plus ${d.local_tax_note})` : ""}, take-home is{" "}
+        <span className="pull">{sym}{fmt(takeHome)} / month</span>.
+      </>;
+
+  const scene3: Narrative["scene3"] = {
+    prose: (
+      <>
+        <p>{taxProse}</p>
+        <p>
+          {isZeroTax
+            ? `Cost of living in ${name} is high. The no-tax trade-off is real — run the numbers.`
+            : isMedTax
+            ? `Purchasing power is competitive. Cost of living doesn't cancel the take-home.`
+            : `Strong public infrastructure, healthcare, and transit absorb some of that tax burden.`}
+        </p>
+        {d?.visa_notes && <p>{d.visa_notes}</p>}
+      </>
+    ),
+  };
+
+  // SCENE 4 — Lunch
+  const scene4: Narrative["scene4"] = {
+    prose: (
+      <>
+        <p>
+          Groceries for one, cooking most nights:{" "}
+          <span className="pull">{sym}{fmt(d?.cost_groceries_monthly)} / month</span>.
+          A restaurant meal for two, mid-range:{" "}
+          <span className="pull">{sym}{fmt(d?.cost_eating_out)}</span>.
+        </p>
+        <p>
+          {isHighTax || (d?.score_healthcare ?? 0) >= 8
+            ? `Healthcare: public system, covered for residents. Internet: ${score(d?.score_internet_speed)} / 10.`
+            : `Healthcare: private plans common. Internet speed: ${score(d?.score_internet_speed)} / 10.`}
+          {(d?.score_internet_speed ?? 0) >= 8
+            ? " Fast. Remote work is viable."
+            : (d?.score_internet_speed ?? 0) >= 6
+            ? " Reliable enough."
+            : " Patchy in some areas."}
+        </p>
+      </>
+    ),
+  };
+
+  // SCENE 5 — Neighbourhoods
+  const scene5: Narrative["scene5"] = {
+    headline: nhCount > 1
+      ? (
+          <>
+            {nhCount} quarters. {nhCount}{" "}
+            <span className="it">completely different</span> cities.
+          </>
+        )
+      : <>The neighbourhoods of {name}.</>,
+  };
+
+  // SCENE 7 — Evening
+  const scene7: Narrative["scene7"] = isHighNightlife
+    ? {
+        headline: (
+          <>{name} <span className="it">does not sleep early</span>. Dinner starts late.</>
+        ),
+        prose: (
+          <p>
+            Nightlife score: <span className="pull">{score(d?.score_nightlife)} / 10</span> — among the highest.
+            Coworking: <span className="pull">{sym}{fmt(d?.cost_coworking_monthly)} / month</span>.
+            Gym: <span className="pull">{sym}{fmt(d?.cost_gym_monthly)} / month</span>.
+          </p>
+        ),
+      }
+    : isLowNightlife
+    ? {
+        headline: (
+          <>Quiet by 22:00. {name} <span className="it">earns its mornings</span>.</>
+        ),
+        prose: (
+          <p>
+            Nightlife is not the draw here ({score(d?.score_nightlife)} / 10).
+            Coworking: <span className="pull">{sym}{fmt(d?.cost_coworking_monthly)} / month</span>.
+            Gym: <span className="pull">{sym}{fmt(d?.cost_gym_monthly)} / month</span>.
+          </p>
+        ),
+      }
+    : {
+        headline: (
+          <>Dinner late. A bar, <span className="it">if the night insists</span>.</>
+        ),
+        prose: (
+          <p>
+            Coworking desk: <span className="pull">{sym}{fmt(d?.cost_coworking_monthly)} / month</span>.
+            Gym membership: <span className="pull">{sym}{fmt(d?.cost_gym_monthly)} / month</span>.
+          </p>
+        ),
+      };
+
+  // SCENE 8 — Visa
+  const scene8: Narrative["scene8"] = {
+    headline: isZeroTax
+      ? <>{name} wants you. <span className="it">The paperwork reflects it.</span></>
+      : isHighTax
+      ? <>The visa is straightforward. <span className="it">The tax filing, less so.</span></>
+      : <>The paperwork is <span className="it">annoying but manageable</span>.</>,
+  };
+
+  return { scene1, scene2, scene3, scene4, scene5, scene7, scene8 };
+}
+
+function isExpensive(d: import("./page").CityDataRow | null): boolean {
+  return (d?.cost_rent_city_centre ?? 0) >= 2500;
+}
+
 export default function CityPageClient({ city }: Props) {
   const [currentMode, setCurrentMode] = useState("night");
   const d = city.city_data?.[0] ?? null;
@@ -83,6 +326,8 @@ export default function CityPageClient({ city }: Props) {
   const takeHome = d?.salary_software_engineer && d?.income_tax_rate_mid
     ? Math.round((d.salary_software_engineer * (1 - d.income_tax_rate_mid)) / 12)
     : null;
+
+  const nav = getCityNarrative(city, d, sym);
 
   return (
     <div className="city-page">
@@ -406,26 +651,8 @@ export default function CityPageClient({ city }: Props) {
           </div>
           <div className="scene-story">
             <p className="scene-meta">Scene 01 · Morning · First Light</p>
-            <h2 className="scene-head">
-              She wakes. The apartment costs{" "}
-              <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span>
-              {" "}a month.
-            </h2>
-            <div className="scene-prose">
-              <p>
-                A one-bedroom in {city.name}, close to the centre:{" "}
-                <span className="pull">{sym}{fmt(d?.cost_rent_city_centre)} / month</span>.
-                The same apartment in New York would run{" "}
-                <span className="pull">$4,150</span>. In Notting Hill,{" "}
-                <span className="pull">£3,800</span>. In Marvila,{" "}
-                <span className="pull">€950</span>.
-              </p>
-              <p>
-                Outside the centre — twenty-five minutes on transit:{" "}
-                <span className="pull">{sym}{fmt(d?.cost_rent_outside)} / month</span>.
-                Utilities on top of that: <span className="pull">{sym}{fmt(d?.cost_utilities_monthly)}</span>.
-              </p>
-            </div>
+            <h2 className="scene-head">{nav.scene1.headline}</h2>
+            <div className="scene-prose">{nav.scene1.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -457,18 +684,8 @@ export default function CityPageClient({ city }: Props) {
           </div>
           <div className="scene-story">
             <p className="scene-meta">Scene 02 · Transit · On Foot</p>
-            <h2 className="scene-head">
-              Monthly pass: <span className="ac">{sym}{fmt(d?.cost_transport_monthly)}</span>.
-              The rest <span className="it">on foot</span>.
-            </h2>
-            <div className="scene-prose">
-              <p>
-                Unlimited metro, bus, tram — <span className="pull">{sym}{fmt(d?.cost_transport_monthly)} / month</span>.
-                Walkability score: <span className="pull">{score(d?.score_walkability)} / 10</span>.
-                Most errands reachable on foot. Safety:{" "}
-                <span className="pull">{score(d?.score_safety)} / 10</span>.
-              </p>
-            </div>
+            <h2 className="scene-head">{nav.scene2.headline}</h2>
+            <div className="scene-prose">{nav.scene2.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -503,18 +720,7 @@ export default function CityPageClient({ city }: Props) {
               A software engineer earns{" "}
               <span className="ac">{sym}{fmt(d?.salary_software_engineer)}</span> gross.
             </h2>
-            <div className="scene-prose">
-              <p>
-                After {d?.income_tax_rate_mid != null ? `${(d.income_tax_rate_mid * 100).toFixed(0)}%` : "—"} income tax
-                {d?.local_tax_note ? ` (plus ${d.local_tax_note})` : ""}, the take-home is{" "}
-                <span className="pull">{sym}{fmt(takeHome)} / month</span>.
-              </p>
-              <p>
-                Purchasing power here is typically 30–45% higher than Northern Europe or North America
-                because cost of living is lower than the salary gap suggests.
-              </p>
-              {d?.visa_notes && <p>{d.visa_notes}</p>}
-            </div>
+            <div className="scene-prose">{nav.scene3.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -552,18 +758,7 @@ export default function CityPageClient({ city }: Props) {
               Groceries: <span className="ac">{sym}{fmt(d?.cost_groceries_monthly)} / month</span>.
               Eating out <span className="it">when the mood takes</span>.
             </h2>
-            <div className="scene-prose">
-              <p>
-                Groceries for one, cooking most nights:{" "}
-                <span className="pull">{sym}{fmt(d?.cost_groceries_monthly)} / month</span>.
-                A restaurant meal for two, mid-range:{" "}
-                <span className="pull">{sym}{fmt(d?.cost_eating_out)}</span>.
-              </p>
-              <p>
-                Healthcare: public and free for residents.
-                Internet speed score: <span className="pull">{score(d?.score_internet_speed)} / 10</span>.
-              </p>
-            </div>
+            <div className="scene-prose">{nav.scene4.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -596,7 +791,7 @@ export default function CityPageClient({ city }: Props) {
             </div>
             <div className="scene-story">
               <p className="scene-meta">Scene 05 · Neighbourhoods</p>
-              <h2 className="scene-head">Six quarters, six <span className="it">completely different</span> cities.</h2>
+              <h2 className="scene-head">{nav.scene5.headline}</h2>
               <div className="scene-prose" style={{ marginTop: 32 }}>
                 {d.neighbourhoods.map((nh, i) => (
                   <div key={i} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid var(--rule)" }}>
@@ -690,13 +885,8 @@ export default function CityPageClient({ city }: Props) {
           </div>
           <div className="scene-story">
             <p className="scene-meta">Scene 07 · After Hours</p>
-            <h2 className="scene-head">Dinner late. A bar, <span className="it">if the night insists</span>.</h2>
-            <div className="scene-prose">
-              <p>
-                Coworking desk: <span className="pull">{sym}{fmt(d?.cost_coworking_monthly)} / month</span>.
-                Gym membership: <span className="pull">{sym}{fmt(d?.cost_gym_monthly)} / month</span>.
-              </p>
-            </div>
+            <h2 className="scene-head">{nav.scene7.headline}</h2>
+            <div className="scene-prose">{nav.scene7.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -724,9 +914,7 @@ export default function CityPageClient({ city }: Props) {
             </div>
             <div className="scene-story">
               <p className="scene-meta">Scene 08 · Paperwork · The Path</p>
-              <h2 className="scene-head">
-                The paperwork is <span className="it">annoying but manageable</span>.
-              </h2>
+              <h2 className="scene-head">{nav.scene8.headline}</h2>
               <div className="scene-prose">
                 <p>{d.visa_notes}</p>
                 {d.visa_official_url && (
