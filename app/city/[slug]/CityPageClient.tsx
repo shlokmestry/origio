@@ -45,7 +45,7 @@ const score = (n: number | null | undefined) =>
 type Narrative = {
   scene1: { headline: JSX.Element | string; prose: JSX.Element | string };
   scene2: { headline: JSX.Element | string; prose: JSX.Element | string };
-  scene3: { prose: JSX.Element | string };
+  scene3: { headline: JSX.Element | string; prose: JSX.Element | string; profTitle: string };
   scene4: { prose: JSX.Element | string };
   scene5: { headline: JSX.Element | string };
   scene7: { headline: JSX.Element | string; prose: JSX.Element | string };
@@ -81,29 +81,36 @@ function getCityNarrative(
     : null;
 
   // SCENE 1 — Wake / Rent
-  const rentCompareProse = isZeroTax
-    ? <>The same square metres in London would cost double. {name} competes on price — and wins.</>
-    : isExpensive(d)
-    ? <>Not cheap. But for what it offers, it holds its own against London, Paris, or New York.</>
-    : <>The same apartment in London runs £3,200+. In New York, $3,800+. {name} is not that.</>;
+  const cheap = !isExpensive(d);
+
+  type Scene1Copy = { headline: JSX.Element | string; flavour: JSX.Element | string };
+  const scene1Copy: Scene1Copy = (() => {
+    if (isHot && isZeroTax)   return { headline: <>The AC was running all night. Rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>No income tax. Expensive city. The trade-off is real — run the numbers.</> };
+    if (isHot && cheap)       return { headline: <>Thirty-five degrees by noon. The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>Heat you adapt to. Rent you don't have to.</> };
+    if (isHot)                return { headline: <>Up before the heat. The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>Summers are brutal. Winters are why people come.</> };
+    if (isCold && cheap)      return { headline: <>Frost on the window. Rent that makes it worth it: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>Cold half the year. Cheap the whole year. The maths works.</> };
+    if (isCold)               return { headline: <>Grey mornings. The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>The winters are long. The salaries make up for it.</> };
+    if (isRainy && cheap)     return { headline: <>Rain again. Rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month — the consolation prize.</>, flavour: <>Not the sunniest city. Not the most expensive either.</> };
+    if (isRainy)              return { headline: <>Another wet morning. The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>High rain, high salaries. The locals stopped noticing either.</> };
+    if (isDry && isWalkable)  return { headline: <>Clear skies. Walk to work. Rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>Dry, walkable, manageable. The baseline a lot of cities can't hit.</> };
+    if (isMild && cheap)      return { headline: <>Mild morning, cheap rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>The city that quietly makes financial sense. No drama.</> };
+    if (isMild && isExpensive(d)) return { headline: <>Perfect weather. Premium rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>Everyone figured out the climate. The prices followed.</> };
+    if (isHighTax && isExpensive(d)) return { headline: <>Expensive city, high taxes, strong everything else. Rent: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span>.</>, flavour: <>You're paying for infrastructure that works. Most of the time.</> };
+    return { headline: <>The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.</>, flavour: <>One bedroom, central. The outside option is cheaper and twenty-five minutes away.</> };
+  })();
 
   const scene1: Narrative["scene1"] = {
-    headline: (
-      <>
-        {isHot ? "Before the heat arrives" : isCold ? "Winter light through the window" : "First light"}
-        . The apartment: <span className="ac">{sym}{fmt(d?.cost_rent_city_centre)}</span> a month.
-      </>
-    ),
+    headline: scene1Copy.headline,
     prose: (
       <>
         <p>
-          A one-bedroom in {name}, central:{" "}
+          One-bedroom, central {name}:{" "}
           <span className="pull">{sym}{fmt(d?.cost_rent_city_centre)} / month</span>.
-          Outside, 25 minutes by transit:{" "}
+          Outside the centre, 25 min by transit:{" "}
           <span className="pull">{sym}{fmt(d?.cost_rent_outside)} / month</span>.
           Utilities: <span className="pull">{sym}{fmt(d?.cost_utilities_monthly)}</span>.
         </p>
-        <p>{rentCompareProse}</p>
+        <p>{scene1Copy.flavour}</p>
       </>
     ),
   };
@@ -164,21 +171,80 @@ function getCityNarrative(
       };
 
   // SCENE 3 — Work
+  const PROFESSION_MAP: Record<string, { title: string; salaryRatio: number }> = {
+    dubai:         { title: "finance analyst",      salaryRatio: 1.05 },
+    "abu-dhabi":   { title: "finance analyst",      salaryRatio: 1.05 },
+    london:        { title: "product manager",      salaryRatio: 1.10 },
+    berlin:        { title: "software engineer",    salaryRatio: 1.00 },
+    amsterdam:     { title: "software engineer",    salaryRatio: 1.00 },
+    barcelona:     { title: "UX designer",          salaryRatio: 0.80 },
+    madrid:        { title: "UX designer",          salaryRatio: 0.82 },
+    lisbon:        { title: "software engineer",    salaryRatio: 1.00 },
+    porto:         { title: "software engineer",    salaryRatio: 0.95 },
+    paris:         { title: "product manager",      salaryRatio: 1.05 },
+    tokyo:         { title: "UX designer",          salaryRatio: 0.90 },
+    singapore:     { title: "finance analyst",      salaryRatio: 1.08 },
+    "new-york":    { title: "product manager",      salaryRatio: 1.15 },
+    miami:         { title: "product manager",      salaryRatio: 1.05 },
+    toronto:       { title: "software engineer",    salaryRatio: 1.00 },
+    sydney:        { title: "software engineer",    salaryRatio: 1.00 },
+    melbourne:     { title: "software engineer",    salaryRatio: 0.98 },
+    "kuala-lumpur":{ title: "software engineer",    salaryRatio: 1.00 },
+    bangkok:       { title: "digital marketer",     salaryRatio: 0.75 },
+    "chiang-mai":  { title: "freelance developer",  salaryRatio: 0.85 },
+    bali:          { title: "freelance developer",  salaryRatio: 0.80 },
+    medellín:      { title: "remote developer",     salaryRatio: 0.90 },
+    medellin:      { title: "remote developer",     salaryRatio: 0.90 },
+    "mexico-city": { title: "UX designer",          salaryRatio: 0.88 },
+    tallinn:       { title: "software engineer",    salaryRatio: 1.00 },
+    riga:          { title: "software engineer",    salaryRatio: 0.92 },
+    warsaw:        { title: "software engineer",    salaryRatio: 0.95 },
+    prague:        { title: "software engineer",    salaryRatio: 0.95 },
+    budapest:      { title: "software engineer",    salaryRatio: 0.93 },
+    bucharest:     { title: "software engineer",    salaryRatio: 0.90 },
+    sofia:         { title: "software engineer",    salaryRatio: 0.88 },
+    athens:        { title: "software engineer",    salaryRatio: 0.90 },
+    milan:         { title: "fashion designer",     salaryRatio: 0.85 },
+    zurich:        { title: "finance analyst",      salaryRatio: 1.20 },
+    geneva:        { title: "finance analyst",      salaryRatio: 1.20 },
+    vienna:        { title: "product manager",      salaryRatio: 1.02 },
+    munich:        { title: "software engineer",    salaryRatio: 1.00 },
+    stockholm:     { title: "software engineer",    salaryRatio: 1.00 },
+    copenhagen:    { title: "software engineer",    salaryRatio: 1.00 },
+    oslo:          { title: "software engineer",    salaryRatio: 1.00 },
+    helsinki:      { title: "software engineer",    salaryRatio: 1.00 },
+    dublin:        { title: "software engineer",    salaryRatio: 1.00 },
+  };
+  const prof = PROFESSION_MAP[city.slug] ?? { title: "software engineer", salaryRatio: 1.00 };
+  const profSalary = d?.salary_software_engineer
+    ? Math.round(d.salary_software_engineer * prof.salaryRatio)
+    : null;
+  const profTakeHome = profSalary && d?.income_tax_rate_mid != null
+    ? Math.round((profSalary * (1 - d.income_tax_rate_mid)) / 12)
+    : takeHome;
+
   const taxProse = isZeroTax
-    ? <>Zero income tax. What you earn, you keep. Take-home: <span className="pull">{sym}{fmt(takeHome)} / month</span>.</>
+    ? <>Zero income tax. What you earn, you keep. Take-home: <span className="pull">{sym}{fmt(profTakeHome)} / month</span>.</>
     : isHighTax
     ? <>
         After <span className="pull">{taxPct}</span> tax
         {d?.local_tax_note ? ` plus ${d.local_tax_note}` : ""}, take-home is{" "}
-        <span className="pull">{sym}{fmt(takeHome)} / month</span>. High rate — but public services are priced in.
+        <span className="pull">{sym}{fmt(profTakeHome)} / month</span>. High rate — but public services are priced in.
       </>
     : <>
         After <span className="pull">{taxPct}</span> income tax
         {d?.local_tax_note ? ` (plus ${d.local_tax_note})` : ""}, take-home is{" "}
-        <span className="pull">{sym}{fmt(takeHome)} / month</span>.
+        <span className="pull">{sym}{fmt(profTakeHome)} / month</span>.
       </>;
 
   const scene3: Narrative["scene3"] = {
+    profTitle: prof.title,
+    headline: (
+      <>
+        A {prof.title} earns{" "}
+        <span className="ac">{sym}{fmt(profSalary)}</span> gross.
+      </>
+    ),
     prose: (
       <>
         <p>{taxProse}</p>
@@ -716,17 +782,14 @@ export default function CityPageClient({ city }: Props) {
           </div>
           <div className="scene-story">
             <p className="scene-meta">Scene 03 · Salary · Tax</p>
-            <h2 className="scene-head">
-              A software engineer earns{" "}
-              <span className="ac">{sym}{fmt(d?.salary_software_engineer)}</span> gross.
-            </h2>
+            <h2 className="scene-head">{nav.scene3.headline}</h2>
             <div className="scene-prose">{nav.scene3.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
               <div className="marg">
-                <p className="marg-lbl">Software engineer · gross</p>
-                <p className="marg-val">{sym}{fmt(d?.salary_software_engineer)}<span className="unit">/yr</span></p>
+                <p className="marg-lbl" style={{ textTransform: "capitalize" }}>{nav.scene3.profTitle} · gross</p>
+                <p className="marg-val">{sym}{fmt(profSalary)}<span className="unit">/yr</span></p>
               </div>
               <div className="marg">
                 <p className="marg-lbl">Income tax</p>
@@ -738,7 +801,7 @@ export default function CityPageClient({ city }: Props) {
               </div>
               <div className="marg">
                 <p className="marg-lbl">Take-home · monthly</p>
-                <p className="marg-val">{sym}{fmt(takeHome)}<span className="unit">avg</span></p>
+                <p className="marg-val">{sym}{fmt(profTakeHome)}<span className="unit">avg</span></p>
                 <p className="marg-sub">After tax · before rent</p>
               </div>
             </div>
