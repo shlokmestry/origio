@@ -12,7 +12,7 @@ export type NearbyCity = {
   name: string;
   flag_emoji: string;
   tagline: string | null;
-  city_data: Array<{ move_score: number | null; cost_rent_city_centre: number | null }>;
+  city_data: Array<{ move_score: number | null }>;
 };
 
 export type CityFull = {
@@ -90,14 +90,14 @@ async function getCityData(slug: string): Promise<CityFull> {
   if (city.latitude != null && city.longitude != null) {
     const { data: allCities } = await supabase
       .from("cities")
-      .select("slug, name, flag_emoji, tagline, latitude, longitude, city_data(move_score, cost_rent_city_centre)")
+      .select("slug, name, flag_emoji, tagline, latitude, longitude, city_data(move_score)")
       .neq("slug", slug);
 
     if (allCities) {
       const withDist = (allCities as Array<{
         slug: string; name: string; flag_emoji: string; tagline: string | null;
         latitude: number | null; longitude: number | null;
-        city_data: Array<{ move_score: number | null; cost_rent_city_centre: number | null }>;
+        city_data: Array<{ move_score: number | null }>;
       }>)
         .filter(c => c.latitude != null && c.longitude != null)
         .map(c => {
