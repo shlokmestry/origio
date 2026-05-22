@@ -812,6 +812,43 @@ export default function CityPageClient({ city }: Props) {
           .page { padding: 0 16px; }
           .skyrail { left: 16px; right: 16px; }
         }
+
+        @media (max-width: 480px) {
+          /* Climate: 6 cols instead of 12 — each column readable at ~45px */
+          .climate-row { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+          .cc-high { font-size: 12px; }
+          .cc-rain { font-size: 9px; }
+          .cc-mth  { font-size: 8px; }
+
+          /* CTA: stack buttons vertically, full width */
+          .cta-actions { flex-direction: column; }
+          .cta-btn, .cta-btn-ghost { width: 100%; text-align: center; box-sizing: border-box; }
+
+          /* Nearby: remove min-width so cards can be narrower */
+          .nearby-card { min-width: 0; }
+          .nearby-row  { flex-direction: column; }
+
+          /* Freshness: stack on narrow screens */
+          .freshness { flex-wrap: wrap; gap: 6px; }
+
+          /* Dossier grid: 2 columns instead of auto-fill 200px */
+          .df-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+          /* Persona gap tighter */
+          .persona-row { gap: 12px; padding: 14px 0; }
+
+          /* Scene opener padding */
+          .scene[style] { padding-top: 100px !important; }
+
+          /* Scene prose font */
+          .scene-prose { font-size: 14px; }
+
+          /* Touch targets for margin stack */
+          .marg { padding-bottom: 16px; min-height: 44px; }
+
+          /* Scene head smaller minimum on very small screens */
+          .scene-head { font-size: clamp(26px, 7vw, 60px); }
+        }
       `}</style>
 
       {/* NAV */}

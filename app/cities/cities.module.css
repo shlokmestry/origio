@@ -113,7 +113,7 @@
 
 .heroType {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(80px, 12vw, 180px);
+  font-size: clamp(32px, 12vw, 180px);
   line-height: 0.88;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -488,7 +488,7 @@
 
 .ccName {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(48px, 7.6vw, 112px);
+  font-size: clamp(28px, 7.6vw, 112px);
   line-height: 0.9;
   letter-spacing: -0.01em;
   margin: 4px 0;
@@ -1034,4 +1034,23 @@
   .manifestHead, .atlasRow { grid-template-columns: 36px minmax(0,1fr) 90px; }
   .manifestHead span:nth-child(3), .arFlag { display: none; }
   .ccName { font-size: 38px; }
+}
+@media (max-width: 480px) {
+  .pageInner { padding: 12px 14px 60px; }
+  .heroFrame { padding: 8px; margin-bottom: 32px; }
+  .heroType { white-space: normal; word-break: break-word; padding: 60px 16px 14px; }
+  .heroSub { padding: 0 16px 20px; font-size: 17px; }
+  .ledgerPanel { margin: 0 8px 8px; }
+  .introRow { grid-template-columns: 1fr; gap: 0; }
+  .introBlock { padding: 24px 18px; }
+  .cityCard { grid-template-columns: 36px minmax(0,1fr); gap: 16px; padding: 24px 4px; }
+  .ccR { grid-column: 2; border-left: none; border-top: 1px solid var(--c-rule);
+    padding-left: 0; padding-top: 16px; flex-direction: row; flex-wrap: wrap; gap: 14px 20px; }
+  .filterBar { gap: 16px 24px; }
+  .chip { min-height: 44px; display: inline-flex; align-items: center; }
+  .waitlist { grid-template-columns: 1fr; padding: 20px 16px; gap: 24px; }
+  .wlForm input, .wlForm button { font-size: 16px; } /* prevent iOS zoom */
+  .compareCta .ccLink { padding: 32px 20px; }
+  .ccLine { font-size: clamp(28px, 8vw, 56px); }
+  .ccLineIt { margin-left: 16px; }
 }
