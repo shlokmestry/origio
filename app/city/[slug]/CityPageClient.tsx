@@ -36,10 +36,10 @@ const getCurrencySymbol = (currency: string) => {
   return map[currency] ?? currency;
 };
 
-const fmt = (n: number | null, fallback = "—") =>
+const fmt = (n: number | null | undefined, fallback = "—") =>
   n != null ? n.toLocaleString() : fallback;
 
-const score = (n: number | null) =>
+const score = (n: number | null | undefined) =>
   n != null ? n.toFixed(1) : "—";
 
 type Narrative = {
