@@ -7,6 +7,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+export type NearbyCity = {
+  slug: string;
+  name: string;
+  flag_emoji: string;
+  tagline: string | null;
+  city_data: Array<{ move_score: number | null; cost_rent_city_centre: number | null }>;
+};
+
 export type CityFull = {
   id: string;
   slug: string;
@@ -23,7 +31,10 @@ export type CityFull = {
   monument_name: string | null;
   monument_image_url: string | null;
   tagline: string | null;
+  latitude: number | null;
+  longitude: number | null;
   city_data: CityDataRow[];
+  nearby?: NearbyCity[];
 };
 
 export type CityDataRow = {
@@ -73,7 +84,37 @@ async function getCityData(slug: string): Promise<CityFull> {
     throw new Error(`City not found: ${slug}`);
   }
 
-  return data as CityFull;
+  const city = data as CityFull;
+
+  // Fetch nearby cities if we have coordinates
+  if (city.latitude != null && city.longitude != null) {
+    const { data: allCities } = await supabase
+      .from("cities")
+      .select("slug, name, flag_emoji, tagline, latitude, longitude, city_data(move_score, cost_rent_city_centre)")
+      .neq("slug", slug);
+
+    if (allCities) {
+      const withDist = (allCities as Array<{
+        slug: string; name: string; flag_emoji: string; tagline: string | null;
+        latitude: number | null; longitude: number | null;
+        city_data: Array<{ move_score: number | null; cost_rent_city_centre: number | null }>;
+      }>)
+        .filter(c => c.latitude != null && c.longitude != null)
+        .map(c => {
+          const dLat = (c.latitude! - city.latitude!) * (Math.PI / 180);
+          const dLon = (c.longitude! - city.longitude!) * (Math.PI / 180);
+          const a = Math.sin(dLat/2)**2 + Math.cos(city.latitude! * Math.PI/180) * Math.cos(c.latitude! * Math.PI/180) * Math.sin(dLon/2)**2;
+          const km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return { ...c, km };
+        })
+        .sort((a, b) => a.km - b.km)
+        .slice(0, 3);
+
+      city.nearby = withDist;
+    }
+  }
+
+  return city;
 }
 
 interface Props {

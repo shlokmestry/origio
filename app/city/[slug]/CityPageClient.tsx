@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { CityFull } from "./page";
+import type { CityFull, CityDataRow } from "./page";
 
 interface Props {
   city: CityFull;
@@ -64,6 +64,74 @@ const fmt = (n: number | null | undefined, fallback = "—") =>
 
 const score = (n: number | null | undefined) =>
   n != null ? n.toFixed(1) : "—";
+
+type Persona = { fit: boolean; label: string; reason: string };
+
+function getCityPersonas(city: CityFull, d: CityDataRow | null): Persona[] {
+  const rent = d?.cost_rent_city_centre ?? 0;
+  const tax = d?.income_tax_rate_mid ?? 0;
+  const safety = d?.score_safety ?? 0;
+  const expat = d?.score_expat_friendliness ?? 0;
+  const walkability = d?.score_walkability ?? 0;
+  const internet = d?.score_internet_speed ?? 0;
+  const nightlife = d?.score_nightlife ?? 0;
+  const healthcare = d?.score_healthcare ?? 0;
+  const isZeroTax = tax === 0;
+  const isWarm = (d?.climate_summer_avg_c ?? 0) >= 25 && (d?.climate_winter_avg_c ?? 15) >= 10;
+  const isCheap = rent < 1200;
+  const isMid = rent >= 1200 && rent < 2200;
+
+  const personas: Persona[] = [
+    {
+      label: "Remote worker on €50–80k",
+      fit: internet >= 7 && expat >= 7 && (isCheap || isMid) && !isZeroTax,
+      reason: isCheap
+        ? `Low rent + solid internet (${d?.score_internet_speed?.toFixed(1)}/10). Disposable income is real here.`
+        : isMid
+        ? `Mid-range rent, good internet (${d?.score_internet_speed?.toFixed(1)}/10). Works if your salary travels.`
+        : `Internet is strong but costs eat into remote salaries at this rent level.`,
+    },
+    {
+      label: "Finance / high-earner (€120k+)",
+      fit: isZeroTax || (tax < 0.25 && expat >= 7),
+      reason: isZeroTax
+        ? `Zero income tax. At €120k gross that's €30–40k more in pocket versus a European capital.`
+        : tax < 0.25
+        ? `Low tax rate (${(tax * 100).toFixed(0)}%) + strong expat infrastructure. High earners do well here.`
+        : `Tax rate of ${(tax * 100).toFixed(0)}% erodes the salary premium. Better options exist for high earners.`,
+    },
+    {
+      label: "Family relocation",
+      fit: safety >= 8 && healthcare >= 7 && walkability >= 6,
+      reason: safety >= 8 && healthcare >= 7
+        ? `Safety ${d?.score_safety?.toFixed(1)}/10, healthcare ${d?.score_healthcare?.toFixed(1)}/10. Strong foundations for a family move.`
+        : safety >= 8
+        ? `Safe city (${d?.score_safety?.toFixed(1)}/10) but healthcare is patchy (${d?.score_healthcare?.toFixed(1)}/10) — private cover needed.`
+        : `Safety score ${d?.score_safety?.toFixed(1)}/10 is a concern. Not the first choice for families.`,
+    },
+    {
+      label: "Retiree / lifestyle mover",
+      fit: isWarm && isCheap && safety >= 7,
+      reason: isWarm && isCheap
+        ? `Warm winters, cheap rent, safe enough. The classic retirement arbitrage move.`
+        : isWarm && !isCheap
+        ? `Good climate but rent at ${city.currency} ${rent?.toLocaleString()}/mo eats into fixed income.`
+        : `Climate or cost makes this a harder sell for lifestyle movers without a salary.`,
+    },
+    {
+      label: "Party / nightlife seeker",
+      fit: nightlife >= 8,
+      reason: nightlife >= 8
+        ? `Nightlife ${d?.score_nightlife?.toFixed(1)}/10. ${city.name} earns its reputation after dark.`
+        : nightlife >= 6
+        ? `Decent nightlife (${d?.score_nightlife?.toFixed(1)}/10) but not the headline reason to move here.`
+        : `Nightlife is not the draw (${d?.score_nightlife?.toFixed(1)}/10). Come for other reasons.`,
+    },
+  ];
+
+  // Sort: good fits first
+  return personas.sort((a, b) => (b.fit ? 1 : 0) - (a.fit ? 1 : 0));
+}
 
 type Narrative = {
   scene1: { headline: JSX.Element | string; prose: JSX.Element | string };
@@ -434,6 +502,18 @@ export default function CityPageClient({ city }: Props) {
     : null;
 
   const nav = getCityNarrative(city, d, sym);
+  const personas = getCityPersonas(city, d);
+
+  const freshnessStatus = (() => {
+    if (!d?.last_verified) return null;
+    const monthsAgo = (Date.now() - new Date(d.last_verified).getTime()) / (1000 * 60 * 60 * 24 * 30);
+    if (monthsAgo < 4)  return { cls: "fresh", label: "Data verified recently" };
+    if (monthsAgo < 10) return { cls: "stale", label: "Data may be slightly dated" };
+    return { cls: "old", label: "Data overdue for verification" };
+  })();
+  const verifiedLabel = d?.last_verified
+    ? new Date(d.last_verified).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+    : null;
   const isSouthern = city.continent === "Oceania" || (city.slug === "cape-town") || (city.slug === "buenos-aires") || (city.slug === "sao-paulo");
   const climateData = buildClimateData(d?.climate_summer_avg_c, d?.climate_winter_avg_c, d?.climate_rainy_days_per_year, isSouthern);
   // Hottest 3 months to highlight (index of peak temp month)
@@ -633,6 +713,39 @@ export default function CityPageClient({ city }: Props) {
         .cc-high { font-family: 'DM Serif Display', Georgia, serif; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
         .cc-rain { font-size: 10px; font-weight: 700; color: var(--dim); }
         .cc-summer .cc-high { color: var(--accent); }
+
+        /* PERSONAS */
+        .personas { padding: 100px 0 0; border-top: 1px solid var(--rule); }
+        .personas-head { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 32px; }
+        .persona-list { display: grid; gap: 2px; max-width: 760px; }
+        .persona-row { display: grid; grid-template-columns: 16px 1fr; gap: 16px; align-items: start; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+        .persona-row:last-child { border-bottom: none; }
+        .persona-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+        .persona-dot.fit  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+        .persona-dot.miss { background: var(--dim); }
+        .persona-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+        .persona-label.miss { color: var(--dim); }
+        .persona-reason { font-size: 13px; color: var(--dim); line-height: 1.6; }
+
+        /* FRESHNESS */
+        .freshness { margin-top: 60px; display: flex; align-items: center; gap: 10px; }
+        .freshness-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .freshness-dot.fresh  { background: #4ade80; box-shadow: 0 0 6px #4ade8066; }
+        .freshness-dot.stale  { background: #facc15; box-shadow: 0 0 6px #facc1566; }
+        .freshness-dot.old    { background: #f87171; box-shadow: 0 0 6px #f8717166; }
+        .freshness-text { font-size: 12px; color: var(--dim); letter-spacing: 0.04em; }
+        .freshness-text strong { color: var(--ink); }
+
+        /* NEARBY */
+        .nearby { padding: 80px 0 0; }
+        .nearby-head { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 24px; }
+        .nearby-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .nearby-card { text-decoration: none; display: block; padding: 20px 24px; border: 1px solid var(--rule); min-width: 180px; flex: 1; transition: border-color 0.2s; }
+        .nearby-card:hover { border-color: var(--accent); }
+        .nearby-flag { font-size: 20px; margin-bottom: 10px; display: block; }
+        .nearby-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; color: var(--ink); display: block; margin-bottom: 4px; }
+        .nearby-tagline { font-size: 12px; color: var(--dim); display: block; }
+        .nearby-score { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--accent); margin-top: 10px; display: block; }
 
         /* DOSSIER */
         .dossier { padding: 160px 0 80px; border-top: 1px solid var(--rule); }
@@ -1047,6 +1160,54 @@ export default function CityPageClient({ city }: Props) {
                   <p className="marg-sub">Public for residents</p>
                 </div>
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* PERSONAS */}
+        <section className="personas">
+          <p className="personas-head">→ Who this city is for</p>
+          <div className="persona-list">
+            {personas.map((p) => (
+              <div key={p.label} className="persona-row">
+                <span className={`persona-dot ${p.fit ? "fit" : "miss"}`} />
+                <div>
+                  <p className={`persona-label${p.fit ? "" : " miss"}`}>{p.label}</p>
+                  <p className="persona-reason">{p.reason}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* FRESHNESS */}
+          {freshnessStatus && verifiedLabel && (
+            <div className="freshness">
+              <span className={`freshness-dot ${freshnessStatus.cls}`} />
+              <span className="freshness-text">
+                <strong>{freshnessStatus.label}</strong>
+                {" — "}last verified <strong>{verifiedLabel}</strong>
+              </span>
+            </div>
+          )}
+        </section>
+
+        {/* NEARBY CITIES */}
+        {city.nearby && city.nearby.length > 0 && (
+          <section className="nearby">
+            <p className="nearby-head">→ Nearby cities</p>
+            <div className="nearby-row">
+              {city.nearby.map((n) => (
+                <Link key={n.slug} href={`/city/${n.slug}`} className="nearby-card">
+                  <span className="nearby-flag">{n.flag_emoji}</span>
+                  <span className="nearby-name">{n.name}</span>
+                  {n.tagline && <span className="nearby-tagline">{n.tagline}</span>}
+                  {n.city_data?.[0]?.move_score != null && (
+                    <span className="nearby-score">
+                      {n.city_data[0].move_score.toFixed(1)} / 10 move score
+                    </span>
+                  )}
+                </Link>
+              ))}
             </div>
           </section>
         )}
