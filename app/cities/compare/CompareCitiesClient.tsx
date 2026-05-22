@@ -9,42 +9,28 @@ import Footer from '@/components/Footer'
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
-type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'intnet' | 'health'
+export type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'cowork' | 'transport'
 
-interface CityData {
+export interface CityData {
   slug: string
   code: string
   name: string
   country: string
   flag: string
+  currency: string
   costs: Record<CostKey, number>
 }
-
-const CITIES: CityData[] = [
-  { slug:'lisbon',    code:'LIS', name:'Lisbon',    country:'Portugal',       flag:'🇵🇹', costs:{rent:1200,groc:280,dine:180,util:85, gym:45, intnet:35, health:40} },
-  { slug:'london',    code:'LHR', name:'London',    country:'United Kingdom', flag:'🇬🇧', costs:{rent:2750,groc:400,dine:360,util:180,gym:65, intnet:50, health:80} },
-  { slug:'dublin',    code:'DUB', name:'Dublin',    country:'Ireland',        flag:'🇮🇪', costs:{rent:2400,groc:350,dine:320,util:160,gym:60, intnet:45, health:60} },
-  { slug:'amsterdam', code:'AMS', name:'Amsterdam', country:'Netherlands',    flag:'🇳🇱', costs:{rent:2100,groc:320,dine:380,util:140,gym:50, intnet:45, health:70} },
-  { slug:'berlin',    code:'BER', name:'Berlin',    country:'Germany',        flag:'🇩🇪', costs:{rent:1450,groc:280,dine:200,util:110,gym:30, intnet:35, health:45} },
-  { slug:'barcelona', code:'BCN', name:'Barcelona', country:'Spain',          flag:'🇪🇸', costs:{rent:1550,groc:300,dine:220,util:120,gym:40, intnet:38, health:50} },
-  { slug:'new-york',  code:'JFK', name:'New York',  country:'United States',  flag:'🇺🇸', costs:{rent:3550,groc:500,dine:480,util:220,gym:90, intnet:60, health:150} },
-  { slug:'toronto',   code:'YYZ', name:'Toronto',   country:'Canada',         flag:'🇨🇦', costs:{rent:1750,groc:340,dine:280,util:150,gym:55, intnet:50, health:0} },
-  { slug:'singapore', code:'SIN', name:'Singapore', country:'Singapore',      flag:'🇸🇬', costs:{rent:2050,groc:380,dine:200,util:180,gym:90, intnet:50, health:80} },
-  { slug:'tokyo',     code:'HND', name:'Tokyo',     country:'Japan',          flag:'🇯🇵', costs:{rent:1100,groc:320,dine:180,util:130,gym:70, intnet:40, health:30} },
-  { slug:'sydney',    code:'SYD', name:'Sydney',    country:'Australia',      flag:'🇦🇺', costs:{rent:1850,groc:380,dine:320,util:170,gym:75, intnet:55, health:40} },
-  { slug:'dubai',     code:'DXB', name:'Dubai',     country:'UAE',            flag:'🇦🇪', costs:{rent:2600,groc:400,dine:280,util:200,gym:80, intnet:70, health:60} },
-]
 
 const LEDGER_MAX = 4
 
 const COST_ROWS: { key: CostKey; label: string; hint: string; color: string }[] = [
-  { key:'rent',   label:'Rent',      hint:'1BR centre',    color:'#a8651e' },
-  { key:'groc',   label:'Groceries', hint:'pantry+market', color:'#5f6d2d' },
-  { key:'dine',   label:'Dining',    hint:'~12 meals',     color:'#1f5a4d' },
-  { key:'util',   label:'Utilities', hint:'power+heat',    color:'#3b485c' },
-  { key:'gym',    label:'Gym',       hint:'monthly',       color:'#6f3e6b' },
-  { key:'intnet', label:'Internet',  hint:'+ co-work',     color:'#a04c2a' },
-  { key:'health', label:'Health',    hint:'out-of-pocket', color:'#b03c4e' },
+  { key:'rent',      label:'Rent',      hint:'1BR centre',  color:'#a8651e' },
+  { key:'groc',      label:'Groceries', hint:'per month',   color:'#5f6d2d' },
+  { key:'dine',      label:'Dining',    hint:'eating out',  color:'#1f5a4d' },
+  { key:'util',      label:'Utilities', hint:'power+water', color:'#3b485c' },
+  { key:'gym',       label:'Gym',       hint:'monthly',     color:'#6f3e6b' },
+  { key:'cowork',    label:'Coworking', hint:'hot desk',    color:'#a04c2a' },
+  { key:'transport', label:'Transit',   hint:'monthly pass',color:'#b03c4e' },
 ]
 
 type CurrencyKey = 'eur' | 'usd' | 'gbp' | 'jpy'
@@ -71,16 +57,24 @@ function niceMax(v: number): number {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function CompareCitiesClient() {
+interface Props { allCities: CityData[] }
+
+export default function CompareCitiesClient({ allCities }: Props) {
   const searchParams = useSearchParams()
+
+  const defaultSlugs = useMemo(() => {
+    const live = allCities.map(c => c.slug)
+    return ['lisbon', 'berlin', 'london'].filter(s => live.includes(s)).slice(0, 3)
+      .concat(live.slice(0, 3)).filter((s, i, a) => a.indexOf(s) === i).slice(0, 3)
+  }, [allCities])
 
   const [selected, setSelected] = useState<string[]>(() => {
     const fromUrl = searchParams.get('cities')
     if (fromUrl) {
-      const slugs = fromUrl.split(',').filter(s => CITIES.some(c => c.slug === s))
+      const slugs = fromUrl.split(',').filter(s => allCities.some(c => c.slug === s))
       if (slugs.length >= 2) return slugs.slice(0, LEDGER_MAX)
     }
-    return ['lisbon', 'berlin', 'london']
+    return defaultSlugs
   })
 
   const [currency, setCurrency] = useState<CurrencyKey>('eur')
@@ -90,8 +84,8 @@ export default function CompareCitiesClient() {
   // ── Derived data ──────────────────────────────────────────────────────────
 
   const picks = useMemo(
-    () => selected.map(s => CITIES.find(c => c.slug === s)).filter(Boolean) as CityData[],
-    [selected]
+    () => selected.map(s => allCities.find(c => c.slug === s)).filter(Boolean) as CityData[],
+    [selected, allCities]
   )
 
   const totals = useMemo(
@@ -167,10 +161,10 @@ export default function CompareCitiesClient() {
   }, [])
 
   const reset = useCallback(() => {
-    setSelected(['lisbon', 'berlin', 'london'])
+    setSelected(defaultSlugs)
     setCurrency('eur')
     setIsolated(null)
-  }, [])
+  }, [defaultSlugs])
 
   const copyTable = useCallback(() => {
     if (picks.length < 2) return
@@ -387,7 +381,7 @@ export default function CompareCitiesClient() {
             <span className={styles.pickLbl}>
               <span className={styles.pickLblArr}>→</span> Pick cities
             </span>
-            {CITIES.map(c => {
+            {allCities.map(c => {
               const isOn = selected.includes(c.slug)
               const atMax = selected.length >= LEDGER_MAX && !isOn
               const minReached = selected.length <= 2 && isOn
