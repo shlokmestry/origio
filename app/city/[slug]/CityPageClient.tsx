@@ -46,7 +46,7 @@ function buildClimateData(
     return {
       month: cell.month,
       high: cell.high,
-      rain: Math.round((cell.rain / totalRawRain) * totalRain),
+      rain: totalRawRain > 0 ? Math.round((cell.rain / totalRawRain) * totalRain) : 0,
     };
   });
 }
@@ -502,21 +502,26 @@ export default function CityPageClient({ city }: Props) {
     ? Math.round((d.salary_software_engineer * (1 - d.income_tax_rate_mid)) / 12)
     : null;
 
-  const nav = getCityNarrative(city, d, sym);
-  const personas = getCityPersonas(city, d);
+  const nav = useMemo(() => getCityNarrative(city, d, sym), [city, d, sym]);
+  const personas = useMemo(() => getCityPersonas(city, d), [city, d]);
 
-  const freshnessStatus = (() => {
+  const freshnessStatus = useMemo(() => {
     if (!d?.last_verified) return null;
-    const monthsAgo = (Date.now() - new Date(d.last_verified).getTime()) / (1000 * 60 * 60 * 24 * 30);
+    const verified = new Date(d.last_verified);
+    if (isNaN(verified.getTime())) return null;
+    const monthsAgo = (Date.now() - verified.getTime()) / (1000 * 60 * 60 * 24 * 30);
     if (monthsAgo < 4)  return { cls: "fresh", label: "Data verified recently" };
     if (monthsAgo < 10) return { cls: "stale", label: "Data may be slightly dated" };
     return { cls: "old", label: "Data overdue for verification" };
-  })();
+  }, [d?.last_verified]);
   const verifiedLabel = d?.last_verified
     ? new Date(d.last_verified).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
-  const isSouthern = city.continent === "Oceania" || (city.slug === "cape-town") || (city.slug === "buenos-aires") || (city.slug === "sao-paulo");
-  const climateData = buildClimateData(d?.climate_summer_avg_c, d?.climate_winter_avg_c, d?.climate_rainy_days_per_year, isSouthern);
+  const isSouthern = (city.latitude != null && city.latitude < 0) || city.continent === "Oceania";
+  const climateData = useMemo(
+    () => buildClimateData(d?.climate_summer_avg_c, d?.climate_winter_avg_c, d?.climate_rainy_days_per_year, isSouthern),
+    [d?.climate_summer_avg_c, d?.climate_winter_avg_c, d?.climate_rainy_days_per_year, isSouthern]
+  );
   // Hottest 3 months to highlight (index of peak temp month)
   const peakMonth = isSouthern ? 0 : 6;
   const summerMonths = new Set([peakMonth, (peakMonth + 1) % 12, (peakMonth + 11) % 12]);
@@ -850,7 +855,7 @@ export default function CityPageClient({ city }: Props) {
             <p className="scene-meta">Origio Dispatch · Public</p>
             <h1 className="scene-head">{city.name}.</h1>
             <p style={{ fontSize: 16, color: "var(--dim)", marginBottom: 20 }}>
-              {city.flag_emoji} {city.country_name}
+              <span aria-label={`${city.country_name} flag`}>{city.flag_emoji}</span> {city.country_name}
             </p>
             <p style={{ fontSize: 16, color: "var(--dim)", lineHeight: 1.7, fontWeight: 300 }}>
               A 24-hour field dispatch — what {city.name} costs, what it pays, and what it
@@ -1032,7 +1037,7 @@ export default function CityPageClient({ city }: Props) {
                     </p>
                     <p style={{ fontSize: 14, color: "var(--dim)", marginBottom: 8 }}>{nh.vibe}</p>
                     <p style={{ fontSize: 14, color: "var(--dim)" }}>
-                      1BR rent: <strong style={{ color: "var(--ink)" }}>{sym}{nh.avgRent}</strong>
+                      1BR rent: <strong style={{ color: "var(--ink)" }}>{sym}{nh.avgRent != null ? nh.avgRent.toLocaleString() : "—"}</strong>
                       {" · "}Good for: {nh.goodFor.join(", ")}
                     </p>
                   </div>
@@ -1181,7 +1186,7 @@ export default function CityPageClient({ city }: Props) {
           <div className="persona-list">
             {personas.map((p) => (
               <div key={p.label} className="persona-row">
-                <span className={`persona-dot ${p.fit ? "fit" : "miss"}`} />
+                <span className={`persona-dot ${p.fit ? "fit" : "miss"}`} role="img" aria-label={p.fit ? "Good fit" : "Poor fit"} />
                 <div>
                   <p className={`persona-label${p.fit ? "" : " miss"}`}>{p.label}</p>
                   <p className="persona-reason">{p.reason}</p>
@@ -1209,14 +1214,10 @@ export default function CityPageClient({ city }: Props) {
             <div className="nearby-row">
               {city.nearby.map((n) => (
                 <Link key={n.slug} href={`/city/${n.slug}`} className="nearby-card">
-                  <span className="nearby-flag">{n.flag_emoji}</span>
+                  <span className="nearby-flag" aria-label={`${n.name} flag`}>{n.flag_emoji}</span>
                   <span className="nearby-name">{n.name}</span>
                   {n.tagline && <span className="nearby-tagline">{n.tagline}</span>}
-                  {n.city_data?.[0]?.move_score != null && (
-                    <span className="nearby-score">
-                      {n.city_data[0].move_score.toFixed(1)} / 10 move score
-                    </span>
-                  )}
+                  {(() => { const ms = n.city_data?.[0]?.move_score; return ms != null ? <span className="nearby-score">{ms.toFixed(1)} / 10 move score</span> : null; })()}
                 </Link>
               ))}
             </div>
@@ -1277,7 +1278,7 @@ export default function CityPageClient({ city }: Props) {
           <p className="cta-label">→ What next</p>
           <div className="cta-actions">
             <Link
-              href={`/cities/compare?cities=${city.slug}`}
+              href={`/cities/compare?cities=${city.slug},${city.slug === "berlin" ? "lisbon" : "berlin"}`}
               className="cta-btn"
             >
               Compare {city.name} to another city →

@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState, useCallback, useMemo } from 'react'
+import { Fragment, useState, useCallback, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './compare.module.css'
@@ -14,11 +14,12 @@ export type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'cowork' | 'tr
 export interface CityData {
   slug: string
   code: string
+  // costs are in EUR; null = no data for that line item
   name: string
   country: string
   flag: string
   currency: string
-  costs: Record<CostKey, number>
+  costs: Record<CostKey, number | null>
 }
 
 const LEDGER_MAX = 4
@@ -77,9 +78,26 @@ export default function CompareCitiesClient({ allCities }: Props) {
     return defaultSlugs
   })
 
-  const [currency, setCurrency] = useState<CurrencyKey>('eur')
-  const [isolated, setIsolated] = useState<CostKey | null>(null)
+  const [currency, setCurrency] = useState<CurrencyKey>(() => {
+    const c = searchParams.get('currency')
+    return (CURR_CYCLE.includes(c as CurrencyKey) ? c : 'eur') as CurrencyKey
+  })
+  const [isolated, setIsolated] = useState<CostKey | null>(() => {
+    const iso = searchParams.get('iso')
+    return iso && COST_ROWS.some(r => r.key === iso) ? iso as CostKey : null
+  })
   const [copied, setCopied] = useState(false)
+
+  // Sync state → URL
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('cities', selected.join(','))
+    if (currency !== 'eur') url.searchParams.set('currency', currency)
+    else url.searchParams.delete('currency')
+    if (isolated) url.searchParams.set('iso', isolated)
+    else url.searchParams.delete('iso')
+    window.history.replaceState(null, '', url.toString())
+  }, [selected, currency, isolated])
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
@@ -89,7 +107,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
   )
 
   const totals = useMemo(
-    () => picks.map(c => COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0)),
+    () => picks.map(c => COST_ROWS.reduce((s, r) => s + (c.costs[r.key] ?? 0), 0)),
     [picks]
   )
 
@@ -101,7 +119,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
   )
 
   const isoTotals = useMemo(
-    () => picks.map(c => isolated ? c.costs[isolated] : totals[picks.indexOf(c)]),
+    () => picks.map(c => isolated ? (c.costs[isolated] ?? 0) : totals[picks.indexOf(c)]),
     [picks, isolated, totals]
   )
 
@@ -133,7 +151,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     let bigRow = COST_ROWS[0]
     let bigDelta = 0
     COST_ROWS.forEach(r => {
-      const d = dearest.c.costs[r.key] - cheapest.c.costs[r.key]
+      const d = (dearest.c.costs[r.key] ?? 0) - (cheapest.c.costs[r.key] ?? 0)
       if (Math.abs(d) > Math.abs(bigDelta)) { bigDelta = d; bigRow = r }
     })
     return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
@@ -170,9 +188,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
     if (picks.length < 2) return
     const lines: string[] = [['Category', ...picks.map(p => p.name)].join('\t')]
     COST_ROWS.forEach(r => {
-      lines.push([r.label, ...picks.map(p => p.costs[r.key] === 0 ? 'free' : fmt(p.costs[r.key], currency))].join('\t'))
+      lines.push([r.label, ...picks.map(p => p.costs[r.key] == null ? '—' : fmt(p.costs[r.key]!, currency))].join('\t'))
     })
-    const tots = picks.map(c => COST_ROWS.reduce((s, r) => s + c.costs[r.key], 0))
+    const tots = picks.map(c => COST_ROWS.reduce((s, r) => s + (c.costs[r.key] ?? 0), 0))
     lines.push(['TOTAL / MO', ...tots.map(t => fmt(t, currency))].join('\t'))
     navigator.clipboard.writeText(lines.join('\n')).catch(() => {})
     setCopied(true)
@@ -237,10 +255,10 @@ export default function CompareCitiesClient({ allCities }: Props) {
         <div className={styles.rrTrack}>
           <div className={styles.rrBar} style={{ width: `${widthPct.toFixed(2)}%` }}>
             {visibleRows
-              .filter(r => c.costs[r.key] > 0)
+              .filter(r => (c.costs[r.key] ?? 0) > 0)
               .map(r => {
-                const v = c.costs[r.key]
-                const pct = v / total
+                const v = c.costs[r.key] ?? 0
+                const pct = total > 0 ? v / total : 0
                 const showLbl = pct > 0.13 || !!isolated
                 const showVal = pct > 0.18 || !!isolated
                 return (
