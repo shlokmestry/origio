@@ -25,7 +25,11 @@ async function getCities(): Promise<CityListItem[]> {
       tagline,
       city_data (
         move_score,
-        cost_rent_city_centre
+        cost_rent_city_centre,
+        score_safety,
+        score_internet_speed,
+        climate_summer_avg_c,
+        climate_winter_avg_c
       )
     `
     )
@@ -49,7 +53,14 @@ async function getCities(): Promise<CityListItem[]> {
       monumentImageUrl: row.monument_image_url,
       tagline: row.tagline,
       data: cd
-        ? { moveScore: cd.move_score, costRentCityCentre: cd.cost_rent_city_centre }
+        ? {
+            moveScore: cd.move_score,
+            costRentCityCentre: cd.cost_rent_city_centre,
+            scoreSafety: cd.score_safety,
+            scoreInternetSpeed: cd.score_internet_speed,
+            climateSummerAvgC: cd.climate_summer_avg_c,
+            climateWinterAvgC: cd.climate_winter_avg_c,
+          }
         : null,
     } as unknown as CityListItem;
   });
