@@ -461,6 +461,7 @@ function isExpensive(d: import("./page").CityDataRow | null): boolean {
 
 export default function CityPageClient({ city }: Props) {
   const [currentMode, setCurrentMode] = useState("night");
+  const [copied, setCopied] = useState(false);
   const d = city.city_data?.[0] ?? null;
   const sym = getCurrencySymbol(city.currency);
 
@@ -770,10 +771,11 @@ export default function CityPageClient({ city }: Props) {
 
         /* CTA */
         .cta {
-          text-align: center; padding: 100px 0 120px;
+          padding: 80px 0 120px;
           border-top: 1px solid var(--rule);
         }
-        .cta p { font-size: 16px; color: var(--dim); margin-bottom: 28px; font-weight: 300; }
+        .cta-label { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 32px; }
+        .cta-actions { display: flex; gap: 12px; flex-wrap: wrap; }
         .cta-btn {
           display: inline-block; padding: 12px 28px;
           background: var(--accent); color: var(--bg);
@@ -783,6 +785,15 @@ export default function CityPageClient({ city }: Props) {
           transition: all 0.2s;
         }
         .cta-btn:hover { box-shadow: 0 8px 24px rgba(0,255,213,0.25); }
+        .cta-btn-ghost {
+          display: inline-block; padding: 12px 28px;
+          background: transparent; color: var(--ink);
+          font-weight: 700; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+          text-decoration: none; border: 1px solid var(--rule); cursor: pointer;
+          transition: border-color 0.2s, color 0.2s;
+        }
+        .cta-btn-ghost:hover { border-color: var(--ink); }
+        .cta-copied { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; display: flex; align-items: center; }
 
         /* RESPONSIVE */
         @media (max-width: 900px) {
@@ -1263,10 +1274,29 @@ export default function CityPageClient({ city }: Props) {
 
         {/* CTA */}
         <section className="cta">
-          <p>
-            Compare {city.name} to your shortlist, or find where matches your situation best.
-          </p>
-          <a href="/wizard" className="cta-btn">Start the wizard →</a>
+          <p className="cta-label">→ What next</p>
+          <div className="cta-actions">
+            <Link
+              href={`/cities/compare?cities=${city.slug}`}
+              className="cta-btn"
+            >
+              Compare {city.name} to another city →
+            </Link>
+            <Link href="/cities" className="cta-btn-ghost">
+              Browse all cities
+            </Link>
+            <button
+              type="button"
+              className="cta-btn-ghost"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href).catch(() => {});
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1800);
+              }}
+            >
+              {copied ? <span className="cta-copied">✓ Link copied</span> : "Share this dispatch"}
+            </button>
+          </div>
         </section>
 
       </div>
