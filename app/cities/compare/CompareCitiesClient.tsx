@@ -203,7 +203,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
   function renderRaceRow(c: CityData, total: number, rank: number) {
     const isCheap = total === minT && minT !== maxT
     const isDear  = total === maxT && minT !== maxT && picks.length >= 3
-    const isoVal  = isolated ? c.costs[isolated] : total
+    const isoVal  = isolated ? (c.costs[isolated] ?? 0) : total
     const widthPct = (isoVal / scaleMax) * 100
 
     const rowCls = [
