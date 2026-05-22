@@ -498,9 +498,6 @@ export default function CityPageClient({ city }: Props) {
       (d.cost_gym_monthly ?? 0)
     : null;
 
-  const takeHome = d?.salary_software_engineer && d?.income_tax_rate_mid
-    ? Math.round((d.salary_software_engineer * (1 - d.income_tax_rate_mid)) / 12)
-    : null;
 
   const nav = useMemo(() => getCityNarrative(city, d, sym), [city, d, sym]);
   const personas = useMemo(() => getCityPersonas(city, d), [city, d]);

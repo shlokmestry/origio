@@ -88,8 +88,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
   })
   const [copied, setCopied] = useState(false)
 
-  // Sync state → URL
+  // Sync state → URL (client-only — window not available on server)
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const url = new URL(window.location.href)
     url.searchParams.set('cities', selected.join(','))
     if (currency !== 'eur') url.searchParams.set('currency', currency)
@@ -298,7 +299,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
       // Annotation after cheapest: rent gap to dearest
       if (!isolated && rank === 0 && indexed.length >= 2) {
         const dearest = indexed[indexed.length - 1]
-        const rentGap = dearest.c.costs.rent - c.costs.rent
+        const rentGap = (dearest.c.costs.rent ?? 0) - (c.costs.rent ?? 0)
         if (rentGap > 200) {
           els.push(
             <div key="annot-rent" className={styles.annotRow}>
