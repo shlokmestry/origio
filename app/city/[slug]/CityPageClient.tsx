@@ -22,9 +22,19 @@ function buildClimateData(
   winterC: number | null,
   rainyDays: number | null,
   southernHemisphere = false
+): ReturnType<typeof _buildClimateData> | null {
+  if (summerC == null || winterC == null) return null;
+  return _buildClimateData(summerC, winterC, rainyDays, southernHemisphere);
+}
+
+function _buildClimateData(
+  summerC: number,
+  winterC: number,
+  rainyDays: number | null,
+  southernHemisphere = false
 ) {
-  const summer = summerC ?? 25;
-  const winter = winterC ?? 10;
+  const summer = summerC;
+  const winter = winterC;
   const totalRain = rainyDays ?? 100;
   const mid = (summer + winter) / 2;
   const amp = (summer - winter) / 2;
@@ -68,33 +78,40 @@ const score = (n: number | null | undefined) =>
 type Persona = { fit: boolean; label: string; reason: string };
 
 function getCityPersonas(city: CityFull, d: CityDataRow | null): Persona[] {
-  const rent = d?.cost_rent_city_centre ?? 0;
-  const tax = d?.income_tax_rate_mid ?? 0;
-  const safety = d?.score_safety ?? 0;
-  const expat = d?.score_expat_friendliness ?? 0;
-  const walkability = d?.score_walkability ?? 0;
-  const internet = d?.score_internet_speed ?? 0;
-  const nightlife = d?.score_nightlife ?? 0;
-  const healthcare = d?.score_healthcare ?? 0;
+  const rent = d?.cost_rent_city_centre ?? null;
+  const tax = d?.income_tax_rate_mid ?? null;
+  const safety = d?.score_safety ?? null;
+  const expat = d?.score_expat_friendliness ?? null;
+  const internet = d?.score_internet_speed ?? null;
+  const nightlife = d?.score_nightlife ?? null;
+  const healthcare = d?.score_healthcare ?? null;
+  const walkability = d?.score_walkability ?? null;
+  const summerC = d?.climate_summer_avg_c ?? null;
+  const winterC = d?.climate_winter_avg_c ?? null;
+
   const isZeroTax = tax === 0;
-  const isWarm = (d?.climate_summer_avg_c ?? 0) >= 25 && (d?.climate_winter_avg_c ?? 15) >= 10;
-  const isCheap = rent < 1200;
-  const isMid = rent >= 1200 && rent < 2200;
+  const isWarm = summerC != null && winterC != null && summerC >= 25 && winterC >= 10;
+  const isCheap = rent != null && rent < 1200;
+  const isMid = rent != null && rent >= 1200 && rent < 2200;
 
   const personas: Persona[] = [
     {
       label: "Remote worker on €50–80k",
-      fit: internet >= 7 && expat >= 7 && (isCheap || isMid) && !isZeroTax,
-      reason: isCheap
-        ? `Low rent + solid internet (${d?.score_internet_speed?.toFixed(1)}/10). Disposable income is real here.`
+      fit: internet != null && expat != null && internet >= 7 && expat >= 7 && (isCheap || isMid),
+      reason: internet == null || expat == null
+        ? `Internet and expat data not yet available for ${city.name}.`
+        : isCheap
+        ? `Low rent + solid internet (${internet.toFixed(1)}/10). Disposable income is real here.`
         : isMid
-        ? `Mid-range rent, good internet (${d?.score_internet_speed?.toFixed(1)}/10). Works if your salary travels.`
+        ? `Mid-range rent, good internet (${internet.toFixed(1)}/10). Works if your salary travels.`
         : `Internet is strong but costs eat into remote salaries at this rent level.`,
     },
     {
       label: "Finance / high-earner (€120k+)",
-      fit: isZeroTax || (tax < 0.25 && expat >= 7),
-      reason: isZeroTax
+      fit: tax != null && (isZeroTax || (tax < 0.25 && (expat ?? 0) >= 7)),
+      reason: tax == null
+        ? `Tax data not yet available for ${city.name}.`
+        : isZeroTax
         ? `Zero income tax. At €120k gross that's €30–40k more in pocket versus a European capital.`
         : tax < 0.25
         ? `Low tax rate (${(tax * 100).toFixed(0)}%) + strong expat infrastructure. High earners do well here.`
@@ -102,17 +119,21 @@ function getCityPersonas(city: CityFull, d: CityDataRow | null): Persona[] {
     },
     {
       label: "Family relocation",
-      fit: safety >= 8 && healthcare >= 7 && walkability >= 6,
-      reason: safety >= 8 && healthcare >= 7
-        ? `Safety ${d?.score_safety?.toFixed(1)}/10, healthcare ${d?.score_healthcare?.toFixed(1)}/10. Strong foundations for a family move.`
+      fit: safety != null && healthcare != null && walkability != null && safety >= 8 && healthcare >= 7 && walkability >= 6,
+      reason: safety == null
+        ? `Safety data not yet available for ${city.name}.`
+        : safety >= 8 && healthcare != null && healthcare >= 7
+        ? `Safety ${safety.toFixed(1)}/10, healthcare ${healthcare.toFixed(1)}/10. Strong foundations for a family move.`
         : safety >= 8
-        ? `Safe city (${d?.score_safety?.toFixed(1)}/10) but healthcare is patchy (${d?.score_healthcare?.toFixed(1)}/10) — private cover needed.`
-        : `Safety score ${d?.score_safety?.toFixed(1)}/10 is a concern. Not the first choice for families.`,
+        ? `Safe city (${safety.toFixed(1)}/10) but healthcare is patchy${healthcare != null ? ` (${healthcare.toFixed(1)}/10)` : ''} — private cover needed.`
+        : `Safety score ${safety.toFixed(1)}/10 is a concern. Not the first choice for families.`,
     },
     {
       label: "Retiree / lifestyle mover",
-      fit: isWarm && isCheap && safety >= 7,
-      reason: isWarm && isCheap
+      fit: isWarm && isCheap && safety != null && safety >= 7,
+      reason: summerC == null || winterC == null
+        ? `Climate data not yet available for ${city.name}.`
+        : isWarm && isCheap
         ? `Warm winters, cheap rent, safe enough. The classic retirement arbitrage move.`
         : isWarm && !isCheap
         ? `Good climate but rent at ${city.currency} ${rent?.toLocaleString()}/mo eats into fixed income.`
@@ -120,12 +141,14 @@ function getCityPersonas(city: CityFull, d: CityDataRow | null): Persona[] {
     },
     {
       label: "Party / nightlife seeker",
-      fit: nightlife >= 8,
-      reason: nightlife >= 8
-        ? `Nightlife ${d?.score_nightlife?.toFixed(1)}/10. ${city.name} earns its reputation after dark.`
+      fit: nightlife != null && nightlife >= 8,
+      reason: nightlife == null
+        ? `Nightlife data not yet available for ${city.name}.`
+        : nightlife >= 8
+        ? `Nightlife ${nightlife.toFixed(1)}/10. ${city.name} earns its reputation after dark.`
         : nightlife >= 6
-        ? `Decent nightlife (${d?.score_nightlife?.toFixed(1)}/10) but not the headline reason to move here.`
-        : `Nightlife is not the draw (${d?.score_nightlife?.toFixed(1)}/10). Come for other reasons.`,
+        ? `Decent nightlife (${nightlife.toFixed(1)}/10) but not the headline reason to move here.`
+        : `Nightlife is not the draw (${nightlife.toFixed(1)}/10). Come for other reasons.`,
     },
   ];
 
@@ -489,7 +512,14 @@ export default function CityPageClient({ city }: Props) {
     return () => { document.body.className = ""; };
   }, [currentMode]);
 
-  const monthlyTotal = d
+  const monthlyTotalFields = d ? [
+    d.cost_rent_outside,
+    d.cost_utilities_monthly,
+    d.cost_groceries_monthly,
+    d.cost_transport_monthly,
+  ] : [];
+  const missingCostFields = monthlyTotalFields.some(v => v == null);
+  const monthlyTotal = d && !missingCostFields
     ? (d.cost_rent_outside ?? 0) +
       (d.cost_utilities_monthly ?? 0) +
       (d.cost_groceries_monthly ?? 0) +
@@ -1113,21 +1143,29 @@ export default function CityPageClient({ city }: Props) {
             <div className="scene-prose">
               <p>{d?.climate_description}</p>
             </div>
-            <div className="climate-row">
-              {climateData.map((cell, i) => (
-                <div
-                  key={cell.month}
-                  className={`climate-cell${summerMonths.has(i) ? " cc-summer" : ""}`}
-                >
-                  <p className="cc-mth">{cell.month}</p>
-                  <p className="cc-high">{cell.high}°</p>
-                  <p className="cc-rain">{cell.rain}d</p>
+            {climateData ? (
+              <>
+                <div className="climate-row">
+                  {climateData.map((cell, i) => (
+                    <div
+                      key={cell.month}
+                      className={`climate-cell${summerMonths.has(i) ? " cc-summer" : ""}`}
+                    >
+                      <p className="cc-mth">{cell.month}</p>
+                      <p className="cc-high">{cell.high}°</p>
+                      <p className="cc-rain">{cell.rain}d</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <p style={{ fontSize: 13, opacity: 0.6, marginTop: 16 }}>
-              Top: avg daily high °C. Bottom: rainy days that month.
-            </p>
+                <p style={{ fontSize: 13, opacity: 0.6, marginTop: 16 }}>
+                  Top: avg daily high °C. Bottom: rainy days that month.
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: 14, opacity: 0.5, marginTop: 16 }}>
+                Climate data not yet available for {city.name}.
+              </p>
+            )}
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -1278,7 +1316,7 @@ export default function CityPageClient({ city }: Props) {
               { label: "Transit", val: d?.cost_transport_monthly, unit: "/mo" },
               { label: "Coworking", val: d?.cost_coworking_monthly, unit: "/mo" },
               { label: "Gym", val: d?.cost_gym_monthly, unit: "/mo" },
-              { label: "Est. total · single", val: monthlyTotal, unit: "/mo", accent: true },
+              { label: missingCostFields ? "Est. total · incomplete" : "Est. total · single", val: monthlyTotal, unit: "/mo", accent: true },
               { label: "Software engineer", val: d?.salary_software_engineer, unit: "/yr" },
               { label: "Income tax", val: d?.income_tax_rate_mid != null ? `${(d.income_tax_rate_mid * 100).toFixed(0)}%` : null, unit: "", raw: true },
               { label: "Move score", val: d?.move_score, unit: "/10", accent: true },

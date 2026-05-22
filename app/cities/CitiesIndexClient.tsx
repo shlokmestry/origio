@@ -193,6 +193,8 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
     if (filters.budget !== 'any') {
       list = list.filter(c => {
+        // Use the hardcoded EUR-normalised rentEur for budget bucketing
+        // (DB rent is in local currency; conversion happens in CITY_EXTRAS)
         const r = c.extra?.rentEur ?? 0
         if (filters.budget === 'low')  return r < 1500
         if (filters.budget === 'mid')  return r >= 1500 && r <= 2500
@@ -200,7 +202,18 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         return true
       })
     }
-    if (filters.climate !== 'any') list = list.filter(c => c.extra?.climateBand === filters.climate)
+    if (filters.climate !== 'any') {
+      list = list.filter(c => {
+        // Derive climateBand from real DB temperatures if available
+        const summer = c.data?.climateSummerAvgC
+        const winter = c.data?.climateWinterAvgC
+        if (summer != null && winter != null) {
+          const derived: ClimateBand = summer >= 24 ? 'warm' : winter <= 8 ? 'cool' : 'temperate'
+          return derived === filters.climate
+        }
+        return c.extra?.climateBand === filters.climate
+      })
+    }
     if (filters.vibe    !== 'any') list = list.filter(c => (c.extra?.vibes ?? []).includes(filters.vibe as Vibe))
 
     list.sort((a, b) => {
