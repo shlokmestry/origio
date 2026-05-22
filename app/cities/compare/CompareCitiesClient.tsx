@@ -280,7 +280,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Right: total + delta */}
         <div className={styles.rrR}>
           <span className={styles.rrTotal}>
-            {fmt(isolated ? c.costs[isolated] : total, currency)}
+            {fmt(isolated ? (c.costs[isolated] ?? 0) : total, currency)}
           </span>
           <span className={styles.rrDelta}>{deltaEl}</span>
         </div>
