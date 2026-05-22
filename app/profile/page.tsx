@@ -416,6 +416,52 @@ export default function ProfilePage() {
         {/* ── CARDS GRID ── */}
         <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
 
+          {/* Passport Card */}
+          {profile?.passport_slug && (
+            <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+              <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Your Passports
+                </span>
+                <button onClick={openEdit} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>
+              </div>
+              <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Primary */}
+                <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.passport_slug]?.flag}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.passport_slug]?.name}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Primary passport</p>
+                  </div>
+                  {savedPassportCtx && (
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', background: savedPassportCtx.tier === 1 ? 'rgba(0,255,213,0.12)' : 'rgba(255,255,255,0.07)', color: savedPassportCtx.tier === 1 ? '#00ffd5' : 'rgba(255,255,255,0.45)', border: `1px solid ${savedPassportCtx.tier === 1 ? 'rgba(0,255,213,0.25)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 6 }}>
+                      T{getPassportStrength(profile.passport_slug)}
+                    </span>
+                  )}
+                </div>
+                {/* Second passport or add prompt */}
+                {profile.second_passport_slug ? (
+                  <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                    <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.flag}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.name}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Second passport</p>
+                    </div>
+                    {savedPassportCtx?.hasDual && savedPassportCtx.tier < getPassportStrength(profile.passport_slug) && (
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', background: 'rgba(255,200,80,0.1)', color: 'rgba(255,200,80,0.8)', border: '1px solid rgba(255,200,80,0.2)', borderRadius: 6 }}>↑ upgrades</span>
+                    )}
+                  </div>
+                ) : (
+                  <button onClick={openEdit} style={{ width: '100%', padding: '12px 14px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.04em' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)' }}>
+                    + Add second passport
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Country Matches */}
           <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
             {/* Card head */}
