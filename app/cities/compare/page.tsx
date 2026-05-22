@@ -38,9 +38,10 @@ async function getCitiesForCompare(): Promise<CityData[]> {
   return data
     .filter(row => row.city_data?.length > 0)
     .map(row => {
-      const cd = (row.city_data as Record<string, number | null>[])[0]
-      const rate = TO_EUR[row.currency] ?? 1
-      const toEur = (v: number | null) => v != null ? Math.round(v * rate) : 0
+      const cd = (row.city_data as Record<string, number | null>[] | null)?.[0]
+      if (!cd) return null
+      const rate = TO_EUR[row.currency as string] ?? 1
+      const toEur = (v: number | null): number | null => v != null ? Math.round(v * rate) : null
 
       return {
         slug: row.slug as string,
@@ -60,6 +61,7 @@ async function getCitiesForCompare(): Promise<CityData[]> {
         },
       } satisfies CityData
     })
+    .filter((c): c is CityData => c !== null)
 }
 
 export const metadata: Metadata = {
