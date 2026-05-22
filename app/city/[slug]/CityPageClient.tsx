@@ -45,7 +45,7 @@ const score = (n: number | null | undefined) =>
 type Narrative = {
   scene1: { headline: JSX.Element | string; prose: JSX.Element | string };
   scene2: { headline: JSX.Element | string; prose: JSX.Element | string };
-  scene3: { headline: JSX.Element | string; prose: JSX.Element | string; profTitle: string };
+  scene3: { headline: JSX.Element | string; prose: JSX.Element | string; profTitle: string; profSalary: number | null; profTakeHome: number | null };
   scene4: { prose: JSX.Element | string };
   scene5: { headline: JSX.Element | string };
   scene7: { headline: JSX.Element | string; prose: JSX.Element | string };
@@ -209,11 +209,26 @@ function getCityNarrative(
     geneva:        { title: "finance analyst",      salaryRatio: 1.20 },
     vienna:        { title: "product manager",      salaryRatio: 1.02 },
     munich:        { title: "software engineer",    salaryRatio: 1.00 },
+    hamburg:       { title: "software engineer",    salaryRatio: 0.97 },
     stockholm:     { title: "software engineer",    salaryRatio: 1.00 },
     copenhagen:    { title: "software engineer",    salaryRatio: 1.00 },
     oslo:          { title: "software engineer",    salaryRatio: 1.00 },
     helsinki:      { title: "software engineer",    salaryRatio: 1.00 },
     dublin:        { title: "software engineer",    salaryRatio: 1.00 },
+    "san-francisco":{ title: "software engineer",  salaryRatio: 1.20 },
+    austin:        { title: "software engineer",    salaryRatio: 1.05 },
+    vancouver:     { title: "software engineer",    salaryRatio: 0.98 },
+    montreal:      { title: "software engineer",    salaryRatio: 0.95 },
+    funchal:       { title: "remote developer",     salaryRatio: 0.90 },
+    manchester:    { title: "software engineer",    salaryRatio: 0.95 },
+    edinburgh:     { title: "software engineer",    salaryRatio: 0.93 },
+    cork:          { title: "software engineer",    salaryRatio: 0.92 },
+    rotterdam:     { title: "software engineer",    salaryRatio: 0.98 },
+    eindhoven:     { title: "software engineer",    salaryRatio: 0.97 },
+    valencia:      { title: "UX designer",          salaryRatio: 0.78 },
+    osaka:         { title: "UX designer",          salaryRatio: 0.88 },
+    kyoto:         { title: "UX designer",          salaryRatio: 0.85 },
+    brisbane:      { title: "software engineer",    salaryRatio: 0.96 },
   };
   const prof = PROFESSION_MAP[city.slug] ?? { title: "software engineer", salaryRatio: 1.00 };
   const profSalary = d?.salary_software_engineer
@@ -239,6 +254,8 @@ function getCityNarrative(
 
   const scene3: Narrative["scene3"] = {
     profTitle: prof.title,
+    profSalary,
+    profTakeHome,
     headline: (
       <>
         A {prof.title} earns{" "}
@@ -789,7 +806,7 @@ export default function CityPageClient({ city }: Props) {
             <div className="margin-stack">
               <div className="marg">
                 <p className="marg-lbl" style={{ textTransform: "capitalize" }}>{nav.scene3.profTitle} · gross</p>
-                <p className="marg-val">{sym}{fmt(profSalary)}<span className="unit">/yr</span></p>
+                <p className="marg-val">{sym}{fmt(nav.scene3.profSalary)}<span className="unit">/yr</span></p>
               </div>
               <div className="marg">
                 <p className="marg-lbl">Income tax</p>
@@ -801,7 +818,7 @@ export default function CityPageClient({ city }: Props) {
               </div>
               <div className="marg">
                 <p className="marg-lbl">Take-home · monthly</p>
-                <p className="marg-val">{sym}{fmt(profTakeHome)}<span className="unit">avg</span></p>
+                <p className="marg-val">{sym}{fmt(nav.scene3.profTakeHome)}<span className="unit">avg</span></p>
                 <p className="marg-sub">After tax · before rent</p>
               </div>
             </div>

@@ -36,7 +36,23 @@ async function getCities(): Promise<CityListItem[]> {
     return [];
   }
 
-  return (data ?? []) as unknown as CityListItem[];
+  return (data ?? []).map((row: Record<string, unknown>) => {
+    const cd = (row.city_data as Record<string, unknown>[] | null)?.[0] ?? null;
+    return {
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      countryName: row.country_name,
+      flagEmoji: row.flag_emoji,
+      continent: row.continent,
+      currency: row.currency,
+      monumentImageUrl: row.monument_image_url,
+      tagline: row.tagline,
+      data: cd
+        ? { moveScore: cd.move_score, costRentCityCentre: cd.cost_rent_city_centre }
+        : null,
+    } as unknown as CityListItem;
+  });
 }
 
 export const metadata: Metadata = {
