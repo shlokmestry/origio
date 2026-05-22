@@ -13,20 +13,43 @@ const MODES = [
   "golden", "dusk", "twilight", "night",
 ];
 
-const CLIMATE_DATA = [
-  { month: "JAN", high: 15, rain: 11 },
-  { month: "FEB", high: 16, rain: 9 },
-  { month: "MAR", high: 18, rain: 8 },
-  { month: "APR", high: 21, rain: 7 },
-  { month: "MAY", high: 25, rain: 3 },
-  { month: "JUN", high: 29, rain: 2 },
-  { month: "JUL", high: 28, rain: 1 },
-  { month: "AUG", high: 28, rain: 1 },
-  { month: "SEP", high: 26, rain: 3 },
-  { month: "OCT", high: 21, rain: 6 },
-  { month: "NOV", high: 18, rain: 9 },
-  { month: "DEC", high: 16, rain: 11 },
-];
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+// Interpolate monthly climate from city's summer/winter averages.
+// Southern hemisphere (negative lat or Oceania continent) flips the curve.
+function buildClimateData(
+  summerC: number | null,
+  winterC: number | null,
+  rainyDays: number | null,
+  southernHemisphere = false
+) {
+  const summer = summerC ?? 25;
+  const winter = winterC ?? 10;
+  const totalRain = rainyDays ?? 100;
+  const mid = (summer + winter) / 2;
+  const amp = (summer - winter) / 2;
+
+  return MONTHS.map((month, i) => {
+    // Month 6 (Jul) = summer peak in northern hemisphere
+    // Shift by 6 months for southern hemisphere
+    const peakMonth = southernHemisphere ? 0 : 6;
+    const angle = ((i - peakMonth) / 12) * 2 * Math.PI;
+    const high = Math.round(mid + amp * Math.cos(angle));
+
+    // Rain inversely correlated with temperature (Mediterranean/temperate pattern)
+    // Hot months get less rain, cool months get more
+    const rainAngle = ((i - peakMonth) / 12) * 2 * Math.PI;
+    const rawRain = 1 - (Math.cos(rainAngle) * 0.5 + 0.5); // 0..1, peaks in winter
+    return { month, high, rain: rawRain };
+  }).map((cell, _, arr) => {
+    const totalRawRain = arr.reduce((s, c) => s + c.rain, 0);
+    return {
+      month: cell.month,
+      high: cell.high,
+      rain: Math.round((cell.rain / totalRawRain) * totalRain),
+    };
+  });
+}
 
 const getCurrencySymbol = (currency: string) => {
   const map: Record<string, string> = {
@@ -411,6 +434,11 @@ export default function CityPageClient({ city }: Props) {
     : null;
 
   const nav = getCityNarrative(city, d, sym);
+  const isSouthern = city.continent === "Oceania" || (city.slug === "cape-town") || (city.slug === "buenos-aires") || (city.slug === "sao-paulo");
+  const climateData = buildClimateData(d?.climate_summer_avg_c, d?.climate_winter_avg_c, d?.climate_rainy_days_per_year, isSouthern);
+  // Hottest 3 months to highlight (index of peak temp month)
+  const peakMonth = isSouthern ? 0 : 6;
+  const summerMonths = new Set([peakMonth, (peakMonth + 1) % 12, (peakMonth + 11) % 12]);
 
   return (
     <div className="city-page">
@@ -923,10 +951,10 @@ export default function CityPageClient({ city }: Props) {
               <p>{d?.climate_description}</p>
             </div>
             <div className="climate-row">
-              {CLIMATE_DATA.map((cell) => (
+              {climateData.map((cell, i) => (
                 <div
                   key={cell.month}
-                  className={`climate-cell${cell.month === "JUN" || cell.month === "JUL" || cell.month === "AUG" ? " cc-summer" : ""}`}
+                  className={`climate-cell${summerMonths.has(i) ? " cc-summer" : ""}`}
                 >
                   <p className="cc-mth">{cell.month}</p>
                   <p className="cc-high">{cell.high}°</p>
