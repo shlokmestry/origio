@@ -290,6 +290,7 @@ export default function WizardPage() {
   };
 
   const canProceed = () => {
+    if (step === 0) return hasDualPassport !== null;
     if (step === 1) return !!answers.passport;
     if (step === 2) return !!answers.moveReason;
     if (step === 3) return !!answers.jobRole;
