@@ -166,7 +166,7 @@ export default function ProPage() {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else { setError('Something went wrong. Please try again.'); setLoading(false) }
+      else { setError(data.error ?? 'Something went wrong. Please try again.'); setLoading(false) }
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)
@@ -268,7 +268,7 @@ export default function ProPage() {
                     fontSize: 'clamp(56px, 8vw, 80px)',
                     lineHeight: 1, letterSpacing: '-0.03em',
                   }}>
-                    €19<span style={{ fontSize: '0.5em', color: '#888880' }}>.99</span>
+                    €4<span style={{ fontSize: '0.5em', color: '#888880' }}>.99</span>
                   </span>
                 </div>
 
