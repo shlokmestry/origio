@@ -301,7 +301,7 @@ export default function WizardPage() {
     return false;
   };
 
-  const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
+  const handleNext = () => { if (step === 0) { startQuiz(); return; } const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
   const handleBack = () => { if (step === 1) setStep(0); else if (step === 0) router.push("/"); else setStep(getPrevStep(step)); };
 
   const handleSubmit = async () => {
@@ -583,12 +583,6 @@ export default function WizardPage() {
                 </div>
               )}
 
-              <button
-                onClick={startQuiz}
-                disabled={hasDualPassport === null}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, background: hasDualPassport === null ? LINE : MINT, color: BG, border: "none", padding: "15px 32px", fontFamily: MONO, fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", cursor: hasDualPassport === null ? "default" : "pointer", opacity: hasDualPassport === null ? 0.4 : 1, transition: "background 0.15s, opacity 0.15s" }}>
-                Start quiz <ArrowRight size={14} />
-              </button>
               <p style={{ fontSize: 12, color: DIM, marginTop: 12 }}>You can also add your passport on the next question — skip if you prefer.</p>
             </>
           )}
