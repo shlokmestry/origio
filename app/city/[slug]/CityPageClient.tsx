@@ -75,6 +75,66 @@ const fmt = (n: number | null | undefined, fallback = "—") =>
 const score = (n: number | null | undefined) =>
   n != null ? n.toFixed(1) : "—";
 
+const PROFESSION_MAP: Record<string, { title: string; salaryRatio: number }> = {
+  dubai:         { title: "finance analyst",      salaryRatio: 1.05 },
+  "abu-dhabi":   { title: "finance analyst",      salaryRatio: 1.05 },
+  london:        { title: "product manager",      salaryRatio: 1.10 },
+  berlin:        { title: "software engineer",    salaryRatio: 1.00 },
+  amsterdam:     { title: "software engineer",    salaryRatio: 1.00 },
+  barcelona:     { title: "UX designer",          salaryRatio: 0.80 },
+  madrid:        { title: "UX designer",          salaryRatio: 0.82 },
+  lisbon:        { title: "software engineer",    salaryRatio: 1.00 },
+  porto:         { title: "software engineer",    salaryRatio: 0.95 },
+  paris:         { title: "product manager",      salaryRatio: 1.05 },
+  tokyo:         { title: "UX designer",          salaryRatio: 0.90 },
+  singapore:     { title: "finance analyst",      salaryRatio: 1.08 },
+  "new-york":    { title: "product manager",      salaryRatio: 1.15 },
+  miami:         { title: "product manager",      salaryRatio: 1.05 },
+  toronto:       { title: "software engineer",    salaryRatio: 1.00 },
+  sydney:        { title: "software engineer",    salaryRatio: 1.00 },
+  melbourne:     { title: "software engineer",    salaryRatio: 0.98 },
+  "kuala-lumpur":{ title: "software engineer",    salaryRatio: 1.00 },
+  bangkok:       { title: "digital marketer",     salaryRatio: 0.75 },
+  "chiang-mai":  { title: "freelance developer",  salaryRatio: 0.85 },
+  bali:          { title: "freelance developer",  salaryRatio: 0.80 },
+  medellín:      { title: "remote developer",     salaryRatio: 0.90 },
+  medellin:      { title: "remote developer",     salaryRatio: 0.90 },
+  "mexico-city": { title: "UX designer",          salaryRatio: 0.88 },
+  tallinn:       { title: "software engineer",    salaryRatio: 1.00 },
+  riga:          { title: "software engineer",    salaryRatio: 0.92 },
+  warsaw:        { title: "software engineer",    salaryRatio: 0.95 },
+  prague:        { title: "software engineer",    salaryRatio: 0.95 },
+  budapest:      { title: "software engineer",    salaryRatio: 0.93 },
+  bucharest:     { title: "software engineer",    salaryRatio: 0.90 },
+  sofia:         { title: "software engineer",    salaryRatio: 0.88 },
+  athens:        { title: "software engineer",    salaryRatio: 0.90 },
+  milan:         { title: "fashion designer",     salaryRatio: 0.85 },
+  zurich:        { title: "finance analyst",      salaryRatio: 1.20 },
+  geneva:        { title: "finance analyst",      salaryRatio: 1.20 },
+  vienna:        { title: "product manager",      salaryRatio: 1.02 },
+  munich:        { title: "software engineer",    salaryRatio: 1.00 },
+  hamburg:       { title: "software engineer",    salaryRatio: 0.97 },
+  stockholm:     { title: "software engineer",    salaryRatio: 1.00 },
+  copenhagen:    { title: "software engineer",    salaryRatio: 1.00 },
+  oslo:          { title: "software engineer",    salaryRatio: 1.00 },
+  helsinki:      { title: "software engineer",    salaryRatio: 1.00 },
+  dublin:        { title: "software engineer",    salaryRatio: 1.00 },
+  "san-francisco":{ title: "software engineer",  salaryRatio: 1.20 },
+  austin:        { title: "software engineer",    salaryRatio: 1.05 },
+  vancouver:     { title: "software engineer",    salaryRatio: 0.98 },
+  montreal:      { title: "software engineer",    salaryRatio: 0.95 },
+  funchal:       { title: "remote developer",     salaryRatio: 0.90 },
+  manchester:    { title: "software engineer",    salaryRatio: 0.95 },
+  edinburgh:     { title: "software engineer",    salaryRatio: 0.93 },
+  cork:          { title: "software engineer",    salaryRatio: 0.92 },
+  rotterdam:     { title: "software engineer",    salaryRatio: 0.98 },
+  eindhoven:     { title: "software engineer",    salaryRatio: 0.97 },
+  valencia:      { title: "UX designer",          salaryRatio: 0.78 },
+  osaka:         { title: "UX designer",          salaryRatio: 0.88 },
+  kyoto:         { title: "UX designer",          salaryRatio: 0.85 },
+  brisbane:      { title: "software engineer",    salaryRatio: 0.96 },
+};
+
 type Persona = { fit: boolean; label: string; reason: string };
 
 function getCityPersonas(city: CityFull, d: CityDataRow | null): Persona[] {
@@ -285,65 +345,6 @@ function getCityNarrative(
       };
 
   // SCENE 3 — Work
-  const PROFESSION_MAP: Record<string, { title: string; salaryRatio: number }> = {
-    dubai:         { title: "finance analyst",      salaryRatio: 1.05 },
-    "abu-dhabi":   { title: "finance analyst",      salaryRatio: 1.05 },
-    london:        { title: "product manager",      salaryRatio: 1.10 },
-    berlin:        { title: "software engineer",    salaryRatio: 1.00 },
-    amsterdam:     { title: "software engineer",    salaryRatio: 1.00 },
-    barcelona:     { title: "UX designer",          salaryRatio: 0.80 },
-    madrid:        { title: "UX designer",          salaryRatio: 0.82 },
-    lisbon:        { title: "software engineer",    salaryRatio: 1.00 },
-    porto:         { title: "software engineer",    salaryRatio: 0.95 },
-    paris:         { title: "product manager",      salaryRatio: 1.05 },
-    tokyo:         { title: "UX designer",          salaryRatio: 0.90 },
-    singapore:     { title: "finance analyst",      salaryRatio: 1.08 },
-    "new-york":    { title: "product manager",      salaryRatio: 1.15 },
-    miami:         { title: "product manager",      salaryRatio: 1.05 },
-    toronto:       { title: "software engineer",    salaryRatio: 1.00 },
-    sydney:        { title: "software engineer",    salaryRatio: 1.00 },
-    melbourne:     { title: "software engineer",    salaryRatio: 0.98 },
-    "kuala-lumpur":{ title: "software engineer",    salaryRatio: 1.00 },
-    bangkok:       { title: "digital marketer",     salaryRatio: 0.75 },
-    "chiang-mai":  { title: "freelance developer",  salaryRatio: 0.85 },
-    bali:          { title: "freelance developer",  salaryRatio: 0.80 },
-    medellín:      { title: "remote developer",     salaryRatio: 0.90 },
-    medellin:      { title: "remote developer",     salaryRatio: 0.90 },
-    "mexico-city": { title: "UX designer",          salaryRatio: 0.88 },
-    tallinn:       { title: "software engineer",    salaryRatio: 1.00 },
-    riga:          { title: "software engineer",    salaryRatio: 0.92 },
-    warsaw:        { title: "software engineer",    salaryRatio: 0.95 },
-    prague:        { title: "software engineer",    salaryRatio: 0.95 },
-    budapest:      { title: "software engineer",    salaryRatio: 0.93 },
-    bucharest:     { title: "software engineer",    salaryRatio: 0.90 },
-    sofia:         { title: "software engineer",    salaryRatio: 0.88 },
-    athens:        { title: "software engineer",    salaryRatio: 0.90 },
-    milan:         { title: "fashion designer",     salaryRatio: 0.85 },
-    zurich:        { title: "finance analyst",      salaryRatio: 1.20 },
-    geneva:        { title: "finance analyst",      salaryRatio: 1.20 },
-    vienna:        { title: "product manager",      salaryRatio: 1.02 },
-    munich:        { title: "software engineer",    salaryRatio: 1.00 },
-    hamburg:       { title: "software engineer",    salaryRatio: 0.97 },
-    stockholm:     { title: "software engineer",    salaryRatio: 1.00 },
-    copenhagen:    { title: "software engineer",    salaryRatio: 1.00 },
-    oslo:          { title: "software engineer",    salaryRatio: 1.00 },
-    helsinki:      { title: "software engineer",    salaryRatio: 1.00 },
-    dublin:        { title: "software engineer",    salaryRatio: 1.00 },
-    "san-francisco":{ title: "software engineer",  salaryRatio: 1.20 },
-    austin:        { title: "software engineer",    salaryRatio: 1.05 },
-    vancouver:     { title: "software engineer",    salaryRatio: 0.98 },
-    montreal:      { title: "software engineer",    salaryRatio: 0.95 },
-    funchal:       { title: "remote developer",     salaryRatio: 0.90 },
-    manchester:    { title: "software engineer",    salaryRatio: 0.95 },
-    edinburgh:     { title: "software engineer",    salaryRatio: 0.93 },
-    cork:          { title: "software engineer",    salaryRatio: 0.92 },
-    rotterdam:     { title: "software engineer",    salaryRatio: 0.98 },
-    eindhoven:     { title: "software engineer",    salaryRatio: 0.97 },
-    valencia:      { title: "UX designer",          salaryRatio: 0.78 },
-    osaka:         { title: "UX designer",          salaryRatio: 0.88 },
-    kyoto:         { title: "UX designer",          salaryRatio: 0.85 },
-    brisbane:      { title: "software engineer",    salaryRatio: 0.96 },
-  };
   const prof = PROFESSION_MAP[city.slug] ?? { title: "software engineer", salaryRatio: 1.00 };
   const profSalary = d?.salary_software_engineer
     ? Math.round(d.salary_software_engineer * prof.salaryRatio)
@@ -484,7 +485,7 @@ function isExpensive(d: import("./page").CityDataRow | null): boolean {
 
 export default function CityPageClient({ city }: Props) {
   const [currentMode, setCurrentMode] = useState("night");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'idle' | 'ok' | 'err'>('idle');
   const d = city.city_data?.[0] ?? null;
   const sym = getCurrencySymbol(city.currency);
 
@@ -1095,7 +1096,7 @@ export default function CityPageClient({ city }: Props) {
               <h2 className="scene-head">{nav.scene5.headline}</h2>
               <div className="scene-prose" style={{ marginTop: 32 }}>
                 {d.neighbourhoods.map((nh, i) => (
-                  <div key={i} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid var(--rule)" }}>
+                  <div key={nh.name} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid var(--rule)" }}>
                     <p style={{ fontWeight: 700, fontSize: 16, color: "var(--accent)", marginBottom: 6 }}>
                       {nh.name}
                     </p>
@@ -1362,12 +1363,14 @@ export default function CityPageClient({ city }: Props) {
               type="button"
               className="cta-btn-ghost"
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href).catch(() => {});
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1800);
+                navigator.clipboard.writeText(window.location.href)
+                  .then(() => { setCopied('ok'); setTimeout(() => setCopied('idle'), 1800); })
+                  .catch(() => { setCopied('err'); setTimeout(() => setCopied('idle'), 2200); });
               }}
             >
-              {copied ? <span className="cta-copied">✓ Link copied</span> : "Share this dispatch"}
+              {copied === 'ok' ? <span className="cta-copied">✓ Link copied</span>
+               : copied === 'err' ? <span className="cta-copied" style={{ color: 'var(--c-dim)' }}>Copy failed — try again</span>
+               : "Share this dispatch"}
             </button>
           </div>
         </section>
