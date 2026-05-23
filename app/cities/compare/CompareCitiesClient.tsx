@@ -181,7 +181,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     if (pairLabels[pair]) return pairLabels[pair]
     const y = verdict.yearGap
     if (y < 3000)  return 'a decent holiday'
-    if (y < 6000)  return 'a gym membership you'd actually use'
+    if (y < 6000)  return "a gym membership you'd actually use"
     if (y < 10000) return 'a return business class ticket'
     if (y < 15000) return 'a used car, running'
     if (y < 20000) return 'a semester abroad'
