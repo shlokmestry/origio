@@ -404,7 +404,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
           <h1 className={styles.raceH1}>
             <span className={styles.it}>Whose month</span><br />
             costs <span className={styles.amberText}>more?</span>{' '}
-            <span className={styles.grey}>Drawn to scale —</span>{' '}
+            <span className={styles.grey}>Drawn to scale ~</span>{' '}
             <span className={styles.stamp}>No axis lies</span>
           </h1>
         </header>
@@ -417,7 +417,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>{' '}
-            — re-tallied as you switch.
+            re-tallied as you switch.
           </div>
           <div className={styles.raceSubR}>
             <span className={styles.raceSubRIt}>Verified Q1 2026</span>

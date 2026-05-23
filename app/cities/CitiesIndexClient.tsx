@@ -251,7 +251,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
               <span className={styles.typeSolid}>Citi</span>
               <span className={styles.typeOutline}>es</span>
             </div>
-            <p className={styles.heroSub}>The Atlas — <span className={styles.grey}>find your city.</span></p>
+            <p className={styles.heroSub}>The Atlas ~ <span className={styles.grey}>find your city.</span></p>
 
             <div className={styles.ledgerPanel}>
               <div className={styles.ledgerHead}>
@@ -273,7 +273,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                 ))}
               </div>
               <div className={styles.ledgerFoot}>
-                <span>More cities — every 90 days</span>
+                <span>More cities every 90 days</span>
                 <span>↓ Scroll to explore</span>
               </div>
             </div>
@@ -432,7 +432,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <span className={styles.ccHeadline}>
               <span className={styles.ccLine}>Compare the</span>
               <span className={`${styles.ccLine} ${styles.ccLineIt}`}><span className={styles.ccIt}>real cost</span></span>
-              <span className={styles.ccLine}>of any two — or four — cities.</span>
+              <span className={styles.ccLine}>of any two or four cities.</span>
             </span>
             <span className={styles.ccMeta}>
               <span className={styles.ccMetaL}>Rent · groceries · gym · doctor · internet · dining · utilities</span>
@@ -446,7 +446,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           <div>
             <p className={styles.wlEyebrow}>Don&apos;t see your city?</p>
             <h3 className={styles.wlTitle}>We add <span className={styles.it}>two cities</span> every quarter.</h3>
-            <p className={styles.wlSub}>Tell us the city you&apos;re researching — we&apos;ll prioritise the most-requested ones, and email you when the report goes live.</p>
+            <p className={styles.wlSub}>Tell us the city you&apos;re researching ~ we&apos;ll prioritise the most-requested ones, and email you when the report goes live.</p>
           </div>
           <form className={styles.wlForm} onSubmit={handleWaitlistSubmit}>
             <input type="text" placeholder="e.g. Mexico City, Bali, Cape Town"
