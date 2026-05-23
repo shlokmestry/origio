@@ -173,7 +173,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
   const handleWaitlistSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    const city = waitlistInput.trim()
+    const city = waitlistInput.trim().slice(0, 100).replace(/[^a-zA-ZÀ-ÿ0-9 \-,.']/g, '')
     if (!city || waitlistLoading) return
     setWaitlistLoading(true)
     await supabase.from('city_waitlist').insert({ city })

@@ -71,8 +71,8 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
   const [selected, setSelected] = useState<string[]>(() => {
     const fromUrl = searchParams.get('cities')
-    if (fromUrl) {
-      const slugs = fromUrl.split(',').filter(s => allCities.some(c => c.slug === s))
+    if (fromUrl && fromUrl.length <= 200) {
+      const slugs = fromUrl.split(',').filter(s => /^[a-z0-9-]+$/.test(s) && allCities.some(c => c.slug === s))
       if (slugs.length >= 2) return slugs.slice(0, LEDGER_MAX)
     }
     return defaultSlugs
@@ -204,7 +204,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     const isCheap = total === minT && minT !== maxT
     const isDear  = total === maxT && minT !== maxT && picks.length >= 3
     const isoVal  = isolated ? (c.costs[isolated] ?? 0) : total
-    const widthPct = (isoVal / scaleMax) * 100
+    const widthPct = scaleMax > 0 ? (isoVal / scaleMax) * 100 : 0
 
     const rowCls = [
       styles.raceRow,
