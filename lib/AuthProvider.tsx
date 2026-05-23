@@ -15,33 +15,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let resolved = false
-
-    function resolve(source: string, u: User | null) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔑 AUTH [${source}]: user=${!!u} | already resolved=${resolved}`)
-      }
-      if (resolved) {
-        setUser(u)
-        return
-      }
-      resolved = true
-      setUser(u)
+    // Subscribe first to avoid missing events that fire before getSession resolves
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
       setLoading(false)
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔑 onAuthStateChange event: ${event} | user: ${!!session?.user}`)
-      }
-      resolve('onAuthStateChange', session?.user ?? null)
     })
 
+    // Eagerly resolve the current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔑 getSession resolved: user=${!!session?.user}`)
-      }
-      resolve('getSession', session?.user ?? null)
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()

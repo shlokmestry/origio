@@ -33,7 +33,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
                 You're out of free quiz runs
               </h1>
               <p className="text-sm text-[#888880] leading-relaxed">
-                Create a free account to get {5} more runs and save your results across devices.
+                Create a free account to get {maxRuns} more runs and save your results across devices.
               </p>
             </div>
           </div>
