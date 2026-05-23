@@ -17,7 +17,7 @@ import { CountryWithData, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel, getVisaColor } from "@/lib/utils";
 import SaveCountryButton from "@/components/SaveCountryButton";
 import { supabase } from "@/lib/supabase";
-import { WizardAnswers } from "@/lib/wizard";
+import { WizardAnswers, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
@@ -123,6 +123,20 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const userRole = wizardAnswers?.jobRole
     ? JOB_ROLES.find((r) => r.key === wizardAnswers.jobRole)
     : null;
+
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
+  const passportContext = (() => {
+    if (!wizardAnswers?.passport) return null;
+    const { primary, secondary } = resolveEffectivePassports(
+      wizardAnswers.passport.toLowerCase(),
+      (wizardAnswers.secondPassport ?? "").toLowerCase() || undefined,
+    );
+    const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+    const rawTier = getPassportStrength(wizardAnswers.passport.toLowerCase());
+    const isEU = EU_PASSPORT_SLUGS.has(primary) || (secondary ? EU_PASSPORT_SLUGS.has(secondary) : false);
+    const upgraded = !!secondary && tier < rawTier;
+    return { tier, rawTier, upgraded, isEU, hasDual: !!wizardAnswers.secondPassport, secondary };
+  })();
   const userSalary = userRole
     ? (data[userRole.salaryKey] as number)
     : null;
@@ -438,6 +452,22 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                   Difficulty {data.visaDifficulty}/5
                 </span>
               </div>
+              {passportContext && (
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-accent/40 text-accent">
+                    Tier {passportContext.tier} passport
+                  </span>
+                  {passportContext.isEU && <span className="text-[10px] font-bold uppercase tracking-widest text-accent/70">EU free movement</span>}
+                  {passportContext.upgraded && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-400/70">
+                      ↑ Upgraded from Tier {passportContext.rawTier} via second passport
+                    </span>
+                  )}
+                  {passportContext.hasDual && !passportContext.upgraded && passportContext.tier <= 2 && (
+                    <span className="text-[10px] font-medium text-white/30">Dual passport · stronger visa access</span>
+                  )}
+                </div>
+              )}
               <p className="text-sm text-text-muted leading-relaxed">{data.visaNotes}</p>
               {data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-2">

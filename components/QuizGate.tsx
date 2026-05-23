@@ -118,7 +118,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
             style={{ boxShadow: "3px 3px 0 #00aa90" }}
           >
             <Sparkles className="w-4 h-4" />
-            Upgrade to Pro — €19.99 once
+            Upgrade to Pro — €4.99 once
           </Link>
           <Link
             href="/"
