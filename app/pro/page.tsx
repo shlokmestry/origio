@@ -109,8 +109,8 @@ const COMPARE_ROWS = [
 ]
 
 const FAQS = [
-  { q: 'Is this really a one-time payment?', a: '€19.99 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.' },
-  { q: 'Why €19.99 and not less?', a: 'A single immigration lawyer consultation costs €200–500. Origio gives you the data to make that decision yourself.' },
+  { q: 'Is this really a one-time payment?', a: '€4.99 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.' },
+  { q: 'Why €4.99 and not free?', a: 'Keeping the data fresh, the scoring accurate, and the servers running costs money. €4.99 is the lowest we can go and still build something worth using.' },
   { q: 'What payment methods are accepted?', a: 'All major credit and debit cards via Stripe. We never see your card details.' },
   { q: 'Can I get a refund?', a: "If something isn't right, email us and we'll sort it out. We stand behind the product." },
   { q: 'Do I need an account?', a: 'Yes. Pro features are tied to your account so they work across devices and stay active permanently.' },
@@ -207,7 +207,7 @@ export default function ProPage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
             <button onClick={handleUpgrade} disabled={loading} className="cta-hover"
               style={{ ...btnPrimary, opacity: loading ? 0.5 : 1, borderRadius: 999, padding: '13px 28px' }}>
-              {loading ? 'Redirecting…' : 'Get Pro · €19.99'}
+              {loading ? 'Redirecting…' : 'Get Pro · €4.99'}
             </button>
             <a href="#compare" className="ghost-hover" style={{
               fontFamily: SANS, fontWeight: 700, fontSize: 13,
@@ -307,7 +307,7 @@ export default function ProPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                   <button onClick={handleUpgrade} disabled={loading} className="cta-hover"
                     style={{ ...btnPrimary, borderRadius: 999, opacity: loading ? 0.5 : 1 }}>
-                    {loading ? 'Redirecting…' : 'Get Pro · €19.99 →'}
+                    {loading ? 'Redirecting…' : 'Get Pro · €4.99 →'}
                   </button>
                   <span style={{ fontFamily: SANS, fontSize: 11, color: '#555' }}>Secure checkout via Stripe</span>
                 </div>
@@ -367,7 +367,7 @@ export default function ProPage() {
               </div>
               <div style={{ padding: '16px 12px', borderLeft: '1px solid rgba(0,255,213,0.3)', textAlign: 'center', background: 'rgba(10,22,20,0.8)' }}>
                 <p style={{ ...eyebrow, color: '#00ffd5' }}>Pro</p>
-                <p style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 15, color: '#00ffd5', marginTop: 4 }}>€19.99</p>
+                <p style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 15, color: '#00ffd5', marginTop: 4 }}>€4.99</p>
               </div>
             </div>
             {COMPARE_ROWS.map((row, i) => (
@@ -455,7 +455,7 @@ export default function ProPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
               <button onClick={handleUpgrade} disabled={loading} className="cta-hover"
                 style={{ ...btnPrimary, borderRadius: 999, opacity: loading ? 0.5 : 1 }}>
-                {loading ? 'Redirecting…' : 'Get Pro · €19.99 →'}
+                {loading ? 'Redirecting…' : 'Get Pro · €4.99 →'}
               </button>
               <Link href="/wizard"
                 style={{ fontFamily: SANS, fontSize: 12, fontWeight: 700, color: '#888880', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.1em' }}

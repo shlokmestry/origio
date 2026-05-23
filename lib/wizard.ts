@@ -4,6 +4,7 @@ import { normalise } from "@/lib/utils";
 
 export interface WizardAnswers {
   passport: string;
+  secondPassport?: string;
   moveReason: string;
   jobRole: string;
   priorities: string[];
@@ -26,6 +27,76 @@ const EU_PASSPORTS = [
   "sweden", "norway", "switzerland", "austria", "belgium", "denmark",
   "finland", "italy", "poland", "romania",
 ];
+
+// Passport strength tiers — how much visa-free access / ease of movement
+// Tier 1: near-universal visa-free (180+ countries), strong bilateral treaties
+// Tier 2: good access (140–179 countries)
+// Tier 3: moderate (100–139 countries)
+// Tier 4: restricted (<100 countries)
+const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
+  // Tier 1 — strongest
+  "germany": 1, "france": 1, "italy": 1, "spain": 1, "finland": 1,
+  "sweden": 1, "austria": 1, "denmark": 1, "netherlands": 1, "norway": 1,
+  "switzerland": 1, "portugal": 1, "ireland": 1, "belgium": 1,
+  "new-zealand": 1, "australia": 1, "japan": 1, "singapore": 1,
+  "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1,
+  // space-variant aliases (wizard PASSPORTS array uses .toLowerCase())
+  "new zealand": 1, "united kingdom": 1, "usa": 1, "south korea": 1,
+  // Tier 2
+  "poland": 2, "romania": 2, "malaysia": 2, "brazil": 2, "uae": 2,
+  "mexico": 2, "chile": 2, "argentina": 2,
+  // Tier 3
+  "china": 3, "india": 3, "turkey": 3, "south-africa": 3, "ukraine": 3,
+  "south africa": 3,
+  "philippines": 3, "indonesia": 3, "vietnam": 3, "thailand": 3,
+  // Tier 4 — most restricted
+  "nigeria": 4, "pakistan": 4, "ghana": 4,
+};
+
+export function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {
+  return PASSPORT_STRENGTH[slug] ?? 3;
+}
+
+export const PASSPORT_TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
+  1: "Tier 1 — visa-free access to 180+ countries",
+  2: "Tier 2 — visa-free access to 140–179 countries",
+  3: "Tier 3 — visa-free access to 100–139 countries",
+  4: "Tier 4 — visa-free access to fewer than 100 countries",
+};
+
+// Countries that do not allow dual citizenship
+export const NO_DUAL_CITIZENSHIP_SLUGS = new Set([
+  "india", "china", "japan", "singapore", "uae",
+  "indonesia", "malaysia", "south-korea", "south korea",
+]);
+
+// If a no-dual passport is paired with another, the user has renounced the no-dual one.
+// Return the passports that are actually valid for scoring.
+export function resolveEffectivePassports(primary: string, secondary?: string): { primary: string; secondary?: string } {
+  if (!secondary) return { primary };
+  const primaryNoD  = NO_DUAL_CITIZENSHIP_SLUGS.has(primary);
+  const secondNoD   = NO_DUAL_CITIZENSHIP_SLUGS.has(secondary);
+  if (primaryNoD && !secondNoD) return { primary: secondary }; // renounced primary
+  if (secondNoD && !primaryNoD) return { primary };            // renounced secondary
+  return { primary, secondary };                               // both allow dual (or both no-dual — edge case)
+}
+
+// Returns the effective (best) passport strength for scoring
+function effectiveStrength(primary: string, secondary?: string): 1 | 2 | 3 | 4 {
+  const s1 = getPassportStrength(primary);
+  const s2 = secondary ? getPassportStrength(secondary) : 4;
+  return Math.min(s1, s2) as 1 | 2 | 3 | 4; // lower number = stronger
+}
+
+// Visa score modifier based on passport strength vs country difficulty
+// Strong passport in hard-to-enter country → less penalty
+function passportVisaModifier(strength: 1 | 2 | 3 | 4, visaDifficulty: number): number {
+  // Tier 1 passport: visa difficulty is effectively reduced by up to 2 points globally
+  // Tier 4 passport: difficulty is felt fully, even amplified on strict countries
+  const reductions: Record<1 | 2 | 3 | 4, number> = { 1: 2.0, 2: 1.0, 3: 0, 4: -1.0 };
+  const effectiveDifficulty = Math.max(0, visaDifficulty - reductions[strength]);
+  return 10 - effectiveDifficulty * 2; // normalised visa score
+}
 
 const ENGLISH_SPEAKING_COUNTRIES = [
   "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore",
@@ -113,6 +184,13 @@ export function scoreCountriesForWizard(
     return true;
   });
 
+  // ── Passport resolution (drop renounced no-dual passport) ───────
+  const rawPrimary   = (answers.passport ?? "").toLowerCase();
+  const rawSecondary = (answers.secondPassport ?? "").toLowerCase() || undefined;
+  const { primary: primarySlug, secondary: secondarySlug } = resolveEffectivePassports(rawPrimary, rawSecondary);
+  const strength = effectiveStrength(primarySlug, secondarySlug);
+  const hasDual  = !!secondarySlug;
+
   // ── SCORING ─────────────────────────────────────────────────────
   const results: CountryMatch[] = eligible.map((country) => {
     const data = country.data;
@@ -124,7 +202,8 @@ export function scoreCountriesForWizard(
     const qualityScore  = data.scoreQualityOfLife;
     const safetyScore   = data.scoreSafety;
     const healthScore   = data.scoreHealthcare;
-    const visaScore     = 10 - data.visaDifficulty * 2;
+    // visa score now accounts for passport strength — strong passport → easier access everywhere
+    const visaScore     = Math.max(0, Math.min(10, passportVisaModifier(strength, data.visaDifficulty)));
     const taxScore      = 10 - normalise(data.incomeTaxRateMid, 0, 55);
     const internetScore = data.scoreInternetSpeed;
 
@@ -207,13 +286,42 @@ export function scoreCountriesForWizard(
     }
 
     // ── SHARED BONUSES ───────────────────────────────────────────
-    const passportLower = (answers.passport ?? "").toLowerCase();
-    const isEU = EU_PASSPORTS.includes(passportLower);
+    const isEU = EU_PASSPORTS.includes(primarySlug) || (secondarySlug ? EU_PASSPORTS.includes(secondarySlug) : false);
+    const euPassportLabel = EU_PASSPORTS.includes(primarySlug) ? "your EU passport" : "your second EU passport";
+
     if (isEU && EUROPEAN_COUNTRIES.includes(country.slug)) {
       score += 0.5;
-      reasons.push("Easy visa with your EU passport");
+      reasons.push(`Free movement with ${euPassportLabel}`);
     }
-    if (data.visaDifficulty <= 2 && !reasons.includes("Easy visa with your EU passport")) {
+
+    // Passport strength bonuses/penalties
+    if (strength === 1) {
+      // Tier 1: virtually no visa barriers globally → reward high-difficulty countries
+      if (data.visaDifficulty >= 3) {
+        score += 0.4;
+        if (!reasons.some(r => r.toLowerCase().includes("visa"))) {
+          reasons.push("Strong passport — minimal visa barriers");
+        }
+      }
+    } else if (strength === 4) {
+      // Tier 4: restricted access → penalise hard-to-enter countries further
+      if (data.visaDifficulty >= 3) {
+        score -= 0.8;
+      }
+    }
+
+    // Dual passport bonus: access to routes either passport unlocks
+    if (hasDual) {
+      if (data.visaDifficulty >= 3 && strength <= 2) {
+        score += 0.4;
+        if (!reasons.some(r => r.toLowerCase().includes("visa") || r.toLowerCase().includes("passport"))) {
+          reasons.push("Dual passport unlocks additional visa routes");
+        }
+      }
+      // If one passport is EU and destination is European — already captured above
+    }
+
+    if (data.visaDifficulty <= 2 && !reasons.some(r => r.toLowerCase().includes("visa") || r.toLowerCase().includes("movement") || r.toLowerCase().includes("passport"))) {
       reasons.push("Straightforward visa process");
     }
     if (answers.priorities?.includes("english") && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) {

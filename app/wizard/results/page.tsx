@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X } from "lucide-react";
-import { CountryMatch, WizardAnswers, TO_USD } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports, scoreCountriesForWizard } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -398,6 +398,7 @@ export default function WizardResultsPage() {
   const [user, setUser]               = useState<User | null>(null);
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Auth — also listens for post-OAuth redirect sign-in
   useEffect(() => {
@@ -502,6 +503,22 @@ export default function WizardResultsPage() {
     router.push("/");
   };
 
+  const handleReportCheckout = async () => {
+    setReportLoading(true);
+    try {
+      const body: Record<string, string> = {};
+      if (user?.email) body.email = user.email;
+      const res = await fetch("/api/checkout-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch { /* ignore */ }
+    setReportLoading(false);
+  };
+
   // ── Loading screen ─────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -536,6 +553,44 @@ export default function WizardResultsPage() {
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
+
+  // Passport power derived values
+  const { primary: effectivePrimary, secondary: effectiveSecondary } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const passportTier    = Math.min(getPassportStrength(effectivePrimary), effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4) as 1|2|3|4;
+  const rawPrimaryTier  = getPassportStrength((answers.passport ?? "").toLowerCase());
+  const tierUpgraded    = !!effectiveSecondary && passportTier < rawPrimaryTier;
+  const hasDualPassport = !!(answers.secondPassport);
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
+  const EU_COUNTRY_SLUGS  = new Set(["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"]);
+  // Which passport drives a given country's visa advantage
+  function passportDrivingVisa(countrySlug: string): string | null {
+    if (!hasDualPassport) return null;
+    const p1IsEU = EU_PASSPORT_SLUGS.has(effectivePrimary);
+    const p2IsEU = effectiveSecondary ? EU_PASSPORT_SLUGS.has(effectiveSecondary) : false;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && !p1IsEU && p2IsEU) return effectiveSecondary ?? null;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && p1IsEU) return effectivePrimary;
+    const t1 = getPassportStrength(effectivePrimary);
+    const t2 = effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4;
+    if (t2 < t1) return effectiveSecondary ?? null; // second is stronger
+    return null; // primary drives it — no need to call it out
+  }
+
+  // Delta: where would top match rank without the second passport?
+  const passportDelta = (() => {
+    if (!hasDualPassport || !answers.secondPassport) return null;
+    try {
+      const countriesRaw = sessionStorage.getItem("wizardCountries");
+      if (!countriesRaw) return null;
+      const countries = JSON.parse(countriesRaw);
+      const withoutSecond = scoreCountriesForWizard(countries, { ...answers, secondPassport: undefined } as WizardAnswers);
+      const topSlug = matches[0]?.country.slug;
+      const rankWithout = withoutSecond.findIndex(m => m.country.slug === topSlug) + 1;
+      return rankWithout > 1 ? rankWithout : null;
+    } catch { return null; }
+  })();
 
   const top       = matches[0];
   const pctColor  = matchPercentColor(top.matchPercent);
@@ -610,9 +665,26 @@ export default function WizardResultsPage() {
         {/* ── HERO ────────────────────────────────────────────────────────── */}
         <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
           <div>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }}>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: hasDualPassport ? 14 : 28, display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: MINT }}>●</span> Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
             </p>
+            {hasDualPassport && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "7px 14px", border: `1px solid rgba(0,255,213,0.2)`, marginBottom: 28, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport power</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT }}>TIER {passportTier}</span>
+                <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{PASSPORT_TIER_LABEL[passportTier].split("—")[1]?.trim()}</span>
+                {tierUpgraded && <span style={{ fontFamily: MONO, fontSize: 10, color: MINT }}>↑ from Tier {rawPrimaryTier}</span>}
+                {passportDelta && (
+                  <>
+                    <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,200,50,0.8)" }}>
+                      Without second passport: #{passportDelta}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>
               <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>
               <h1 style={{ fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92, margin: 0, color: FG }}>
@@ -698,6 +770,11 @@ export default function WizardResultsPage() {
                   </div>
                   <div style={{ fontSize: 36, marginBottom: 12 }}>{m.country.flagEmoji}</div>
                   <div style={{ fontFamily: SERIF, fontSize: 22, color: FG, marginBottom: 8 }}>{m.country.name}</div>
+                  {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 8, opacity: 0.8 }}>
+                      ✦ visa via {driver} passport
+                    </div>
+                  ) : null; })()}
                   {salary && (
                     <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: DIM, lineHeight: 1.8 }}>
                       <span>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</span><br />
@@ -864,20 +941,38 @@ export default function WizardResultsPage() {
                   }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
                     onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-                    <Sparkles size={13} /> Get Pro · €19.99
+                    <Sparkles size={13} /> Get Pro · €4.99
                   </Link>
+                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ flex: 1, height: 1, background: LINE }} />
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#333" }}>or</span>
+                    <div style={{ flex: 1, height: 1, background: LINE }} />
+                  </div>
+                  <button onClick={handleReportCheckout} disabled={reportLoading} style={{ marginTop: 12, width: "100%", fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", padding: "11px 20px", background: "transparent", color: DIM, border: `1px solid #2a2a2a`, borderRadius: 999, cursor: reportLoading ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "border-color 0.15s, color 0.15s" }}
+                    onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.borderColor = "#444"; (e.currentTarget as HTMLElement).style.color = "#fff"; } }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; (e.currentTarget as HTMLElement).style.color = DIM; }}>
+                    {reportLoading ? "Redirecting…" : "↓ Download Report · €4.99"}
+                  </button>
+                  <p style={{ fontFamily: SANS, fontSize: 11, color: "#444", marginTop: 8 }}>One-time · top 5 matches · downloadable</p>
                 </div>
               </div>
             </div>
           )}
           {isPro && matches.length >= 3 && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 25 countries ranked for you</p>
-              <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Compare top 3 <ArrowRight size={13} />
-              </Link>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <button onClick={handleReportCheckout} disabled={reportLoading} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM, background: "none", border: "none", cursor: reportLoading ? "default" : "pointer", display: "flex", alignItems: "center", gap: 5, transition: "color 0.15s" }}
+                  onMouseEnter={e => { if (!reportLoading) (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = DIM; }}>
+                  ↓ Download report · €4.99
+                </button>
+                <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = MINT)}
+                  onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                  Compare top 3 <ArrowRight size={13} />
+                </Link>
+              </div>
             </div>
           )}
         </section>
