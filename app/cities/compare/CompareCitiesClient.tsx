@@ -417,7 +417,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>{' '}
-            re-tallied as you switch.
+            ~ re-tallied as you switch.
           </div>
           <div className={styles.raceSubR}>
             <span className={styles.raceSubRIt}>Verified Q1 2026</span>
@@ -595,7 +595,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Bureau */}
         <div className={styles.bureau}>
           <span>Origio · Comparative Bureau · est. 2024</span>
-          <span className={styles.seal}>— it is what it is —</span>
+          <span className={styles.seal}>~ it is what it is ~</span>
           <span>All numbers real · sourced Q1 2026</span>
         </div>
       </main>

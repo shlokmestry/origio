@@ -38,8 +38,8 @@ const STEP_LABELS = [
 const PASSPORTS = [
   "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
   "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
-  "Canada","USA","Singapore","UAE","India","China","Brazil","South Africa",
-  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
+  "Canada","USA","Singapore","Japan","South Korea","UAE","India","China",
+  "Brazil","South Africa","Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
 ];
 
 const NO_DUAL_CITIZENSHIP: Record<string, string> = {
@@ -290,6 +290,7 @@ export default function WizardPage() {
   };
 
   const canProceed = () => {
+    if (step === 0) return hasDualPassport !== null;
     if (step === 1) return !!answers.passport;
     if (step === 2) return !!answers.moveReason;
     if (step === 3) return !!answers.jobRole;

@@ -446,7 +446,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           <div>
             <p className={styles.wlEyebrow}>Don&apos;t see your city?</p>
             <h3 className={styles.wlTitle}>We add <span className={styles.it}>two cities</span> every quarter.</h3>
-            <p className={styles.wlSub}>Tell us the city you&apos;re researching ~ we&apos;ll prioritise the most-requested ones, and email you when the report goes live.</p>
+            <p className={styles.wlSub}>Tell us the city you&apos;re researching we&apos;ll prioritise the most-requested ones, and email you when the report goes live.</p>
           </div>
           <form className={styles.wlForm} onSubmit={handleWaitlistSubmit}>
             <input type="text" placeholder="e.g. Mexico City, Bali, Cape Town"
