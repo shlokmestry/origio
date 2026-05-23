@@ -158,6 +158,38 @@ export default function CompareCitiesClient({ allCities }: Props) {
     return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
   }, [indexed])
 
+  const strikeLabel = useMemo(() => {
+    if (!verdict) return 'a small inheritance'
+    const d = verdict.dearest.c.slug
+    const c = verdict.cheapest.c.slug
+    const pair = [d, c].sort().join('|')
+    const pairLabels: Record<string, string> = {
+      'lisbon|london':       "your landlord's third holiday home",
+      'lisbon|new-york':     "a year of therapy for living in New York",
+      'lisbon|singapore':    "a condo in the country you left",
+      'london|new-york':     "the deposit on a studio neither of you can afford",
+      'london|tokyo':        "what London charges just for the postcode",
+      'dubai|london':        "the tax you didn't pay living in Dubai",
+      'berlin|new-york':     "a sabbatical, a motorbike, and change",
+      'berlin|london':       "six months of Berlin rent, paid twice",
+      'amsterdam|new-york':  "a boat house. a real one.",
+      'barcelona|london':    "a long weekend every single month",
+      'dubai|singapore':     "a business class round-trip, twelve times",
+      'sydney|tokyo':        "a plot twist",
+      'toronto|new-york':    "your Canadian healthcare, in cash",
+    }
+    if (pairLabels[pair]) return pairLabels[pair]
+    const y = verdict.yearGap
+    if (y < 3000)  return 'a decent holiday'
+    if (y < 6000)  return 'a gym membership you'd actually use'
+    if (y < 10000) return 'a return business class ticket'
+    if (y < 15000) return 'a used car, running'
+    if (y < 20000) return 'a semester abroad'
+    if (y < 30000) return 'a small inheritance'
+    if (y < 50000) return 'a down payment deposit'
+    return 'a year off, honestly'
+  }, [verdict])
+
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const toggleCity = useCallback((slug: string) => {
@@ -493,7 +525,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                 <span className={styles.it}>{fmt(verdict.gap, currency)}</span> more than{' '}
                 <strong><span className={styles.it}>{verdict.cheapest.c.name}</span></strong>.{' '}
                 Over a year that&rsquo;s{' '}
-                <span className={styles.strike}>a small inheritance</span>{' '}
+                <span className={styles.strike}>{strikeLabel}</span>{' '}
                 <span className={styles.it}>{fmt(verdict.yearGap, currency)}</span>.
               </p>
             )}
