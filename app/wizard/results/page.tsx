@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X } from "lucide-react";
-import { CountryMatch, WizardAnswers } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports, scoreCountriesForWizard } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
+import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -53,21 +54,6 @@ function getCurrencySymbol(currency: string): string {
   };
   return s[currency] ?? currency + " ";
 }
-
-function getVisaLabel(d: number) {
-  if (d <= 1) return "Easy";
-  if (d <= 2) return "Straightforward";
-  if (d <= 3) return "Moderate";
-  if (d <= 4) return "Difficult";
-  return "Very hard";
-}
-
-const TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
-  NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
-  NOK: 0.093, SEK: 0.096, DKK: 0.145,
-  JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
-};
 
 function toUSD(amount: number, currency: string): number {
   return amount * (TO_USD[currency] ?? 1);
@@ -457,6 +443,8 @@ export default function WizardResultsPage() {
               .from("wizard_results")
               .select("answers, top_countries")
               .eq("user_id", session.user.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
               .maybeSingle();
 
             if (result?.top_countries && result.top_countries.length > 0) {
@@ -501,12 +489,7 @@ export default function WizardResultsPage() {
             slug: m.country.slug, name: m.country.name,
             flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
           }));
-          const { data: existing } = await supabase.from("wizard_results").select("id").eq("user_id", user.id).maybeSingle();
-          if (existing) {
-            await supabase.from("wizard_results").update({ top_countries: topCountries, answers, created_at: new Date().toISOString() }).eq("id", existing.id);
-          } else {
-            await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
-          }
+          await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
         } catch (err) { console.error("Failed to save:", err); }
       };
       save();
@@ -553,6 +536,44 @@ export default function WizardResultsPage() {
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
+
+  // Passport power derived values
+  const { primary: effectivePrimary, secondary: effectiveSecondary } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const passportTier    = Math.min(getPassportStrength(effectivePrimary), effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4) as 1|2|3|4;
+  const rawPrimaryTier  = getPassportStrength((answers.passport ?? "").toLowerCase());
+  const tierUpgraded    = !!effectiveSecondary && passportTier < rawPrimaryTier;
+  const hasDualPassport = !!(answers.secondPassport);
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
+  const EU_COUNTRY_SLUGS  = new Set(["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"]);
+  // Which passport drives a given country's visa advantage
+  function passportDrivingVisa(countrySlug: string): string | null {
+    if (!hasDualPassport) return null;
+    const p1IsEU = EU_PASSPORT_SLUGS.has(effectivePrimary);
+    const p2IsEU = effectiveSecondary ? EU_PASSPORT_SLUGS.has(effectiveSecondary) : false;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && !p1IsEU && p2IsEU) return effectiveSecondary ?? null;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && p1IsEU) return effectivePrimary;
+    const t1 = getPassportStrength(effectivePrimary);
+    const t2 = effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4;
+    if (t2 < t1) return effectiveSecondary ?? null; // second is stronger
+    return null; // primary drives it — no need to call it out
+  }
+
+  // Delta: where would top match rank without the second passport?
+  const passportDelta = (() => {
+    if (!hasDualPassport || !answers.secondPassport) return null;
+    try {
+      const countriesRaw = sessionStorage.getItem("wizardCountries");
+      if (!countriesRaw) return null;
+      const countries = JSON.parse(countriesRaw);
+      const withoutSecond = scoreCountriesForWizard(countries, { ...answers, secondPassport: undefined } as WizardAnswers);
+      const topSlug = matches[0]?.country.slug;
+      const rankWithout = withoutSecond.findIndex(m => m.country.slug === topSlug) + 1;
+      return rankWithout > 1 ? rankWithout : null;
+    } catch { return null; }
+  })();
 
   const top       = matches[0];
   const pctColor  = matchPercentColor(top.matchPercent);
@@ -627,9 +648,26 @@ export default function WizardResultsPage() {
         {/* ── HERO ────────────────────────────────────────────────────────── */}
         <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
           <div>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }}>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: hasDualPassport ? 14 : 28, display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: MINT }}>●</span> Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
             </p>
+            {hasDualPassport && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "7px 14px", border: `1px solid rgba(0,255,213,0.2)`, marginBottom: 28, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport power</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT }}>TIER {passportTier}</span>
+                <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{PASSPORT_TIER_LABEL[passportTier].split("—")[1]?.trim()}</span>
+                {tierUpgraded && <span style={{ fontFamily: MONO, fontSize: 10, color: MINT }}>↑ from Tier {rawPrimaryTier}</span>}
+                {passportDelta && (
+                  <>
+                    <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,200,50,0.8)" }}>
+                      Without second passport: #{passportDelta}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>
               <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>
               <h1 style={{ fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92, margin: 0, color: FG }}>
@@ -715,6 +753,11 @@ export default function WizardResultsPage() {
                   </div>
                   <div style={{ fontSize: 36, marginBottom: 12 }}>{m.country.flagEmoji}</div>
                   <div style={{ fontFamily: SERIF, fontSize: 22, color: FG, marginBottom: 8 }}>{m.country.name}</div>
+                  {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 8, opacity: 0.8 }}>
+                      ✦ visa via {driver} passport
+                    </div>
+                  ) : null; })()}
                   {salary && (
                     <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: DIM, lineHeight: 1.8 }}>
                       <span>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</span><br />

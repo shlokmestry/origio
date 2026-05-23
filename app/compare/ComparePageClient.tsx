@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import Link from "next/link";
+import { getVisaLabel } from "@/lib/utils";
+import { getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -18,14 +20,6 @@ const COL_C = "#c4b5fd";
 const LABEL_W = 200; // px — label column width, shared everywhere
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-function getVisaLabel(d: number) {
-  if (d <= 1) return "Easy";
-  if (d <= 2) return "Moderate";
-  if (d <= 3) return "Challenging";
-  if (d <= 4) return "Difficult";
-  return "Very Hard";
-}
 
 // ── ChevronDown SVG ───────────────────────────────────────────────────────────
 
@@ -291,6 +285,7 @@ export default function ComparePageClient() {
   const [slugC, setSlugC] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
   const [isPro, setIsPro] = useState(false);
+  const [passportCtx, setPassportCtx] = useState<{ tier: 1|2|3|4; rawTier: 1|2|3|4; upgraded: boolean; hasDual: boolean } | null>(null);
   // FIX: start true so we never render a black screen while checking
   const [proChecked, setProChecked] = useState(true);
 
@@ -300,12 +295,44 @@ export default function ComparePageClient() {
       if (session?.user) {
         const { data } = await supabase
           .from("profiles")
-          .select("is_pro")
+          .select("is_pro, passport_slug, second_passport_slug")
           .eq("id", session.user.id)
           .single();
         setIsPro(data?.is_pro ?? false);
+        // build passport context for visa-adjusted display
+        if (data?.passport_slug) {
+          const { primary, secondary } = resolveEffectivePassports(data.passport_slug, data.second_passport_slug ?? undefined);
+          const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+          const rawTier = getPassportStrength(data.passport_slug);
+          setPassportCtx({ tier, rawTier, upgraded: !!secondary && tier < rawTier, hasDual: !!data.second_passport_slug });
+        } else {
+          // fallback: try sessionStorage answers
+          try {
+            const raw = sessionStorage.getItem("wizardAnswers");
+            if (raw) {
+              const a = JSON.parse(raw);
+              if (a?.passport) {
+                const { primary, secondary } = resolveEffectivePassports(a.passport.toLowerCase(), (a.secondPassport ?? "").toLowerCase() || undefined);
+                const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+                setPassportCtx({ tier, rawTier: getPassportStrength(a.passport.toLowerCase()), upgraded: !!secondary && tier < getPassportStrength(a.passport.toLowerCase()), hasDual: !!a.secondPassport });
+              }
+            }
+          } catch { /* ignore */ }
+        }
       } else {
         setIsPro(false);
+        // anon: try sessionStorage for passport context
+        try {
+          const raw = sessionStorage.getItem("wizardAnswers");
+          if (raw) {
+            const a = JSON.parse(raw);
+            if (a?.passport) {
+              const { primary, secondary } = resolveEffectivePassports(a.passport.toLowerCase(), (a.secondPassport ?? "").toLowerCase() || undefined);
+              const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+              setPassportCtx({ tier, rawTier: getPassportStrength(a.passport.toLowerCase()), upgraded: !!secondary && tier < getPassportStrength(a.passport.toLowerCase()), hasDual: !!a.secondPassport });
+            }
+          }
+        } catch { /* ignore */ }
       }
       setProChecked(true);
     });
@@ -602,6 +629,18 @@ export default function ComparePageClient() {
             <MetricRow label="Internet speed" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreInternetSpeed")} />
 
             <SectionRow label="Visa" isPro={isPro} />
+            {passportCtx && (
+              <div style={{ display: "grid", gridTemplateColumns: TABLE_GRID, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ width: LABEL_W }} />
+                <div className="col-span-3 px-4 py-2 flex items-center gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#00ffd5] border border-[#00ffd5]/30 px-2 py-0.5">
+                    Tier {passportCtx.tier} passport
+                  </span>
+                  <span className="text-[10px] text-white/30">{PASSPORT_TIER_LABEL[passportCtx.tier].split("—")[1]?.trim()}</span>
+                  {passportCtx.upgraded && <span className="text-[10px] text-yellow-400/60">↑ upgraded via second passport</span>}
+                </div>
+              </div>
+            )}
             <MetricRow label="Difficulty" isPro={isPro} higherIsBetter={false} format={(v) => `${getVisaLabel(v)} · ${v}/5`} values={trio("visaDifficulty")} />
             <MetricRow label="Move score" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("moveScore")} />
           </div>
