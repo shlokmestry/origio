@@ -579,7 +579,7 @@ export default function SalaryCalculator() {
                     </div>
                   </div>
                   <Link href="/pro" style={{ padding:"8px 14px", background:"#00ffd5", color:"#0a0a0a", fontFamily:"monospace", fontSize:10, fontWeight:700, textDecoration:"none", textTransform:"uppercase", letterSpacing:"0.12em", flexShrink:0 }}>
-                    €19.99 →
+                    €4.99 →
                   </Link>
                 </div>
               )}
@@ -646,7 +646,7 @@ export default function SalaryCalculator() {
                         <ReceiptRow label="Other Deductions" value={`-${sym}????`} red dim />
                         <div style={{ padding:"6px 10px", border:"1px dashed rgba(0,255,213,0.18)", margin:"6px 0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                           <span style={{ fontFamily:"monospace", fontSize:9, color:"#00ffd5" }}>🔒 PRO — full breakdown</span>
-                          <Link href="/pro" style={{ fontFamily:"monospace", fontSize:9, color:"#00ffd5", textDecoration:"underline" }}>€19.99</Link>
+                          <Link href="/pro" style={{ fontFamily:"monospace", fontSize:9, color:"#00ffd5", textDecoration:"underline" }}>€4.99</Link>
                         </div>
                       </>
                     )}
