@@ -256,7 +256,7 @@ export default function WizardPage() {
 
   const isJobOffer = answers.moveReason === "job";
   const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
-  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
+  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; if (cur === 2 && introPassport) return 0; return cur - 1; };
   const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
   const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
   const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
@@ -286,11 +286,11 @@ export default function WizardPage() {
         sessionStorage.setItem("wizardPassportContext", JSON.stringify({ passport: introPassport, secondPassport: introSecondPassport || null }));
       } catch { /* ignore */ }
     }
-    setStep(1);
+    setStep(introPassport ? 2 : 1);
   };
 
   const canProceed = () => {
-    if (step === 0) return hasDualPassport !== null;
+    if (step === 0) return hasDualPassport !== null && introPassport !== '';
     if (step === 1) return !!answers.passport;
     if (step === 2) return !!answers.moveReason;
     if (step === 3) return !!answers.jobRole;
@@ -584,7 +584,6 @@ export default function WizardPage() {
                 </div>
               )}
 
-              <p style={{ fontSize: 12, color: DIM, marginTop: 12 }}>You can also add your passport on the next question — skip if you prefer.</p>
             </>
           )}
 
