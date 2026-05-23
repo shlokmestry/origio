@@ -14,10 +14,10 @@ interface NavProps {
 }
 
 export default function Nav({ countries = [], onCountrySelect }: NavProps) {
-  const [searchOpen, setSearchOpen]       = useState(false);
+  const [searchOpen, setSearchOpen]         = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser]                   = useState<SupabaseUser | null>(null);
-  const [isPro, setIsPro]           = useState(false);
+  const [user, setUser]                     = useState<SupabaseUser | null>(null);
+  const [isPro, setIsPro]                   = useState(false);
 
   const fetchProStatus = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -52,7 +52,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
     };
   }, [fetchProStatus]);
 
-  // Global "/" shortcut to open search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "/" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
@@ -107,6 +106,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           transition: color 0.15s, background 0.15s; font-family: 'Satoshi', sans-serif;
         }
         .nav-link-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .nav-link-item.active { color: #fff; background: rgba(255,255,255,0.08); }
         .nav-link-pro { color: #00ffd5 !important; display: flex; align-items: center; gap: 4px; }
         .nav-link-pro:hover { background: rgba(0,255,213,0.08) !important; }
         .nav-search-btn {
@@ -122,9 +122,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           color: rgba(255,255,255,0.2);
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 4px;
-          padding: 1px 5px;
-          letter-spacing: 0;
+          border-radius: 4px; padding: 1px 5px; letter-spacing: 0;
         }
         .nav-auth-pill {
           display: flex; align-items: center; gap: 6px;
@@ -146,12 +144,19 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           transition: color 0.15s; flex-shrink: 0;
         }
         .nav-mobile-btn:hover { color: #fff; }
+        .ph-badge {
+          position: fixed; top: 18px; right: 20px; z-index: 101;
+          display: block; line-height: 0; opacity: 0.9;
+          transition: opacity 0.15s;
+        }
+        .ph-badge:hover { opacity: 1; }
         @media (max-width: 768px) {
           .nav-pill { top: 12px; height: 46px; }
           .nav-links-inner { display: none; }
           .nav-logo-pill { height: 38px; }
           .nav-auth-pill { height: 38px; padding: 0 14px; font-size: 12px; }
           .nav-mobile-btn { display: flex; }
+          .ph-badge { display: none; }
         }
         .mobile-menu {
           display: none; position: fixed; inset: 0; z-index: 200;
@@ -197,6 +202,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
               <span className="nav-search-btn-kbd">/</span>
             </button>
           )}
+          <Link href="/cities"            className="nav-link-item">Cities</Link>
           <Link href="/salary-calculator" className="nav-link-item">Calculator</Link>
           <Link href="/blog"              className="nav-link-item">Blog</Link>
           <Link href="/about"             className="nav-link-item">About</Link>
@@ -208,7 +214,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           )}
         </div>
 
-        {/* Mobile hamburger */}
         <button
           className="nav-mobile-btn"
           onClick={() => setMobileMenuOpen(true)}
@@ -230,6 +235,12 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           </a>
         )}
       </nav>
+
+      {/* Product Hunt badge — fixed top-right, hidden on mobile */}
+      <a href="https://www.producthunt.com/products/origio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-origio" target="_blank" rel="noopener noreferrer" className="ph-badge" aria-label="Origio on Product Hunt">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="Origio - A personalized way to discover where to live | Product Hunt" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1138152&theme=dark&t=1779092788392" width={250} height={54} style={{ display: "block" }} />
+      </a>
 
       {/* Mobile full-screen menu */}
       <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="Mobile navigation">
@@ -257,8 +268,9 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
               <span style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: "'DM Serif Display', Georgia, serif", letterSpacing: "-0.01em" }}>Search countries</span>
             </button>
           )}
-          <Link href="/wizard"             className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
-          <Link href="/compare"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
+          <Link href="/wizard"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
+          <Link href="/cities"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Cities</Link>
+          <Link href="/compare"           className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
           <Link href="/salary-calculator" className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Calculator</Link>
           <Link href="/blog"              className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
           <Link href="/about"             className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>About</Link>
@@ -291,7 +303,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         </div>
       </div>
 
-      {/* CommandSearch modal — centered, with illustration */}
       <CommandSearch
         countries={countries}
         onCountrySelect={handleCountrySelect}
