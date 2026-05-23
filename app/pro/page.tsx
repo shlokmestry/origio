@@ -158,12 +158,16 @@ export default function ProPage() {
   const handleUpgrade = async () => {
     setLoading(true); setError('')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.push('/signin?next=/pro'); return }
+    if (!session) { setLoading(false); router.push('/signin?next=/pro'); return }
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10000)
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
       const data = await res.json().catch(() => ({}))
       if (data.url) {
         window.location.href = data.url
