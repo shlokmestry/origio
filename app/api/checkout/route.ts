@@ -33,15 +33,20 @@ export async function POST(request: Request) {
   const requestOrigin = request.headers.get('origin') ?? ''
   const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-    customer_email: user.email,
-    client_reference_id: user.id,
-    success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/pro`,
-    metadata: { user_id: user.id },
-  })
-
-  return NextResponse.json({ url: session.url })
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
+      customer_email: user.email,
+      client_reference_id: user.id,
+      success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pro`,
+      metadata: { user_id: user.id },
+    })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Stripe error'
+    console.error('[checkout] Stripe error:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }
