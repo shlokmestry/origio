@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, CheckCircle } from "lucide-react";
@@ -34,7 +34,7 @@ function visa(d: number) {
   return getVisaLabel(d);
 }
 
-export default function ReportSuccessPage() {
+function ReportSuccessInner() {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
 
@@ -200,5 +200,14 @@ export default function ReportSuccessPage() {
 
       </div>
     </main>
+  );
+}
+
+
+export default function ReportSuccessPage() {
+  return (
+    <Suspense fallback={<main style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#888880", fontSize: 13, fontFamily: "sans-serif" }}>Loading…</p></main>}>
+      <ReportSuccessInner />
+    </Suspense>
   );
 }
