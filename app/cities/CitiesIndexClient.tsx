@@ -46,7 +46,7 @@ const CITY_EXTRAS: Record<string, CityExtra> = {
   singapore:   { climateBand:'warm',      climate:'Tropical',         vibes:['remote','family','culture'],   rentEur:2580, visa:'sponsor',  internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
   tokyo:       { climateBand:'temperate', climate:'Humid Subtropical',vibes:['culture','remote','nightlife'],rentEur:900,  visa:'investor', internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
   sydney:      { climateBand:'warm',      climate:'Oceanic',          vibes:['beach','family','remote'],     rentEur:1530, visa:'sponsor',  internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
-  dubai:       { climateBand:'warm',      climate:'Desert',           vibes:['remote','beach','nightlife'],  rentEur:700,  visa:'investor', internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
+  dubai:       { climateBand:'warm',      climate:'Desert',           vibes:['remote','beach','nightlife'],  rentEur:2200, visa:'investor', internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
   // soon cities (no rentEur needed for filtering since they're excluded)
   porto:       { climateBand:'temperate', climate:'Atlantic temperate',vibes:['budget','culture','remote'],  rentEur:950,  status:'soon' },
   funchal:     { climateBand:'warm',      climate:'Subtropical',       vibes:['remote','beach','culture'],   rentEur:1100, status:'soon' },
