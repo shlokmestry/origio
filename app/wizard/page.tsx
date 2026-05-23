@@ -217,9 +217,10 @@ export default function WizardPage() {
 
   useEffect(() => {
     async function checkGate() {
-      const safetyTimer = setTimeout(() => setGateChecked(true), 5000);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const anonSession = { data: { session: null }, error: null } as const;
+        const timeout = new Promise<typeof anonSession>(resolve => setTimeout(() => resolve(anonSession), 4000));
+        const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout]);
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
@@ -249,7 +250,6 @@ export default function WizardPage() {
         // Network / Supabase error — allow the quiz to proceed rather than hanging forever
         console.error("checkGate error:", err);
       } finally {
-        clearTimeout(safetyTimer);
         setGateChecked(true);
       }
     }
@@ -377,9 +377,30 @@ export default function WizardPage() {
   const stepPad       = (n: number) => String(n).padStart(2, "0");
 
   if (!gateChecked) return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 120, height: 2, background: LINE }}>
-        <div style={{ width: "40%", height: "100%", background: MINT, animation: "pulse 1.5s infinite" }} />
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
+      <style>{`
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(250%)} }
+        @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.3} 40%{transform:translateY(-6px);opacity:1} }
+      `}</style>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: MINT, display: "inline-block", animation: "pulse 1.5s infinite" }} />
+        <span style={{ fontFamily: SERIF, fontSize: 28, letterSpacing: "-0.02em", color: FG }}>
+          origio<span style={{ color: MINT }}>.</span>
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", gap: 7 }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: MINT, display: "inline-block", animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+          ))}
+        </div>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM }}>
+          Preparing your quiz
+        </span>
+      </div>
+      <div style={{ position: "absolute", bottom: 32, fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#333" }}>
+        findorigio.com
       </div>
     </div>
   );
