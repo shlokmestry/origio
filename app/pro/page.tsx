@@ -164,9 +164,13 @@ export default function ProPage() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else { setError(data.error ?? 'Something went wrong. Please try again.'); setLoading(false) }
+      const data = await res.json().catch(() => ({}))
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.error ?? `Checkout failed (${res.status}). Please try again.`)
+        setLoading(false)
+      }
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)
