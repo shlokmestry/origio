@@ -398,6 +398,7 @@ export default function WizardResultsPage() {
   const [user, setUser]               = useState<User | null>(null);
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Auth — also listens for post-OAuth redirect sign-in
   useEffect(() => {
@@ -500,6 +501,22 @@ export default function WizardResultsPage() {
     sessionStorage.setItem("highlightedCountries", JSON.stringify(matches.slice(0, 3).map(m => m.country.slug)));
     sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
     router.push("/");
+  };
+
+  const handleReportCheckout = async () => {
+    setReportLoading(true);
+    try {
+      const body: Record<string, string> = {};
+      if (user?.email) body.email = user.email;
+      const res = await fetch("/api/checkout-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch { /* ignore */ }
+    setReportLoading(false);
   };
 
   // ── Loading screen ─────────────────────────────────────────────────────
@@ -924,20 +941,38 @@ export default function WizardResultsPage() {
                   }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
                     onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-                    <Sparkles size={13} /> Get Pro · €19.99
+                    <Sparkles size={13} /> Get Pro · €4.99
                   </Link>
+                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ flex: 1, height: 1, background: LINE }} />
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#333" }}>or</span>
+                    <div style={{ flex: 1, height: 1, background: LINE }} />
+                  </div>
+                  <button onClick={handleReportCheckout} disabled={reportLoading} style={{ marginTop: 12, width: "100%", fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", padding: "11px 20px", background: "transparent", color: DIM, border: `1px solid #2a2a2a`, borderRadius: 999, cursor: reportLoading ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "border-color 0.15s, color 0.15s" }}
+                    onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.borderColor = "#444"; (e.currentTarget as HTMLElement).style.color = "#fff"; } }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; (e.currentTarget as HTMLElement).style.color = DIM; }}>
+                    {reportLoading ? "Redirecting…" : "↓ Download Report · €4.99"}
+                  </button>
+                  <p style={{ fontFamily: SANS, fontSize: 11, color: "#444", marginTop: 8 }}>One-time · top 5 matches · downloadable</p>
                 </div>
               </div>
             </div>
           )}
           {isPro && matches.length >= 3 && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 25 countries ranked for you</p>
-              <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Compare top 3 <ArrowRight size={13} />
-              </Link>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <button onClick={handleReportCheckout} disabled={reportLoading} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM, background: "none", border: "none", cursor: reportLoading ? "default" : "pointer", display: "flex", alignItems: "center", gap: 5, transition: "color 0.15s" }}
+                  onMouseEnter={e => { if (!reportLoading) (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = DIM; }}>
+                  ↓ Download report · €4.99
+                </button>
+                <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = MINT)}
+                  onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                  Compare top 3 <ArrowRight size={13} />
+                </Link>
+              </div>
             </div>
           )}
         </section>
