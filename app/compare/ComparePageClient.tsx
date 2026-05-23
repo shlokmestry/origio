@@ -694,7 +694,7 @@ export default function ComparePageClient() {
                 style={{ borderRadius: 100 }}
               >
                 <Star className="w-3.5 h-3.5" fill="currentColor" />
-                Get Pro · €19.99
+                Get Pro · €4.99
               </Link>
             </div>
           )}
