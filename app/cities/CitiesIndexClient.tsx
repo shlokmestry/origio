@@ -35,16 +35,16 @@ interface CityExtra {
 // rentEur: approximate EUR equivalent using May 2026 rates
 // GBP×1.18  USD×0.92  CAD×0.68  SGD×0.68  JPY×0.0064  AUD×0.59  AED×0.25
 const CITY_EXTRAS: Record<string, CityExtra> = {
-  lisbon:      { climateBand:'warm',      climate:'Mediterranean',    vibes:['remote','culture','beach'],    rentEur:1200, visa:'nomad',    internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
+  lisbon:      { climateBand:'warm',      climate:'Mediterranean',    vibes:['remote','culture','beach','budget'],    rentEur:1200, visa:'nomad',    internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
   london:      { climateBand:'temperate', climate:'Oceanic',          vibes:['remote','culture','nightlife'],rentEur:2600, visa:'sponsor',  internet:'excellent', english:'very-high', safety:'safe',      status:'live' },
   dublin:      { climateBand:'cool',      climate:'Oceanic',          vibes:['remote','culture','nightlife'],rentEur:2200, visa:'sponsor',  internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
   amsterdam:   { climateBand:'temperate', climate:'Oceanic',          vibes:['remote','culture','nightlife'],rentEur:1950, visa:'visa-free',internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  berlin:      { climateBand:'temperate', climate:'Continental',      vibes:['remote','nightlife','culture'],rentEur:1350, visa:'nomad',    internet:'good',      english:'high',      safety:'safe',      status:'live' },
+  berlin:      { climateBand:'temperate', climate:'Continental',      vibes:['remote','nightlife','culture','budget'],rentEur:1350, visa:'nomad',    internet:'good',      english:'high',      safety:'safe',      status:'live' },
   barcelona:   { climateBand:'warm',      climate:'Mediterranean',    vibes:['remote','beach','nightlife'],  rentEur:1450, visa:'nomad',    internet:'good',      english:'moderate',  safety:'safe',      status:'live' },
   'new-york':  { climateBand:'temperate', climate:'Continental',      vibes:['remote','culture','nightlife'],rentEur:3500, visa:'sponsor',  internet:'excellent', english:'very-high', safety:'moderate',  status:'live' },
   toronto:     { climateBand:'cool',      climate:'Continental',      vibes:['family','culture','remote'],   rentEur:1630, visa:'income',   internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
   singapore:   { climateBand:'warm',      climate:'Tropical',         vibes:['remote','family','culture'],   rentEur:2580, visa:'sponsor',  internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  tokyo:       { climateBand:'temperate', climate:'Humid Subtropical',vibes:['culture','remote','nightlife'],rentEur:900,  visa:'investor', internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
+  tokyo:       { climateBand:'temperate', climate:'Humid Subtropical',vibes:['culture','remote','nightlife','budget'],rentEur:900,  visa:'investor', internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
   sydney:      { climateBand:'warm',      climate:'Oceanic',          vibes:['beach','family','remote'],     rentEur:1530, visa:'sponsor',  internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
   dubai:       { climateBand:'warm',      climate:'Desert',           vibes:['remote','beach','nightlife'],  rentEur:2200, visa:'investor', internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
   // soon cities (no rentEur needed for filtering since they're excluded)
@@ -204,13 +204,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
     }
     if (filters.climate !== 'any') {
       list = list.filter(c => {
-        // Derive climateBand from real DB temperatures if available
-        const summer = c.data?.climateSummerAvgC
-        const winter = c.data?.climateWinterAvgC
-        if (summer != null && winter != null) {
-          const derived: ClimateBand = summer >= 24 ? 'warm' : winter <= 8 ? 'cool' : 'temperate'
-          return derived === filters.climate
-        }
+        // Always use hardcoded climateBand — DB temp thresholds misclassify cities like Tokyo
         return c.extra?.climateBand === filters.climate
       })
     }
