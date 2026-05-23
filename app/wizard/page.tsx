@@ -217,6 +217,7 @@ export default function WizardPage() {
 
   useEffect(() => {
     async function checkGate() {
+      const safetyTimer = setTimeout(() => setGateChecked(true), 5000);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
@@ -248,6 +249,7 @@ export default function WizardPage() {
         // Network / Supabase error — allow the quiz to proceed rather than hanging forever
         console.error("checkGate error:", err);
       } finally {
+        clearTimeout(safetyTimer);
         setGateChecked(true);
       }
     }
