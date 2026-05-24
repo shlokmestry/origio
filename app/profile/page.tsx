@@ -462,6 +462,28 @@ export default function ProfilePage() {
             </div>
           )}
 
+          {wizardResult && (() => {
+            const daysAgo = Math.floor((Date.now() - new Date(wizardResult.created_at).getTime()) / 86400000)
+            return daysAgo > 30 ? (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+                padding: '12px 16px', marginBottom: 16,
+                borderLeft: '2px solid #facc15', background: 'rgba(250,204,21,0.04)',
+              }}>
+                <p style={{ fontFamily: "var(--font-body,'Satoshi',sans-serif)", fontSize: 13, color: '#facc15', margin: 0 }}>
+                  Your results are {daysAgo} days old — priorities change.
+                </p>
+                <button onClick={() => router.push('/wizard')} style={{
+                  fontFamily: "'Cabinet Grotesk','Satoshi',sans-serif", fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.16em', textTransform: 'uppercase', color: '#facc15',
+                  background: 'none', border: '1px solid #facc15', padding: '6px 14px', cursor: 'pointer',
+                }}>
+                  Retake →
+                </button>
+              </div>
+            ) : null
+          })()}
+
           {/* Country Matches */}
           <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
             {/* Card head */}

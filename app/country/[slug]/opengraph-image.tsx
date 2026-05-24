@@ -43,7 +43,7 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
         }} />
 
         {/* Logo top-left */}
-        <img src={logoBase64} style={{ position: "absolute", top: 36, left: 48, height: 36, width: "auto" }} />
+        <img src={logoBase64} alt="" style={{ position: "absolute", top: 36, left: 48, height: 36, width: "auto" }} />
 
         <div style={{ fontSize: 80, marginBottom: 16, display: "flex" }}>{flag}</div>
         <div style={{ fontSize: 72, fontWeight: 800, color: "#f0f0e8", letterSpacing: "-2px", marginBottom: 6, display: "flex" }}>{name}</div>
