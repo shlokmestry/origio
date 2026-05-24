@@ -17,7 +17,7 @@ import type { User } from "@supabase/supabase-js";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
-const BG    = "#0a0a0a";
+const BG    = "#0e0d0c";
 const FG    = "#f0f0e8";
 const MINT  = "#00ffd5";
 const DIM   = "#888880";
@@ -388,6 +388,25 @@ function SaveResultsBanner() {
   );
 }
 
+// ── Country role label ─────────────────────────────────────────────────────
+function getCountryRoleLabel(m: CountryMatch, jobRoleDef: typeof JOB_ROLES[0] | undefined, allMatches: CountryMatch[]): string {
+  const d = m.country.data;
+  const salary = jobRoleDef ? d[jobRoleDef.salaryKey] as number : 0;
+  const salaryUSD = salary * (TO_USD[m.country.currency] ?? 1);
+  const topSalaryUSD = allMatches.slice(0, 5).reduce((max, x) => {
+    const s = jobRoleDef ? x.country.data[jobRoleDef.salaryKey] as number : 0;
+    return Math.max(max, s * (TO_USD[x.country.currency] ?? 1));
+  }, 0);
+  if (salaryUSD >= topSalaryUSD * 0.97) return "Best salary";
+  if (d.visaDifficulty <= 1) return "Fastest visa";
+  if (d.incomeTaxRateMid <= 12) return "Low tax";
+  if (d.costRentCityCentre <= 800) return "Lowest cost";
+  if (d.scoreSafety >= 8.5) return "Safest";
+  if (d.scoreQualityOfLife >= 8.5) return "Best QoL";
+  if (d.language === "English") return "English-speaking";
+  return "";
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function WizardResultsPage() {
   const router = useRouter();
@@ -629,12 +648,6 @@ export default function WizardResultsPage() {
         }
       `}</style>
 
-      <div style={{
-        position: "fixed", top: 0, right: 0, width: 600, height: 600,
-        background: "radial-gradient(ellipse at 80% 0%, #00ffd508 0%, transparent 55%)",
-        pointerEvents: "none", zIndex: 0,
-      }} />
-
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <Nav countries={[]} onCountrySelect={() => {}} />
 
@@ -672,10 +685,16 @@ export default function WizardResultsPage() {
                 {top.country.name}
               </h1>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
               <span style={{ fontFamily: SERIF, fontSize: 48, color: pctColor }}>{top.matchPercent}%</span>
               <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM }}>match for your profile</span>
             </div>
+            <p style={{ fontFamily: SANS, fontSize: 15, color: "rgba(240,240,232,0.7)", lineHeight: 1.7, marginBottom: 24, maxWidth: 480 }}>
+              {(() => {
+                const scores = computeScoreBreakdown(top.country, answers, jobRoleDef);
+                return generateSummary(top, answers, scores, 1);
+              })()}
+            </p>
             {topSalary && (
               <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE, marginBottom: 24 }}>
                 {[
@@ -736,108 +755,103 @@ export default function WizardResultsPage() {
         {/* ── PODIUM ──────────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-              Your <em style={{ color: MINT, fontStyle: "italic" }}>top three</em>
+              Your <em style={{ fontStyle: "italic" }}>top three</em>
             </h2>
           </div>
-          <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
-            {matches.slice(0, 3).map((m, i) => {
-              const mcs    = getCurrencySymbol(m.country.currency);
-              const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
-              return (
-                <div key={m.country.slug} style={{ background: BG, padding: "24px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: RANK_COLORS[i] }}>#{i + 1}</span>
-                    <span style={{ fontFamily: SERIF, fontSize: 20, color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</span>
-                  </div>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{m.country.flagEmoji}</div>
-                  <div style={{ fontFamily: SERIF, fontSize: 22, color: FG, marginBottom: 8 }}>{m.country.name}</div>
-                  {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
-                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 8, opacity: 0.8 }}>
-                      ✦ visa via {driver} passport
-                    </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: LINE }}>
+            {/* #1 — dominant */}
+            <div style={{ background: BG, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>01</span>
+                <span style={{ fontSize: 40 }}>{matches[0].country.flagEmoji}</span>
+                <div>
+                  <div style={{ fontFamily: SERIF, fontSize: 28, color: FG, marginBottom: 4 }}>{matches[0].country.name}</div>
+                  {(() => { const driver = passportDrivingVisa(matches[0].country.slug); return driver ? (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 4, opacity: 0.8 }}>✦ visa via {driver} passport</div>
                   ) : null; })()}
-                  {salary && (
-                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: DIM, lineHeight: 1.8 }}>
-                      <span>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</span><br />
-                      <span>{mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo rent · {m.country.language}</span>
-                    </div>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
-                    <Link href={`/country/${m.country.slug}/personalised`} style={{
-                      fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-                      color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
-                    }}>
-                      Report →
-                    </Link>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: DIM, letterSpacing: "0.14em" }}>
+                    {jobRoleDef ? `${getCurrencySymbol(matches[0].country.currency)}${(matches[0].country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr · ${getVisaLabel(matches[0].country.data.visaDifficulty)} visa` : ""}
                   </div>
-                  <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
                 </div>
-              );
-            })}
-          </div>
-          {isPro && (
-            <div style={{ marginTop: 20 }}>
-              <Link href={compareHref} style={{
-                fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase",
-                color: DIM, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, transition: "color 0.15s",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Compare these 3 side by side <ArrowRight size={13} />
-              </Link>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                <span style={{ fontFamily: SERIF, fontSize: 40, color: matchPercentColor(matches[0].matchPercent) }}>{matches[0].matchPercent}%</span>
+                <Link href={`/country/${matches[0].country.slug}/personalised`} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                  Report →
+                </Link>
+              </div>
             </div>
-          )}
+            {/* #2 and #3 — quieter */}
+            <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: LINE }}>
+              {matches.slice(1, 3).map((m, i) => {
+                const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
+                const mcs = getCurrencySymbol(m.country.currency);
+                return (
+                  <div key={m.country.slug} style={{ background: BG, padding: "20px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{String(i + 2).padStart(2, "0")}</span>
+                      <span style={{ fontFamily: SERIF, fontSize: 18, color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</span>
+                    </div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>{m.country.flagEmoji}</div>
+                    <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 6 }}>{m.country.name}</div>
+                    {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
+                      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 6, opacity: 0.8 }}>✦ visa via {driver} passport</div>
+                    ) : null; })()}
+                    {salary && <div style={{ fontFamily: MONO, fontSize: 10, color: DIM, letterSpacing: "0.1em" }}>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</div>}
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${LINE}` }}>
+                      <Link href={`/country/${m.country.slug}/personalised`} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, transition: "color .12s" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = FG)}
+                        onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                        Report →
+                      </Link>
+                    </div>
+                    <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 2} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ── AT A GLANCE ─────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ At a glance</p>
-            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-              What this <em style={{ color: MINT, fontStyle: "italic" }}>means</em>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>Analysis</p>
+            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+              What your results say
             </h2>
           </div>
-          <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE }}>
-            {[
-              {
-                label: "Best salary",
-                value: (() => { if (!jobRoleDef) return "—"; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${best.country.flagEmoji} ${best.country.name}`; })(),
-                sub: (() => { if (!jobRoleDef) return ""; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${getCurrencySymbol(best.country.currency)}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr`; })(),
-              },
-              {
-                label: "Easiest visa",
-                value: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return `${e.country.flagEmoji} ${e.country.name}`; })(),
-                sub: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return getVisaLabel(e.country.data.visaDifficulty); })(),
-              },
-              {
-                label: "Lowest rent",
-                value: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${c.country.flagEmoji} ${c.country.name}`; })(),
-                sub: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${getCurrencySymbol(c.country.currency)}${c.country.data.costRentCityCentre.toLocaleString()}/mo`; })(),
-              },
-              {
-                label: "Safest",
-                value: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.flagEmoji} ${s.country.name}`; })(),
-                sub: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.data.scoreSafety}/10`; })(),
-              },
-            ].map(item => (
-              <div key={item.label} style={{ background: BG, padding: "20px 22px" }}>
-                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>{item.label}</div>
-                <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 4 }}>{item.value}</div>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: MINT, letterSpacing: "0.1em" }}>{item.sub}</div>
+          {(() => {
+            const topReasons = top.reasons.slice(0, 2);
+            const reasonsText = topReasons.length > 0 ? topReasons.join(" and ") : "your stated priorities";
+            const strongestText = `${top.country.flagEmoji} ${top.country.name} leads because it scores highest on ${reasonsText}.`;
+            const topScores = computeScoreBreakdown(top.country, answers, jobRoleDef);
+            const bottomMetric = Object.values(topScores).sort((a, b) => a.value - b.value)[0];
+            const tradeoffText = `The trade-off: ${bottomMetric.label} is lower than your other matches. ${bottomMetric.desc}.`;
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: LINE }}>
+                <div style={{ background: BG, padding: "24px 28px" }}>
+                  <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Strongest signal</p>
+                  <p style={{ fontFamily: SANS, fontSize: 15, color: FG, lineHeight: 1.6, margin: 0 }}>{strongestText}</p>
+                </div>
+                <div style={{ background: BG, padding: "24px 28px", borderLeft: `1px solid ${LINE}` }}>
+                  <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Main trade-off</p>
+                  <p style={{ fontFamily: SANS, fontSize: 15, color: "rgba(240,240,232,0.6)", lineHeight: 1.6, margin: 0 }}>{tradeoffText}</p>
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </section>
 
         {/* ── FULL RANKING ────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0 80px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
-              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ The ranking</p>
-              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-                All <em style={{ color: MINT, fontStyle: "italic" }}>twenty-five</em>
+              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ The ranking</p>
+              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+                All <em style={{ fontStyle: "italic" }}>twenty-five</em>
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
@@ -867,6 +881,14 @@ export default function WizardResultsPage() {
                     <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>
                     <div>
                       <div style={{ fontFamily: SERIF, fontSize: 15, color: FG, marginBottom: 2 }}>{m.country.name}</div>
+                      {(() => {
+                        const label = getCountryRoleLabel(m, jobRoleDef, matches);
+                        return label ? (
+                          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3a3a3a", marginTop: 2, display: "block" }}>
+                            {label}
+                          </span>
+                        ) : null;
+                      })()}
                       {salary && (
                         <div style={{ fontFamily: MONO, fontSize: 10, color: "#333", letterSpacing: "0.08em" }}>
                           {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa · {mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo
