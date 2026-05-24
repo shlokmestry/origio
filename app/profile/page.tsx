@@ -93,7 +93,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
-  const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
+  const [wizardResults, setWizardResults] = useState<WizardResult[] | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -133,8 +133,7 @@ export default function ProfilePage() {
             .select('top_countries, answers, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+            .limit(3),
           supabase.from('profiles')
             .select('passport_slug, second_passport_slug, job_title, onboarded, is_pro')
             .eq('id', userId)
@@ -142,7 +141,7 @@ export default function ProfilePage() {
         ])
         if (savesRes.error) console.error('saved_countries error:', savesRes.error)
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
-        setWizardResult(wizardRes.data ?? null)
+        setWizardResults((wizardRes.data as WizardResult[]) ?? null)
         const p = profileRes.data ?? null
         setProfile(p)
         if (p) {
@@ -278,6 +277,7 @@ export default function ProfilePage() {
       : null)
     : null
   const isPro = profile?.is_pro ?? false
+  const wizardResult = wizardResults?.[0] ?? null
   const topMatch = wizardResult?.top_countries?.[0]
   const memberSince = user?.created_at ? formatDate(user.created_at) : null
   const filteredPassports = PASSPORT_LIST.filter(p =>
@@ -407,7 +407,7 @@ export default function ProfilePage() {
             </div>
             <a href="/pro"
               className="inline-flex items-center gap-2 transition-all"
-              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 100, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 0, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
               <Sparkles className="w-3.5 h-3.5" /> Get Pro
             </a>
           </div>
@@ -466,9 +466,16 @@ export default function ProfilePage() {
           <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
             {/* Card head */}
             <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
-                Your Country Matches
-              </span>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Your Country Matches
+                </span>
+                {wizardResult?.created_at && (
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
+                    Updated {Math.floor((Date.now() - new Date(wizardResult.created_at).getTime()) / 86400000)}d ago
+                  </span>
+                )}
+              </div>
               <a href="/wizard" className="flex items-center gap-1.5 transition-colors"
                 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
@@ -532,8 +539,33 @@ export default function ProfilePage() {
                   )
                 })}
 
-                <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
-                  {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
+                {/* Actions row */}
+                <div className="flex items-center justify-between flex-wrap gap-3" style={{ padding: '14px 22px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <button
+                    onClick={() => {
+                      if (wizardResult?.answers) sessionStorage.setItem('wizardAnswers', JSON.stringify(wizardResult.answers))
+                      router.push('/wizard')
+                    }}
+                    style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, letterSpacing: '0.04em' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'}>
+                    What if I changed my priorities? →
+                  </button>
+                  {wizardResult.top_countries.length >= 2 && (
+                    <a href={`/compare?a=${wizardResult.top_countries[0].slug}&b=${wizardResult.top_countries[1].slug}`}
+                      style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00ffd5'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'}>
+                      Compare top 2 →
+                    </a>
+                  )}
+                </div>
+
+                <div style={{ padding: '10px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>{wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}</span>
+                  {(wizardResults?.length ?? 0) > 1 && (
+                    <span style={{ color: 'rgba(255,255,255,0.15)' }}>You&apos;ve run this {wizardResults!.length} times</span>
+                  )}
                 </div>
               </>
             )}
