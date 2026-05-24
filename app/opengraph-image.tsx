@@ -25,7 +25,7 @@ export default async function OgImage() {
         }} />
 
         {/* Logo image */}
-        <img src={logoBase64} style={{ height: 64, width: "auto", marginBottom: 48 }} />
+        <img src={logoBase64} alt="" style={{ height: 64, width: "auto", marginBottom: 48 }} />
 
         {/* Tagline */}
         <div style={{ fontSize: 40, fontWeight: 800, color: "#f0f0e8", letterSpacing: "-1px", marginBottom: 12, display: "flex" }}>

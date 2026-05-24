@@ -164,17 +164,15 @@ export default function ProPage() {
       const timeout = setTimeout(() => controller.abort(), 10000)
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: session.user.id }),
         signal: controller.signal,
       })
       clearTimeout(timeout)
       const data = await res.json().catch(() => ({}))
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        setError(data.error ?? `Checkout failed (${res.status}). Please try again.`)
-        setLoading(false)
-      }
+      if (data.url) { window.location.href = data.url; return }
+      setError(data.error ?? `Checkout failed (${res.status}). Please try again.`)
+      setLoading(false)
     } catch {
       setError('Network error. Please try again.')
       setLoading(false)

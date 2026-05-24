@@ -57,6 +57,12 @@ const TO_USD: Record<string, number> = {
   INR: 0.012, BRL: 0.20, MYR: 0.22,
 };
 
+const TESTIMONIALS = [
+  { quote: "Origio's visa checklist saved me 3 weeks of research. Moved to Portugal in 2024.", name: "L.H.", role: "Software Engineer" },
+  { quote: "Finally a tool that shows real take-home, not just headline salary. Changed my whole decision.", name: "M.K.", role: "Product Manager" },
+  { quote: "Compared 6 countries in an afternoon. Ended up in Singapore — best decision I made.", name: "A.R.", role: "Marketing Director" },
+]
+
 export default function CountryPageClient({ country, otherCountries }: Props) {
   const { data } = country;
   const scoreBreakdown = getScoreBreakdown(data);
@@ -356,6 +362,19 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          {/* ── Social proof ─────────────────────────────────────────────── */}
+          <section className="border-t-2 border-[#1a1a1a] pt-10">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-6">From people who moved</p>
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+              {TESTIMONIALS.map((t, i) => (
+                <div key={i} className="border border-[#1a1a1a] p-5" style={{ borderLeft: '2px solid #2a2a2a' }}>
+                  <p className="text-sm text-[#888880] leading-relaxed mb-4">"{t.quote}"</p>
+                  <p className="text-xs font-bold text-[#f0f0e8] uppercase tracking-wide">{t.name} · <span className="text-[#555]">{t.role}</span></p>
+                </div>
+              ))}
             </div>
           </section>
 

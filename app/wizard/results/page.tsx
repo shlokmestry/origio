@@ -745,6 +745,15 @@ export default function WizardResultsPage() {
                 onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
                 <Globe size={12} /> See on globe
               </button>
+              <Link href="/salary-calculator" style={{
+                fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: DIM, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
+                borderBottom: '1px solid #2a2a2a', paddingBottom: 1, transition: 'color .12s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.color = FG)}
+                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                Calculate exact take-home →
+              </Link>
             </div>
           </div>
           <div style={{ position: "sticky", top: 80 }}>
