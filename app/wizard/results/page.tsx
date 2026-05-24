@@ -912,38 +912,60 @@ export default function WizardResultsPage() {
             })}
           </div>
           {!isPro && lockedCount > 0 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 0" }}>
-              <div style={{ border: `1px solid ${MINT}`, background: BG, padding: "28px 32px", textAlign: "center", maxWidth: 360, width: "100%" }}>
-                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                  <Lock size={12} /> {lockedCount} more locked
+            <div>
+              {/* 3 locked rows inline */}
+              {[4, 5, 6].map((n) => (
+                <div key={n} style={{
+                  display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px",
+                  alignItems: "center", gap: 14, padding: "14px 10px",
+                  borderBottom: `1px solid #0d0d0d`,
+                  opacity: 0.3, userSelect: "none", pointerEvents: "none",
+                }} className="res-row">
+                  <span style={{ fontFamily: MONO, fontSize: 11, textAlign: "right", color: "#2a2a2a" }}>{String(n).padStart(2, "0")}</span>
+                  <Lock size={12} style={{ color: "#2a2a2a" }} />
+                  <div>
+                    <div style={{ height: 8, width: 80 + n * 10, background: "#1a1a1a", marginBottom: 5 }} />
+                    <div style={{ height: 6, width: 50, background: "#111" }} />
+                  </div>
+                  <div style={{ height: 1, background: "#111", width: "100%" }} />
+                  <div style={{ height: 8, width: 28, background: "#1a1a1a" }} />
                 </div>
-                <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: "0 0 6px" }}>
-                  Unlock all 25 countries — €5 forever
-                </h3>
-                <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: DIM, margin: "0 0 20px" }}>
-                  Salary calc · Visa checklist · 3-country compare
-                </p>
+              ))}
+              {/* Inline upgrade strip */}
+              <div style={{
+                borderTop: `1px solid ${MINT}`, borderBottom: `1px solid #1a1a1a`,
+                padding: "20px 10px",
+                display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+              }}>
+                <div>
+                  <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>
+                    <Lock size={10} style={{ display: "inline", marginRight: 6 }} />{lockedCount} countries locked
+                  </p>
+                  <p style={{ fontFamily: SANS, fontSize: 14, color: FG, margin: 0 }}>
+                    Salary calc · Visa checklist · 3-country compare
+                  </p>
+                </div>
                 <Link href="/pro" style={{
-                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-                  padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-                  display: "inline-flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "center",
-                  boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s",
+                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+                  padding: "11px 24px", background: MINT, color: BG, textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s", flexShrink: 0,
                 }}
                   onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
-                  <Sparkles size={13} /> Get Pro · €4.99
+                  Unlock all 25 — €4.99 <ArrowRight size={13} />
                 </Link>
+              </div>
+              {/* Download report option */}
+              <div style={{ padding: "12px 10px", borderBottom: `1px solid #0d0d0d` }}>
                 <button onClick={handleReportCheckout} disabled={reportLoading} style={{
-                  marginTop: 10, width: "100%",
                   fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                  padding: "10px 0", background: "transparent", color: "#555", border: "none",
-                  cursor: reportLoading ? "default" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  borderTop: "1px solid #1a1a1a", transition: "color .12s",
+                  color: "#444", background: "none", border: "none", cursor: reportLoading ? "default" : "pointer",
+                  display: "flex", alignItems: "center", gap: 6, padding: 0, transition: "color .12s",
                 }}
                   onMouseEnter={e => { if (!reportLoading) (e.currentTarget as HTMLElement).style.color = DIM; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#555"; }}>
-                  {reportLoading ? "Redirecting…" : "↓ Report only · €4.99"}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#444"; }}>
+                  ↓ {reportLoading ? "Redirecting…" : "Top 5 report only · €4.99"}
                 </button>
               </div>
             </div>
@@ -976,9 +998,9 @@ export default function WizardResultsPage() {
         {excludedCountries.length > 0 && (
           <section style={{ padding: "52px 0", borderTop: `1px solid ${LINE}` }}>
             <div style={{ marginBottom: 28 }}>
-              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ Edge cases</p>
-              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-                Filtered <em style={{ color: MINT, fontStyle: "italic" }}>out</em>
+              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ Edge cases</p>
+              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+                Filtered <em style={{ fontStyle: "italic" }}>out</em>
               </h2>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 1, background: LINE }}>
