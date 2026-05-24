@@ -293,7 +293,7 @@ function SessionExpired() {
         style={{
           fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
           padding: "13px 28px", background: MINT, color: BG, border: "none",
-          borderRadius: 999, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
+          borderRadius: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
           boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
         }}>
         Retake quiz →
@@ -727,7 +727,7 @@ export default function WizardResultsPage() {
               <Link href={`/country/${top.country.slug}/personalised`} style={{
                 fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
                 padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-                borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
+                borderRadius: 0, display: "inline-flex", alignItems: "center", gap: 8,
                 transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
               }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
@@ -737,7 +737,7 @@ export default function WizardResultsPage() {
               <button onClick={handleViewOnGlobe} style={{
                 fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
                 padding: "13px 28px", background: "transparent", color: DIM,
-                border: `1px solid #2a2a2a`, borderRadius: 999, cursor: "pointer", transition: "all 0.15s",
+                border: `1px solid #2a2a2a`, borderRadius: 0, cursor: "pointer", transition: "all 0.15s",
               }}
                 onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#444"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
@@ -907,54 +907,37 @@ export default function WizardResultsPage() {
             })}
           </div>
           {!isPro && lockedCount > 0 && (
-            <div style={{ position: "relative" }}>
-              <div style={{ filter: "blur(4px)", opacity: 0.4, pointerEvents: "none", userSelect: "none" }}>
-                {[visibleMatches.length + 1, visibleMatches.length + 2, visibleMatches.length + 3].map((n, i) => (
-                  <div key={n} style={{ display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px", alignItems: "center", gap: 14, padding: "14px 10px", borderBottom: `1px solid #0f0f0f`, opacity: 1 - i * 0.25 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: "#1a1a1a", textAlign: "right" }}>{String(n).padStart(2, "0")}</span>
-                    <span style={{ fontSize: 20 }}>🌍</span>
-                    <div>
-                      <div style={{ height: 10, width: 100, background: "#1a1a1a", marginBottom: 6 }} />
-                      <div style={{ height: 8, width: 140, background: "#111" }} />
-                    </div>
-                    <div style={{ height: 2, background: "#111" }} />
-                    <div style={{ height: 10, width: 28, background: "#1a1a1a" }} />
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 0 32px" }}>
-                <div style={{ border: `1px solid ${MINT}`, background: BG, padding: "28px 32px", textAlign: "center", maxWidth: 360, width: "100%" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <Lock size={12} /> {lockedCount} more locked
-                  </div>
-                  <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: "0 0 12px" }}>
-                    Unlock the <em style={{ color: MINT, fontStyle: "italic" }}>full ranking</em>
-                  </h3>
-                  <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, lineHeight: 1.6, margin: "0 0 20px" }}>
-                    See every country scored, side-by-side compare, and a personalised written report.
-                  </p>
-                  <Link href="/pro" style={{
-                    fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-                    padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-                    borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
-                    transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-                    <Sparkles size={13} /> Get Pro · €4.99
-                  </Link>
-                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ flex: 1, height: 1, background: LINE }} />
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#333" }}>or</span>
-                    <div style={{ flex: 1, height: 1, background: LINE }} />
-                  </div>
-                  <button onClick={handleReportCheckout} disabled={reportLoading} style={{ marginTop: 12, width: "100%", fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", padding: "11px 20px", background: "transparent", color: DIM, border: `1px solid #2a2a2a`, borderRadius: 999, cursor: reportLoading ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "border-color 0.15s, color 0.15s" }}
-                    onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.borderColor = "#444"; (e.currentTarget as HTMLElement).style.color = "#fff"; } }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; (e.currentTarget as HTMLElement).style.color = DIM; }}>
-                    {reportLoading ? "Redirecting…" : "↓ Download Report · €4.99"}
-                  </button>
-                  <p style={{ fontFamily: SANS, fontSize: 11, color: "#444", marginTop: 8 }}>One-time · top 5 matches · downloadable</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 0" }}>
+              <div style={{ border: `1px solid ${MINT}`, background: BG, padding: "28px 32px", textAlign: "center", maxWidth: 360, width: "100%" }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <Lock size={12} /> {lockedCount} more locked
                 </div>
+                <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: "0 0 6px" }}>
+                  Unlock all 25 countries — €5 forever
+                </h3>
+                <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: DIM, margin: "0 0 20px" }}>
+                  Salary calc · Visa checklist · 3-country compare
+                </p>
+                <Link href="/pro" style={{
+                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+                  padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
+                  borderRadius: 0, display: "inline-flex", alignItems: "center", gap: 8,
+                  transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+                  <Sparkles size={13} /> Get Pro · €4.99
+                </Link>
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1, height: 1, background: LINE }} />
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#333" }}>or</span>
+                  <div style={{ flex: 1, height: 1, background: LINE }} />
+                </div>
+                <button onClick={handleReportCheckout} disabled={reportLoading} style={{ marginTop: 12, width: "100%", fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", padding: "11px 20px", background: "transparent", color: DIM, border: `1px solid #2a2a2a`, borderRadius: 0, cursor: reportLoading ? "default" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "border-color 0.15s, color 0.15s" }}
+                  onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.borderColor = "#444"; (e.currentTarget as HTMLElement).style.color = "#fff"; } }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; (e.currentTarget as HTMLElement).style.color = DIM; }}>
+                  {reportLoading ? "Redirecting…" : "↓ Download Report · €4.99"}
+                </button>
               </div>
             </div>
           )}
@@ -1013,7 +996,7 @@ export default function WizardResultsPage() {
           <button onClick={() => router.push("/wizard")} style={{
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
             padding: "13px 28px", background: "transparent", color: DIM,
-            border: `1px solid #2a2a2a`, borderRadius: 999, cursor: "pointer", transition: "all 0.15s",
+            border: `1px solid #2a2a2a`, borderRadius: 0, cursor: "pointer", transition: "all 0.15s",
           }}
             onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#444"; }}
             onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
@@ -1022,7 +1005,7 @@ export default function WizardResultsPage() {
           <Link href="/pro" style={{
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
             padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-            borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
+            borderRadius: 0, display: "inline-flex", alignItems: "center", gap: 8,
             transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
           }}
             onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
