@@ -335,7 +335,7 @@ function getCityNarrative(
         ),
         prose: (
           <p>
-            Unlimited metro, bus, tram —{" "}
+            Unlimited metro, bus, tram {" "}
             <span className="pull">{sym}{fmt(d?.cost_transport_monthly)} / month</span>.
             Walkability: <span className="pull">{score(d?.score_walkability)} / 10</span>.
             Safety: <span className="pull">{score(d?.score_safety)} / 10</span>.
@@ -923,7 +923,7 @@ export default function CityPageClient({ city }: Props) {
               <span aria-label={`${city.country_name} flag`}>{city.flag_emoji}</span> {city.country_name}
             </p>
             <p style={{ fontSize: 16, color: "var(--dim)", lineHeight: 1.7, fontWeight: 300 }}>
-              A 24-hour field dispatch — what {city.name} costs, what it pays, and what it
+              A 24-hour field dispatch ~ what {city.name} costs, what it pays, and what it
               feels like to wake up here.
             </p>
           </div>
@@ -933,7 +933,7 @@ export default function CityPageClient({ city }: Props) {
                 <div className="marg">
                   <p className="marg-lbl">Move Score</p>
                   <p className="marg-val">{d.move_score}<span className="unit">/10</span></p>
-                  <p className="marg-sub">Cost, salary, visa, quality of life — combined.</p>
+                  <p className="marg-sub">Cost, salary, visa, quality of life combined.</p>
                 </div>
               )}
               {city.population && (
@@ -974,7 +974,7 @@ export default function CityPageClient({ city }: Props) {
               <div className="marg">
                 <p className="marg-lbl">Utilities</p>
                 <p className="marg-val">{sym}{fmt(d?.cost_utilities_monthly)}<span className="unit">/mo</span></p>
-                <p className="marg-sub">Power, water, internet — 1BR</p>
+                <p className="marg-sub">Power, water, internet ~ 1BR</p>
               </div>
             </div>
           </div>

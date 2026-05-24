@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -91,15 +93,15 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Scripts
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://*.sentry.io",
               // Styles
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://cdn.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
               // Images — added Unsplash, Pexels, Pixabay for city monument images
               "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com https://images.unsplash.com https://images.pexels.com https://pixabay.com https://cdn.pixabay.com",
               // Fonts
               "font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com https://fonts.gstatic.com",
-              // Connections — added Unsplash, Pexels, Pixabay APIs
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://api.unsplash.com https://api.pexels.com https://pixabay.com",
+              // Connections — added Unsplash, Pexels, Pixabay APIs, Sentry
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://api.unsplash.com https://api.pexels.com https://pixabay.com https://*.sentry.io",
               // Stripe
               "frame-src https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
@@ -115,4 +117,9 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});

@@ -1,52 +1,65 @@
-// app/api/checkout/route.ts
-import { createClient } from '@supabase/supabase-js'
+// app/api/checkout/route.ts (UPDATED)
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { rateLimit } from '@/lib/rate-limit'
+import * as Sentry from "@sentry/nextjs";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2026-03-25.dahlia',
+})
 
 export async function POST(request: Request) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2026-03-25.dahlia',
-  })
-  // Rate limit: max 5 checkout sessions per minute
-  const limited = await rateLimit(request, { name: 'checkout', maxRequests: 5, windowSeconds: 60 })
+  // Rate limit: max 10 checkout initiations per minute
+  const limited = rateLimit(request, { name: 'checkout', maxRequests: 10, windowSeconds: 60 })
   if (limited) return limited
-  // Get token from Authorization header — sent from client
-  const authHeader = request.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const token = authHeader.replace('Bearer ', '')
-
-  // Use token to get user — works reliably on Vercel without cookie issues
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-
-  if (error || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
-  const requestOrigin = request.headers.get('origin') ?? ''
-  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
 
   try {
+    const { userId } = await request.json()
+
+    if (!userId) {
+      Sentry.captureMessage('No userId provided to checkout', 'warning');
+      return NextResponse.json(
+        { error: 'User ID required' },
+        { status: 400 }
+      )
+    }
+
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Origio Pro',
+              description: 'Lifetime access to all Pro features',
+            },
+            unit_amount: 500, // €5.00
+          },
+          quantity: 1,
+        },
+      ],
       mode: 'payment',
-      line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
-      customer_email: user.email,
-      client_reference_id: user.id,
-      success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pro`,
-      metadata: { user_id: user.id },
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pro?cancelled=true`,
+      metadata: {
+        user_id: userId,
+      },
+      client_reference_id: userId,
     })
-    return NextResponse.json({ url: session.url })
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Stripe error'
-    console.error('[checkout] Stripe error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+
+    return NextResponse.json({ sessionId: session.id, url: session.url })
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        route: 'checkout',
+        type: 'session_creation_failed',
+      },
+    });
+    console.error('Checkout error:', error)
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
+      { status: 500 }
+    )
   }
 }
