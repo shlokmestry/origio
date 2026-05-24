@@ -21,16 +21,20 @@ export async function POST(request: Request) {
     if (typeof body.email === 'string' && body.email.includes('@')) customerEmail = body.email
   } catch { /* no body — anon is fine */ }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [{ price: process.env.STRIPE_REPORT_PRICE_ID!, quantity: 1 }],
-    ...(customerEmail ? { customer_email: customerEmail } : {}),
-    success_url: `${origin}/report/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/wizard/results`,
-    metadata: { type: 'report' },
-    // collect_email so we can send the report even for anon users
-    ...(customerEmail ? {} : { billing_address_collection: 'auto' }),
-  })
-
-  return NextResponse.json({ url: session.url })
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [{ price: process.env.STRIPE_REPORT_PRICE_ID!, quantity: 1 }],
+      ...(customerEmail ? { customer_email: customerEmail } : {}),
+      success_url: `${origin}/report/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/wizard/results`,
+      metadata: { type: 'report' },
+      ...(customerEmail ? {} : { billing_address_collection: 'auto' }),
+    })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Stripe error'
+    console.error('[checkout-report]', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }
