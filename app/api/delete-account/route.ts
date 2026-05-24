@@ -6,7 +6,7 @@ import AccountDeleted from '@/emails/AccountDeleted'
 import { createElement } from 'react'
 import { rateLimit } from '@/lib/rate-limit'
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: Request): Promise<Response> {
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

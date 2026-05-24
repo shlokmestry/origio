@@ -17,8 +17,8 @@ const adminSupabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 )
 
-export async function POST(request: Request) {
-  const limited = rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
+export async function POST(request: Request): Promise<Response> {
+  const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
   if (limited) return limited
 
   const body = await request.text()

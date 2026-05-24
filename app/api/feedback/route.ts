@@ -12,7 +12,7 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;")
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "feedback", maxRequests: 3, windowSeconds: 60 });
   if (limited) return limited;
 

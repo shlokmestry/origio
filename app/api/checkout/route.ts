@@ -8,9 +8,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
 })
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   // Rate limit: max 10 checkout initiations per minute
-  const limited = rateLimit(request, { name: 'checkout', maxRequests: 10, windowSeconds: 60 })
+  const limited = await rateLimit(request, { name: 'checkout', maxRequests: 10, windowSeconds: 60 })
   if (limited) return limited
 
   try {
