@@ -64,6 +64,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const currencySymbol = getCurrencySymbol(country.currency);
   const visaColor = getVisaColor(data.visaDifficulty);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // ── Personalisation state ──────────────────────────────────────────────────
@@ -81,6 +82,8 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
       // 2. Supabase override for logged-in users (more persistent)
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', session.user.id).maybeSingle()
+        setIsPro(profile?.is_pro ?? false)
         const { data: result } = await supabase
           .from("wizard_results")
           .select("answers, top_countries")
@@ -215,14 +218,20 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           </Link>
           <div className="flex items-center gap-3">
             <SaveCountryButton countrySlug={country.slug} />
-            <button
-              onClick={handleGetReport}
-              disabled={generatingPDF}
-              className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2"
-            >
-              {generatingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-              {generatingPDF ? "Generating..." : "Download PDF"}
-            </button>
+            {isPro ? (
+              <button
+                onClick={handleGetReport}
+                disabled={generatingPDF}
+                className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2"
+              >
+                {generatingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                {generatingPDF ? "Generating..." : "Download PDF"}
+              </button>
+            ) : (
+              <Link href="/pro" className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2">
+                Get Full Report →
+              </Link>
+            )}
           </div>
         </div>
       </nav>
