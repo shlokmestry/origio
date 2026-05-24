@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "generate-headline", maxRequests: 10, windowSeconds: 60 });
   if (limited) return limited;
 
