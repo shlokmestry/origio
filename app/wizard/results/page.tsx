@@ -403,7 +403,7 @@ function getCountryRoleLabel(m: CountryMatch, jobRoleDef: typeof JOB_ROLES[0] | 
   if (d.costRentCityCentre <= 800) return "Lowest cost";
   if (d.scoreSafety >= 8.5) return "Safest";
   if (d.scoreQualityOfLife >= 8.5) return "Best QoL";
-  if (d.language === "English") return "English-speaking";
+  if (m.country.language === "English") return "English-speaking";
   return "";
 }
 
