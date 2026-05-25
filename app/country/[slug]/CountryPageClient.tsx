@@ -18,6 +18,7 @@ import { getScoreColor, getScoreBreakdown, getVisaLabel, getVisaColor } from "@/
 import SaveCountryButton from "@/components/SaveCountryButton";
 import { supabase } from "@/lib/supabase";
 import { WizardAnswers, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
+import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
@@ -259,8 +260,9 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
               {/* Role salary highlight */}
               {userRole && userSalary && (
                 <div className="flex items-center justify-between border border-[#2a2a2a] px-4 py-3">
-                  <span className="text-sm font-bold text-text-muted">
-                    {userRole.emoji} {userRole.label} salary here
+                  <span className="flex items-center gap-2 text-sm font-bold text-text-muted">
+                    <JobRoleIcon roleKey={userRole.key} size={15} color="#888" />
+                    {userRole.label} salary here
                   </span>
                   <span className="font-heading text-xl font-extrabold text-text-primary">
                     {currencySymbol}{userSalary.toLocaleString()}/yr
