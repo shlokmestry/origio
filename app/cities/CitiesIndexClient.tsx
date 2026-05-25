@@ -131,6 +131,15 @@ function matchReasons(
   return out
 }
 
+const VIBE_LABELS: Record<string, string> = {
+  remote:    'Remote-friendly',
+  family:    'Family',
+  nightlife: 'Nightlife',
+  culture:   'Culture',
+  beach:     'Beach',
+  budget:    'Budget',
+}
+
 // ── Filter chip component ─────────────────────────────────────────────────
 
 interface ChipGroupProps {
@@ -320,12 +329,12 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
               onChange={v => setFilter('vibe', v)}
               options={[
                 { val:'any',       label:'Anything' },
-                { val:'remote',    label:'Remote work' },
+                { val:'remote',    label:'Remote-friendly' },
                 { val:'family',    label:'Family' },
                 { val:'nightlife', label:'Nightlife' },
                 { val:'culture',   label:'Culture' },
                 { val:'beach',     label:'Beach' },
-                { val:'budget',    label:'Live cheap' },
+                { val:'budget',    label:'Budget' },
               ]}
             />
             <div className={styles.filterBarRight}>
@@ -383,7 +392,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {c.tagline && <p className={styles.ccTagline}>{c.tagline}</p>}
                       <div className={styles.ccTags}>
                         {extra.vibes.map(v => (
-                          <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{v}</span>
+                          <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
                       {/* Why this city — shows on hover when filters active */}
@@ -410,7 +419,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                         <p className={styles.ccStatL}>Climate</p>
                         <p className={`${styles.ccStatV} ${styles.climate}`}>{extra.climate}</p>
                       </div>
-                      <span className={styles.ccArrow}>→</span>
+                      <span className={styles.ccArrow}>View city →</span>
                     </div>
                   </a>
                 )

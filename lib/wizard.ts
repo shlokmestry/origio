@@ -6,6 +6,7 @@ export interface WizardAnswers {
   passport: string;
   secondPassport?: string;
   moveReason: string;
+  workType?: string; // 'employee' | 'freelancer' | 'company'
   jobRole: string;
   priorities: string[];
   cityVibe: string;
@@ -251,6 +252,15 @@ export function scoreCountriesForWizard(
       if (internetScore >= 8.5) reasons.push("Excellent internet speeds");
       if (taxScore >= 8)        reasons.push("Very tax efficient");
       if (affordScore >= 7)     reasons.push("Low cost of living");
+      // workType bonuses for remote workers
+      if (answers.workType === "freelancer") {
+        if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.4; reasons.push("Freelancer-friendly nomad visa"); }
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("No tax on foreign freelance income"); }
+      }
+      if (answers.workType === "company") {
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.5; reasons.push("Territorial tax — company profits taxed locally only"); }
+        if (["estonia", "georgia", "portugal", "uae", "singapore"].includes(country.slug)) { score += 0.5; reasons.push("Strong company formation + low corporate tax"); }
+      }
 
     // ── STANDARD scoring path ────────────────────────────────────
     } else {

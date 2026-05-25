@@ -5,6 +5,7 @@
   color: var(--c-ink);
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
 /* ── NAV ── */
@@ -88,8 +89,8 @@
 
 .frameMeta {
   font-family: 'Space Mono', monospace;
-  font-size: 8px; font-weight: 700;
-  letter-spacing: 0.24em; text-transform: uppercase;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
   color: #8a8a7a;
   position: absolute;
   z-index: 2;
@@ -186,12 +187,12 @@
   padding: 9px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
   font-family: 'Space Mono', monospace;
-  font-size: 8px; color: #7ab8b2;
+  font-size: 12px; color: #7ab8b2;
 }
 .ledgerRow .lrN { color: rgba(122,184,178,0.6); }
 .ledgerRow .lrCode { font-weight: 700; letter-spacing: 0.1em; color: #a0d4ce; }
-.ledgerRow .lrName { font-size: 9px; color: #e8f4f2; font-family: 'DM Serif Display', Georgia, serif; font-style: italic; letter-spacing: 0; }
-.ledgerRow .lrStat { font-size: 8px; text-align: right; color: #a0d4ce; }
+.ledgerRow .lrName { font-size: 12px; color: #e8f4f2; font-family: 'DM Serif Display', Georgia, serif; font-style: italic; letter-spacing: 0; }
+.ledgerRow .lrStat { font-size: 12px; text-align: right; color: #a0d4ce; }
 .ledgerRow .lrStatusDot {
   width: 6px; height: 6px; border-radius: 50%;
   background: rgba(122,184,178,0.3);
@@ -202,7 +203,7 @@
   padding: 10px 20px;
   border-top: 1px solid rgba(255,255,255,0.1);
   font-family: 'Space Mono', monospace;
-  font-size: 7px; color: rgba(122,184,178,0.6);
+  font-size: 11px; color: rgba(122,184,178,0.6);
   letter-spacing: 0.14em; text-transform: uppercase;
 }
 
@@ -565,8 +566,18 @@
 
 .ccArrow {
   font-family: 'Space Mono', monospace;
-  font-size: 11px; color: var(--c-amber);
-  margin-top: 12px; letter-spacing: 0.1em;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--c-teal);
+  margin-top: 16px;
+  border: 1px solid rgba(77,230,204,0.3);
+  padding: 8px 12px;
+  align-self: flex-start;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cityCard:hover .ccArrow {
+  background: rgba(77,230,204,0.08);
+  border-color: var(--c-teal);
 }
 
 /* ── FILTER BAR ── */
@@ -967,8 +978,8 @@
 .live { color: var(--c-teal); }
 .lrN { color: #8a8a7a; }
 .lrCode { font-weight: 700; letter-spacing: 0.1em; }
-.lrName { font-size: 8.5px; color: #2a2a20; }
-.lrStat { font-size: 8px; text-align: right; }
+.lrName { font-size: 12px; color: #2a2a20; }
+.lrStat { font-size: 12px; text-align: right; }
 .lrStatusDot { width: 6px; height: 6px; border-radius: 50%; background: #c8c4b0; }
 .lrStatusDot.live { background: var(--c-teal); }
 .mark { color: var(--c-amber); font-size: 8px; }

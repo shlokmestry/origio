@@ -294,7 +294,11 @@ export default function WizardPage() {
   const canProceed = () => {
     if (step === 0) return hasDualPassport !== null && introPassport !== '';
     if (step === 1) return !!answers.passport;
-    if (step === 2) return !!answers.moveReason;
+    if (step === 2) {
+      if (!answers.moveReason) return false;
+      if (answers.moveReason === "remote" || answers.moveReason === "career") return !!answers.workType;
+      return true;
+    }
     if (step === 3) return !!answers.jobRole;
     if (step === 4) return (answers.priorities?.length ?? 0) >= 3;
     if (step === 5) return !!answers.cityVibe;
@@ -304,8 +308,9 @@ export default function WizardPage() {
     return false;
   };
 
-  const handleNext = () => { if (step === 0) { startQuiz(); return; } const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
-  const handleBack = () => { if (step === 1) setStep(0); else if (step === 0) router.push("/"); else setStep(getPrevStep(step)); };
+  const scrollToTop = () => { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleNext = () => { if (step === 0) { startQuiz(); scrollToTop(); return; } const next = getNextStep(step); if (next <= TOTAL_STEPS) { setStep(next); scrollToTop(); } else handleSubmit(); };
+  const handleBack = () => { if (step === 1) { setStep(0); scrollToTop(); } else if (step === 0) router.push("/"); else { setStep(getPrevStep(step)); scrollToTop(); } };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -419,10 +424,14 @@ export default function WizardPage() {
         }
         @media(max-width:600px){
           .wiz-grid-2  { grid-template-columns: 1fr !important; }
-          .wiz-header-inner { padding: 12px 18px !important; }
-          .wiz-main { padding: 32px 18px 100px !important; }
-          .wiz-step-heading { font-size: clamp(28px,8vw,44px) !important; }
-          .wiz-nav-btns { gap: 10px !important; }
+          .wiz-header-inner { padding: 12px 16px !important; }
+          .wiz-main { padding: 24px 16px 100px !important; max-width: 100vw !important; overflow-x: hidden !important; }
+          .wiz-step-heading { font-size: clamp(26px,7vw,40px) !important; }
+          .wiz-nav-btns { gap: 10px !important; flex-wrap: wrap !important; }
+        }
+        @media(max-width:400px){
+          .wiz-main { padding: 20px 12px 100px !important; }
+          .wiz-nav-btns button { padding: 12px 18px !important; font-size: 11px !important; }
         }
       `}</style>
 
@@ -644,7 +653,7 @@ export default function WizardPage() {
                 {[
                   { key: "job",       label: "I have a job offer",          sub: "Moving for a specific role" },
                   { key: "career",    label: "Better career opportunities", sub: "Higher salary, growth, tech hubs" },
-                  { key: "remote",    label: "I work remotely",             sub: "Location flexibility, low tax, fast internet" },
+                  { key: "remote",    label: "I work remotely / run a business", sub: "Location flexibility, tax optimisation, nomad visa" },
                   { key: "retire",    label: "Retirement / FIRE",           sub: "Low cost, healthcare, passive income" },
                   { key: "study",     label: "Study abroad",                sub: "Universities, student visas" },
                   { key: "lifestyle", label: "Lifestyle change",            sub: "Weather, culture, quality of life" },
@@ -655,6 +664,25 @@ export default function WizardPage() {
                   </OptionCard>
                 ))}
               </div>
+
+              {/* Work type — shown when remote/career selected */}
+              {(answers.moveReason === "remote" || answers.moveReason === "career") && (
+                <div style={{ marginTop: 28, borderTop: `1px solid ${LINE}`, paddingTop: 24 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 14 }}>How do you work?</div>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {[
+                      { key: "employee",   label: "Employed",         sub: "Salary from a company — visa tied to employer" },
+                      { key: "freelancer", label: "Freelancer / contractor", sub: "Self-employed, invoice clients — nomad visa routes" },
+                      { key: "company",    label: "I own a company",  sub: "Director / founder — tax residency + corporate structure" },
+                    ].map(opt => (
+                      <OptionCard key={opt.key} selected={answers.workType === opt.key} onClick={() => setAnswers({ ...answers, workType: opt.key })}>
+                        <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
+                        <div style={{ fontSize: 13, color: DIM }}>{opt.sub}</div>
+                      </OptionCard>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
