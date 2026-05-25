@@ -11,6 +11,7 @@ import { WizardAnswers, scoreCountriesForWizard, getPassportStrength, PASSPORT_T
 import { CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import QuizGate from "@/components/QuizGate";
+import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF  = "'DM Serif Display', Georgia, serif";
@@ -695,7 +696,7 @@ export default function WizardPage() {
               <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {JOB_ROLES.map(r => (
                   <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
-                    badge={<span style={{ fontSize: 20, flexShrink: 0 }}>{r.emoji}</span>}>
+                    badge={<JobRoleIcon roleKey={r.key} size={22} color={answers.jobRole === r.key ? MINT : DIM} />}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: FG }}>{r.label}</div>
                   </OptionCard>
                 ))}
