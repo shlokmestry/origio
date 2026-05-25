@@ -35,6 +35,16 @@ export interface CountryData {
   salaryCybersecurity: number;
   salaryElectrician: number;
   salaryChef: number;
+  salaryAiMlEngineer: number;
+  salaryCloudArchitect: number;
+  salaryDentist: number;
+  salaryPhysiotherapist: number;
+  salaryPsychologist: number;
+  salaryRenewableEnergyEngineer: number;
+  salaryPilot: number;
+  salaryGraphicDesigner: number;
+  salaryBiomedicalEngineer: number;
+  salarySupplyChainManager: number;
   costRentCityCentre: number;
   costRentOutside: number;
   costGroceriesMonthly: number;
@@ -103,6 +113,16 @@ export type JobRole =
   | "cybersecurity"
   | "electrician"
   | "chef"
+  | "aiMlEngineer"
+  | "cloudArchitect"
+  | "dentist"
+  | "physiotherapist"
+  | "psychologist"
+  | "renewableEnergyEngineer"
+  | "pilot"
+  | "graphicDesigner"
+  | "biomedicalEngineer"
+  | "supplyChainManager"
 
 export const JOB_ROLES: {
   key: JobRole;
@@ -130,6 +150,16 @@ export const JOB_ROLES: {
   { key: "marketingManager", label: "Marketing Manager", emoji: "📣", salaryKey: "salaryMarketingManager" },
   { key: "electrician", label: "Electrician", emoji: "⚡", salaryKey: "salaryElectrician" },
   { key: "chef", label: "Chef", emoji: "👨‍🍳", salaryKey: "salaryChef" },
+  { key: "aiMlEngineer", label: "AI / ML Engineer", emoji: "🤖", salaryKey: "salaryAiMlEngineer" },
+  { key: "cloudArchitect", label: "Cloud Architect", emoji: "☁️", salaryKey: "salaryCloudArchitect" },
+  { key: "dentist", label: "Dentist", emoji: "🦷", salaryKey: "salaryDentist" },
+  { key: "physiotherapist", label: "Physiotherapist", emoji: "🏃", salaryKey: "salaryPhysiotherapist" },
+  { key: "psychologist", label: "Psychologist", emoji: "🧠", salaryKey: "salaryPsychologist" },
+  { key: "renewableEnergyEngineer", label: "Renewable Energy Engineer", emoji: "🌱", salaryKey: "salaryRenewableEnergyEngineer" },
+  { key: "pilot", label: "Pilot", emoji: "✈️", salaryKey: "salaryPilot" },
+  { key: "graphicDesigner", label: "Graphic Designer", emoji: "🖌️", salaryKey: "salaryGraphicDesigner" },
+  { key: "biomedicalEngineer", label: "Biomedical Engineer", emoji: "🔬", salaryKey: "salaryBiomedicalEngineer" },
+  { key: "supplyChainManager", label: "Supply Chain Manager", emoji: "📦", salaryKey: "salarySupplyChainManager" },
 ]
 
 // Keep old exports for any files that still reference them
