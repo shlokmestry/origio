@@ -308,6 +308,207 @@ export function ChefIcon({ size = 20, color = 'currentColor', className }: P) {
   )
 }
 
+// Neural network nodes + brain outline — AI/ML
+export function AiMlEngineerIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Outer brain-like oval */}
+      <ellipse cx="12" cy="12" rx="9" ry="10" />
+      {/* Neural nodes */}
+      <rect x="5.5" y="6" width="2" height="2" fill={color} stroke="none" />
+      <rect x="10.5" y="4" width="2" height="2" fill={color} stroke="none" />
+      <rect x="15.5" y="6" width="2" height="2" fill={color} stroke="none" />
+      <rect x="5.5" y="11" width="2" height="2" fill={color} stroke="none" />
+      <rect x="10.5" y="11" width="2" height="2" fill={color} stroke="none" />
+      <rect x="15.5" y="11" width="2" height="2" fill={color} stroke="none" />
+      <rect x="10.5" y="17" width="2" height="2" fill={color} stroke="none" />
+      {/* Connections */}
+      <line x1="6.5" y1="7" x2="11.5" y2="5" />
+      <line x1="11.5" y1="5" x2="16.5" y2="7" />
+      <line x1="6.5" y1="8" x2="6.5" y2="12" />
+      <line x1="11.5" y1="6" x2="11.5" y2="12" />
+      <line x1="16.5" y1="8" x2="16.5" y2="12" />
+      <line x1="6.5" y1="12" x2="11.5" y2="12" />
+      <line x1="11.5" y1="12" x2="16.5" y2="12" />
+      <line x1="11.5" y1="13" x2="11.5" y2="18" />
+    </svg>
+  )
+}
+
+// Cloud shape + server rack inside — Cloud Architect
+export function CloudArchitectIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Cloud outline */}
+      <path d="M5,14 Q2,14 2,11 Q2,8 5,8 Q5,5 8,4 Q11,3 13,5 Q15,3 17,5 Q20,5 21,8 Q23,8 22,11 Q22,14 19,14 Z" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Server rows inside cloud */}
+      <rect x="7" y="9" width="10" height="2" />
+      <rect x="7" y="12" width="10" height="2" />
+      {/* Status dots */}
+      <rect x="15" y="9.5" width="1" height="1" fill={color} stroke="none" />
+      <rect x="15" y="12.5" width="1" height="1" fill={color} stroke="none" />
+      {/* Down to ground */}
+      <line x1="9" y1="14" x2="9" y2="19" />
+      <line x1="15" y1="14" x2="15" y2="19" />
+      <line x1="7" y1="19" x2="17" y2="19" />
+    </svg>
+  )
+}
+
+// Tooth cross-section outline — Dentist
+export function DentistIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Tooth crown — two bumps at top */}
+      <path d="M5,10 L5,6 Q5,3 7,3 Q9,3 9,5 Q9,3 11,2 Q13,2 13,4 Q13,2 15,2 Q17,3 17,5 Q17,3 19,3 Q21,3 21,6 L21,10 Q21,15 18,18 Q16,20 15,18 Q14,16 13,16 Q12,16 11,18 Q10,20 8,18 Q5,15 5,10 Z" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Root hint — center dividing line */}
+      <line x1="13" y1="16" x2="13" y2="12" />
+    </svg>
+  )
+}
+
+// Figure in motion + body joint highlights — Physiotherapist
+export function PhysiotherapistIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Head */}
+      <circle cx="12" cy="3.5" r="2" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Spine/torso */}
+      <line x1="12" y1="5.5" x2="12" y2="13" />
+      {/* Arms outstretched with angle */}
+      <line x1="12" y1="8" x2="6" y2="11" />
+      <line x1="12" y1="8" x2="18" y2="6" />
+      {/* Legs */}
+      <line x1="12" y1="13" x2="8" y2="20" />
+      <line x1="12" y1="13" x2="16" y2="20" />
+      {/* Joint circles — shoulder, hip, knee */}
+      <circle cx="9" cy="9.5" r="1.2" fill={color} stroke="none" />
+      <circle cx="12" cy="13" r="1.2" fill={color} stroke="none" />
+      <circle cx="10" cy="16.5" r="1.2" fill={color} stroke="none" />
+    </svg>
+  )
+}
+
+// Head profile + thought/speech wave — Psychologist
+export function PsychologistIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Head silhouette */}
+      <path d="M8,20 L8,15 Q4,13 4,9 Q4,3 12,3 Q20,3 20,9 Q20,13 16,15 L16,20 Z" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Brain waves inside */}
+      <path d="M8,9 Q10,7 12,9 Q14,11 16,9" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Bottom border */}
+      <line x1="8" y1="20" x2="16" y2="20" />
+    </svg>
+  )
+}
+
+// Sun + wind turbine blade + grid — Renewable Energy Engineer
+export function RenewableEnergyEngineerIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Sun */}
+      <circle cx="6" cy="6" r="3" />
+      <line x1="6" y1="1" x2="6" y2="2.5" />
+      <line x1="6" y1="9.5" x2="6" y2="11" />
+      <line x1="1" y1="6" x2="2.5" y2="6" />
+      <line x1="9.5" y1="6" x2="11" y2="6" />
+      <line x1="2.9" y1="2.9" x2="3.9" y2="3.9" />
+      <line x1="8.1" y1="8.1" x2="9.1" y2="9.1" />
+      {/* Wind turbine mast */}
+      <line x1="17" y1="10" x2="17" y2="22" />
+      {/* Three blades */}
+      <path d="M17,10 L17,4" strokeLinejoin="round" />
+      <path d="M17,10 L12,13" strokeLinejoin="round" />
+      <path d="M17,10 L22,13" strokeLinejoin="round" />
+      {/* Hub */}
+      <rect x="15.5" y="8.5" width="3" height="3" fill={color} stroke="none" />
+      {/* Base */}
+      <line x1="13" y1="22" x2="21" y2="22" />
+    </svg>
+  )
+}
+
+// Aircraft side profile — Pilot
+export function PilotIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Fuselage */}
+      <path d="M2,12 Q4,10 8,10 L18,10 Q21,10 22,12 Q21,14 18,14 L8,14 Q4,14 2,12 Z" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Nose cone */}
+      <path d="M18,10 Q22,11 22,12 Q22,13 18,14" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Main wing */}
+      <path d="M10,10 L6,4 L14,10" strokeLinejoin="round" />
+      {/* Tail wing */}
+      <path d="M5,10 L3,6 L7,10" strokeLinejoin="round" />
+      {/* Tail fin vertical */}
+      <path d="M4,10 L4,7 L6,10" strokeLinejoin="round" />
+      {/* Engine pod under wing */}
+      <rect x="9" y="13" width="4" height="2" />
+    </svg>
+  )
+}
+
+// Pen tool + bezier curve — Graphic Designer
+export function GraphicDesignerIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Pen body */}
+      <path d="M14,3 L19,3 L21,5 L21,10 L12,19 L5,19 L5,12 L14,3 Z" strokeLinejoin="miter" />
+      {/* Pen tip */}
+      <path d="M5,12 L3,21 L12,19" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Nib line */}
+      <line x1="5" y1="19" x2="8" y2="16" />
+      {/* Bezier anchor points */}
+      <rect x="18" y="4" width="2" height="2" fill={color} stroke="none" />
+      <rect x="10" y="10" width="2" height="2" fill={color} stroke="none" />
+      {/* Curve */}
+      <path d="M19,5 Q15,8 11,11" strokeDasharray="2 1.5" />
+    </svg>
+  )
+}
+
+// DNA helix + circuit — Biomedical Engineer
+export function BiomedicalEngineerIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Left helix strand */}
+      <path d="M9,2 Q6,6 9,10 Q12,14 9,18 Q8,20 7,22" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Right helix strand */}
+      <path d="M15,2 Q18,6 15,10 Q12,14 15,18 Q16,20 17,22" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Rungs */}
+      <line x1="9.5" y1="4" x2="14.5" y2="4" />
+      <line x1="8" y1="7.5" x2="16" y2="7.5" />
+      <line x1="9.5" y1="11" x2="14.5" y2="11" />
+      <line x1="8" y1="14.5" x2="16" y2="14.5" />
+      <line x1="9.5" y1="18" x2="14.5" y2="18" />
+    </svg>
+  )
+}
+
+// Nodes connected by shipping route lines — Supply Chain Manager
+export function SupplyChainManagerIcon({ size = 20, color = 'currentColor', className }: P) {
+  return (
+    <svg {...b(size, color)} className={className}>
+      {/* Factory node top-left */}
+      <rect x="1" y="2" width="5" height="5" />
+      {/* Ship/port node top-right */}
+      <rect x="18" y="2" width="5" height="5" />
+      {/* Warehouse node bottom-center */}
+      <rect x="9.5" y="17" width="5" height="5" />
+      {/* Distribution center center */}
+      <rect x="9.5" y="9" width="5" height="5" />
+      {/* Routes */}
+      <line x1="6" y1="4.5" x2="9.5" y2="11" />
+      <line x1="18" y1="4.5" x2="14.5" y2="11" />
+      <line x1="12" y1="14" x2="12" y2="17" />
+      {/* Arrow heads on routes */}
+      <polyline points="8.5,9.5 9.5,11 11,10.5" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points="15.5,9.5 14.5,11 13,10.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 const ICONS: Record<string, (p: P) => React.ReactElement | null> = {
   softwareEngineer:  SoftwareEngineerIcon,
   doctor:            DoctorIcon,
@@ -327,8 +528,18 @@ const ICONS: Record<string, (p: P) => React.ReactElement | null> = {
   hrManager:         HRManagerIcon,
   salesManager:      SalesManagerIcon,
   marketingManager:  MarketingManagerIcon,
-  electrician:       ElectricianIcon,
-  chef:              ChefIcon,
+  electrician:              ElectricianIcon,
+  chef:                     ChefIcon,
+  aiMlEngineer:             AiMlEngineerIcon,
+  cloudArchitect:           CloudArchitectIcon,
+  dentist:                  DentistIcon,
+  physiotherapist:          PhysiotherapistIcon,
+  psychologist:             PsychologistIcon,
+  renewableEnergyEngineer:  RenewableEnergyEngineerIcon,
+  pilot:                    PilotIcon,
+  graphicDesigner:          GraphicDesignerIcon,
+  biomedicalEngineer:       BiomedicalEngineerIcon,
+  supplyChainManager:       SupplyChainManagerIcon,
 }
 
 export function JobRoleIcon({ roleKey, size = 20, color = 'currentColor', className }: P & { roleKey: string }) {

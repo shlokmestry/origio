@@ -293,6 +293,61 @@ export function scoreCountriesForWizard(
         score += 0.4; reasons.push("Free or low-cost university education");
       }
       if (answers.moveReason === "job" && data.visaDifficulty <= 2) score += 0.3;
+
+      // ── PROFESSION-SPECIFIC BONUSES ──────────────────────────
+      const role = answers.jobRole;
+
+      // Healthcare professionals — bonus for countries with shortage lists / healthcare system strength
+      if (["doctor","nurse","pharmacist","physiotherapist","psychologist","dentist"].includes(role)) {
+        if (data.scoreHealthcare >= 8.5) { score += 0.4; reasons.push("Excellent public healthcare system to work in"); }
+        if (["australia","canada","germany","netherlands","ireland","new-zealand","norway","sweden","denmark"].includes(country.slug)) {
+          score += 0.5; reasons.push("Active healthcare worker visa sponsorship"); }
+        if (["physiotherapist","psychologist"].includes(role) &&
+          ["australia","canada","new-zealand","ireland","united-kingdom"].includes(country.slug)) {
+          score += 0.3; reasons.push("Shortage occupation — faster visa processing"); }
+      }
+
+      // AI/ML + Cloud Architect — tech hub bonus, low corporate tax
+      if (["aiMlEngineer","cloudArchitect","softwareEngineer","devOps","cybersecurity","dataScientist"].includes(role)) {
+        if (["usa","singapore","united-kingdom","germany","netherlands","ireland","canada","australia"].includes(country.slug)) {
+          score += 0.4; reasons.push("Major tech hub — strong demand for this role"); }
+        if (["aiMlEngineer","cloudArchitect"].includes(role) &&
+          ["usa","singapore","united-kingdom","germany","netherlands","switzerland"].includes(country.slug)) {
+          score += 0.3; reasons.push("High AI/cloud investment — premium salaries"); }
+      }
+
+      // Pilot — aviation hub bonus, UAE/Singapore/Australia flag carriers
+      if (role === "pilot") {
+        if (["uae","singapore","australia","ireland","germany","norway","netherlands"].includes(country.slug)) {
+          score += 0.6; reasons.push("Major aviation hub — active pilot recruitment"); }
+        if (data.visaDifficulty <= 2) { score += 0.3; reasons.push("Employer-sponsored pilot visas available"); }
+      }
+
+      // Renewable Energy Engineer — EU green economy bonus
+      if (role === "renewableEnergyEngineer") {
+        if (["germany","netherlands","denmark","sweden","norway","spain","portugal","austria","finland","belgium"].includes(country.slug)) {
+          score += 0.6; reasons.push("EU green energy investment — strong sector growth"); }
+        if (["australia","canada","new-zealand","usa"].includes(country.slug)) {
+          score += 0.3; reasons.push("Growing renewable energy sector"); }
+      }
+
+      // Biomedical Engineer — medtech clusters
+      if (role === "biomedicalEngineer") {
+        if (["switzerland","germany","singapore","usa","netherlands","ireland"].includes(country.slug)) {
+          score += 0.5; reasons.push("Major medtech/pharma cluster — high demand"); }
+      }
+
+      // Graphic Designer — creative economy / remote-friendly
+      if (role === "graphicDesigner") {
+        if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.4; reasons.push("Nomad visa — work remotely as a designer"); }
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Tax efficient for freelance design income"); }
+      }
+
+      // Supply Chain Manager — logistics hubs
+      if (role === "supplyChainManager") {
+        if (["singapore","netherlands","germany","uae","belgium"].includes(country.slug)) {
+          score += 0.5; reasons.push("Global logistics hub — top supply chain roles"); }
+      }
     }
 
     // ── SHARED BONUSES ───────────────────────────────────────────
