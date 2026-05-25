@@ -202,6 +202,16 @@ export interface CityData {
   salaryMarketingManager: number;
   salaryElectrician: number;
   salaryChef: number;
+  salaryAiMlEngineer: number;
+  salaryCloudArchitect: number;
+  salaryDentist: number;
+  salaryPhysiotherapist: number;
+  salaryPsychologist: number;
+  salaryRenewableEnergyEngineer: number;
+  salaryPilot: number;
+  salaryGraphicDesigner: number;
+  salaryBiomedicalEngineer: number;
+  salarySupplyChainManager: number;
   scoreQualityOfLife: number;
   scoreSafety: number;
   scoreHealthcare: number;
