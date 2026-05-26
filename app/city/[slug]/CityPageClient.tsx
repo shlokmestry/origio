@@ -664,7 +664,7 @@ export default function CityPageClient({ city }: Props) {
           align-self: start;
         }
         .scene-time .hr {
-          font-family: 'DM Serif Display', Georgia, serif;
+          font-family: 'Cabinet Grotesk', sans-serif;
           font-style: italic; font-size: 22px;
           letter-spacing: 0; text-transform: none;
           color: var(--ink); margin-bottom: 14px; display: block;
@@ -695,7 +695,7 @@ export default function CityPageClient({ city }: Props) {
         }
 
         .scene-head {
-          font-family: 'DM Serif Display', Georgia, serif;
+          font-family: 'Cabinet Grotesk', sans-serif;
           font-weight: 400; font-style: normal;
           font-size: clamp(34px, 4vw, 60px);
           line-height: 0.98; letter-spacing: -0.022em;
@@ -726,7 +726,7 @@ export default function CityPageClient({ city }: Props) {
           text-transform: uppercase; color: var(--dimmer); margin-bottom: 8px;
         }
         .marg-val {
-          font-family: 'DM Serif Display', Georgia, serif;
+          font-family: 'Cabinet Grotesk', sans-serif;
           font-size: 26px; color: var(--ink);
           line-height: 1; margin-bottom: 6px;
         }
@@ -744,7 +744,7 @@ export default function CityPageClient({ city }: Props) {
         }
         .climate-cell { display: flex; flex-direction: column; align-items: center; text-align: center; }
         .cc-mth { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 8px; }
-        .cc-high { font-family: 'DM Serif Display', Georgia, serif; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+        .cc-high { font-family: 'Cabinet Grotesk', sans-serif; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
         .cc-rain { font-size: 10px; font-weight: 700; color: var(--dim); }
         .cc-summer .cc-high { color: var(--accent); }
 
@@ -777,7 +777,7 @@ export default function CityPageClient({ city }: Props) {
         .nearby-card { text-decoration: none; display: block; padding: 20px 24px; border: 1px solid var(--rule); min-width: 180px; flex: 1; transition: border-color 0.2s; }
         .nearby-card:hover { border-color: var(--accent); }
         .nearby-flag { font-size: 20px; margin-bottom: 10px; display: block; }
-        .nearby-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; color: var(--ink); display: block; margin-bottom: 4px; }
+        .nearby-name { font-family: 'Cabinet Grotesk', sans-serif; font-size: 20px; color: var(--ink); display: block; margin-bottom: 4px; }
         .nearby-tagline { font-size: 12px; color: var(--dim); display: block; }
         .nearby-score { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--accent); margin-top: 10px; display: block; }
 
@@ -785,7 +785,7 @@ export default function CityPageClient({ city }: Props) {
         .dossier { padding: 160px 0 80px; border-top: 1px solid var(--rule); }
         .dossier-head { max-width: 640px; margin-bottom: 80px; }
         .dossier-title {
-          font-family: 'DM Serif Display', Georgia, serif;
+          font-family: 'Cabinet Grotesk', sans-serif;
           font-size: clamp(36px, 4.2vw, 64px);
           color: var(--ink); line-height: 0.98; margin-bottom: 18px;
         }
@@ -797,7 +797,7 @@ export default function CityPageClient({ city }: Props) {
         }
         .df-cell { padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
         .df-lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 8px; }
-        .df-val { font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: var(--ink); line-height: 1; margin-bottom: 6px; }
+        .df-val { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; color: var(--ink); line-height: 1; margin-bottom: 6px; }
         .df-val .unit { font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; color: var(--dim); margin-left: 4px; }
         .df-val.ac { color: var(--accent); }
         .df-sub { font-size: 13px; color: var(--dim); line-height: 1.5; }

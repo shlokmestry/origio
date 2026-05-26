@@ -89,7 +89,7 @@ function ValCell({
       {/* number */}
       <div
         style={{
-          fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
+          fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
           fontSize: 22,
           lineHeight: 1,
           color: valColor,
@@ -407,7 +407,7 @@ export default function ComparePageClient() {
           </p>
           <h1
             style={{
-              fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
+              fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
               fontSize: "clamp(44px, 5.5vw, 68px)",
               fontWeight: 400,
               lineHeight: 1,
@@ -680,7 +680,7 @@ export default function ComparePageClient() {
               <div className="flex-1 min-w-0">
                 <p
                   className="text-[18px] font-normal text-white mb-1"
-                  style={{ fontFamily: "var(--font-heading, 'DM Serif Display', Georgia, serif)" }}
+                  style={{ fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)" }}
                 >
                   Add a third country
                 </p>

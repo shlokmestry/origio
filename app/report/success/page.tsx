@@ -8,7 +8,7 @@ import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER
 import { JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 
-const SERIF = "'DM Serif Display', Georgia, serif";
+const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
 const BG    = "#0a0a0a";
 const MINT  = "#00ffd5";

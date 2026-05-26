@@ -87,7 +87,7 @@ const S = {
   dimmer: 'rgba(240,240,232,0.28)',
   accent: '#00ffd5',
   text: '#f0f0e8',
-  serif: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
+  serif: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
   sans: "'Inter', sans-serif",
 }
 

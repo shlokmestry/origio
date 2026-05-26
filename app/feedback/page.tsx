@@ -15,7 +15,7 @@ const S = {
   borderMd: 'rgba(255,255,255,0.12)',
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.2)',
-  serif: "'DM Serif Display', Georgia, serif",
+  serif: "'Cabinet Grotesk', sans-serif",
   sans: "'Inter', sans-serif",
 };
 

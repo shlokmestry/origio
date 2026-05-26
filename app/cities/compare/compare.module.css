@@ -49,7 +49,7 @@
   letter-spacing: 0.16em; color: #f0f0ed; text-transform: uppercase;
 }
 .navCenter {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 8.5px; font-weight: 700;
   letter-spacing: 0.18em; text-transform: uppercase;
   color: #f0f0ed;
@@ -106,13 +106,13 @@
 .folioStrip {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 56px 0;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
 }
 .folioIt {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 13px;
   text-transform: none; letter-spacing: 0;
   color: var(--paperInk);
@@ -126,7 +126,7 @@
 /* ── HEADLINE ── */
 .raceHead { padding: 42px 56px 12px; position: relative; }
 .eyebrow {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.32em; text-transform: uppercase;
   color: var(--amberD);
@@ -140,7 +140,7 @@
   font-size: 11px;
 }
 .raceH1 {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-size: clamp(28px, 9vw, 156px);
   line-height: 0.86; letter-spacing: -0.038em;
   color: var(--paperInk);
@@ -151,7 +151,7 @@
 .stamp {
   display: inline-block; transform: rotate(-3deg);
   background: var(--paperInk); color: var(--paper);
-  font-family: 'Space Mono', monospace; font-weight: 700;
+  font-family: 'Satoshi', sans-serif; font-weight: 700;
   font-size: 0.18em; letter-spacing: 0.12em;
   padding: 0.18em 0.4em 0.12em;
   vertical-align: 0.32em; margin: 0 0.1em;
@@ -167,7 +167,7 @@
   border-bottom: 1px solid var(--paperRule);
 }
 .raceSubL {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic;
   font-size: clamp(17px, 1.7vw, 22px);
   line-height: 1.45; color: rgba(21,20,15,0.62);
@@ -176,7 +176,7 @@
 .currToggle {
   display: inline-block; cursor: pointer;
   font-style: normal;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 0.62em; font-weight: 700;
   color: var(--paper); background: var(--paperInk);
   padding: 4px 11px 3px; margin: 0 2px;
@@ -187,14 +187,14 @@
 }
 .currToggle:hover { background: var(--amberD); transform: rotate(-1deg); }
 .raceSubR {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
   text-align: right; line-height: 1.6;
 }
 .raceSubRIt {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 14px;
   text-transform: none; letter-spacing: 0;
   color: var(--paperInk);
@@ -212,7 +212,7 @@
 }
 .pickRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .pickLbl {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
@@ -220,12 +220,12 @@
   display: inline-flex; align-items: center; gap: 8px;
 }
 .pickLblArr {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 18px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }
 .pickChip {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
   color: rgba(21,20,15,0.7);
   background: transparent;
@@ -243,13 +243,13 @@
 .chFlag { font-size: 13px; line-height: 1; }
 .pickCap {
   margin-left: auto;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55); white-space: nowrap;
 }
 .pickCapNum {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 22px;
   color: var(--paperInk); letter-spacing: 0;
   margin-right: 2px; vertical-align: -2px;
@@ -258,7 +258,7 @@
 /* Legend */
 .legendRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
 .legendLbl {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
@@ -266,7 +266,7 @@
   display: inline-flex; align-items: center; gap: 8px;
 }
 .legendLblArr {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 18px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }
@@ -276,7 +276,7 @@
   cursor: pointer;
   background: transparent; border: 1px solid transparent;
   transition: border-color 0.15s, background 0.15s;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
   text-transform: uppercase; color: rgba(21,20,15,0.78);
 }
@@ -298,7 +298,7 @@
   border-bottom: 1px solid var(--paperRule);
 }
 .scaleL {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
@@ -309,12 +309,12 @@
 .scaleLabel {
   position: absolute; bottom: 14px;
   transform: translateX(-50%);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
   color: var(--paperInk); white-space: nowrap;
 }
 .scaleR {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.55); text-align: right;
@@ -335,7 +335,7 @@
 /* Left column */
 .rrL { display: flex; align-items: flex-end; gap: 14px; min-width: 0; }
 .rrRank {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic;
   font-size: clamp(24px, 5.4vw, 76px);
   line-height: 0.84; letter-spacing: -0.04em;
@@ -348,7 +348,7 @@
 .rrFlag { font-size: 18px; line-height: 1; margin-bottom: 6px; display: block; }
 .rrName {
   display: block;
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic;
   font-size: clamp(28px, 3vw, 40px);
   line-height: 0.92; letter-spacing: -0.024em;
@@ -356,7 +356,7 @@
 }
 .rrMeta {
   display: block;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.18em; text-transform: uppercase;
   color: rgba(21,20,15,0.55);
@@ -389,13 +389,13 @@
 .rrSeg:hover { filter: brightness(1.08); }
 .rrSegLbl {
   position: absolute; left: 6px; top: 5px;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 8px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: rgba(255,255,255,0.95); pointer-events: none; white-space: nowrap;
 }
 .rrSegVal {
   position: absolute; left: 6px; bottom: 4px;
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-size: 14px; color: #fff; letter-spacing: -0.01em;
   pointer-events: none; white-space: nowrap;
 }
@@ -405,7 +405,7 @@
   bottom: calc(100% + 6px); left: 50%;
   transform: translateX(-50%);
   background: var(--paperInk); color: var(--paper);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
   padding: 5px 9px; white-space: nowrap;
   pointer-events: none; opacity: 0; transition: opacity 0.15s;
@@ -423,7 +423,7 @@
 /* Right column */
 .rrR { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .rrTotal {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-size: clamp(40px, 4.4vw, 60px);
   line-height: 0.94; letter-spacing: -0.028em;
   color: var(--paperInk);
@@ -431,7 +431,7 @@
 .isCheap .rrTotal { color: var(--moss); }
 .isDear .rrTotal { color: rgba(21,20,15,0.55); }
 .rrDelta {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
   color: rgba(21,20,15,0.5); margin-top: 4px;
@@ -445,7 +445,7 @@
   grid-column: 1 / -1;
   display: flex; align-items: center; gap: 12px;
   padding: 0 0 6px;
-  font-family: 'Caveat', cursive;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-weight: 700; font-size: 22px;
   color: var(--moss); line-height: 1;
 }
@@ -453,7 +453,7 @@
 .squig { display: inline-block; transform: rotate(-1.5deg); }
 .ruler { flex-grow: 1; height: 1px; background: currentColor; opacity: 0.32; }
 .tail {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-weight: 700; font-size: 10px;
   letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.7;
 }
@@ -463,14 +463,14 @@
   display: grid;
   grid-template-columns: 280px 1fr 260px;
   gap: 28px; padding: 4px 0 8px; align-items: start;
-  font-family: 'Caveat', cursive;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-weight: 600; font-size: 22px;
   color: var(--amberD); line-height: 1.15;
 }
 .annotL { text-align: right; padding-right: 8px; transform: rotate(-1deg); }
 .annotC { display: flex; align-items: flex-start; gap: 10px; padding-left: 10px; }
 .annotCArr {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 28px; line-height: 0.7;
   color: var(--amberD); flex-shrink: 0; transform: translateY(-4px);
 }
@@ -493,13 +493,13 @@
   gap: 56px; align-items: start;
 }
 .verdictEyebrow {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.28em; text-transform: uppercase;
   color: var(--amberD); margin-bottom: 16px;
 }
 .verdictText {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-size: clamp(26px, 3vw, 42px);
   line-height: 1.18; letter-spacing: -0.022em;
   color: var(--paperInk);
@@ -520,13 +520,13 @@
 .vrCardCheap { border-left-color: var(--moss) !important; }
 .vrCardDear  { border-left-color: var(--rose) !important; }
 .vrLbl {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 8.5px; font-weight: 700;
   letter-spacing: 0.24em; text-transform: uppercase;
   color: rgba(21,20,15,0.55); margin-bottom: 8px;
 }
 .vrBody {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-size: 19px; line-height: 1.3;
   color: var(--paperInk); letter-spacing: -0.014em;
 }
@@ -545,7 +545,7 @@
   background: var(--paperInk); color: var(--paper);
   border: 1px solid var(--paperInk);
   padding: 11px 16px; cursor: pointer;
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   transition: background 0.15s, transform 0.15s;
@@ -555,20 +555,20 @@
 .actBtnGhost:hover { background: var(--paperInk) !important; color: var(--paper) !important; border-color: var(--paperInk) !important; }
 .spacer { flex-grow: 1; }
 .note {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 14px; color: rgba(21,20,15,0.62);
 }
 
 /* Empty state */
 .raceEmpty {
   padding: 80px 56px; text-align: center;
-  font-family: 'DM Serif Display', Georgia, serif; font-style: italic;
+  font-family: 'Cabinet Grotesk', sans-serif; font-style: italic;
   font-size: clamp(26px, 3vw, 40px);
   color: rgba(21,20,15,0.42); line-height: 1.25;
 }
 .raceEmpty span {
   display: block; margin-top: 14px;
-  font-family: 'Space Mono', monospace; font-style: normal;
+  font-family: 'Satoshi', sans-serif; font-style: normal;
   font-size: 11px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.42);
@@ -579,13 +579,13 @@
   padding: 24px 56px 36px;
   display: flex; justify-content: space-between; align-items: baseline; gap: 20px;
   border-top: 1px solid var(--paperRule);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(21,20,15,0.5);
 }
 .seal {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cabinet Grotesk', sans-serif;
   font-style: italic; font-size: 16px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }

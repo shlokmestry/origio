@@ -50,7 +50,7 @@ function getSupabase() {
 }
 
 // ── Shared token styles ────────────────────────────────────────────────────
-const SERIF = "'Georgia', 'DM Serif Display', serif";
+const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', 'system-ui', sans-serif";
 const MONO  = "'Cabinet Grotesk', 'monospace'";
 
