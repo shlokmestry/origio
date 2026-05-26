@@ -241,7 +241,7 @@ function NewspaperSpoof() {
         <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
           ALL STORIES BASED ON REAL SEARCHES MADE AT 2AM
         </span>
-        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "italic" }}>
+        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "normal" }}>
           findorigio.com
         </span>
       </div>
@@ -461,7 +461,7 @@ export default function AboutPage() {
               maxWidth: "16ch", textShadow: "0 4px 48px rgba(0,0,0,0.5)", margin: 0,
             }}>
               what the fuck is{" "}
-              <em style={{ color: "#00ffd5", fontStyle: "italic" }}>origio</em>?
+              <em style={{ color: "#00ffd5", fontStyle: "normal" }}>origio</em>?
             </h1>
           </div>
           <div style={{
@@ -492,7 +492,7 @@ export default function AboutPage() {
                 lineHeight: 1.55, color: "#f0f0e8", fontWeight: 400, margin: "0 0 32px",
               }}>
                 Origio was built by{" "}
-                <em style={{ color: "#00ffd5", fontStyle: "italic" }}>Shlok Mestry</em>{" "}
+                <em style={{ color: "#00ffd5", fontStyle: "normal" }}>Shlok Mestry</em>{" "}
                 after spending weeks manually researching countries to move to and
                 realising there was no single place that had all the information needed
                 to make a proper decision.
@@ -532,7 +532,7 @@ export default function AboutPage() {
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
                 }}>
                   why not just use{" "}
-                  <em style={{ color: "rgba(240,240,232,0.35)", fontStyle: "italic", textDecoration: "line-through", textDecorationColor: "rgba(255,60,60,0.5)" }}>Numbeo</em>?
+                  <em style={{ color: "rgba(240,240,232,0.35)", fontStyle: "normal", textDecoration: "line-through", textDecorationColor: "rgba(255,60,60,0.5)" }}>Numbeo</em>?
                 </h2>
               </div>
             </FadeIn>
@@ -559,7 +559,7 @@ export default function AboutPage() {
                   lineHeight: 1, letterSpacing: "-0.02em",
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
                 }}>
-                  how does this <em style={{ color: "#00ffd5", fontStyle: "italic" }}>work</em>?
+                  how does this <em style={{ color: "#00ffd5", fontStyle: "normal" }}>work</em>?
                 </h2>
                 <span style={{
                   fontFamily: "Satoshi, sans-serif", fontSize: 11,
@@ -613,7 +613,7 @@ export default function AboutPage() {
                   color: "#f0f0e8", fontWeight: 400, margin: "0 0 20px",
                 }}>
                   how the{" "}
-                  <em style={{ color: "#00ffd5", fontStyle: "italic" }}>algorithm</em>{" "}
+                  <em style={{ color: "#00ffd5", fontStyle: "normal" }}>algorithm</em>{" "}
                   works
                 </h2>
                 <p style={{
@@ -712,7 +712,7 @@ export default function AboutPage() {
                 color: "#ffffff", fontWeight: 400, margin: 0,
                 textShadow: "0 2px 24px rgba(0,0,0,0.7)",
               }}>
-                where does the <em style={{ color: "#00ffd5", fontStyle: "italic" }}>data</em> come from?
+                where does the <em style={{ color: "#00ffd5", fontStyle: "normal" }}>data</em> come from?
               </h2>
             </FadeIn>
           </div>

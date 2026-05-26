@@ -222,7 +222,7 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
           In {match.country.name}
         </p>
         <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: 0 }}>
-          In <em style={{ color: MINT, fontStyle: "italic" }}>{match.country.name}</em>
+          In <em style={{ color: MINT, fontStyle: "normal" }}>{match.country.name}</em>
         </h3>
       </div>
       <div style={{ padding: "8px 0" }}>
@@ -284,7 +284,7 @@ function SessionExpired() {
       <span style={{ fontSize: 48 }}>🌍</span>
       <div>
         <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,42px)", fontWeight: 400, color: FG, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
-          Your session <em style={{ color: MINT, fontStyle: "italic" }}>expired</em>
+          Your session <em style={{ color: MINT, fontStyle: "normal" }}>expired</em>
         </h2>
         <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 340, margin: "0 auto" }}>
           We couldn't find your results — this usually happens after a page refresh or opening from a new tab. Retake the quiz to see your matches again (takes 2 minutes).
@@ -559,7 +559,7 @@ export default function WizardResultsPage() {
         <div style={{ textAlign: "center" }}>
           <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12 }}>◆ Computing</p>
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,48px)", fontWeight: 400, letterSpacing: "-0.02em", color: FG, margin: 0 }}>
-            Finding your <em style={{ color: MINT, fontStyle: "italic" }}>country…</em>
+            Finding your <em style={{ color: MINT, fontStyle: "normal" }}>country…</em>
           </h2>
         </div>
         <div style={{ width: "100%", maxWidth: 320 }}>
@@ -766,7 +766,7 @@ export default function WizardResultsPage() {
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-              Your <em style={{ fontStyle: "italic" }}>top three</em>
+              Your <em style={{ fontStyle: "normal" }}>top three</em>
             </h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, background: LINE }}>
@@ -860,7 +860,7 @@ export default function WizardResultsPage() {
             <div>
               <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ The ranking</p>
               <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-                All <em style={{ fontStyle: "italic" }}>twenty-five</em>
+                All <em style={{ fontStyle: "normal" }}>twenty-five</em>
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
@@ -1009,7 +1009,7 @@ export default function WizardResultsPage() {
             <div style={{ marginBottom: 28 }}>
               <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ Edge cases</p>
               <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-                Filtered <em style={{ fontStyle: "italic" }}>out</em>
+                Filtered <em style={{ fontStyle: "normal" }}>out</em>
               </h2>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 1, background: LINE }}>

@@ -444,7 +444,7 @@ export default function SalaryCalculator() {
               Take-Home Calculator
             </p>
             <h1 style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontWeight:400, fontSize:"clamp(28px, 5vw, 46px)", lineHeight:1.05, letterSpacing:"-0.02em", color:"#f0f0e8", margin:"0 0 10px" }}>
-              what will you <em style={{ color:"#00ffd5", fontStyle:"italic" }}>actually</em> earn?
+              what will you <em style={{ color:"#00ffd5", fontStyle:"normal" }}>actually</em> earn?
             </h1>
             <p style={{ fontFamily:"system-ui, sans-serif", fontSize:14, color:"rgba(240,240,232,0.42)", margin:0 }}>
               Net salary after tax and deductions. 2025/26 rates.
@@ -566,7 +566,7 @@ export default function SalaryCalculator() {
                   <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.1)" }}>·</span>
                   <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:pain.color, letterSpacing:"0.1em" }}>{TAX_DATA[country].label}</span>
                 </div>
-                <p style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontSize:14, lineHeight:1.65, color:"rgba(240,240,232,0.52)", margin:"0 0 14px", fontStyle:"italic" }}>
+                <p style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontSize:14, lineHeight:1.65, color:"rgba(240,240,232,0.52)", margin:"0 0 14px", fontStyle:"normal" }}>
                   "{currentFact}"
                 </p>
                 <button onClick={() => setCurrentFact(getRandomFact(country))}
@@ -685,7 +685,7 @@ export default function SalaryCalculator() {
 
                     {/* Dubai quip — appears when tax rate is painful */}
                     {displayResult.rate > 0.28 && country !== "AE" && (
-                      <div style={{ marginTop:10, fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.26)", letterSpacing:"0.06em", textAlign:"center", fontStyle:"italic" }}>
+                      <div style={{ marginTop:10, fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.26)", letterSpacing:"0.06em", textAlign:"center", fontStyle:"normal" }}>
                         you could live in Dubai instead. just saying.
                       </div>
                     )}

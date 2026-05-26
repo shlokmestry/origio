@@ -50,7 +50,7 @@ function FlickerWord() {
     <span style={{
       opacity:    visible ? 1 : 0,
       transition: done ? "opacity 0.9s ease, color 0.6s ease" : "opacity 0.35s ease",
-      fontStyle:  done ? "italic" : "normal",
+      fontStyle: "normal",
       color:      done ? "#00ffd5" : "rgba(255,255,255,0.75)",
       display:    "inline",
     }}>
