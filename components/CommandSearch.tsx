@@ -174,7 +174,7 @@ function ScoreBar({ score }: { score: number }) {
       <span
         style={{
           fontSize: 11,
-          fontFamily: "monospace",
+          fontFamily: "Satoshi, sans-serif",
           fontWeight: 700,
           color: "rgba(255,255,255,0.5)",
         }}

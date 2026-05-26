@@ -269,7 +269,7 @@ export default function SuccessClient() {
   }, [sessionId, router, mounted, goSuccess, goError])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', fontFamily: "'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
+    <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', fontFamily: "'Satoshi', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
       <style>{`
         @keyframes breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
         @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.3} }

@@ -136,7 +136,7 @@ function NewspaperSpoof() {
           The Expat Times
         </span>
         <span style={{
-          fontFamily: "monospace",
+          fontFamily: "Satoshi, sans-serif",
           fontSize: 10,
           color: "rgba(240,240,232,0.3)",
           letterSpacing: "0.08em",
@@ -158,7 +158,7 @@ function NewspaperSpoof() {
       >
         {["BREAKING", "SALARY NEWS", "VISA CHAOS", "COST OF LIVING SPECIAL"].map(tag => (
           <span key={tag} style={{
-            fontFamily: "monospace", fontSize: 9,
+            fontFamily: "Satoshi, sans-serif", fontSize: 9,
             color: "rgba(240,240,232,0.25)", letterSpacing: "0.1em",
           }}>{tag}</span>
         ))}
@@ -209,7 +209,7 @@ function NewspaperSpoof() {
             {/* Origio replacement */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <span style={{
-                fontFamily: "monospace", fontSize: 10,
+                fontFamily: "Satoshi, sans-serif", fontSize: 10,
                 color: "#00ffd5", letterSpacing: "0.1em",
                 textTransform: "uppercase", flexShrink: 0,
                 marginTop: 3,
@@ -238,7 +238,7 @@ function NewspaperSpoof() {
         justifyContent: "space-between",
         alignItems: "center",
       }}>
-        <span style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
+        <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
           ALL STORIES BASED ON REAL SEARCHES MADE AT 2AM
         </span>
         <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "italic" }}>
@@ -269,7 +269,7 @@ function AlgorithmScribble() {
     <div ref={ref}>
       {/* Label */}
       <div style={{
-        fontFamily: "monospace", fontSize: 11, letterSpacing: "0.18em",
+        fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.18em",
         textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
         marginBottom: 32, textAlign: "center",
         opacity: inView ? 1 : 0, transition: "opacity 0.5s ease",
@@ -350,7 +350,7 @@ function AlgorithmScribble() {
                 textAnchor="middle"
                 fill={f.color}
                 opacity="0.55"
-                style={{ fontFamily: "monospace", fontSize: 11 }}
+                style={{ fontFamily: "Satoshi, sans-serif", fontSize: 11 }}
               >
                 {f.weight}
               </text>
@@ -402,7 +402,7 @@ function AlgorithmScribble() {
 
         {/* Scrawled note bottom-left */}
         <text x="24" y="268" fill="rgba(240,240,232,0.18)"
-          style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.05em", opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" }}
+          style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, letterSpacing: "0.05em", opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" }}
         >
           * weights shift based on your wizard answers
         </text>
@@ -470,7 +470,7 @@ export default function AboutPage() {
             display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
             color: "rgba(240,240,232,0.5)",
           }}>
-            <span style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>scroll</span>
+            <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>scroll</span>
             <div style={{ width: 1, height: 36, background: "linear-gradient(180deg, rgba(240,240,232,0.5), transparent)" }} />
           </div>
         </section>
@@ -480,7 +480,7 @@ export default function AboutPage() {
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <FadeIn>
               <span style={{
-                fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                 textTransform: "uppercase", color: "#00ffd5",
                 borderBottom: "2px solid #00ffd5", paddingBottom: 4,
                 display: "inline-block", marginBottom: 32,
@@ -521,7 +521,7 @@ export default function AboutPage() {
             <FadeIn>
               <div style={{ marginBottom: 56 }}>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                   textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
                   display: "inline-block", marginBottom: 20,
                 }}>the problem</span>
@@ -562,7 +562,7 @@ export default function AboutPage() {
                   how does this <em style={{ color: "#00ffd5", fontStyle: "italic" }}>work</em>?
                 </h2>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11,
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11,
                   letterSpacing: "0.2em", textTransform: "uppercase",
                   color: "rgba(240,240,232,0.35)",
                 }}>
@@ -602,7 +602,7 @@ export default function AboutPage() {
             <FadeIn>
               <div style={{ marginBottom: 64 }}>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                   textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
                   display: "inline-block", marginBottom: 20,
                 }}>the score</span>
@@ -658,7 +658,7 @@ export default function AboutPage() {
                       marginBottom: 12,
                     }} />
                     <p style={{
-                      fontFamily: "monospace", fontSize: 10,
+                      fontFamily: "Satoshi, sans-serif", fontSize: 10,
                       letterSpacing: "0.14em", textTransform: "uppercase",
                       color: f.color, margin: "0 0 8px",
                     }}>{f.label}</p>
@@ -700,7 +700,7 @@ export default function AboutPage() {
           }}>
             <FadeIn>
               <span style={{
-                fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                 textTransform: "uppercase", color: "#00ffd5",
                 borderBottom: "2px solid #00ffd5", paddingBottom: 4, display: "inline-block",
               }}>the data</span>

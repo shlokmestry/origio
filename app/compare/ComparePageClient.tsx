@@ -383,7 +383,7 @@ export default function ComparePageClient() {
 
   // FIX: removed black-screen guard — render shell immediately, data fills in
   return (
-    <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Satoshi, sans-serif" }}>
       <style>{`
         @media (max-width: 700px) {
           .cmp-selectors-grid { grid-template-columns: 1fr 1fr !important; }

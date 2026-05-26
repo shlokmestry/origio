@@ -162,7 +162,7 @@ function CyclingCard({ idx, fading, isSignup }: { idx: number; fading: boolean; 
         <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880' }}>
           {isSignup ? '✦ New match found' : 'Your top match'}
         </span>
-        <span style={{ fontFamily: 'monospace', fontSize: 10, color: isSignup ? '#00ffd5' : '#888880', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <span style={{ fontFamily: 'Satoshi, sans-serif', fontSize: 10, color: isSignup ? '#00ffd5' : '#888880', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           {isSignup ? 'scanning...' : 'Sample'}
         </span>
       </div>
@@ -214,7 +214,7 @@ function CyclingCard({ idx, fading, isSignup }: { idx: number; fading: boolean; 
                   transition: fading ? 'width 0.2s ease' : 'width 0.8s cubic-bezier(.2,.8,.2,1) 0.1s',
                 }} />
               </div>
-              <span style={{ fontFamily: 'monospace', fontSize: 10, color: '#fafafa', width: 26, textAlign: 'right', flexShrink: 0 }}>{b.num}</span>
+              <span style={{ fontFamily: 'Satoshi, sans-serif', fontSize: 10, color: '#fafafa', width: 26, textAlign: 'right', flexShrink: 0 }}>{b.num}</span>
             </div>
           ))}
         </div>
@@ -507,7 +507,7 @@ export default function SignInClient() {
                           : strength.label}
                       </span>
                       {!passwordInvalid && password.length > 0 && (
-                        <span style={{ fontSize: 10, color: '#555', fontFamily: 'monospace' }}>{password.length}/16</span>
+                        <span style={{ fontSize: 10, color: '#555', fontFamily: 'Satoshi, sans-serif' }}>{password.length}/16</span>
                       )}
                     </div>
                   </div>
@@ -638,7 +638,7 @@ export default function SignInClient() {
               position: 'absolute', bottom: '120%', left: '50%', transform: 'translateX(-50%) translateY(4px)',
               background: '#0f0f0f', border: '1px solid #2a2a2a',
               padding: '4px 10px', whiteSpace: 'nowrap',
-              fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase',
+              fontFamily: 'Satoshi, sans-serif', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase',
               color: '#00ffd5',
               opacity: hoveredDot === dot.label ? 1 : 0,
               transition: 'opacity 0.15s, transform 0.15s',
@@ -703,7 +703,7 @@ export default function SignInClient() {
         <div style={{
           position: 'absolute', bottom: 16, left: 16, right: 16,
           display: 'flex', justifyContent: 'space-between',
-          fontFamily: 'monospace', fontSize: 9, color: '#333', letterSpacing: '0.1em',
+          fontFamily: 'Satoshi, sans-serif', fontSize: 9, color: '#333', letterSpacing: '0.1em',
           textTransform: 'uppercase', pointerEvents: 'none', zIndex: 10,
           opacity: fading ? 0 : 1, transition: 'opacity 0.35s ease',
         }}>

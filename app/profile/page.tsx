@@ -303,7 +303,7 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Satoshi, sans-serif' }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <div className="max-w-[1000px] mx-auto px-10 pt-28 pb-20" style={{ paddingLeft: 'clamp(20px, 4vw, 40px)', paddingRight: 'clamp(20px, 4vw, 40px)' }}>
