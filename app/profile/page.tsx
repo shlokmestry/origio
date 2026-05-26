@@ -325,7 +325,7 @@ export default function ProfilePage() {
                 className="w-[72px] h-[72px] rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.14)' }}
               >
-                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, color: '#fff' }}>
+                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 28, color: '#fff' }}>
                   {(displayName?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
                 </span>
               </div>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
             <div>
               {/* Name + Pro badge */}
               <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
+                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
                   {displayName}
                 </span>
                 {isPro && (
@@ -401,7 +401,7 @@ export default function ProfilePage() {
                 <Zap className="w-4 h-4 text-white/60" />
               </div>
               <div>
-                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
+                <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 25 countries · €4.99 one-time</p>
               </div>
             </div>
@@ -523,7 +523,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                       <span style={{ fontSize: 40, lineHeight: 1 }}>{topMatch.flagEmoji}</span>
                       <div>
-                        <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
+                        <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
                           {topMatch.name}
                         </div>
                         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
@@ -532,7 +532,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 42, color: '#fff', lineHeight: 1 }}>
+                      <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 42, color: '#fff', lineHeight: 1 }}>
                         {capPercent(topMatch.matchPercent ?? 0)}%
                       </div>
                       <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -770,7 +770,7 @@ export default function ProfilePage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 24 }}>Edit Profile</h3>
+            <h3 style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 24 }}>Edit Profile</h3>
 
             <div className="space-y-5">
               {/* Name */}
@@ -927,7 +927,7 @@ export default function ProfilePage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, color: '#fff', marginBottom: 16 }}>Delete account?</h3>
+            <h3 style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 22, color: '#fff', marginBottom: 16 }}>Delete account?</h3>
 
             {/* Warning box */}
             <div className="flex items-center gap-3.5 mb-5"

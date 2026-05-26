@@ -80,7 +80,7 @@ function StretchHeadline() {
 
   return (
     <div ref={ref} style={{
-      fontFamily:      "DM Serif Display, Georgia, serif",
+      fontFamily:      "Cabinet Grotesk, sans-serif",
       fontWeight:      400,
       lineHeight:      1.0,
       letterSpacing:   "-0.02em",

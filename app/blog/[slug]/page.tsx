@@ -11,7 +11,7 @@ export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
-const SERIF = "var(--font-heading, 'DM Serif Display', Georgia, serif)";
+const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)";
 const SANS  = "'Inter', sans-serif";
 const MONO  = "'monospace'";
 

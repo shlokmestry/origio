@@ -14,7 +14,7 @@ import QuizGate from "@/components/QuizGate";
 import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
-const SERIF  = "'DM Serif Display', Georgia, serif";
+const SERIF  = "'Cabinet Grotesk', sans-serif";
 const SANS   = "'Satoshi', system-ui, sans-serif";
 const MONO   = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const BG     = "#0a0a0a";

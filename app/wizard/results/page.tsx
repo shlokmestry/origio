@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
-const SERIF = "'DM Serif Display', Georgia, serif";
+const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const BG    = "#0e0d0c";

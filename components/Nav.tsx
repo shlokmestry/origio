@@ -189,7 +189,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           display: flex; align-items: center; gap: 12px;
           padding: 18px 24px; font-size: 22px; font-weight: 700;
           color: rgba(255,255,255,0.7); text-decoration: none;
-          font-family: 'DM Serif Display', Georgia, serif;
+          font-family: 'Cabinet Grotesk', sans-serif;
           border-bottom: 1px solid #111; transition: color 0.15s;
           letter-spacing: -0.01em;
         }
@@ -282,7 +282,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "18px 24px", background: "none", border: "none", borderBottom: "1px solid #111", cursor: "pointer", textAlign: "left" }}
             >
               <Search size={18} style={{ color: "rgba(255,255,255,0.4)", flexShrink: 0 }} />
-              <span style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: "'DM Serif Display', Georgia, serif", letterSpacing: "-0.01em" }}>Search countries</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: "'Cabinet Grotesk', sans-serif", letterSpacing: "-0.01em" }}>Search countries</span>
             </button>
           )}
           <Link href="/wizard"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
