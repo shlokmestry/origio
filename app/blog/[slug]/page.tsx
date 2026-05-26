@@ -13,7 +13,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)";
 const SANS  = "'Inter', sans-serif";
-const MONO  = "'monospace'";
+const MONO  = "'Satoshi', sans-serif";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Insights":         "#a78bfa",

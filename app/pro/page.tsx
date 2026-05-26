@@ -118,9 +118,9 @@ const FAQS = [
 ]
 
 // ── Tokens ─────────────────────────────────────────────────────────────────────
-const SERIF = "var(--font-heading, Georgia, 'Times New Roman', serif)"
-const SANS  = "var(--font-body, 'Satoshi', system-ui, sans-serif)"
-const MONO  = "'Cabinet Grotesk', monospace"
+const SERIF = "'Cabinet Grotesk', sans-serif"
+const SANS  = "'Satoshi', sans-serif"
+const MONO  = "'Satoshi', sans-serif"
 
 const eyebrow: React.CSSProperties = {
   fontFamily: MONO, fontSize: 10, fontWeight: 800,

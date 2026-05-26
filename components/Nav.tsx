@@ -135,7 +135,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         }
         .nav-search-btn:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.07); }
         .nav-search-btn-kbd {
-          font-size: 10px; font-family: monospace;
+          font-size: 10px; font-family: 'Satoshi', sans-serif;
           color: rgba(255,255,255,0.2);
           background: rgba(255,255,255,0.06);
           border: 1px solid rgba(255,255,255,0.1);

@@ -443,7 +443,7 @@ export default function SalaryCalculator() {
             <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.22em", textTransform:"uppercase", color:"#00ffd5", marginBottom:10 }}>
               Take-Home Calculator
             </p>
-            <h1 style={{ fontFamily:"Georgia, serif", fontWeight:400, fontSize:"clamp(28px, 5vw, 46px)", lineHeight:1.05, letterSpacing:"-0.02em", color:"#f0f0e8", margin:"0 0 10px" }}>
+            <h1 style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontWeight:400, fontSize:"clamp(28px, 5vw, 46px)", lineHeight:1.05, letterSpacing:"-0.02em", color:"#f0f0e8", margin:"0 0 10px" }}>
               what will you <em style={{ color:"#00ffd5", fontStyle:"italic" }}>actually</em> earn?
             </h1>
             <p style={{ fontFamily:"system-ui, sans-serif", fontSize:14, color:"rgba(240,240,232,0.42)", margin:0 }}>
@@ -566,7 +566,7 @@ export default function SalaryCalculator() {
                   <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.1)" }}>·</span>
                   <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:pain.color, letterSpacing:"0.1em" }}>{TAX_DATA[country].label}</span>
                 </div>
-                <p style={{ fontFamily:"Georgia, serif", fontSize:14, lineHeight:1.65, color:"rgba(240,240,232,0.52)", margin:"0 0 14px", fontStyle:"italic" }}>
+                <p style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontSize:14, lineHeight:1.65, color:"rgba(240,240,232,0.52)", margin:"0 0 14px", fontStyle:"italic" }}>
                   "{currentFact}"
                 </p>
                 <button onClick={() => setCurrentFact(getRandomFact(country))}
@@ -597,7 +597,7 @@ export default function SalaryCalculator() {
               {/* Guides */}
               <div style={{ marginTop:16, border:"1px solid #1a1a1a", padding:"16px 18px" }}>
                 <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(240,240,232,0.18)", marginBottom:6 }}>Also explore</p>
-                <h2 style={{ fontFamily:"Georgia, serif", fontSize:16, fontWeight:400, color:"#f0f0e8", margin:"0 0 10px" }}>Best countries by role</h2>
+                <h2 style={{ fontFamily:"Cabinet Grotesk, sans-serif", fontSize:16, fontWeight:400, color:"#f0f0e8", margin:"0 0 10px" }}>Best countries by role</h2>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
                   {GUIDES.map((g) => (
                     <Link key={g.slug} href={`/best-countries-for/${g.slug}`}
