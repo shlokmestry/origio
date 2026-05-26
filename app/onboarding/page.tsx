@@ -63,7 +63,7 @@ const S = {
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.18)',
   serif: "'Cabinet Grotesk', sans-serif",
-  sans: "'Inter', sans-serif",
+  sans: "'Satoshi', sans-serif",
 }
 
 function PassportSVG({ design }: { design: PassportDesign }) {
@@ -84,8 +84,8 @@ function PassportSVG({ design }: { design: PassportDesign }) {
       <circle cx="100" cy="110" r="36" fill={design.accentColor} opacity="0.1" />
       <circle cx="100" cy="110" r="32" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.35" />
       <text x="100" y="120" textAnchor="middle" fontSize="30" fill={design.textColor} opacity="0.9">{design.emblem}</text>
-      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">{design.name.toUpperCase()}</text>
-      <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="serif">{design.coverText}</text>
+      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="Cabinet Grotesk, sans-serif" fontWeight="bold">{design.name.toUpperCase()}</text>
+      <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="Cabinet Grotesk, sans-serif">{design.coverText}</text>
       <text x="100" y="225" textAnchor="middle" fontSize="22" opacity="0.9">{design.flag}</text>
       <rect x="10" y="248" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
       <rect x="10" y="255" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />

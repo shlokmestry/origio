@@ -66,15 +66,15 @@ function HowItWorksScribble() {
       </defs>
       <path filter="url(#wobbly)" d="M 222 95 C 258 82, 300 88, 322 114 C 346 142, 344 182, 328 208 C 312 234, 280 250, 248 252 C 216 254, 184 242, 164 218 C 144 194, 140 160, 156 134 C 172 108, 200 98, 222 95 Z" fill="none" stroke="#f0f0e8" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
       <path filter="url(#wobbly-sm)" d="M 228 98 C 264 86, 304 92, 326 118 C 348 146, 345 186, 328 212" fill="none" stroke="#f0f0e8" strokeWidth="0.8" strokeLinecap="round" opacity="0.15" />
-      <text x="245" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>01</text>
+      <text x="245" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>01</text>
       <text x="245" y="200" textAnchor="middle" fill="rgba(240,240,232,0.52)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>answer 8 questions</text>
       <path filter="url(#wobbly)" d="M 578 94 C 614 82, 658 90, 680 118 C 702 146, 700 186, 684 212 C 668 238, 638 252, 606 252 C 574 252, 544 238, 528 212 C 512 186, 512 148, 534 120 C 552 96, 572 96, 578 94 Z" fill="none" stroke="#f0f0e8" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
       <path filter="url(#wobbly-sm)" d="M 582 97 C 618 85, 660 94, 682 122 C 704 150, 701 190, 684 216" fill="none" stroke="#f0f0e8" strokeWidth="0.8" strokeLinecap="round" opacity="0.15" />
-      <text x="605" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>02</text>
+      <text x="605" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>02</text>
       <text x="605" y="200" textAnchor="middle" fill="rgba(240,240,232,0.52)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>get your top countries</text>
       <path filter="url(#wobbly)" d="M 400 378 C 440 366, 486 372, 512 400 C 538 428, 536 470, 518 498 C 500 526, 466 540, 432 540 C 398 540, 364 526, 346 498 C 328 470, 328 430, 352 402 C 370 380, 388 380, 400 378 Z" fill="none" stroke="#00ffd5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.93" />
       <path filter="url(#wobbly-sm)" d="M 406 381 C 444 370, 488 377, 514 406 C 540 434, 537 474, 518 502" fill="none" stroke="#00ffd5" strokeWidth="0.9" strokeLinecap="round" opacity="0.2" />
-      <text x="428" y="455" textAnchor="middle" fill="#00ffd5" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>03</text>
+      <text x="428" y="455" textAnchor="middle" fill="#00ffd5" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>03</text>
       <text x="428" y="488" textAnchor="middle" fill="rgba(0,255,213,0.6)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>dive into the data</text>
       <path filter="url(#wobbly-sm)" d="M 324 128 C 358 92, 444 80, 498 104 C 524 116, 538 136, 542 156" fill="none" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="5.5 10" markerEnd="url(#pen-tip)" opacity="0.82" />
       <path filter="url(#wobbly-sm)" d="M 326 133 C 362 98, 448 86, 500 110" fill="none" stroke="#00ffd5" strokeWidth="0.55" strokeLinecap="round" opacity="0.18" />
@@ -126,7 +126,7 @@ function NewspaperSpoof() {
         justifyContent: "space-between",
       }}>
         <span style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Cabinet Grotesk', sans-serif",
           fontSize: "clamp(22px, 4vw, 36px)",
           fontWeight: 700,
           color: "#f0f0e8",
@@ -180,7 +180,7 @@ function NewspaperSpoof() {
             {/* Crossed-out headline */}
             <div style={{ position: "relative", marginBottom: 12 }}>
               <p style={{
-                fontFamily: "Georgia, serif",
+                fontFamily: "'Cabinet Grotesk', sans-serif",
                 fontSize: "clamp(14px, 2vw, 17px)",
                 lineHeight: 1.45,
                 color: "rgba(240,240,232,0.28)",
@@ -241,7 +241,7 @@ function NewspaperSpoof() {
         <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
           ALL STORIES BASED ON REAL SEARCHES MADE AT 2AM
         </span>
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "italic" }}>
+        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "italic" }}>
           findorigio.com
         </span>
       </div>
@@ -338,7 +338,7 @@ function AlgorithmScribble() {
                 y={by + 24}
                 textAnchor="middle"
                 fill={f.color}
-                style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: 400 }}
+                style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 13, fontWeight: 400 }}
               >
                 {f.label}
               </text>
@@ -362,7 +362,7 @@ function AlgorithmScribble() {
                   y={by + 30}
                   textAnchor="middle"
                   fill="rgba(240,240,232,0.25)"
-                  style={{ fontFamily: "Georgia, serif", fontSize: 20 }}
+                  style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20 }}
                 >
                   +
                 </text>
@@ -395,7 +395,7 @@ function AlgorithmScribble() {
             opacity="0.8"
           />
           <text x="400" y="220" textAnchor="middle" fill="#00ffd5"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 22, fontWeight: 400 }}>
+            style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 22, fontWeight: 400 }}>
             Move Score
           </text>
         </g>
@@ -455,7 +455,7 @@ export default function AboutPage() {
             minHeight: "calc(100vh - 80px)", padding: "0 24px",
           }}>
             <h1 style={{
-              fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 400,
+              fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 400,
               fontSize: "clamp(48px, 9vw, 128px)", lineHeight: 1.05,
               letterSpacing: "-0.02em", color: "#ffffff", textAlign: "center",
               maxWidth: "16ch", textShadow: "0 4px 48px rgba(0,0,0,0.5)", margin: 0,
@@ -488,7 +488,7 @@ export default function AboutPage() {
             </FadeIn>
             <FadeIn delay={80}>
               <p style={{
-                fontFamily: "Georgia, serif", fontSize: "clamp(20px, 2.8vw, 30px)",
+                fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(20px, 2.8vw, 30px)",
                 lineHeight: 1.55, color: "#f0f0e8", fontWeight: 400, margin: "0 0 32px",
               }}>
                 Origio was built by{" "}
@@ -526,7 +526,7 @@ export default function AboutPage() {
                   display: "inline-block", marginBottom: 20,
                 }}>the problem</span>
                 <h2 style={{
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Cabinet Grotesk', sans-serif",
                   fontSize: "clamp(36px, 5.5vw, 80px)",
                   lineHeight: 1.0, letterSpacing: "-0.025em",
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
@@ -555,7 +555,7 @@ export default function AboutPage() {
                 gap: 16, marginBottom: 72,
               }}>
                 <h2 style={{
-                  fontFamily: "Georgia, serif", fontSize: "clamp(40px, 6vw, 88px)",
+                  fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(40px, 6vw, 88px)",
                   lineHeight: 1, letterSpacing: "-0.02em",
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
                 }}>
@@ -607,7 +607,7 @@ export default function AboutPage() {
                   display: "inline-block", marginBottom: 20,
                 }}>the score</span>
                 <h2 style={{
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Cabinet Grotesk', sans-serif",
                   fontSize: "clamp(36px, 5.5vw, 78px)",
                   lineHeight: 1.0, letterSpacing: "-0.025em",
                   color: "#f0f0e8", fontWeight: 400, margin: "0 0 20px",
@@ -707,7 +707,7 @@ export default function AboutPage() {
             </FadeIn>
             <FadeIn delay={80}>
               <h2 style={{
-                fontFamily: "Georgia, serif", fontSize: "clamp(36px, 5vw, 68px)",
+                fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(36px, 5vw, 68px)",
                 lineHeight: 1.1, letterSpacing: "-0.02em",
                 color: "#ffffff", fontWeight: 400, margin: 0,
                 textShadow: "0 2px 24px rgba(0,0,0,0.7)",
