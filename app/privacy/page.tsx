@@ -16,7 +16,7 @@ const S = {
   accent: '#00ffd5',
   text: '#f0f0e8',
   serif: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
-  sans: "'Inter', sans-serif",
+  sans: "'Satoshi', sans-serif",
 }
 
 export default function PrivacyPage() {

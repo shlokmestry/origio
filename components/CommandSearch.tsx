@@ -105,7 +105,7 @@ const S = {
   borderMd: "rgba(255,255,255,0.14)",
   dim: "rgba(255,255,255,0.38)",
   dimmer: "rgba(255,255,255,0.18)",
-  sans: "'Inter', sans-serif",
+  sans: "'Satoshi', sans-serif",
 };
 
 function getRecent(): string[] {

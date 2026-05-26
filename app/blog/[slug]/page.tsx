@@ -12,7 +12,7 @@ export const revalidate = 3600;
 type Props = { params: Promise<{ slug: string }> };
 
 const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)";
-const SANS  = "'Inter', sans-serif";
+const SANS  = "'Satoshi', sans-serif";
 const MONO  = "'Satoshi', sans-serif";
 
 const CATEGORY_COLORS: Record<string, string> = {
