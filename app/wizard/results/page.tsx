@@ -840,7 +840,7 @@ export default function WizardResultsPage() {
             const bottomMetric = Object.values(topScores).sort((a, b) => a.value - b.value)[0];
             const tradeoffText = `The trade-off: ${bottomMetric.label} is lower than your other matches. ${bottomMetric.desc}.`;
             return (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: LINE }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 1, background: LINE }}>
                 <div style={{ background: BG, padding: "24px 28px" }}>
                   <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Strongest signal</p>
                   <p style={{ fontFamily: SANS, fontSize: 15, color: FG, lineHeight: 1.6, margin: 0 }}>{strongestText}</p>

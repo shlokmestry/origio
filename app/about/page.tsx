@@ -196,7 +196,7 @@ function NewspaperSpoof() {
                 viewBox="0 0 24 24"
                 style={{
                   position: "absolute",
-                  top: -4, left: -28,
+                  top: -4, left: "clamp(-28px, -3vw, -12px)",
                   width: 20, height: 20,
                   opacity: inView ? 0.5 : 0,
                   transition: `opacity 0.3s ease ${i * 120 + 300}ms`,

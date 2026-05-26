@@ -154,7 +154,7 @@ export default function SignInClient() {
         .tab-btn:not(.active):hover { color: #555; }
         @media (max-width: 900px) {
           .auth-left-panel { display: none !important; }
-          .auth-right-panel { border-radius: 0 !important; max-width: 100% !important; }
+          .auth-right-panel { border-radius: 0 !important; max-width: 100% !important; padding: 32px 24px !important; }
         }
       `}</style>
 
