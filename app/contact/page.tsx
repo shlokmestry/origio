@@ -22,7 +22,7 @@ const TIPS = [
 ]
 
 const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)"
-const SANS  = "'Inter', sans-serif"
+const SANS  = "'Satoshi', sans-serif"
 
 export default function ContactPage() {
   return (

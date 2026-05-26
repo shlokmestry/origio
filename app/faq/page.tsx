@@ -50,7 +50,7 @@ const S = {
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.2)',
   serif: "'Cabinet Grotesk', sans-serif",
-  sans: "'Inter', sans-serif",
+  sans: "'Satoshi', sans-serif",
 };
 
 export default function FAQPage() {
