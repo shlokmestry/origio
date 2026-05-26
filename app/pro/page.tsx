@@ -117,19 +117,25 @@ export default function ProPage() {
   return (
     <>
       <Nav />
-      <div style={{ minHeight: '100vh', background: '#f5f4f0', paddingTop: 100, paddingBottom: 80, fontFamily: "'Satoshi', sans-serif" }}>
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', paddingTop: 100, paddingBottom: 80, fontFamily: "'Satoshi', sans-serif" }}>
         <style>{`
-          @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+          @keyframes cardPushUp {
+            0%   { transform: translateY(60px); opacity: 0; }
+            60%  { transform: translateY(-8px);  opacity: 1; }
+            80%  { transform: translateY(4px);   opacity: 1; }
+            100% { transform: translateY(0px);   opacity: 1; }
+          }
           .pro-card {
             background: #fff;
             border-radius: 4px;
             border: 1px solid #e2e2dc;
-            box-shadow: 6px 6px 0 #111;
+            box-shadow: 6px 6px 0 #4de6cc;
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
             overflow: hidden;
             position: relative;
+            animation: cardPushUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
           }
           .pro-cta-btn {
             width: 100%;
@@ -172,22 +178,28 @@ export default function ProPage() {
             letter-spacing: -0.01em;
           }
           .faq-q:hover { color: #333; }
+          .pro-banner {
+            animation: cardPushUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+          }
+          .pro-faq {
+            animation: cardPushUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+          }
           @media (max-width: 600px) {
             .pro-card { max-width: 100%; border-radius: 0; box-shadow: none; }
           }
         `}</style>
 
         {/* Free callout banner */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div className="pro-banner" style={{ textAlign: 'center', marginBottom: 24 }}>
           <span style={{
             display: 'inline-block',
-            border: '1.5px solid #e2e2dc',
-            background: '#fff',
+            border: '1.5px solid rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.06)',
             borderRadius: 4,
             padding: '6px 16px',
             fontSize: 13,
             fontFamily: "'Satoshi', sans-serif",
-            color: '#555',
+            color: 'rgba(255,255,255,0.55)',
           }}>
             <span style={{ color: '#4de6cc', fontWeight: 800 }}>FREE</span> for basic results, or…
           </span>
@@ -271,8 +283,8 @@ export default function ProPage() {
         </div>
 
         {/* FAQ */}
-        <div style={{ maxWidth: 480, margin: '48px auto 0', padding: '0 16px' }}>
-          <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#111', marginBottom: 4, letterSpacing: '-0.02em' }}>
+        <div className="pro-faq" style={{ maxWidth: 480, margin: '48px auto 0', padding: '0 16px' }}>
+          <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4, letterSpacing: '-0.02em' }}>
             Questions
           </p>
           <div style={{ background: '#fff', border: '1px solid #e2e2dc', borderRadius: 4, padding: '0 24px' }}>
@@ -296,8 +308,8 @@ export default function ProPage() {
         </div>
 
         {/* Bottom note */}
-        <p style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: '#bbb', fontFamily: "'Satoshi', sans-serif" }}>
-          Questions? <a href="/contact" style={{ color: '#888', textDecoration: 'underline', textUnderlineOffset: 2 }}>Get in touch</a>
+        <p style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: "'Satoshi', sans-serif" }}>
+          Questions? <a href="/contact" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'underline', textUnderlineOffset: 2 }}>Get in touch</a>
         </p>
       </div>
       <Footer />
