@@ -87,7 +87,7 @@ export default async function BlogPage() {
             color: "#f0f0e8",
           }}>
             Inside Origio:{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>Blog</em>
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>Blog</em>
           </h1>
           <p style={{
             fontFamily: SANS,
@@ -357,7 +357,7 @@ export default async function BlogPage() {
             margin: "0 0 16px",
           }}>
             Not sure which country{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>fits you</em>?
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>fits you</em>?
           </h2>
           <p style={{
             fontFamily: SANS,

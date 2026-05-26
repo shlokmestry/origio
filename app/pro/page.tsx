@@ -205,7 +205,7 @@ export default function ProPage() {
             lineHeight: 0.9, letterSpacing: '-0.025em',
             textTransform: 'uppercase', marginBottom: 24,
           }}>
-            Pay once.<br/>Move <em style={{ color: '#00ffd5', fontStyle: 'italic', textTransform: 'none' }}>freely.</em>
+            Pay once.<br/>Move <em style={{ color: '#00ffd5', fontStyle: 'normal', textTransform: 'none' }}>freely.</em>
           </h1>
           <p style={{ fontFamily: SANS, fontSize: 15, color: '#888880', lineHeight: 1.7, maxWidth: 420, margin: '0 auto 36px' }}>
             Free shows you the top 3. Pro ranks all 25 with full personalised reports, take-home calculations, and side-by-side comparison.
@@ -265,7 +265,7 @@ export default function ProPage() {
                   lineHeight: 1, letterSpacing: '-0.015em',
                   marginBottom: 16, textTransform: 'uppercase',
                 }}>
-                  Origio <em style={{ color: '#00ffd5', fontStyle: 'italic', textTransform: 'none' }}>Pro</em>
+                  Origio <em style={{ color: '#00ffd5', fontStyle: 'normal', textTransform: 'none' }}>Pro</em>
                 </h2>
 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
@@ -332,7 +332,7 @@ export default function ProPage() {
             fontFamily: SERIF, fontWeight: 900, fontSize: 'clamp(40px, 6vw, 80px)',
             lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 64,
           }}>
-            Five things free users <em style={{ color: '#00ffd5', fontStyle: 'italic' }}>don't get</em>.
+            Five things free users <em style={{ color: '#00ffd5', fontStyle: 'normal' }}>don't get</em>.
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0 }} className="features-grid">
             {PRO_FEATURES.map((f, i) => (
@@ -342,7 +342,7 @@ export default function ProPage() {
                 borderTop: '1px solid #1a1a1a',
                 borderRight: i % 2 === 0 ? '1px solid #1a1a1a' : 'none',
               }}>
-                <span style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 44, color: '#00ffd5', lineHeight: 1, flexShrink: 0, minWidth: 52, fontStyle: 'italic' }}>{f.num}</span>
+                <span style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 44, color: '#00ffd5', lineHeight: 1, flexShrink: 0, minWidth: 52, fontStyle: 'normal' }}>{f.num}</span>
                 <div>
                   <p style={{ fontFamily: SERIF, fontWeight: 900, fontSize: 20, color: '#f0f0e8', marginBottom: 8, letterSpacing: '-0.01em' }}>{f.title}</p>
                   <p style={{ fontFamily: SANS, fontSize: 14, color: 'rgba(240,240,232,0.52)', lineHeight: 1.65 }}>{f.desc}</p>
@@ -361,7 +361,7 @@ export default function ProPage() {
             fontFamily: SERIF, fontWeight: 900, fontSize: 'clamp(40px, 6vw, 80px)',
             lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 56,
           }}>
-            What's the <em style={{ color: '#00ffd5', fontStyle: 'italic' }}>difference</em>?
+            What's the <em style={{ color: '#00ffd5', fontStyle: 'normal' }}>difference</em>?
           </h2>
           <div style={{ border: '1px solid #1a1a1a' }}>
             {/* Header row */}
@@ -407,7 +407,7 @@ export default function ProPage() {
             fontFamily: SERIF, fontWeight: 900, fontSize: 'clamp(40px, 6vw, 80px)',
             lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 56,
           }}>
-            Before you <em style={{ color: '#00ffd5', fontStyle: 'italic' }}>upgrade</em>.
+            Before you <em style={{ color: '#00ffd5', fontStyle: 'normal' }}>upgrade</em>.
           </h2>
           <div style={{ borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a' }}>
             {FAQS.map((faq, i) => (
@@ -453,7 +453,7 @@ export default function ProPage() {
               fontSize: 'clamp(40px, 6vw, 80px)',
               lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 16, position: 'relative',
             }}>
-              Ready to <em style={{ color: '#00ffd5', fontStyle: 'italic' }}>move</em>?
+              Ready to <em style={{ color: '#00ffd5', fontStyle: 'normal' }}>move</em>?
             </h2>
             <p style={{ fontFamily: SANS, fontSize: 15, color: '#888880', lineHeight: 1.6, marginBottom: 36 }}>
               One payment. Full access. Forever.

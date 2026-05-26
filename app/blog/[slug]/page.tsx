@@ -293,7 +293,7 @@ export default async function BlogPostPage({ params }: Props) {
             color: "#f0f0e8", margin: "0 0 14px",
           }}>
             Where does your salary{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>stretch furthest?</em>
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>stretch furthest?</em>
           </h3>
           <p style={{
             fontFamily: SANS, fontSize: 14, lineHeight: 1.7,
@@ -337,13 +337,13 @@ export default async function BlogPostPage({ params }: Props) {
         .blog-prose h3 { font-family: ${SERIF}; font-size: clamp(18px,2.5vw,22px); font-weight: 400; line-height: 1.25; color: #f0f0e8; margin: 40px 0 16px; }
         .blog-prose h4 { font-size: 9px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(240,240,232,0.4); margin: 32px 0 12px; }
         .blog-prose strong { color: #f0f0e8; font-weight: 700; }
-        .blog-prose em { color: rgba(240,240,232,0.85); font-style: italic; }
+        .blog-prose em { color: rgba(240,240,232,0.85); font-style: normal; }
         .blog-prose a { color: #00ffd5; text-decoration: none; border-bottom: 1px solid rgba(0,255,213,0.3); transition: border-color 0.15s; }
         .blog-prose a:hover { border-color: #00ffd5; }
         .blog-prose ul, .blog-prose ol { margin: 0 0 24px; padding-left: 20px; color: rgba(240,240,232,0.65); font-size: 16px; line-height: 1.8; }
         .blog-prose li { margin-bottom: 8px; }
         .blog-prose li::marker { color: #00ffd5; }
-        .blog-prose blockquote { border-left: 2px solid #00ffd5; margin: 32px 0; padding: 4px 0 4px 24px; color: rgba(240,240,232,0.55); font-style: italic; font-size: 18px; line-height: 1.7; }
+        .blog-prose blockquote { border-left: 2px solid #00ffd5; margin: 32px 0; padding: 4px 0 4px 24px; color: rgba(240,240,232,0.55); font-style: normal; font-size: 18px; line-height: 1.7; }
         .blog-prose code { font-family: 'Fira Code', monospace; font-size: 13px; background: #111; color: #00ffd5; padding: 2px 7px; border: 1px solid #2a2a2a; }
         .blog-prose pre { background: #0f0f0f; border: 1px solid #2a2a2a; padding: 20px 24px; overflow-x: auto; margin: 0 0 28px; }
         .blog-prose pre code { background: none; border: none; padding: 0; font-size: 13px; color: rgba(240,240,232,0.8); }

@@ -665,7 +665,7 @@ export default function CityPageClient({ city }: Props) {
         }
         .scene-time .hr {
           font-family: 'Cabinet Grotesk', sans-serif;
-          font-style: italic; font-size: 22px;
+          font-style: normal; font-size: 22px;
           letter-spacing: 0; text-transform: none;
           color: var(--ink); margin-bottom: 14px; display: block;
         }
@@ -701,7 +701,7 @@ export default function CityPageClient({ city }: Props) {
           line-height: 0.98; letter-spacing: -0.022em;
           color: var(--ink); margin-bottom: 28px;
         }
-        .scene-head .it { font-style: italic; }
+        .scene-head .it { font-style: normal; }
         .scene-head .ac { color: var(--accent); }
 
         .scene-prose {
@@ -1300,7 +1300,7 @@ export default function CityPageClient({ city }: Props) {
         {/* DOSSIER */}
         <section className="dossier">
           <div className="dossier-head">
-            <h2 className="dossier-title">The <span style={{ fontStyle: "italic" }}>dossier.</span></h2>
+            <h2 className="dossier-title">The <span style={{ fontStyle: "normal" }}>dossier.</span></h2>
             <p className="dossier-intro">
               Every number in this dispatch, in one place.
               {d?.last_verified && ` Verified ${new Date(d.last_verified).toLocaleDateString("en-US", { year: "numeric", month: "long" })}.`}

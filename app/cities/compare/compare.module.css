@@ -113,7 +113,7 @@
 }
 .folioIt {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 13px;
+  font-style: normal; font-size: 13px;
   text-transform: none; letter-spacing: 0;
   color: var(--paperInk);
 }
@@ -145,9 +145,9 @@
   line-height: 0.86; letter-spacing: -0.038em;
   color: var(--paperInk);
 }
-.it { font-style: italic; }
+.it { font-style: normal; }
 .grey { color: rgba(21,20,15,0.30); }
-.amberText { color: var(--amberD); font-style: italic; }
+.amberText { color: var(--amberD); font-style: normal; }
 .stamp {
   display: inline-block; transform: rotate(-3deg);
   background: var(--paperInk); color: var(--paper);
@@ -168,7 +168,7 @@
 }
 .raceSubL {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic;
+  font-style: normal;
   font-size: clamp(17px, 1.7vw, 22px);
   line-height: 1.45; color: rgba(21,20,15,0.62);
   max-width: 760px;
@@ -195,7 +195,7 @@
 }
 .raceSubRIt {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 14px;
+  font-style: normal; font-size: 14px;
   text-transform: none; letter-spacing: 0;
   color: var(--paperInk);
   display: block; margin-bottom: 4px;
@@ -221,7 +221,7 @@
 }
 .pickLblArr {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 18px;
+  font-style: normal; font-size: 18px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }
 .pickChip {
@@ -250,7 +250,7 @@
 }
 .pickCapNum {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 22px;
+  font-style: normal; font-size: 22px;
   color: var(--paperInk); letter-spacing: 0;
   margin-right: 2px; vertical-align: -2px;
 }
@@ -267,7 +267,7 @@
 }
 .legendLblArr {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 18px;
+  font-style: normal; font-size: 18px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }
 .legendKey {
@@ -336,7 +336,7 @@
 .rrL { display: flex; align-items: flex-end; gap: 14px; min-width: 0; }
 .rrRank {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic;
+  font-style: normal;
   font-size: clamp(24px, 5.4vw, 76px);
   line-height: 0.84; letter-spacing: -0.04em;
   color: var(--paperDim); flex-shrink: 0;
@@ -349,7 +349,7 @@
 .rrName {
   display: block;
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic;
+  font-style: normal;
   font-size: clamp(28px, 3vw, 40px);
   line-height: 0.92; letter-spacing: -0.024em;
   color: var(--paperInk); margin-bottom: 6px;
@@ -471,7 +471,7 @@
 .annotC { display: flex; align-items: flex-start; gap: 10px; padding-left: 10px; }
 .annotCArr {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 28px; line-height: 0.7;
+  font-style: normal; font-size: 28px; line-height: 0.7;
   color: var(--amberD); flex-shrink: 0; transform: translateY(-4px);
 }
 .annotR { text-align: left; padding-left: 8px; transform: rotate(1deg); }
@@ -504,7 +504,7 @@
   line-height: 1.18; letter-spacing: -0.022em;
   color: var(--paperInk);
 }
-.verdictText .it { font-style: italic; color: var(--amberD); }
+.verdictText .it { font-style: normal; color: var(--amberD); }
 .strike {
   text-decoration: line-through;
   text-decoration-thickness: 3px;
@@ -556,13 +556,13 @@
 .spacer { flex-grow: 1; }
 .note {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 14px; color: rgba(21,20,15,0.62);
+  font-style: normal; font-size: 14px; color: rgba(21,20,15,0.62);
 }
 
 /* Empty state */
 .raceEmpty {
   padding: 80px 56px; text-align: center;
-  font-family: 'Cabinet Grotesk', sans-serif; font-style: italic;
+  font-family: 'Cabinet Grotesk', sans-serif; font-style: normal;
   font-size: clamp(26px, 3vw, 40px);
   color: rgba(21,20,15,0.42); line-height: 1.25;
 }
@@ -586,7 +586,7 @@
 }
 .seal {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: italic; font-size: 16px;
+  font-style: normal; font-size: 16px;
   letter-spacing: 0; text-transform: none; color: var(--amberD);
 }
 

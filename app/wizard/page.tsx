@@ -141,7 +141,7 @@ function StepSub({ children }: { children: React.ReactNode }) {
 }
 
 function Mint({ children }: { children: React.ReactNode }) {
-  return <em style={{ color: MINT, fontStyle: "italic" }}>{children}</em>;
+  return <em style={{ color: MINT, fontStyle: "normal" }}>{children}</em>;
 }
 
 function OptionCard({ selected, onClick, children, badge }: {
@@ -727,7 +727,7 @@ export default function WizardPage() {
                     <OptionCard key={opt.key} selected={selected}
                       onClick={() => { const cur = answers.priorities ?? []; setAnswers({ ...answers, priorities: selected ? cur.filter(x => x !== opt.key) : [...cur, opt.key] }); }}
                       badge={
-                        <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "italic", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "normal", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {selected ? idx + 1 : "·"}
                         </span>
                       }>
