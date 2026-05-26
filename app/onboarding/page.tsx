@@ -189,7 +189,8 @@ export default function OnboardingPage() {
                 This helps us show you the most relevant visa routes and options.
               </p>
 
-              <div style={{ display: 'flex', gap: 20 }}>
+              <style>{`@media (max-width: 480px) { .passport-layout { flex-direction: column !important; } .passport-preview { width: 100% !important; max-width: 180px; align-self: center; } }`}</style>
+              <div className="passport-layout" style={{ display: 'flex', gap: 20 }}>
                 {/* Left: search + list */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {/* Selected pill */}
@@ -238,7 +239,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Right: passport preview */}
-                <div style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
+                <div className="passport-preview" style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
                   {selectedPassport ? (
                     <div style={{ width: '100%' }}>
                       <PassportSVG design={selectedPassport} />

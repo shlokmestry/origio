@@ -518,7 +518,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           )}
 
           {/* 3 stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 16 }}>
             {/* Gross */}
             <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 12 }}>Gross salary</div>
@@ -595,7 +595,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>What fits, what doesn't</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12 }}>
             {/* Fits */}
             <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
@@ -640,7 +640,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
           <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
             {/* 3-col stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderBottom: `1px solid ${S.border}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', borderBottom: `1px solid ${S.border}` }}>
               <div style={{ padding: '22px 24px', borderRight: `1px solid ${S.border}` }}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim, marginBottom: 8 }}>Top route</div>
                 <div style={{ fontFamily: S.serif, fontSize: 22, color: '#fff', marginBottom: 4 }}>{data.visaPopularRoutes?.[0] ?? "Work Permit"}</div>
@@ -785,7 +785,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
           <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
             {/* Header row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '12px 22px', background: 'rgba(255,255,255,0.03)', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: S.dim }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', padding: '12px 22px', background: 'rgba(255,255,255,0.03)', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: S.dim }}>
               <span>Category</span>
               <span style={{ textAlign: 'right' }}>Est.</span>
               <span style={{ textAlign: 'right' }}>Status</span>
@@ -799,7 +799,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                   { label: "Utilities", val: data.costUtilitiesMonthly, isRent: false },
                   { label: "Eating out (×20 meals)", val: data.costEatingOut * 20, isRent: false },
                 ].map((item, i, arr) => (
-                  <div key={item.label} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px', padding: '14px 22px', alignItems: 'center', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
+                  <div key={item.label} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', padding: '14px 22px', alignItems: 'center', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none' }}>
                     <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)' }}>{item.label}</span>
                     <span style={{ fontFamily: S.serif, fontSize: 16, color: '#fff', textAlign: 'right' }}>{cs}{item.val.toLocaleString()}</span>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -842,7 +842,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>Scored against your priorities</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12 }}>
             {/* Score breakdown */}
             <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px', borderBottom: `1px solid ${S.border}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>
@@ -900,7 +900,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           </div>
 
           {/* Top 2 match cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginBottom: 12 }}>
             {otherMatches.slice(0, 2).map((m, i) => (
               <Link key={m.country.slug} href={`/country/${m.country.slug}/personalised`}
                 style={{ display: 'block', background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, padding: 24, textDecoration: 'none', transition: 'border-color 0.2s, background 0.2s' }}
