@@ -107,7 +107,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <main style={{ background: "#0a0a0a", color: "#f0f0e8", minHeight: "100vh" }}>
 
-      {/* JSON-LD */}
+      {/* JSON-LD — JSON.stringify escapes all special chars; replace </script> sequences as extra defence */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -120,7 +120,7 @@ export default async function BlogPostPage({ params }: Props) {
             dateModified: post.published_at,
             publisher: { "@type": "Organization", name: "Origio", url: "https://findorigio.com" },
             mainEntityOfPage: `https://findorigio.com/blog/${slug}`,
-          }),
+          }).replace(/<\/script>/gi, '<\\/script>'),
         }}
       />
 

@@ -1,6 +1,7 @@
-// app/api/checkout/route.ts (UPDATED)
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
 import * as Sentry from "@sentry/nextjs";
 
@@ -14,15 +15,30 @@ export async function POST(request: Request): Promise<Response> {
   if (limited) return limited
 
   try {
-    const { userId } = await request.json()
+    // Verify session server-side — never trust userId from the request body
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
 
-    if (!userId) {
-      Sentry.captureMessage('No userId provided to checkout', 'warning');
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
+
+    const userId = user.id
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
