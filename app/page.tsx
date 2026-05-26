@@ -249,7 +249,7 @@ export default function Home() {
           </div>
 
           <p style={{
-            fontFamily:   "Inter, sans-serif",
+            fontFamily:   "Satoshi, sans-serif",
             fontSize:     "clamp(14px, 1.5vw, 18px)",
             color:        "rgba(255,255,255,0.42)",
             fontWeight:   400,
@@ -271,7 +271,7 @@ export default function Home() {
               justifyContent: "center",
               background:     "#ffffff",
               color:          "#0a0a0a",
-              fontFamily:     "Inter, sans-serif",
+              fontFamily:     "Satoshi, sans-serif",
               fontSize:       "clamp(13px,1.4vw,15px)",
               fontWeight:     700,
               padding:        "clamp(12px,1.5vh,16px) clamp(36px,5vw,60px)",
@@ -307,7 +307,7 @@ export default function Home() {
           left:          20,
           zIndex:        10,
           fontSize:      9,
-          fontFamily:    "monospace",
+          fontFamily:    "Satoshi, sans-serif",
           color:         "rgba(255,255,255,0.18)",
           textTransform: "uppercase",
           letterSpacing: "0.3em",

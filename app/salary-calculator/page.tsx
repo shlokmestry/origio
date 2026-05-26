@@ -183,13 +183,13 @@ function ReceiptRow({ label, value, dim, red, bold }: { label: string; value: st
       padding: "5px 0", gap: 8,
     }}>
       <span style={{
-        fontFamily: "monospace", fontSize: 12,
+        fontFamily: "Satoshi, sans-serif", fontSize: 12,
         color: dim ? "rgba(240,240,232,0.28)" : "rgba(240,240,232,0.65)",
         letterSpacing: "0.04em", textTransform: "uppercase",
         fontWeight: bold ? 700 : 400,
       }}>{label}</span>
       <span style={{
-        fontFamily: "monospace", fontSize: 13,
+        fontFamily: "Satoshi, sans-serif", fontSize: 13,
         color: red ? "#ef4444" : bold ? "#f0f0e8" : "rgba(240,240,232,0.75)",
         fontWeight: bold ? 700 : 400, letterSpacing: "0.06em", flexShrink: 0,
       }}>{value}</span>
@@ -227,13 +227,13 @@ function SplitFlap({ roles, value, onChange }: { roles: string[]; value: string;
 
   return (
     <div>
-      <p style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:12 }}>
+      <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:12 }}>
         Job Role
       </p>
       <div style={{ display:"flex", alignItems:"center", gap:0 }}>
         {/* Down arrow */}
         <button onClick={() => go("down")} style={{
-          fontFamily:"monospace", fontSize:18, color:"rgba(240,240,232,0.4)",
+          fontFamily:"Satoshi, sans-serif", fontSize:18, color:"rgba(240,240,232,0.4)",
           background:"#0f0f0f", border:"2px solid #2a2a2a", borderRight:"none",
           width:40, height:52, cursor:"pointer", display:"flex",
           alignItems:"center", justifyContent:"center",
@@ -261,7 +261,7 @@ function SplitFlap({ roles, value, onChange }: { roles: string[]; value: string;
 
           {/* Role text */}
           <div style={{
-            fontFamily:"monospace", fontSize:13, fontWeight:700,
+            fontFamily:"Satoshi, sans-serif", fontSize:13, fontWeight:700,
             letterSpacing:"0.14em", textTransform:"uppercase",
             color:"#f0f0e8",
             transform: flipping
@@ -280,7 +280,7 @@ function SplitFlap({ roles, value, onChange }: { roles: string[]; value: string;
           {/* Index indicator */}
           <div style={{
             position:"absolute", bottom:3, right:8,
-            fontFamily:"monospace", fontSize:8,
+            fontFamily:"Satoshi, sans-serif", fontSize:8,
             color:"rgba(240,240,232,0.18)", letterSpacing:"0.1em",
           }}>
             {String(idx + 1).padStart(2,"0")}/{String(roles.length).padStart(2,"0")}
@@ -289,7 +289,7 @@ function SplitFlap({ roles, value, onChange }: { roles: string[]; value: string;
 
         {/* Up arrow */}
         <button onClick={() => go("up")} style={{
-          fontFamily:"monospace", fontSize:18, color:"rgba(240,240,232,0.4)",
+          fontFamily:"Satoshi, sans-serif", fontSize:18, color:"rgba(240,240,232,0.4)",
           background:"#0f0f0f", border:"2px solid #2a2a2a", borderLeft:"none",
           width:40, height:52, cursor:"pointer", display:"flex",
           alignItems:"center", justifyContent:"center",
@@ -305,7 +305,7 @@ function SplitFlap({ roles, value, onChange }: { roles: string[]; value: string;
       <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:8 }}>
         {roles.filter(r => r !== "Custom").map((r) => (
           <button key={r} onClick={() => onChange(r)} style={{
-            fontFamily:"monospace", fontSize:9, letterSpacing:"0.1em",
+            fontFamily:"Satoshi, sans-serif", fontSize:9, letterSpacing:"0.1em",
             textTransform:"uppercase", padding:"3px 8px",
             border:"1px solid",
             borderColor: value===r ? "#00ffd5" : "#1a1a1a",
@@ -440,7 +440,7 @@ export default function SalaryCalculator() {
 
           {/* ── PAGE HEADER ── */}
           <div style={{ marginBottom: 40 }}>
-            <p style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.22em", textTransform:"uppercase", color:"#00ffd5", marginBottom:10 }}>
+            <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.22em", textTransform:"uppercase", color:"#00ffd5", marginBottom:10 }}>
               Take-Home Calculator
             </p>
             <h1 style={{ fontFamily:"Georgia, serif", fontWeight:400, fontSize:"clamp(28px, 5vw, 46px)", lineHeight:1.05, letterSpacing:"-0.02em", color:"#f0f0e8", margin:"0 0 10px" }}>
@@ -461,7 +461,7 @@ export default function SalaryCalculator() {
               <div style={{ display:"flex", gap:0, marginBottom:28, border:"2px solid #2a2a2a", width:"fit-content" }}>
                 {(["forward","reverse"] as const).map((m) => (
                   <button key={m} onClick={() => setMode(m)} style={{
-                    fontFamily:"monospace", fontSize:11, letterSpacing:"0.14em", textTransform:"uppercase",
+                    fontFamily:"Satoshi, sans-serif", fontSize:11, letterSpacing:"0.14em", textTransform:"uppercase",
                     padding:"8px 20px", background: mode===m ? "#f0f0e8" : "transparent",
                     color: mode===m ? "#0a0a0a" : "rgba(240,240,232,0.4)",
                     border:"none", cursor:"pointer", transition:"all 0.15s", fontWeight: mode===m ? 700 : 400,
@@ -475,7 +475,7 @@ export default function SalaryCalculator() {
 
                 {/* Country */}
                 <div>
-                  <p style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:12 }}>
+                  <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:12 }}>
                     Country {!isPro && <span style={{ color:"#00ffd5" }}>{FREE_COUNTRY_LIMIT} free</span>}
                   </p>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
@@ -486,7 +486,7 @@ export default function SalaryCalculator() {
                         <button key={c} onClick={() => !locked && handleCountryChange(c)}
                           title={locked ? "Pro only" : TAX_DATA[c].label}
                           style={{
-                            fontFamily:"monospace", fontSize:13, padding:"8px 14px", border:"2px solid",
+                            fontFamily:"Satoshi, sans-serif", fontSize:13, padding:"8px 14px", border:"2px solid",
                             borderColor: locked ? "#1a1a1a" : active ? "#00ffd5" : "#2a2a2a",
                             background: active ? "rgba(0,255,213,0.08)" : "transparent",
                             color: locked ? "#2a2a2a" : active ? "#00ffd5" : "rgba(240,240,232,0.55)",
@@ -508,32 +508,32 @@ export default function SalaryCalculator() {
                 {/* Salary / target */}
                 {mode === "forward" ? (
                   <div>
-                    <p style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:8 }}>
+                    <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:8 }}>
                       Gross Annual Salary {!isPro && <span style={{ color:"rgba(240,240,232,0.28)" }}>— capped at {sym}{fmt(FREE_SALARY_CAP)} free</span>}
                     </p>
                     <div style={{ position:"relative" }}>
-                      <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", fontFamily:"monospace", fontSize:14, color:"rgba(240,240,232,0.35)" }}>{sym}</span>
+                      <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", fontFamily:"Satoshi, sans-serif", fontSize:14, color:"rgba(240,240,232,0.35)" }}>{sym}</span>
                       <input type="text" value={inputVal} onChange={(e) => handleSalaryInput(e.target.value)}
-                        style={{ width:"100%", background:"#0f0f0f", border:"2px solid #2a2a2a", padding:"12px 14px 12px 32px", fontFamily:"monospace", fontSize:18, color:"#f0f0e8", outline:"none", boxSizing:"border-box" }}
+                        style={{ width:"100%", background:"#0f0f0f", border:"2px solid #2a2a2a", padding:"12px 14px 12px 32px", fontFamily:"Satoshi, sans-serif", fontSize:18, color:"#f0f0e8", outline:"none", boxSizing:"border-box" }}
                         onFocus={e => e.currentTarget.style.borderColor="#00ffd5"}
                         onBlur={e => e.currentTarget.style.borderColor="#2a2a2a"}
                       />
                     </div>
                     {!userEditedSalary && role !== "Custom" && (
-                      <p style={{ fontFamily:"monospace", fontSize:10, color:"rgba(0,255,213,0.45)", marginTop:6, letterSpacing:"0.06em" }}>
+                      <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, color:"rgba(0,255,213,0.45)", marginTop:6, letterSpacing:"0.06em" }}>
                         ↑ median market rate for {role} in {TAX_DATA[country].label.split(" ").slice(1).join(" ")} — edit to customise
                       </p>
                     )}
                     {salaryCapped && (
                       <div style={{ marginTop:8, padding:"8px 12px", border:"1px solid rgba(0,255,213,0.25)", background:"rgba(0,255,213,0.04)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                        <span style={{ fontFamily:"monospace", fontSize:10, color:"#00ffd5" }}>Showing {sym}{fmt(FREE_SALARY_CAP)} — Pro removes cap</span>
-                        <Link href="/pro" style={{ fontFamily:"monospace", fontSize:10, color:"#00ffd5", textDecoration:"underline" }}>Upgrade →</Link>
+                        <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, color:"#00ffd5" }}>Showing {sym}{fmt(FREE_SALARY_CAP)} — Pro removes cap</span>
+                        <Link href="/pro" style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, color:"#00ffd5", textDecoration:"underline" }}>Upgrade →</Link>
                       </div>
                     )}
                     <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
                       {(isPro ? [30000,50000,75000,100000,150000] : [20000,35000,50000,60000]).map((v) => (
                         <button key={v} onClick={() => { setSalary(v); setInputVal(new Intl.NumberFormat("en").format(v)); setUserEditedSalary(true); }}
-                          style={{ fontFamily:"monospace", fontSize:11, padding:"5px 10px", border:"1px solid", borderColor: salary===v ? "#00ffd5" : "#2a2a2a", background: salary===v ? "rgba(0,255,213,0.08)" : "transparent", color: salary===v ? "#00ffd5" : "rgba(240,240,232,0.4)", cursor:"pointer" }}>
+                          style={{ fontFamily:"Satoshi, sans-serif", fontSize:11, padding:"5px 10px", border:"1px solid", borderColor: salary===v ? "#00ffd5" : "#2a2a2a", background: salary===v ? "rgba(0,255,213,0.08)" : "transparent", color: salary===v ? "#00ffd5" : "rgba(240,240,232,0.4)", cursor:"pointer" }}>
                           {sym}{new Intl.NumberFormat("en",{notation:"compact"}).format(v)}
                         </button>
                       ))}
@@ -541,18 +541,18 @@ export default function SalaryCalculator() {
                   </div>
                 ) : (
                   <div>
-                    <p style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:8 }}>
+                    <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.35)", marginBottom:8 }}>
                       Target Take-Home (annual net)
                     </p>
                     <div style={{ position:"relative" }}>
-                      <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", fontFamily:"monospace", fontSize:14, color:"rgba(240,240,232,0.35)" }}>{sym}</span>
+                      <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", fontFamily:"Satoshi, sans-serif", fontSize:14, color:"rgba(240,240,232,0.35)" }}>{sym}</span>
                       <input type="text" value={targetNetInput} onChange={(e) => handleTargetInput(e.target.value)}
-                        style={{ width:"100%", background:"#0f0f0f", border:"2px solid #2a2a2a", padding:"12px 14px 12px 32px", fontFamily:"monospace", fontSize:18, color:"#f0f0e8", outline:"none", boxSizing:"border-box" }}
+                        style={{ width:"100%", background:"#0f0f0f", border:"2px solid #2a2a2a", padding:"12px 14px 12px 32px", fontFamily:"Satoshi, sans-serif", fontSize:18, color:"#f0f0e8", outline:"none", boxSizing:"border-box" }}
                         onFocus={e => e.currentTarget.style.borderColor="#00ffd5"}
                         onBlur={e => e.currentTarget.style.borderColor="#2a2a2a"}
                       />
                     </div>
-                    <p style={{ fontFamily:"monospace", fontSize:11, color:"rgba(240,240,232,0.3)", marginTop:8 }}>
+                    <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:11, color:"rgba(240,240,232,0.3)", marginTop:8 }}>
                       → you need to earn <strong style={{ color:"#f0f0e8" }}>{sym}{fmt(grossNeeded)}</strong> gross to take home {sym}{fmt(targetNet)}
                     </p>
                   </div>
@@ -562,15 +562,15 @@ export default function SalaryCalculator() {
               {/* ── FIELD REPORT / FUN FACT ── */}
               <div style={{ marginTop:28, padding:"18px 20px", border:"1px solid #1a1a1a", background:"rgba(255,255,255,0.01)" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-                  <span style={{ fontFamily:"monospace", fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(240,240,232,0.2)" }}>FIELD REPORT</span>
-                  <span style={{ fontFamily:"monospace", fontSize:9, color:"rgba(240,240,232,0.1)" }}>·</span>
-                  <span style={{ fontFamily:"monospace", fontSize:9, color:pain.color, letterSpacing:"0.1em" }}>{TAX_DATA[country].label}</span>
+                  <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(240,240,232,0.2)" }}>FIELD REPORT</span>
+                  <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.1)" }}>·</span>
+                  <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:pain.color, letterSpacing:"0.1em" }}>{TAX_DATA[country].label}</span>
                 </div>
                 <p style={{ fontFamily:"Georgia, serif", fontSize:14, lineHeight:1.65, color:"rgba(240,240,232,0.52)", margin:"0 0 14px", fontStyle:"italic" }}>
                   "{currentFact}"
                 </p>
                 <button onClick={() => setCurrentFact(getRandomFact(country))}
-                  style={{ fontFamily:"monospace", fontSize:9, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(240,240,232,0.22)", background:"none", border:"1px solid #1a1a1a", padding:"4px 10px", cursor:"pointer" }}
+                  style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(240,240,232,0.22)", background:"none", border:"1px solid #1a1a1a", padding:"4px 10px", cursor:"pointer" }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color="#f0f0e8"; (e.currentTarget as HTMLElement).style.borderColor="#2a2a2a"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color="rgba(240,240,232,0.22)"; (e.currentTarget as HTMLElement).style.borderColor="#1a1a1a"; }}
                 >
@@ -584,11 +584,11 @@ export default function SalaryCalculator() {
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <Zap style={{ width:14, height:14, color:"#00ffd5", flexShrink:0 }} />
                     <div>
-                      <p style={{ fontFamily:"monospace", fontSize:10, fontWeight:700, color:"#f0f0e8", textTransform:"uppercase", letterSpacing:"0.1em", margin:0 }}>Pro unlocks everything</p>
-                      <p style={{ fontFamily:"monospace", fontSize:9, color:"rgba(240,240,232,0.32)", margin:"2px 0 0" }}>All {ALL_COUNTRY_KEYS.length} countries · any salary · full breakdown</p>
+                      <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, fontWeight:700, color:"#f0f0e8", textTransform:"uppercase", letterSpacing:"0.1em", margin:0 }}>Pro unlocks everything</p>
+                      <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.32)", margin:"2px 0 0" }}>All {ALL_COUNTRY_KEYS.length} countries · any salary · full breakdown</p>
                     </div>
                   </div>
-                  <Link href="/pro" style={{ padding:"8px 14px", background:"#00ffd5", color:"#0a0a0a", fontFamily:"monospace", fontSize:10, fontWeight:700, textDecoration:"none", textTransform:"uppercase", letterSpacing:"0.12em", flexShrink:0 }}>
+                  <Link href="/pro" style={{ padding:"8px 14px", background:"#00ffd5", color:"#0a0a0a", fontFamily:"Satoshi, sans-serif", fontSize:10, fontWeight:700, textDecoration:"none", textTransform:"uppercase", letterSpacing:"0.12em", flexShrink:0 }}>
                     €4.99 →
                   </Link>
                 </div>
@@ -596,12 +596,12 @@ export default function SalaryCalculator() {
 
               {/* Guides */}
               <div style={{ marginTop:16, border:"1px solid #1a1a1a", padding:"16px 18px" }}>
-                <p style={{ fontFamily:"monospace", fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(240,240,232,0.18)", marginBottom:6 }}>Also explore</p>
+                <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(240,240,232,0.18)", marginBottom:6 }}>Also explore</p>
                 <h2 style={{ fontFamily:"Georgia, serif", fontSize:16, fontWeight:400, color:"#f0f0e8", margin:"0 0 10px" }}>Best countries by role</h2>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
                   {GUIDES.map((g) => (
                     <Link key={g.slug} href={`/best-countries-for/${g.slug}`}
-                      style={{ fontFamily:"monospace", fontSize:10, letterSpacing:"0.1em", textTransform:"uppercase", padding:"5px 12px", border:"1px solid #2a2a2a", color:"rgba(240,240,232,0.42)", textDecoration:"none" }}
+                      style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, letterSpacing:"0.1em", textTransform:"uppercase", padding:"5px 12px", border:"1px solid #2a2a2a", color:"rgba(240,240,232,0.42)", textDecoration:"none" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor="#f0f0e8"; (e.currentTarget as HTMLElement).style.color="#f0f0e8"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor="#2a2a2a"; (e.currentTarget as HTMLElement).style.color="rgba(240,240,232,0.42)"; }}
                     >{g.label}</Link>
@@ -626,16 +626,16 @@ export default function SalaryCalculator() {
                   <div style={{ padding:"24px 28px 20px" }}>
                     {/* Header */}
                     <div style={{ textAlign:"center", marginBottom:16 }}>
-                      <div style={{ fontFamily:"monospace", fontSize:16, fontWeight:700, letterSpacing:"0.3em", color:"#f0f0e8" }}>ORIGIO</div>
-                      <div style={{ fontFamily:"monospace", fontSize:8, letterSpacing:"0.18em", color:"rgba(240,240,232,0.28)", textTransform:"uppercase", marginTop:2 }}>SALARY STATEMENT · EMPLOYEE COPY</div>
+                      <div style={{ fontFamily:"Satoshi, sans-serif", fontSize:16, fontWeight:700, letterSpacing:"0.3em", color:"#f0f0e8" }}>ORIGIO</div>
+                      <div style={{ fontFamily:"Satoshi, sans-serif", fontSize:8, letterSpacing:"0.18em", color:"rgba(240,240,232,0.28)", textTransform:"uppercase", marginTop:2 }}>SALARY STATEMENT · EMPLOYEE COPY</div>
                       <DottedLine thick />
-                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"monospace", fontSize:9, color:"rgba(240,240,232,0.28)", letterSpacing:"0.05em" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.28)", letterSpacing:"0.05em" }}>
                         <span>DATE: {receiptDate}</span>
                         <span>TIME: {receiptTime}</span>
                         <span>REF: {receiptNo}</span>
                       </div>
                       <DottedLine />
-                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"monospace", fontSize:9, color:"rgba(240,240,232,0.28)", letterSpacing:"0.05em", marginTop:3 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.28)", letterSpacing:"0.05em", marginTop:3 }}>
                         <span>COUNTRY: {TAX_DATA[country].label}</span>
                         <span>ROLE: {role.toUpperCase().slice(0,14)}</span>
                       </div>
@@ -645,7 +645,7 @@ export default function SalaryCalculator() {
                     <ReceiptRow label={mode==="reverse" ? "GROSS NEEDED" : "GROSS SALARY"} value={`${sym}${fmt(displayGross)}`} bold />
                     <DottedLine />
 
-                    <div style={{ fontFamily:"monospace", fontSize:8, letterSpacing:"0.18em", color:"rgba(240,240,232,0.2)", marginBottom:3, textTransform:"uppercase" }}>Deductions</div>
+                    <div style={{ fontFamily:"Satoshi, sans-serif", fontSize:8, letterSpacing:"0.18em", color:"rgba(240,240,232,0.2)", marginBottom:3, textTransform:"uppercase" }}>Deductions</div>
                     {isPro ? (
                       displayResult.items.filter(i => i.v > 0).map((item) => (
                         <ReceiptRow key={item.label} label={item.label} value={`-${sym}${fmt(item.v)}`} red />
@@ -655,8 +655,8 @@ export default function SalaryCalculator() {
                         <ReceiptRow label="Income Tax" value={`-${sym}????`} red dim />
                         <ReceiptRow label="Other Deductions" value={`-${sym}????`} red dim />
                         <div style={{ padding:"6px 10px", border:"1px dashed rgba(0,255,213,0.18)", margin:"6px 0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                          <span style={{ fontFamily:"monospace", fontSize:9, color:"#00ffd5" }}>🔒 PRO — full breakdown</span>
-                          <Link href="/pro" style={{ fontFamily:"monospace", fontSize:9, color:"#00ffd5", textDecoration:"underline" }}>€4.99</Link>
+                          <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"#00ffd5" }}>🔒 PRO — full breakdown</span>
+                          <Link href="/pro" style={{ fontFamily:"Satoshi, sans-serif", fontSize:9, color:"#00ffd5", textDecoration:"underline" }}>€4.99</Link>
                         </div>
                       </>
                     )}
@@ -671,13 +671,13 @@ export default function SalaryCalculator() {
                     {/* Pain meter */}
                     <div style={{ marginTop:14 }}>
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
-                        <span style={{ fontFamily:"monospace", fontSize:8, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.2)" }}>PAIN LEVEL</span>
-                        <span style={{ fontFamily:"monospace", fontSize:10, color:pain.color, letterSpacing:"0.06em", textTransform:"uppercase" }}>{pain.label}</span>
+                        <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:8, letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(240,240,232,0.2)" }}>PAIN LEVEL</span>
+                        <span style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, color:pain.color, letterSpacing:"0.06em", textTransform:"uppercase" }}>{pain.label}</span>
                       </div>
                       <div style={{ height:5, background:"#111", border:"1px solid #1a1a1a", overflow:"hidden" }}>
                         <div style={{ height:"100%", width:`${displayResult.rate*100}%`, background:`linear-gradient(90deg, #00ffd5, ${pain.color})`, transition:"width 0.6s cubic-bezier(0.16,1,0.3,1)" }} />
                       </div>
-                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"monospace", fontSize:7, color:"rgba(240,240,232,0.16)", marginTop:2, letterSpacing:"0.06em" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"Satoshi, sans-serif", fontSize:7, color:"rgba(240,240,232,0.16)", marginTop:2, letterSpacing:"0.06em" }}>
                         <span>ZERO TAX</span>
                         <span>CRIMINAL</span>
                       </div>
@@ -685,7 +685,7 @@ export default function SalaryCalculator() {
 
                     {/* Dubai quip — appears when tax rate is painful */}
                     {displayResult.rate > 0.28 && country !== "AE" && (
-                      <div style={{ marginTop:10, fontFamily:"monospace", fontSize:9, color:"rgba(240,240,232,0.26)", letterSpacing:"0.06em", textAlign:"center", fontStyle:"italic" }}>
+                      <div style={{ marginTop:10, fontFamily:"Satoshi, sans-serif", fontSize:9, color:"rgba(240,240,232,0.26)", letterSpacing:"0.06em", textAlign:"center", fontStyle:"italic" }}>
                         you could live in Dubai instead. just saying.
                       </div>
                     )}
@@ -697,7 +697,7 @@ export default function SalaryCalculator() {
                           <div style={{ background:"#00ffd5", width:`${(1-displayResult.rate)*100}%`, transition:"width 0.6s ease" }} />
                           <div style={{ background:"rgba(239,68,68,0.5)", width:`${displayResult.rate*100}%`, transition:"width 0.6s ease" }} />
                         </div>
-                        <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"monospace", fontSize:8, color:"rgba(240,240,232,0.22)", marginTop:2 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"Satoshi, sans-serif", fontSize:8, color:"rgba(240,240,232,0.22)", marginTop:2 }}>
                           <span>YOURS {(100-displayResult.rate*100).toFixed(1)}%</span>
                           <span>THEIRS {(displayResult.rate*100).toFixed(1)}%</span>
                         </div>
@@ -705,7 +705,7 @@ export default function SalaryCalculator() {
                     )}
 
                     <DottedLine thick />
-                    <div style={{ textAlign:"center", fontFamily:"monospace", fontSize:8, color:"rgba(240,240,232,0.16)", letterSpacing:"0.06em", lineHeight:1.8 }}>
+                    <div style={{ textAlign:"center", fontFamily:"Satoshi, sans-serif", fontSize:8, color:"rgba(240,240,232,0.16)", letterSpacing:"0.06em", lineHeight:1.8 }}>
                       <div>ESTIMATES ONLY · {now.getFullYear()} TAX RATES APPLIED</div>
                       {country === "AE" && <div>UAE HAS ZERO INCOME TAX · YOU WIN</div>}
                       {country === "US" && <div>INCLUDES ~5% AVG STATE TAX</div>}
@@ -719,7 +719,7 @@ export default function SalaryCalculator() {
                 </div>
               ) : (
                 <div style={{ border:"1px dashed #1a1a1a", padding:"60px 24px", textAlign:"center" }}>
-                  <p style={{ fontFamily:"monospace", fontSize:10, color:"rgba(240,240,232,0.15)", letterSpacing:"0.14em", margin:0 }}>RECEIPT APPEARS HERE</p>
+                  <p style={{ fontFamily:"Satoshi, sans-serif", fontSize:10, color:"rgba(240,240,232,0.15)", letterSpacing:"0.14em", margin:0 }}>RECEIPT APPEARS HERE</p>
                 </div>
               )}
             </div>

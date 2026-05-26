@@ -364,7 +364,7 @@ export default function Globe({
                         style={{
                           color: "#00ffd5",
                           fontSize: "11px",
-                          fontFamily: "monospace",
+                          fontFamily: "Satoshi, sans-serif",
                           letterSpacing: "0.05em",
                         }}
                       >

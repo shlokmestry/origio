@@ -582,7 +582,7 @@ export default function CityPageClient({ city }: Props) {
         body.mode-twilight { --bg:var(--twilight); --ink:#e8d8e8; --accent:#c8a8c8; --sun:#a890c0; --dim:rgba(232,216,232,0.48); --dimmer:rgba(232,216,232,0.20); --rule:rgba(232,216,232,0.14); }
 
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-family: 'Satoshi', sans-serif;
           background: var(--bg); color: var(--ink);
           min-height: 100vh; overflow-x: hidden;
           transition: background 1.6s cubic-bezier(.4,0,.2,1), color 1s ease;
@@ -733,7 +733,7 @@ export default function CityPageClient({ city }: Props) {
         .marg-val .unit {
           font-family: inherit; font-size: 12px; font-weight: 600;
           color: var(--dim); margin-left: 4px;
-          font-family: -apple-system, sans-serif;
+          font-family: 'Satoshi', sans-serif;
         }
         .marg-sub { font-size: 13px; line-height: 1.5; color: var(--dim); font-weight: 300; }
 
@@ -798,7 +798,7 @@ export default function CityPageClient({ city }: Props) {
         .df-cell { padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
         .df-lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 8px; }
         .df-val { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; color: var(--ink); line-height: 1; margin-bottom: 6px; }
-        .df-val .unit { font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; color: var(--dim); margin-left: 4px; }
+        .df-val .unit { font-family: 'Satoshi', sans-serif; font-size: 12px; font-weight: 600; color: var(--dim); margin-left: 4px; }
         .df-val.ac { color: var(--accent); }
         .df-sub { font-size: 13px; color: var(--dim); line-height: 1.5; }
 
