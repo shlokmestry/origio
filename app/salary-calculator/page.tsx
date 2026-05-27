@@ -595,7 +595,7 @@ export default function SalaryCalculator() {
             </div>
 
             {/* Comparison chart */}
-            <ComparisonChart country={country} role={role} level={level} />
+            <ComparisonChart selectedCountry={country} role={role} level={level} />
           </section>
 
           {/* ══ RIGHT: Benchmark ══ */}
