@@ -377,6 +377,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
   role: string; selectedCountry: keyof typeof TAX_DATA; level: Level; showUSD: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [chartMode, setChartMode] = useState<"gross" | "net">("gross");
 
   useEffect(() => {
     setMounted(false);
@@ -388,11 +389,18 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
     const arr = ALL_COUNTRY_KEYS.map(c => {
       const local = Math.round(getSalaryForRole(role, c) * LEVEL_MULTIPLIERS[level]);
       const usd = Math.round(local * (FX_TO_USD[c] ?? 1));
-      return { code: c, local, usd, d: TAX_DATA[c] };
+      const netLocal = calcCountry(c, local)?.net ?? Math.round(local * 0.7);
+      const netUSD = Math.round(netLocal * (FX_TO_USD[c] ?? 1));
+      return { code: c, local, usd, netLocal, netUSD, d: TAX_DATA[c] };
     });
     arr.sort((a, b) => b.usd - a.usd);
-    const max = Math.max(...arr.map(r => r.usd));
-    return arr.map(r => ({ ...r, widthPct: (r.usd / max) * 100 }));
+    const maxGrossUSD = Math.max(...arr.map(r => r.usd));
+    const maxNetUSD = Math.max(...arr.map(r => r.netUSD));
+    return arr.map(r => ({
+      ...r,
+      grossWidthPct: (r.usd / maxGrossUSD) * 100,
+      netWidthPct: (r.netUSD / maxNetUSD) * 100,
+    }));
   }, [role, level]);
 
   return (
@@ -401,28 +409,63 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
       border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14,
     }}>
       <div style={{
-        display: "flex", alignItems: "baseline", justifyContent: "space-between",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
         marginBottom: 16, gap: 12, flexWrap: "wrap",
       }}>
+        <div>
+          <div style={{
+            fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800,
+            letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
+          }}>Across countries · {role} · {level}</div>
+          <div style={{
+            fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500,
+            letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)", marginTop: 3,
+          }}>{showUSD ? "USD equivalent · ranked by USD" : "local currency · ranked by USD equivalent"}</div>
+        </div>
+        {/* Gross / Net pill toggle */}
         <div style={{
-          fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800,
-          letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
-        }}>Across countries · {role} · {level}</div>
-        <div style={{
-          fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500,
-          letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)",
-        }}>{showUSD ? "USD equivalent · ranked by USD" : "local currency · ranked by USD equivalent"}</div>
+          display: "inline-flex", borderRadius: 100,
+          border: "1px solid rgba(255,255,255,0.1)",
+          background: "rgba(255,255,255,0.03)",
+          padding: 3, gap: 2,
+        }}>
+          {(["gross", "net"] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => setChartMode(mode)}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 100,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "Satoshi, sans-serif",
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                background: chartMode === mode ? "#222222" : "transparent",
+                color: chartMode === mode ? "#ffffff" : "rgba(255,255,255,0.35)",
+                transition: "background 150ms ease, color 150ms ease",
+              }}
+            >
+              {mode === "gross" ? "Gross" : "Net"}
+            </button>
+          ))}
+        </div>
       </div>
       <div style={{ overflowX: "auto", marginLeft: -4, marginRight: -4, padding: "0 4px" }}>
         <div style={{ minWidth: 360 }}>
           {rows.map((r, i) => {
             const selected = r.code === selectedCountry;
+            const widthPct = chartMode === "gross" ? r.grossWidthPct : r.netWidthPct;
+            const localVal = chartMode === "gross" ? r.local : r.netLocal;
+            const usdVal = chartMode === "gross" ? r.usd : r.netUSD;
             const displayVal = showUSD
-              ? `$${r.usd.toLocaleString("en")}`
-              : `${r.d.symbol}${r.local.toLocaleString("en")}`;
+              ? `$${usdVal.toLocaleString("en")}`
+              : `${r.d.symbol}${localVal.toLocaleString("en")}`;
             return (
               <div key={r.code} style={{
-                display: "grid", gridTemplateColumns: "120px 1fr 110px",
+                display: "grid", gridTemplateColumns: "minmax(0, 140px) 1fr minmax(0, 120px)",
                 alignItems: "center", gap: 14, padding: "9px 0",
                 opacity: mounted ? 1 : 0,
                 transform: mounted ? "translateY(0)" : "translateY(4px)",
@@ -431,17 +474,18 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
                 <div style={{
                   fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: 500,
                   color: selected ? "#ffffff" : "rgba(255,255,255,0.55)",
-                  display: "flex", alignItems: "center", gap: 9, whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 9,
+                  overflow: "hidden", minWidth: 0,
                 }}>
-                  <span style={{ fontSize: 13, lineHeight: 1, width: 16 }}>{r.d.flag}</span>
-                  <span>{r.d.name}</span>
+                  <span style={{ fontSize: 13, lineHeight: 1, width: 16, flexShrink: 0 }}>{r.d.flag}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.d.name}</span>
                 </div>
                 <div style={{
                   height: 8, background: "rgba(255,255,255,0.04)",
                   borderRadius: 100, overflow: "hidden",
                 }}>
                   <div style={{
-                    height: "100%", width: mounted ? `${r.widthPct}%` : "0%",
+                    height: "100%", width: mounted ? `${widthPct}%` : "0%",
                     background: selected ? "#4de6cc" : "rgba(255,255,255,0.85)",
                     borderRadius: 100,
                     transition: `width 700ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 30}ms`,
@@ -451,6 +495,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
                   fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: 500,
                   color: selected ? "#4de6cc" : "rgba(255,255,255,0.55)",
                   textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
+                  overflow: "hidden", textOverflow: "ellipsis",
                 }}>{displayVal}</div>
               </div>
             );
@@ -529,6 +574,12 @@ export default function SalaryCalculator() {
   const [isPro, setIsPro] = useState(false);
   const [authLoaded, setAuthLoaded] = useState(false);
 
+  // Editable salary state
+  const [customSalary, setCustomSalary] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
   const fetchPro = useCallback(async (userId: string) => {
     const { data } = await supabase.from("profiles").select("is_pro").eq("id", userId).single();
     setIsPro(data?.is_pro ?? false);
@@ -554,10 +605,25 @@ export default function SalaryCalculator() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const grossLocal = useMemo(() =>
+  // Reset custom salary when role or country changes
+  useEffect(() => {
+    setCustomSalary(null);
+  }, [role, country]);
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editing && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editing]);
+
+  const baseSalary = useMemo(() =>
     Math.round(getSalaryForRole(role, country) * LEVEL_MULTIPLIERS[level]),
     [role, country, level]
   );
+
+  const grossLocal = customSalary ?? baseSalary;
   const grossUSD = useMemo(() => Math.round(grossLocal * (FX_TO_USD[country] ?? 1)), [grossLocal, country]);
 
   const result = useMemo(() => calcCountry(country, grossLocal), [country, grossLocal]);
@@ -587,6 +653,29 @@ export default function SalaryCalculator() {
   const displayTakeHomeM = showUSD ? takeHomeMonthlyUSD : takeHomeMonthly;
 
   const stickyTop = NAV_H + 16;
+
+  function startEdit() {
+    setEditVal(grossLocal.toLocaleString("en"));
+    setEditing(true);
+  }
+
+  function commitEdit() {
+    const raw = editVal.replace(/[^0-9.]/g, "");
+    const parsed = parseFloat(raw);
+    if (parsed > 0 && !isNaN(parsed)) {
+      setCustomSalary(Math.round(parsed));
+    } else {
+      setCustomSalary(null);
+    }
+    setEditing(false);
+  }
+
+  function handleEditKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") commitEdit();
+    if (e.key === "Escape") {
+      setEditing(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
@@ -719,24 +808,90 @@ export default function SalaryCalculator() {
                 <div style={{
                   fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800,
                   letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
-                }}>Gross annual · {role} · {d.name} · {level}</div>
+                }}>
+                  Gross annual · {role} · {d.name} · {level}
+                  {customSalary !== null && (
+                    <span style={{
+                      marginLeft: 8, color: "#4de6cc", letterSpacing: "0.08em",
+                    }}>· custom</span>
+                  )}
+                </div>
                 <CurrencyToggle
                   showUSD={showUSD}
                   onToggle={() => setShowUSD(v => !v)}
                   localCurrency={d.currency}
                 />
               </div>
-              <div style={{
-                fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 800,
-                fontSize: "clamp(52px, 8vw, 96px)", lineHeight: 1,
-                letterSpacing: "-0.035em", color: "#ffffff", fontVariantNumeric: "tabular-nums",
-              }}>
-                <span style={{
-                  fontFamily: "Satoshi, sans-serif", fontSize: "0.35em", fontWeight: 500,
-                  color: "rgba(255,255,255,0.45)", verticalAlign: "0.55em", marginRight: 8, letterSpacing: 0,
-                }}>{displayGrossSym}</span>
-                <AnimatedNumber value={displayGross} format={(n) => Math.round(n).toLocaleString("en")} />
-              </div>
+
+              {/* Editable gross number */}
+              {editing ? (
+                <div style={{
+                  fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 800,
+                  fontSize: "clamp(52px, 8vw, 96px)", lineHeight: 1,
+                  letterSpacing: "-0.035em", color: "#ffffff", fontVariantNumeric: "tabular-nums",
+                  display: "flex", alignItems: "baseline", gap: 0,
+                }}>
+                  <span style={{
+                    fontFamily: "Satoshi, sans-serif", fontSize: "0.35em", fontWeight: 500,
+                    color: "rgba(255,255,255,0.45)", verticalAlign: "0.55em", marginRight: 8, letterSpacing: 0,
+                    flexShrink: 0,
+                  }}>{displayGrossSym}</span>
+                  <input
+                    ref={editInputRef}
+                    value={editVal}
+                    onChange={e => setEditVal(e.target.value)}
+                    onBlur={commitEdit}
+                    onKeyDown={handleEditKeyDown}
+                    style={{
+                      fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 800,
+                      fontSize: "inherit", lineHeight: 1,
+                      letterSpacing: "-0.035em", color: "#ffffff",
+                      fontVariantNumeric: "tabular-nums",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: "2px solid rgba(77,230,204,0.6)",
+                      outline: "none",
+                      width: "100%",
+                      minWidth: 0,
+                      padding: 0,
+                    }}
+                  />
+                </div>
+              ) : (
+                <div
+                  onClick={startEdit}
+                  title="Click to enter a custom salary"
+                  style={{
+                    fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 800,
+                    fontSize: "clamp(52px, 8vw, 96px)", lineHeight: 1,
+                    letterSpacing: "-0.035em", color: "#ffffff", fontVariantNumeric: "tabular-nums",
+                    cursor: "pointer",
+                    display: "inline-flex", alignItems: "baseline", gap: 0,
+                    borderBottom: "2px solid transparent",
+                    transition: "border-color 160ms ease",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.borderBottomColor = "rgba(255,255,255,0.18)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.borderBottomColor = "transparent";
+                  }}
+                >
+                  <span style={{
+                    fontFamily: "Satoshi, sans-serif", fontSize: "0.35em", fontWeight: 500,
+                    color: "rgba(255,255,255,0.45)", verticalAlign: "0.55em", marginRight: 8, letterSpacing: 0,
+                    flexShrink: 0,
+                  }}>{displayGrossSym}</span>
+                  <AnimatedNumber value={displayGross} format={(n) => Math.round(n).toLocaleString("en")} />
+                  <span style={{
+                    fontSize: "0.22em", marginLeft: 12, color: "rgba(255,255,255,0.25)",
+                    fontFamily: "Satoshi, sans-serif", fontWeight: 500, letterSpacing: "0.02em",
+                    alignSelf: "center",
+                    transition: "color 160ms ease",
+                  }}>✏</span>
+                </div>
+              )}
+
               {showUSD && country !== "US" && (
                 <div style={{
                   fontFamily: "Satoshi, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)",
