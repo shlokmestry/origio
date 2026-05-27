@@ -138,6 +138,13 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           color: #fff;
         }
 
+        /* ── Desktop links wrapper ──────────────────────── */
+        .nav-links-inner {
+          display: flex;
+          align-items: center;
+          gap: 0;
+        }
+
         /* ── Nav links ──────────────────────────────────── */
         .nav-link-item {
           font-family: 'Satoshi', sans-serif;
@@ -262,8 +269,18 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
 
         /* ── Responsive ─────────────────────────────────── */
         @media (max-width: 768px) {
-          .nav-pill { top: 12px; height: 48px; padding-left: 14px; }
-          .nav-links-inner { display: none; }
+          .nav-pill {
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            transform: none;
+            width: auto;
+            height: 48px;
+            padding-left: 14px;
+            padding-right: 6px;
+          }
+          .nav-links-inner { display: none !important; }
+          .nav-search-desktop { display: none !important; }
           .nav-cta { height: 36px; padding: 0 14px; font-size: 12px; }
           .nav-mobile-btn { display: flex; }
           .ph-badge { display: none; }
@@ -324,7 +341,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         </Link>
 
         {/* Desktop links */}
-        <div className="nav-links-inner" style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        <div className="nav-links-inner" style={{ alignItems: "center", gap: 0 }}>
           {countries.length > 0 && (
             <button className="nav-search-btn" onClick={() => setSearchOpen(true)} aria-label="Search countries">
               <Search size={12} />
