@@ -383,7 +383,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
     setMounted(false);
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
-  }, [role, level]);
+  }, [role, level, selectedCountry]);
 
   const rows = useMemo(() => {
     const arr = ALL_COUNTRY_KEYS.map(c => {
@@ -929,6 +929,7 @@ export default function SalaryCalculator() {
 
             {/* Comparison chart */}
             <ComparisonChart
+              key={`${role}-${level}`}
               selectedCountry={country}
               role={role}
               level={level}
