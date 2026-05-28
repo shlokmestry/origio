@@ -106,41 +106,49 @@ const ENGLISH_SPEAKING_COUNTRIES = [
 const EUROPEAN_COUNTRIES = [
   "germany", "netherlands", "portugal", "spain", "ireland", "france",
   "italy", "united-kingdom", "sweden", "switzerland", "norway", "austria",
-  "finland", "belgium", "denmark", "poland",
+  "finland", "belgium", "denmark", "poland", "greece", "croatia", "czech-republic",
 ];
 
 const WARM_COUNTRIES = [
   "uae", "spain", "portugal", "singapore", "australia", "india",
   "brazil", "malaysia", "thailand", "vietnam", "philippines",
+  "mexico", "colombia", "costa-rica", "panama", "greece",
 ];
 
 const HIGH_COST_COUNTRIES = [
   "singapore", "switzerland", "norway", "australia", "new-zealand",
-  "ireland", "united-kingdom", "usa", "canada", "denmark",
+  "ireland", "united-kingdom", "usa", "canada", "denmark", "south-korea",
 ];
 
 const HIGH_TAX_COUNTRIES = [
   "sweden", "finland", "germany", "denmark", "austria", "ireland",
   "united-kingdom", "italy", "netherlands", "belgium", "norway",
-  "australia", "new-zealand", "france", "canada",
+  "australia", "new-zealand", "france", "canada", "poland",
 ];
 
-const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal"];
-const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand"];
-const NOMAD_VISA_COUNTRIES       = ["portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand"];
+const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica"];
+const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama"];
+const NOMAD_VISA_COUNTRIES       = [
+  "portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand",
+  "mexico", "colombia", "panama", "thailand", "greece", "croatia", "costa-rica", "south-korea",
+  "georgia", "vietnam", "czech-republic",
+];
 
 const STRONG_HEALTHCARE_COUNTRIES = [
   "germany", "france", "switzerland", "austria", "netherlands",
   "sweden", "norway", "denmark", "finland", "belgium",
   "australia", "canada", "new-zealand", "singapore", "japan",
-  "united-kingdom", "ireland", "portugal", "spain", "italy",
+  "united-kingdom", "ireland", "portugal", "spain", "italy", "south-korea",
 ];
 
 export const TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
-  NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
+  USD: 1,     EUR: 1.08,  GBP: 1.27,  AUD: 0.65,  CAD: 0.74,
+  NZD: 0.61,  CHF: 1.13,  SGD: 0.74,  AED: 0.27,
   NOK: 0.093, SEK: 0.096, DKK: 0.145,
   JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
+  // 2025/2026 additions
+  MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
+  CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
 };
 
 function toUSD(amount: number, currency: string): number {
