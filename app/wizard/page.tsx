@@ -300,7 +300,11 @@ export default function WizardPage() {
       if (answers.moveReason === "remote" || answers.moveReason === "career") return !!answers.workType;
       return true;
     }
-    if (step === 3) return !!answers.jobRole;
+    // jobRole optional for retire/lifestyle/study — salary isn't the focus
+    if (step === 3) {
+      const roleOptional = ["retire", "lifestyle", "study"].includes(answers.moveReason ?? "");
+      return roleOptional ? true : !!answers.jobRole;
+    }
     if (step === 4) return (answers.priorities?.length ?? 0) >= 3;
     if (step === 5) return !!answers.cityVibe;
     if (step === 6) return !!answers.rentBudget;
@@ -342,15 +346,23 @@ export default function WizardPage() {
       }
       let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
       try {
-        const vController = new AbortController();
-        const vTimeout    = setTimeout(() => vController.abort(), 3000);
-        const vRes        = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: vController.signal });
-        clearTimeout(vTimeout);
-        if (vRes.ok) {
-          const v = await vRes.json();
-          if (!v.valid && v.flaggedCountries?.length > 0) {
-            const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
-            matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
+        const { data: { session: vSession } } = await supabase.auth.getSession();
+        if (vSession?.access_token) {
+          const vController = new AbortController();
+          const vTimeout    = setTimeout(() => vController.abort(), 3000);
+          const vRes        = await fetch("/api/validate-results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${vSession.access_token}` },
+            body: JSON.stringify({ matches, answers }),
+            signal: vController.signal,
+          });
+          clearTimeout(vTimeout);
+          if (vRes.ok) {
+            const v = await vRes.json();
+            if (!v.valid && v.flaggedCountries?.length > 0) {
+              const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
+              matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
+            }
           }
         }
       } catch { /* silent — validation is non-critical */ }
@@ -692,7 +704,11 @@ export default function WizardPage() {
             <>
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
               <StepHeading>What's your <Mint>job?</Mint></StepHeading>
-              <StepSub>Used to show realistic salary expectations per country.</StepSub>
+              {["retire","lifestyle","study"].includes(answers.moveReason ?? "") ? (
+                <StepSub>Optional — pick your role to see salary comparisons, or skip to continue.</StepSub>
+              ) : (
+                <StepSub>Used to show realistic salary expectations per country.</StepSub>
+              )}
               <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {JOB_ROLES.map(r => (
                   <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
