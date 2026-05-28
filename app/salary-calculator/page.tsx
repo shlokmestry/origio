@@ -9,6 +9,15 @@ import Footer from "@/components/Footer";
 // ─── Constants ────────────────────────────────────────────────────────────────
 const NAV_H = 64; // fixed nav height + buffer
 
+// ─── Remote-friendly data ─────────────────────────────────────────────────────
+const REMOTE_DATA: Record<string, { stars: number; badge: string }> = {
+  AE: { stars: 5, badge: "0% tax · Nomad Visa" },
+  PT: { stars: 4, badge: "NHR scheme · D8 Visa" },
+  SG: { stars: 4, badge: "Low tax · fast internet" },
+  IE: { stars: 3, badge: "EU · English · tech hub" },
+  NL: { stars: 3, badge: "30% expat ruling · EU" },
+};
+
 // ─── FX rates to USD ──────────────────────────────────────────────────────────
 const FX_TO_USD: Record<string, number> = {
   UK: 1.27, US: 1.0, CA: 0.74, AU: 0.66,
@@ -526,6 +535,86 @@ function BenchmarkRow({ label, value, sub }: { label: string; value: string; sub
   );
 }
 
+// ─── Market Fit Gauge ─────────────────────────────────────────────────────────
+function MarketFitGauge({ grossLocal, role, country }: {
+  grossLocal: number;
+  role: string;
+  country: keyof typeof TAX_DATA;
+}) {
+  const median = getSalaryForRole(role, country);
+  const p25 = Math.round(median * 0.75);
+  const p50 = median;
+  const p75 = Math.round(median * 1.4);
+
+  const salary = grossLocal;
+
+  let dotColor = "#4de6cc";
+  let fitLabel = "Competitive";
+  if (salary < p25) { dotColor = "#ef4444"; fitLabel = "Below market"; }
+  else if (salary < p50) { dotColor = "#f97316"; fitLabel = "At lower end"; }
+  else if (salary <= p75) { dotColor = "#4de6cc"; fitLabel = "Competitive"; }
+  else { dotColor = "#ffffff"; fitLabel = "Above market"; }
+
+  // Clamp dot position 0–100% across the track from p25 to p75
+  const trackMin = p25 * 0.85; // a bit of padding before p25
+  const trackMax = p75 * 1.1;
+  const dotPct = Math.max(0, Math.min(100, ((salary - trackMin) / (trackMax - trackMin)) * 100));
+
+  const sym = TAX_DATA[country].symbol;
+  const fmt = (n: number) => `${sym}${Math.round(n / 1000)}k`;
+
+  return (
+    <div style={{ padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+      <div style={{
+        fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800,
+        letterSpacing: "0.18em", textTransform: "uppercase",
+        color: "rgba(255,255,255,0.35)", marginBottom: 12,
+      }}>Market Fit</div>
+
+      {/* Track */}
+      <div style={{ position: "relative", height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 100, marginBottom: 20 }}>
+        {/* Filled portion from p25 to p75 on the track */}
+        <div style={{
+          position: "absolute",
+          left: `${Math.max(0, Math.min(100, ((p25 - trackMin) / (trackMax - trackMin)) * 100))}%`,
+          width: `${Math.max(0, Math.min(100, ((p75 - p25) / (trackMax - trackMin)) * 100))}%`,
+          height: "100%",
+          background: "rgba(77,230,204,0.15)",
+          borderRadius: 100,
+        }} />
+        {/* Dot */}
+        <div style={{
+          position: "absolute",
+          left: `${dotPct}%`,
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 12, height: 12,
+          background: dotColor,
+          borderRadius: "50%",
+          boxShadow: `0 0 8px ${dotColor}88`,
+          transition: "left 400ms cubic-bezier(0.22,1,0.36,1)",
+        }} />
+      </div>
+
+      {/* Labels row */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+        {[{ label: "P25", val: p25 }, { label: "P50", val: p50 }, { label: "P75", val: p75 }].map(p => (
+          <div key={p.label} style={{ textAlign: "center" }}>
+            <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>{p.label}</div>
+            <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{fmt(p.val)}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Fit label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+        <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 11, fontWeight: 600, color: dotColor }}>{fitLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 function HowDisclosure({ country }: { country: keyof typeof TAX_DATA }) {
   const [open, setOpen] = useState(false);
   const d = TAX_DATA[country];
@@ -563,6 +652,142 @@ function HowDisclosure({ country }: { country: keyof typeof TAX_DATA }) {
   );
 }
 
+// ─── Cities CTA ───────────────────────────────────────────────────────────────
+function CitiesCTA() {
+  return (
+    <Link href="/cities" style={{ textDecoration: "none", display: "block", marginTop: 18 }}>
+      <div style={{
+        background: "#0d0d0d",
+        borderLeft: "3px solid #4de6cc",
+        border: "1px solid rgba(255,255,255,0.05)",
+        borderLeftWidth: 3,
+        borderLeftColor: "#4de6cc",
+        borderRadius: 10,
+        padding: "14px 16px",
+        cursor: "pointer",
+        transition: "background 150ms ease",
+      }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#111111"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "#0d0d0d"}
+      >
+        <div style={{
+          fontFamily: "Satoshi, sans-serif", fontSize: 13, fontWeight: 600,
+          color: "#ffffff", lineHeight: 1.35, marginBottom: 6,
+        }}>
+          Know your take-home?<br />See what it buys.
+        </div>
+        <div style={{
+          fontFamily: "Satoshi, sans-serif", fontSize: 12,
+          color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 4,
+        }}>
+          Compare rent, food &amp; lifestyle costs across 12 cities →
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── Country Compare Section ──────────────────────────────────────────────────
+function CountryCompareSection({ pinnedCountries, selectedCountry, role, level, onClear }: {
+  pinnedCountries: (keyof typeof TAX_DATA)[];
+  selectedCountry: keyof typeof TAX_DATA;
+  role: string;
+  level: Level;
+  onClear: () => void;
+}) {
+  // Build list: selected country always first, then pinned (deduped)
+  const allCodes = [selectedCountry, ...pinnedCountries.filter(c => c !== selectedCountry)] as (keyof typeof TAX_DATA)[];
+
+  return (
+    <div style={{
+      padding: "20px 22px",
+      background: "#111111",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: 14,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 16,
+      }}>
+        <div style={{
+          fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800,
+          letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)",
+        }}>Compare Countries</div>
+        <button onClick={onClear} style={{
+          fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500,
+          color: "rgba(255,255,255,0.35)", background: "none", border: "none",
+          cursor: "pointer", padding: "4px 8px",
+          borderRadius: 6,
+          letterSpacing: "0.06em",
+        }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"}
+        >Clear comparison</button>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {allCodes.map(c => {
+          const td = TAX_DATA[c];
+          const gross = Math.round(getSalaryForRole(role, c) * LEVEL_MULTIPLIERS[level]);
+          const taxResult = calcCountry(c, gross);
+          const net = taxResult?.net ?? gross;
+          const rate = ((taxResult?.rate ?? 0) * 100).toFixed(1);
+          const netPct = Math.round((net / gross) * 100);
+          const taxPct = 100 - netPct;
+          const isSelected = c === selectedCountry;
+
+          return (
+            <div key={c} style={{
+              flex: "1 1 140px", minWidth: 130, maxWidth: 180,
+              padding: "14px 14px 12px",
+              background: "#0d0d0d",
+              border: `1px solid ${isSelected ? "rgba(77,230,204,0.4)" : "rgba(255,255,255,0.07)"}`,
+              borderRadius: 12,
+              position: "relative",
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                <span style={{ fontSize: 15 }}>{td.flag}</span>
+                <span style={{
+                  fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: 700,
+                  color: isSelected ? "#4de6cc" : "#ffffff",
+                }}>{c}</span>
+              </div>
+              {/* Gross */}
+              <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 2 }}>Gross</div>
+              <div style={{
+                fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 700, fontSize: 15,
+                color: "#ffffff", marginBottom: 6, letterSpacing: "-0.01em",
+              }}>
+                {td.symbol}{gross.toLocaleString("en")}
+              </div>
+              {/* Net */}
+              <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 2 }}>Net</div>
+              <div style={{
+                fontFamily: "Cabinet Grotesk, sans-serif", fontWeight: 700, fontSize: 15,
+                color: "#4de6cc", marginBottom: 8, letterSpacing: "-0.01em",
+              }}>
+                {td.symbol}{Math.round(net).toLocaleString("en")}
+              </div>
+              {/* Tax rate */}
+              <div style={{
+                fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500,
+                color: "rgba(255,255,255,0.4)", marginBottom: 8,
+              }}>{rate}% effective tax</div>
+              {/* Visual bar */}
+              <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 100, overflow: "hidden" }}>
+                <div style={{ display: "flex", height: "100%" }}>
+                  <div style={{ width: `${taxPct}%`, background: "#ef4444", opacity: 0.7 }} />
+                  <div style={{ width: `${netPct}%`, background: "#4de6cc", opacity: 0.8 }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SalaryCalculator() {
   const [country, setCountry] = useState<keyof typeof TAX_DATA>("UK");
@@ -579,6 +804,12 @@ export default function SalaryCalculator() {
   const [editing, setEditing] = useState(false);
   const [editVal, setEditVal] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
+
+  // Remote filter
+  const [remoteFilter, setRemoteFilter] = useState(false);
+
+  // Pinned countries for comparison
+  const [pinnedCountries, setPinnedCountries] = useState<(keyof typeof TAX_DATA)[]>([]);
 
   const fetchPro = useCallback(async (userId: string) => {
     const { data } = await supabase.from("profiles").select("is_pro").eq("id", userId).single();
@@ -677,6 +908,18 @@ export default function SalaryCalculator() {
     }
   }
 
+  function togglePin(c: keyof typeof TAX_DATA) {
+    setPinnedCountries(prev => {
+      if (prev.includes(c)) return prev.filter(x => x !== c);
+      if (prev.length >= 3) return prev;
+      return [...prev, c];
+    });
+  }
+
+  const displayedCountries = remoteFilter
+    ? ALL_COUNTRY_KEYS.filter(c => REMOTE_DATA[c])
+    : ALL_COUNTRY_KEYS;
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <Nav countries={[]} onCountrySelect={() => {}} />
@@ -707,13 +950,32 @@ export default function SalaryCalculator() {
 
             {/* Country List */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Country</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Country</div>
+                {/* Remote filter toggle */}
+                <button
+                  onClick={() => setRemoteFilter(v => !v)}
+                  style={{
+                    padding: "3px 9px",
+                    borderRadius: 100,
+                    border: `1px solid ${remoteFilter ? "rgba(77,230,204,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    background: remoteFilter ? "rgba(77,230,204,0.12)" : "transparent",
+                    color: remoteFilter ? "#4de6cc" : "rgba(255,255,255,0.35)",
+                    fontFamily: "Satoshi, sans-serif", fontSize: 9, fontWeight: 600,
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    cursor: "pointer", transition: "all 150ms ease",
+                    whiteSpace: "nowrap",
+                  }}
+                >REMOTE ✦</button>
+              </div>
               <div className="country-list" style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 340, overflowY: "auto", paddingRight: 2 }}>
-                {ALL_COUNTRY_KEYS.map((c) => {
+                {displayedCountries.map((c) => {
                   const active = country === c;
+                  const pinned = pinnedCountries.includes(c);
+                  const remoteInfo = REMOTE_DATA[c];
                   return (
                     <button key={c} onClick={() => setCountry(c)} style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                      display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
                       background: active ? "#161616" : "transparent",
                       border: "1px solid", borderColor: active ? "rgba(255,255,255,0.07)" : "transparent",
                       borderLeft: "2px solid", borderLeftColor: active ? "#4de6cc" : "transparent",
@@ -721,10 +983,36 @@ export default function SalaryCalculator() {
                       color: active ? "#ffffff" : "rgba(255,255,255,0.55)",
                       fontFamily: "Satoshi, sans-serif", fontSize: 13, fontWeight: 500,
                       transition: "background 120ms ease, color 120ms ease, border-color 120ms ease",
+                      position: "relative",
                     }}>
-                      <span style={{ fontSize: 16, lineHeight: 1, width: 18, textAlign: "center" }}>{TAX_DATA[c].flag}</span>
-                      <span style={{ flex: 1 }}>{TAX_DATA[c].name}</span>
-                      <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: active ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)" }}>{c}</span>
+                      <span style={{ fontSize: 16, lineHeight: 1, width: 18, textAlign: "center", flexShrink: 0 }}>{TAX_DATA[c].flag}</span>
+                      <span style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, minWidth: 0 }}>
+                        <span>{TAX_DATA[c].name}</span>
+                        {remoteFilter && remoteInfo && (
+                          <span style={{ fontSize: 9, color: "#4de6cc", letterSpacing: "0.04em", fontWeight: 500 }}>
+                            {"★".repeat(remoteInfo.stars)} {remoteInfo.badge}
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", color: active ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>{c}</span>
+                      {/* Pin button */}
+                      <span
+                        role="button"
+                        onClick={e => { e.stopPropagation(); togglePin(c); }}
+                        title={pinned ? "Unpin" : "Pin for comparison"}
+                        style={{
+                          width: 16, height: 16,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          borderRadius: "50%",
+                          background: pinned ? "rgba(77,230,204,0.2)" : "rgba(255,255,255,0.06)",
+                          color: pinned ? "#4de6cc" : "rgba(255,255,255,0.3)",
+                          fontSize: 10, fontWeight: 700,
+                          cursor: "pointer",
+                          flexShrink: 0,
+                          transition: "background 120ms ease, color 120ms ease",
+                          lineHeight: 1,
+                        }}
+                      >{pinned ? "✕" : "+"}</span>
                     </button>
                   );
                 })}
@@ -927,6 +1215,17 @@ export default function SalaryCalculator() {
               />
             </div>
 
+            {/* Country comparison section */}
+            {pinnedCountries.length > 0 && (
+              <CountryCompareSection
+                pinnedCountries={pinnedCountries}
+                selectedCountry={country}
+                role={role}
+                level={level}
+                onClear={() => setPinnedCountries([])}
+              />
+            )}
+
             {/* Comparison chart */}
             <ComparisonChart
               key={`${role}-${level}`}
@@ -945,6 +1244,9 @@ export default function SalaryCalculator() {
           }}>
             <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>Benchmark</div>
             <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 14 }}>{role} · {d.name}</div>
+
+            {/* Market Fit Gauge — before Global rank */}
+            <MarketFitGauge grossLocal={grossLocal} role={role} country={country} />
 
             <BenchmarkRow
               label="Global rank"
@@ -965,6 +1267,9 @@ export default function SalaryCalculator() {
             />
 
             <HowDisclosure country={country} />
+
+            {/* Cities CTA */}
+            <CitiesCTA />
           </aside>
         </div>
       </main>
