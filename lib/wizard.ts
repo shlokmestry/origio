@@ -115,6 +115,20 @@ const WARM_COUNTRIES = [
   "mexico", "colombia", "costa-rica", "panama", "greece",
 ];
 
+// City vibe preferences
+const BIG_CITY_COUNTRIES = [
+  "usa", "united-kingdom", "singapore", "japan", "germany", "france",
+  "australia", "canada", "uae", "netherlands",
+];
+const COASTAL_COUNTRIES = [
+  "portugal", "spain", "australia", "new-zealand", "brazil", "malaysia",
+  "thailand", "philippines", "vietnam", "uae", "italy",
+];
+const MID_CITY_COUNTRIES = [
+  "portugal", "germany", "netherlands", "austria", "sweden", "norway",
+  "denmark", "finland", "belgium", "poland", "ireland", "new-zealand",
+];
+
 const HIGH_COST_COUNTRIES = [
   "singapore", "switzerland", "norway", "australia", "new-zealand",
   "ireland", "united-kingdom", "usa", "canada", "denmark", "south-korea",
@@ -181,6 +195,8 @@ export function scoreCountriesForWizard(
     if (dealBreakers.includes("lowtax")   && HIGH_TAX_COUNTRIES.includes(country.slug))        return false;
     if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA_COUNTRIES.includes(country.slug))    return false;
     if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) return false;
+    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug))               return false;
+    if (dealBreakers.includes("lowcrime") && country.data.scoreCrimeRate < 7.5)                return false;
     if (dealBreakers.includes("lowcost")) {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (HIGH_COST_COUNTRIES.includes(country.slug)) return false;
@@ -356,6 +372,29 @@ export function scoreCountriesForWizard(
         if (["singapore","netherlands","germany","uae","belgium"].includes(country.slug)) {
           score += 0.5; reasons.push("Global logistics hub — top supply chain roles"); }
       }
+
+      // workType bonuses for career path (mirrors remote path)
+      if (answers.moveReason === "career") {
+        if (answers.workType === "freelancer") {
+          if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Freelancer-friendly nomad visa"); }
+          if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.2; reasons.push("Tax efficient for freelance income"); }
+        }
+        if (answers.workType === "company") {
+          if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Territorial tax — company profits taxed locally only"); }
+          if (["estonia","georgia","portugal","uae","singapore"].includes(country.slug)) { score += 0.3; reasons.push("Strong company formation + low corporate tax"); }
+        }
+      }
+    }
+
+    // ── CITY VIBE ────────────────────────────────────────────────
+    if (answers.cityVibe === "big-city" && BIG_CITY_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Major global city — matches your vibe");
+    }
+    if (answers.cityVibe === "coastal" && COASTAL_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Coastal lifestyle — beaches and ocean access");
+    }
+    if (answers.cityVibe === "mid-city" && MID_CITY_COUNTRIES.includes(country.slug)) {
+      score += 0.3; reasons.push("Liveable mid-size city — less hectic, great quality of life");
     }
 
     // ── SHARED BONUSES ───────────────────────────────────────────
@@ -432,11 +471,11 @@ export function scoreCountriesForWizard(
       score += 0.3; reasons.push("French is a bonus in Canada");
     }
 
-    // Soft deal breaker penalties (warm/crime — can't hard filter, subjective)
-    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug)) score -= 2.5;
-    if (dealBreakers.includes("lowcrime")) {
-      if (data.scoreCrimeRate < 8.0) score -= 2.5;
-      else reasons.push("Very low crime rate");
+    // warm + lowcrime are now hard filters in the exclusion pass above.
+    // Only add positive reason labels here for countries that passed.
+    if (dealBreakers.includes("lowcrime")) reasons.push("Very low crime rate");
+    if (dealBreakers.includes("warm") && !reasons.some(r => r.toLowerCase().includes("warm") || r.toLowerCase().includes("climate"))) {
+      reasons.push("Warm climate");
     }
 
     if (affordScore >= 7.5 && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost"))) {
@@ -455,10 +494,15 @@ export function scoreCountriesForWizard(
 
   results.sort((a, b) => b.matchScore - a.matchScore);
 
-  // ── PERCENT: absolute scale, real spread ─────────────────────
+  // ── PERCENT: relative scale with real spread ─────────────────
+  const topScore  = results[0]?.matchScore ?? 10;
+  const botScore  = results[results.length - 1]?.matchScore ?? 0;
+  const scoreSpan = Math.max(topScore - botScore, 0.1);
   results.forEach((r) => {
-    const pct = Math.round(45 + (r.matchScore / 10) * 50);
-    r.matchPercent = Math.min(95, Math.max(45, pct));
+    // Top match → ~88–95%, last match → ~30–45%, linear in between
+    const relative = (r.matchScore - botScore) / scoreSpan;
+    const pct = Math.round(30 + relative * 65);
+    r.matchPercent = Math.min(95, Math.max(20, pct));
   });
 
   return results;

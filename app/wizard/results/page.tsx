@@ -1,7 +1,7 @@
 // app/wizard/results/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X } from "lucide-react";
@@ -70,13 +70,22 @@ function computeScoreBreakdown(country: CountryWithData, answers: Partial<Wizard
   const rentUSD = toUSD(data.costRentCityCentre, country.currency);
   const salaryRaw = jobRoleDef ? data[jobRoleDef.salaryKey] as number : data.salarySoftwareEngineer;
   const salaryUSD = toUSD(salaryRaw, country.currency);
+  // Use same passport-aware visa score as the scoring algorithm
+  const { primary: ep, secondary: es } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const str = Math.min(getPassportStrength(ep), es ? getPassportStrength(es) : 4) as 1|2|3|4;
+  const reductions: Record<1|2|3|4, number> = { 1: 2.0, 2: 1.0, 3: 0, 4: -1.0 };
+  const effDiff = Math.max(0, data.visaDifficulty - reductions[str]);
+  const visaScore = Math.max(0, Math.min(10, 10 - effDiff * 2));
   return {
     salary:        { label: "Salary",          value: normalise(salaryUSD, 25000, 200000), desc: `${getCurrencySymbol(country.currency)}${salaryRaw.toLocaleString()}/yr` },
     affordability: { label: "Affordability",   value: 10 - normalise(rentUSD, 300, 4000),  desc: `${getCurrencySymbol(country.currency)}${data.costRentCityCentre.toLocaleString()}/mo rent` },
     tax:           { label: "Tax efficiency",  value: 10 - normalise(data.incomeTaxRateMid, 0, 55), desc: `${data.incomeTaxRateMid}% income tax` },
     safety:        { label: "Safety",          value: data.scoreSafety,                    desc: `${data.scoreSafety}/10 safety score` },
     quality:       { label: "Quality of life", value: data.scoreQualityOfLife,             desc: `${data.scoreQualityOfLife}/10 QoL score` },
-    visa:          { label: "Visa access",     value: 10 - data.visaDifficulty * 2,        desc: getVisaLabel(data.visaDifficulty) + " visa process" },
+    visa:          { label: "Visa access",     value: visaScore,                           desc: getVisaLabel(data.visaDifficulty) + " visa process" },
   };
 }
 
@@ -503,11 +512,24 @@ export default function WizardResultsPage() {
   }, []);
 
   // Auto-save whenever user becomes available (including post-OAuth redirect)
+  // Guard: only save once per page load by tracking whether we've already saved
+  const hasSavedRef = React.useRef(false);
   useEffect(() => {
-    if (!isLoading && matches.length > 0 && user) {
+    if (!isLoading && matches.length > 0 && user && !hasSavedRef.current) {
+      hasSavedRef.current = true;
       const save = async () => {
         try {
-          const topCountries = matches.slice(0, 37).map(m => ({
+          // Check for a recent save (within 5 minutes) to avoid duplicates on fast reloads
+          const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+          const { data: existing } = await supabase
+            .from("wizard_results")
+            .select("id")
+            .eq("user_id", user.id)
+            .gte("created_at", fiveMinAgo)
+            .limit(1)
+            .maybeSingle();
+          if (existing) return; // already saved this session
+          const topCountries = matches.slice(0, 25).map(m => ({
             slug: m.country.slug, name: m.country.name,
             flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
           }));
