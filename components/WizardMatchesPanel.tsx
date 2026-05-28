@@ -131,7 +131,7 @@ export default function WizardMatchesPanel({
         <div className="border-2 border-[#2a2a2a] p-5 text-center mt-4" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
           <Sparkles className="w-5 h-5 text-accent mx-auto mb-2" />
           <p className="font-heading font-bold text-text-primary text-sm uppercase mb-1">See all rankings</p>
-          <p className="text-xs text-text-muted mb-4">Upgrade to Pro to unlock all 25 countries ranked for you.</p>
+          <p className="text-xs text-text-muted mb-4">Upgrade to Pro to unlock all 37 countries ranked for you.</p>
           <a href="/pro" className="cta-button w-full py-2.5 text-xs font-bold block text-center uppercase tracking-wide">
             Upgrade to Pro ~ €4.99
           </a>

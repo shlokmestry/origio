@@ -18,7 +18,7 @@ interface TopMatch {
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 const PRO_FEATURES = [
-  { n: '01', title: 'All 25 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
+  { n: '01', title: 'All 37 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
   { n: '02', title: 'Full personalised report',   desc: 'Salary, take-home after tax, costs, visa path — specific to you.' },
   { n: '03', title: 'Salary calculator',          desc: 'Real take-home after tax in any country, for your salary.' },
   { n: '04', title: 'Visa checklist',             desc: 'Every document, in order, with official links — country-specific.' },
@@ -335,7 +335,7 @@ export default function SuccessClient() {
 
               <div className="fu d5" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                 <Link href="/wizard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: '#4de6cc', color: '#050508', fontFamily: "'Satoshi', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', textDecoration: 'none', boxShadow: '3px 3px 0 rgba(77,230,204,0.3)' }}>
-                  Run quiz — see all 25 <ArrowRight size={13} />
+                  Run quiz — see all 37 <ArrowRight size={13} />
                 </Link>
                 <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: "'Satoshi', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', textDecoration: 'none' }}>
                   Explore globe <ArrowRight size={11} />
