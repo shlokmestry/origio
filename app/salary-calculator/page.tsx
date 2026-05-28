@@ -20,9 +20,13 @@ const REMOTE_DATA: Record<string, { stars: number; badge: string }> = {
 
 // ─── FX rates to USD ──────────────────────────────────────────────────────────
 const FX_TO_USD: Record<string, number> = {
-  UK: 1.27, US: 1.0, CA: 0.74, AU: 0.66,
-  DE: 1.09, IE: 1.09, NL: 1.09, SG: 0.74,
-  AE: 0.27, PT: 1.09,
+  UK: 1.27,  US: 1.0,   CA: 0.74,  AU: 0.66,
+  DE: 1.09,  IE: 1.09,  NL: 1.09,  SG: 0.74,
+  AE: 0.27,  PT: 1.09,
+  // 2025/2026 additions
+  MX: 0.058, TH: 0.028, GR: 1.08,  CO: 0.00024,
+  PA: 1.0,   KR: 0.00074, CZ: 0.044, GE: 0.37,
+  VN: 0.000039, HR: 1.08, CR: 0.0019, PL: 0.25,
 };
 
 // ─── Tax Data ─────────────────────────────────────────────────────────────────
@@ -59,32 +63,71 @@ const TAX_DATA = {
   PT: { currency:"EUR", symbol:"€",   usdSymbol:"$", name:"Portugal",             flag:"🇵🇹",
     bands:[{min:0,max:7703,rate:.1325},{min:7703,max:11623,rate:.18},{min:11623,max:16472,rate:.23},{min:16472,max:21321,rate:.26},{min:21321,max:27146,rate:.3275},{min:27146,max:39791,rate:.37},{min:39791,max:51997,rate:.435},{min:51997,max:81199,rate:.45},{min:81199,max:Infinity,rate:.48}],
     socialSecurity:.11 },
+  MX: { currency:"MXN", symbol:"MX$", usdSymbol:"$", name:"Mexico",               flag:"🇲🇽",
+    bands:[{min:0,max:8952,rate:0},{min:8952,max:75984,rate:.0192},{min:75984,max:133536,rate:.064},{min:133536,max:155229,rate:.1088},{min:155229,max:185852,rate:.16},{min:185852,max:374838,rate:.1792},{min:374838,max:590796,rate:.2136},{min:590796,max:1127927,rate:.2352},{min:1127927,max:1503902,rate:.30},{min:1503902,max:4511707,rate:.32},{min:4511707,max:Infinity,rate:.35}],
+    socialSecurity:.08 },
+  TH: { currency:"THB", symbol:"฿",   usdSymbol:"$", name:"Thailand",             flag:"🇹🇭",
+    personalDeduction:150000,
+    bands:[{min:0,max:150000,rate:0},{min:150000,max:300000,rate:.05},{min:300000,max:500000,rate:.10},{min:500000,max:750000,rate:.15},{min:750000,max:1000000,rate:.20},{min:1000000,max:2000000,rate:.25},{min:2000000,max:5000000,rate:.30},{min:5000000,max:Infinity,rate:.35}],
+    socialSecurity:.05 },
+  GR: { currency:"EUR", symbol:"€",   usdSymbol:"$", name:"Greece",               flag:"🇬🇷",
+    bands:[{min:0,max:10000,rate:.09},{min:10000,max:20000,rate:.22},{min:20000,max:30000,rate:.28},{min:30000,max:40000,rate:.36},{min:40000,max:Infinity,rate:.44}],
+    socialSecurity:.16 },
+  CO: { currency:"COP", symbol:"COP ",usdSymbol:"$", name:"Colombia",              flag:"🇨🇴",
+    bands:[{min:0,max:51322000,rate:0},{min:51322000,max:80071000,rate:.19},{min:80071000,max:193063000,rate:.28},{min:193063000,max:408260000,rate:.33},{min:408260000,max:Infinity,rate:.35}],
+    socialSecurity:.08 },
+  PA: { currency:"USD", symbol:"B/.", usdSymbol:"$", name:"Panama",               flag:"🇵🇦",
+    bands:[{min:0,max:11000,rate:0},{min:11000,max:50000,rate:.15},{min:50000,max:Infinity,rate:.25}],
+    socialSecurity:.0975 },
+  KR: { currency:"KRW", symbol:"₩",  usdSymbol:"$", name:"South Korea",           flag:"🇰🇷",
+    bands:[{min:0,max:14000000,rate:.06},{min:14000000,max:50000000,rate:.15},{min:50000000,max:88000000,rate:.24},{min:88000000,max:150000000,rate:.35},{min:150000000,max:300000000,rate:.38},{min:300000000,max:500000000,rate:.40},{min:500000000,max:Infinity,rate:.42}],
+    socialSecurity:.09 },
+  CZ: { currency:"CZK", symbol:"Kč", usdSymbol:"$", name:"Czech Republic",        flag:"🇨🇿",
+    bands:[{min:0,max:1762812,rate:.15},{min:1762812,max:Infinity,rate:.23}],
+    socialSecurity:.11 },
+  GE: { currency:"GEL", symbol:"₾",  usdSymbol:"$", name:"Georgia",               flag:"🇬🇪",
+    bands:[{min:0,max:Infinity,rate:.20}],
+    socialSecurity:.02 },
+  VN: { currency:"VND", symbol:"₫",  usdSymbol:"$", name:"Vietnam",               flag:"🇻🇳",
+    personalDeduction:132000000,
+    bands:[{min:0,max:60000000,rate:.05},{min:60000000,max:120000000,rate:.10},{min:120000000,max:216000000,rate:.15},{min:216000000,max:384000000,rate:.20},{min:384000000,max:624000000,rate:.25},{min:624000000,max:960000000,rate:.30},{min:960000000,max:Infinity,rate:.35}],
+    socialSecurity:.105 },
+  HR: { currency:"EUR", symbol:"€",  usdSymbol:"$", name:"Croatia",               flag:"🇭🇷",
+    bands:[{min:0,max:50400,rate:.236},{min:50400,max:Infinity,rate:.354}],
+    socialSecurity:.20 },
+  CR: { currency:"CRC", symbol:"₡",  usdSymbol:"$", name:"Costa Rica",            flag:"🇨🇷",
+    bands:[{min:0,max:10996000,rate:0},{min:10996000,max:16494000,rate:.10},{min:16494000,max:27490000,rate:.15},{min:27490000,max:56725000,rate:.20},{min:56725000,max:Infinity,rate:.25}],
+    socialSecurity:.1067 },
+  PL: { currency:"PLN", symbol:"zł", usdSymbol:"$", name:"Poland",               flag:"🇵🇱",
+    taxFreeAmount:30000,
+    bands:[{min:0,max:120000,rate:.12},{min:120000,max:Infinity,rate:.32}],
+    socialSecurity:.1371, healthInsurance:.09 },
 };
 
 const ALL_COUNTRY_KEYS = Object.keys(TAX_DATA) as (keyof typeof TAX_DATA)[];
 
 // ─── Salary data (median gross, local currency, 2025 market rates) ────────────
 const ROLE_SALARIES: Record<string, Record<string, number>> = {
-  "Software Engineer":         { UK:75000,  US:130000, CA:110000, AU:120000, DE:72000,  IE:80000,  NL:75000,  SG:95000,  AE:280000, PT:35000  },
-  "Product Manager":           { UK:85000,  US:145000, CA:120000, AU:130000, DE:80000,  IE:90000,  NL:85000,  SG:110000, AE:320000, PT:40000  },
-  "UX/UI Designer":            { UK:55000,  US:95000,  CA:85000,  AU:90000,  DE:58000,  IE:60000,  NL:60000,  SG:72000,  AE:200000, PT:28000  },
-  "Data Scientist":            { UK:70000,  US:125000, CA:105000, AU:110000, DE:70000,  IE:75000,  NL:72000,  SG:90000,  AE:260000, PT:32000  },
-  "DevOps Engineer":           { UK:72000,  US:128000, CA:108000, AU:115000, DE:74000,  IE:78000,  NL:76000,  SG:92000,  AE:270000, PT:33000  },
-  "Marketing Manager":         { UK:52000,  US:85000,  CA:75000,  AU:85000,  DE:55000,  IE:58000,  NL:58000,  SG:75000,  AE:200000, PT:25000  },
-  "Financial Analyst":         { UK:58000,  US:90000,  CA:78000,  AU:88000,  DE:60000,  IE:62000,  NL:62000,  SG:78000,  AE:220000, PT:26000  },
-  "Cybersecurity Analyst":     { UK:68000,  US:115000, CA:95000,  AU:105000, DE:68000,  IE:72000,  NL:70000,  SG:85000,  AE:250000, PT:30000  },
-  "Sales Manager":             { UK:65000,  US:110000, CA:90000,  AU:100000, DE:65000,  IE:68000,  NL:65000,  SG:85000,  AE:240000, PT:28000  },
-  "HR Manager":                { UK:50000,  US:80000,  CA:72000,  AU:80000,  DE:52000,  IE:55000,  NL:55000,  SG:70000,  AE:190000, PT:24000  },
-  "AI / ML Engineer":          { UK:90000,  US:185000, CA:150000, AU:155000, DE:95000,  IE:100000, NL:92000,  SG:150000, AE:350000, PT:42000  },
-  "Cloud Architect":           { UK:85000,  US:170000, CA:140000, AU:148000, DE:90000,  IE:95000,  NL:88000,  SG:135000, AE:325000, PT:38000  },
-  "Dentist":                   { UK:82000,  US:180000, CA:165000, AU:175000, DE:80000,  IE:100000, NL:100000, SG:160000, AE:330000, PT:40000  },
-  "Physiotherapist":           { UK:43000,  US:82000,  CA:85000,  AU:90000,  DE:47000,  IE:52000,  NL:52000,  SG:68000,  AE:160000, PT:24000  },
-  "Psychologist":              { UK:46000,  US:95000,  CA:85000,  AU:95000,  DE:52000,  IE:57000,  NL:56000,  SG:70000,  AE:185000, PT:28000  },
-  "Renewable Energy Engineer": { UK:68000,  US:112000, CA:108000, AU:122000, DE:73000,  IE:67000,  NL:72000,  SG:92000,  AE:255000, PT:37000  },
-  "Pilot":                     { UK:90000,  US:170000, CA:145000, AU:150000, DE:95000,  IE:85000,  NL:100000, SG:165000, AE:450000, PT:65000  },
-  "Graphic Designer":          { UK:41000,  US:72000,  CA:63000,  AU:70000,  DE:46000,  IE:45000,  NL:49000,  SG:56000,  AE:128000, PT:21000  },
-  "Biomedical Engineer":       { UK:55000,  US:112000, CA:98000,  AU:105000, DE:68000,  IE:68000,  NL:67000,  SG:90000,  AE:215000, PT:30000  },
-  "Supply Chain Manager":      { UK:64000,  US:110000, CA:110000, AU:118000, DE:80000,  IE:80000,  NL:80000,  SG:102000, AE:260000, PT:38000  },
+  "Software Engineer":         { UK:75000,  US:130000, CA:110000, AU:120000, DE:72000,  IE:80000,  NL:75000,  SG:95000,  AE:280000, PT:35000,  MX:580000,   TH:1130000,  GR:35000,  CO:72000000,  PA:55000, KR:85000000,  CZ:1200000,  GE:70000,  VN:600000000,  HR:42000,  CR:28000000,  PL:180000  },
+  "Product Manager":           { UK:85000,  US:145000, CA:120000, AU:130000, DE:80000,  IE:90000,  NL:85000,  SG:110000, AE:320000, PT:40000,  MX:680000,   TH:1400000,  GR:42000,  CO:90000000,  PA:65000, KR:100000000, CZ:1400000,  GE:85000,  VN:750000000,  HR:50000,  CR:35000000,  PL:210000  },
+  "UX/UI Designer":            { UK:55000,  US:95000,  CA:85000,  AU:90000,  DE:58000,  IE:60000,  NL:60000,  SG:72000,  AE:200000, PT:28000,  MX:400000,   TH:840000,   GR:28000,  CO:55000000,  PA:45000, KR:68000000,  CZ:900000,   GE:50000,  VN:420000000,  HR:32000,  CR:21000000,  PL:130000  },
+  "Data Scientist":            { UK:70000,  US:125000, CA:105000, AU:110000, DE:70000,  IE:75000,  NL:72000,  SG:90000,  AE:260000, PT:32000,  MX:540000,   TH:1050000,  GR:34000,  CO:68000000,  PA:52000, KR:82000000,  CZ:1150000,  GE:65000,  VN:560000000,  HR:40000,  CR:26000000,  PL:170000  },
+  "DevOps Engineer":           { UK:72000,  US:128000, CA:108000, AU:115000, DE:74000,  IE:78000,  NL:76000,  SG:92000,  AE:270000, PT:33000,  MX:560000,   TH:1100000,  GR:36000,  CO:75000000,  PA:57000, KR:88000000,  CZ:1250000,  GE:72000,  VN:620000000,  HR:43000,  CR:29000000,  PL:185000  },
+  "Marketing Manager":         { UK:52000,  US:85000,  CA:75000,  AU:85000,  DE:55000,  IE:58000,  NL:58000,  SG:75000,  AE:200000, PT:25000,  MX:420000,   TH:700000,   GR:28000,  CO:48000000,  PA:48000, KR:60000000,  CZ:850000,   GE:45000,  VN:360000000,  HR:34000,  CR:16000000,  PL:110000  },
+  "Financial Analyst":         { UK:58000,  US:90000,  CA:78000,  AU:88000,  DE:60000,  IE:62000,  NL:62000,  SG:78000,  AE:220000, PT:26000,  MX:360000,   TH:780000,   GR:30000,  CO:45000000,  PA:50000, KR:65000000,  CZ:900000,   GE:48000,  VN:380000000,  HR:36000,  CR:18000000,  PL:120000  },
+  "Cybersecurity Analyst":     { UK:68000,  US:115000, CA:95000,  AU:105000, DE:68000,  IE:72000,  NL:70000,  SG:85000,  AE:250000, PT:30000,  MX:500000,   TH:980000,   GR:33000,  CO:65000000,  PA:54000, KR:78000000,  CZ:1100000,  GE:62000,  VN:520000000,  HR:40000,  CR:25000000,  PL:160000  },
+  "Sales Manager":             { UK:65000,  US:110000, CA:90000,  AU:100000, DE:65000,  IE:68000,  NL:65000,  SG:85000,  AE:240000, PT:28000,  MX:380000,   TH:800000,   GR:30000,  CO:50000000,  PA:52000, KR:64000000,  CZ:880000,   GE:46000,  VN:380000000,  HR:34000,  CR:17000000,  PL:120000  },
+  "HR Manager":                { UK:50000,  US:80000,  CA:72000,  AU:80000,  DE:52000,  IE:55000,  NL:55000,  SG:70000,  AE:190000, PT:24000,  MX:300000,   TH:660000,   GR:26000,  CO:40000000,  PA:42000, KR:55000000,  CZ:780000,   GE:38000,  VN:300000000,  HR:30000,  CR:14000000,  PL:100000  },
+  "AI / ML Engineer":          { UK:90000,  US:185000, CA:150000, AU:155000, DE:95000,  IE:100000, NL:92000,  SG:150000, AE:350000, PT:42000,  MX:720000,   TH:1600000,  GR:44000,  CO:100000000, PA:75000, KR:120000000, CZ:1600000,  GE:95000,  VN:900000000,  HR:55000,  CR:42000000,  PL:250000  },
+  "Cloud Architect":           { UK:85000,  US:170000, CA:140000, AU:148000, DE:90000,  IE:95000,  NL:88000,  SG:135000, AE:325000, PT:38000,  MX:680000,   TH:1500000,  GR:42000,  CO:95000000,  PA:70000, KR:110000000, CZ:1500000,  GE:88000,  VN:840000000,  HR:52000,  CR:38000000,  PL:230000  },
+  "Dentist":                   { UK:82000,  US:180000, CA:165000, AU:175000, DE:80000,  IE:100000, NL:100000, SG:160000, AE:330000, PT:40000,  MX:600000,   TH:1800000,  GR:50000,  CO:80000000,  PA:80000, KR:130000000, CZ:1500000,  GE:80000,  VN:700000000,  HR:60000,  CR:45000000,  PL:200000  },
+  "Physiotherapist":           { UK:43000,  US:82000,  CA:85000,  AU:90000,  DE:47000,  IE:52000,  NL:52000,  SG:68000,  AE:160000, PT:24000,  MX:280000,   TH:600000,   GR:26000,  CO:38000000,  PA:38000, KR:48000000,  CZ:700000,   GE:30000,  VN:240000000,  HR:28000,  CR:12000000,  PL:90000   },
+  "Psychologist":              { UK:46000,  US:95000,  CA:85000,  AU:95000,  DE:52000,  IE:57000,  NL:56000,  SG:70000,  AE:185000, PT:28000,  MX:300000,   TH:720000,   GR:28000,  CO:42000000,  PA:42000, KR:52000000,  CZ:800000,   GE:35000,  VN:280000000,  HR:32000,  CR:14000000,  PL:100000  },
+  "Renewable Energy Engineer": { UK:68000,  US:112000, CA:108000, AU:122000, DE:73000,  IE:67000,  NL:72000,  SG:92000,  AE:255000, PT:37000,  MX:480000,   TH:1050000,  GR:36000,  CO:60000000,  PA:55000, KR:80000000,  CZ:1100000,  GE:60000,  VN:520000000,  HR:42000,  CR:24000000,  PL:155000  },
+  "Pilot":                     { UK:90000,  US:170000, CA:145000, AU:150000, DE:95000,  IE:85000,  NL:100000, SG:165000, AE:450000, PT:65000,  MX:900000,   TH:3200000,  GR:65000,  CO:180000000, PA:120000,KR:180000000, CZ:2500000,  GE:160000, VN:1800000000, HR:80000,  CR:70000000,  PL:380000  },
+  "Graphic Designer":          { UK:41000,  US:72000,  CA:63000,  AU:70000,  DE:46000,  IE:45000,  NL:49000,  SG:56000,  AE:128000, PT:21000,  MX:240000,   TH:540000,   GR:22000,  CO:32000000,  PA:35000, KR:42000000,  CZ:620000,   GE:28000,  VN:240000000,  HR:26000,  CR:11000000,  PL:85000   },
+  "Biomedical Engineer":       { UK:55000,  US:112000, CA:98000,  AU:105000, DE:68000,  IE:68000,  NL:67000,  SG:90000,  AE:215000, PT:30000,  MX:380000,   TH:900000,   GR:30000,  CO:55000000,  PA:50000, KR:70000000,  CZ:950000,   GE:50000,  VN:380000000,  HR:35000,  CR:22000000,  PL:135000  },
+  "Supply Chain Manager":      { UK:64000,  US:110000, CA:110000, AU:118000, DE:80000,  IE:80000,  NL:80000,  SG:102000, AE:260000, PT:38000,  MX:420000,   TH:1100000,  GR:35000,  CO:60000000,  PA:58000, KR:75000000,  CZ:1050000,  GE:55000,  VN:480000000,  HR:42000,  CR:24000000,  PL:150000  },
 };
 
 const ROLES = Object.keys(ROLE_SALARIES);
@@ -97,8 +140,8 @@ function getSalaryForRole(role: string, country: string): number {
 }
 
 // ─── Benchmark data ───────────────────────────────────────────────────────────
-const PPP_INDEX: Record<string, number> = { UK:88, US:100, CA:92, AU:95, DE:97, IE:90, NL:96, SG:104, AE:115, PT:78 };
-const AVG_RENT_MONTHLY: Record<string, number> = { UK:1850, US:2400, CA:2100, AU:2300, DE:1300, IE:2000, NL:1800, SG:3200, AE:6500, PT:1100 };
+const PPP_INDEX: Record<string, number> = { UK:88, US:100, CA:92, AU:95, DE:97, IE:90, NL:96, SG:104, AE:115, PT:78, MX:48, TH:42, GR:75, CO:36, PA:68, KR:82, CZ:72, GE:38, VN:32, HR:66, CR:55, PL:65 };
+const AVG_RENT_MONTHLY: Record<string, number> = { UK:1850, US:2400, CA:2100, AU:2300, DE:1300, IE:2000, NL:1800, SG:3200, AE:6500, PT:1100, MX:950, TH:850, GR:900, CO:530, PA:1200, KR:900, CZ:1050, GE:650, VN:560, HR:700, CR:970, PL:1000 };
 
 function computeBenchmark(role: string, country: string, salary: number) {
   const salaryUSD = salary * (FX_TO_USD[country] ?? 1);
@@ -243,6 +286,109 @@ function calcPT(g: number) {
   return { items: [{ label: "Income Tax", v: it }, { label: "Social Security", v: ss }], total, net: g - total, rate: total / g };
 }
 
+function calcMX(g: number) {
+  const d = TAX_DATA.MX;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax (ISR)", v: it }, { label: "Social Security (IMSS)", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcTH(g: number) {
+  const d = TAX_DATA.TH;
+  const deduction = Math.min(g * 0.5, 100000);
+  const personalAllowance = 60000;
+  const taxable = Math.max(0, g - deduction - personalAllowance - (d.personalDeduction ?? 0));
+  const it = calcBanded(taxable, d.bands);
+  const ss = Math.min(g * d.socialSecurity, 9000);
+  const total = it + ss;
+  return { items: [{ label: "Income Tax (PIT)", v: it }, { label: "Social Security", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcGR(g: number) {
+  const d = TAX_DATA.GR;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social Security", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcCO(g: number) {
+  const d = TAX_DATA.CO;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax (DIAN)", v: it }, { label: "Social Security", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcPA(g: number) {
+  const d = TAX_DATA.PA;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social Security (CSS)", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcKR(g: number) {
+  const d = TAX_DATA.KR;
+  const it = calcBanded(g, d.bands);
+  const localSurtax = it * 0.1;
+  const ss = g * d.socialSecurity;
+  const total = it + localSurtax + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Local Surtax (10%)", v: localSurtax }, { label: "Social Insurance", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcCZ(g: number) {
+  const d = TAX_DATA.CZ;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social & Health Insurance", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcGE(g: number) {
+  const d = TAX_DATA.GE;
+  const it = g * 0.20;
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax (flat 20%)", v: it }, { label: "Pension Contribution", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcVN(g: number) {
+  const d = TAX_DATA.VN;
+  const taxable = Math.max(0, g - (d.personalDeduction ?? 0));
+  const it = calcBanded(taxable, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Personal Income Tax (PIT)", v: it }, { label: "Social Insurance", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcHR(g: number) {
+  const d = TAX_DATA.HR;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social Security (pension + health)", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcCR(g: number) {
+  const d = TAX_DATA.CR;
+  const it = calcBanded(g, d.bands);
+  const ss = g * d.socialSecurity;
+  const total = it + ss;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social Security (CCSS)", v: ss }], total, net: g - total, rate: total / g };
+}
+
+function calcPL(g: number) {
+  const d = TAX_DATA.PL;
+  const taxable = Math.max(0, g - d.taxFreeAmount);
+  const it = calcBanded(taxable, d.bands);
+  const ss = g * d.socialSecurity;
+  const health = g * d.healthInsurance;
+  const total = it + ss + health;
+  return { items: [{ label: "Income Tax", v: it }, { label: "Social Insurance (ZUS)", v: ss }, { label: "Health Insurance", v: health }], total, net: g - total, rate: total / g };
+}
+
 function calcCountry(c: keyof typeof TAX_DATA, g: number) {
   switch (c) {
     case "UK": return calcUK(g);
@@ -255,6 +401,18 @@ function calcCountry(c: keyof typeof TAX_DATA, g: number) {
     case "SG": return calcSG(g);
     case "AE": return calcAE(g);
     case "PT": return calcPT(g);
+    case "MX": return calcMX(g);
+    case "TH": return calcTH(g);
+    case "GR": return calcGR(g);
+    case "CO": return calcCO(g);
+    case "PA": return calcPA(g);
+    case "KR": return calcKR(g);
+    case "CZ": return calcCZ(g);
+    case "GE": return calcGE(g);
+    case "VN": return calcVN(g);
+    case "HR": return calcHR(g);
+    case "CR": return calcCR(g);
+    case "PL": return calcPL(g);
   }
 }
 
