@@ -44,7 +44,7 @@ export default function Footer() {
               <span className="font-heading text-[15px] font-extrabold tracking-tight text-[#1a1a1a] uppercase">Origio</span>
             </Link>
             <p className="text-[11px] text-[#888] leading-relaxed max-w-[180px] font-body">
-              25 countries ranked for your job and passport.
+              37 countries ranked for your job and passport.
             </p>
           </div>
 

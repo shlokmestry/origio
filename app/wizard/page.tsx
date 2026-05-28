@@ -494,7 +494,7 @@ export default function WizardPage() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 12, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 25 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 37 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>

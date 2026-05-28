@@ -306,7 +306,7 @@ export default async function BlogPostPage({ params }: Props) {
             fontFamily: SANS, fontSize: 14, lineHeight: 1.7,
             color: "rgba(240,240,232,0.45)", margin: "0 auto 32px", maxWidth: 380,
           }}>
-            Answer 8 questions and get a personalised ranking across 25 countries based on your role, passport, and priorities.
+            Answer 8 questions and get a personalised ranking across 37 countries based on your role, passport, and priorities.
           </p>
           <Link href="/wizard" style={{
             display: "inline-flex", alignItems: "center", gap: 8,

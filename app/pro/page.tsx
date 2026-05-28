@@ -23,7 +23,7 @@ const FEATURES = [
         <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
       </svg>
     ),
-    title: 'All 25 countries unlocked',
+    title: 'All 37 countries unlocked',
     desc: 'Free users see 3 results. Pro unlocks every country scored against your profile.',
   },
   {
@@ -67,7 +67,7 @@ const FAQS = [
   },
   {
     q: 'What countries are included?',
-    a: 'All 25 countries in the Origio database — Europe, Southeast Asia, Middle East, North America, and Oceania.',
+    a: 'All 37 countries in the Origio database — Europe, Southeast Asia, Middle East, North America, and Oceania.',
   },
   {
     q: 'Can I get a refund?',
