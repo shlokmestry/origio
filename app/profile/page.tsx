@@ -402,7 +402,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 25 countries · €4.99 one-time</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 37 countries · €4.99 one-time</p>
               </div>
             </div>
             <a href="/pro"

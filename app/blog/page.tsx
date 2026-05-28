@@ -367,7 +367,7 @@ export default async function BlogPage() {
             maxWidth: 460,
             lineHeight: 1.6,
           }}>
-            Answer 8 quick questions and get a personalised ranking across all 25 countries based on your role, passport, and priorities.
+            Answer 8 quick questions and get a personalised ranking across all 37 countries based on your role, passport, and priorities.
           </p>
           <Link
             href="/wizard"

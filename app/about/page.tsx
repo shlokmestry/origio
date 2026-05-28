@@ -104,7 +104,7 @@ function NewspaperSpoof() {
     },
     {
       them: "Reddit thread: 'should I move to Portugal?' — 340 opinions, zero data",
-      us: "25 countries ranked by your actual priorities, not strangers' vibes",
+      us: "37 countries ranked by your actual priorities, not strangers' vibes",
     },
     {
       them: "Government visa website lists requirements. Does not mention 14-month wait.",
@@ -506,7 +506,7 @@ export default function AboutPage() {
             <FadeIn delay={240}>
               <p style={{ fontFamily: "system-ui, sans-serif", fontSize: 17, lineHeight: 1.75, color: "rgba(240,240,232,0.72)", margin: 0 }}>
                 If you're not sure where to start, the{" "}
-                <strong style={{ color: "#f0f0e8" }}>Find My Country</strong> quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 25 countries and gives you a personalised ranked list.
+                <strong style={{ color: "#f0f0e8" }}>Find My Country</strong> quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 37 countries and gives you a personalised ranked list.
               </p>
             </FadeIn>
           </div>
