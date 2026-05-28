@@ -40,7 +40,7 @@ export default async function OgImage() {
 
         {/* Pills */}
         <div style={{ display: "flex", gap: 12 }}>
-          {["🌐 25 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
+          {["🌐 37 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
             <div key={label} style={{
               background: "rgba(0,255,213,0.08)", border: "1px solid rgba(0,255,213,0.25)",
               padding: "10px 22px", fontSize: 18, color: "#00ffd5", display: "flex",

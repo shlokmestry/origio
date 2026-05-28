@@ -29,7 +29,7 @@ const LOADING_STEPS = [
   "Crunching salary data...",
   "Checking visa routes...",
   "Weighing your priorities...",
-  "Ranking 25 countries...",
+  "Ranking 37 countries...",
   "Almost done...",
 ];
 const RANK_COLORS = [MINT, "#facc15", "#a78bfa"];
@@ -507,7 +507,7 @@ export default function WizardResultsPage() {
     if (!isLoading && matches.length > 0 && user) {
       const save = async () => {
         try {
-          const topCountries = matches.slice(0, 25).map(m => ({
+          const topCountries = matches.slice(0, 37).map(m => ({
             slug: m.country.slug, name: m.country.name,
             flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
           }));
@@ -579,8 +579,8 @@ export default function WizardResultsPage() {
   if (matches.length === 0) return <SessionExpired />;
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches  = isPro ? matches.slice(0, 25) : matches.slice(0, 8);
-  const lockedCount     = 25 - visibleMatches.length;
+  const visibleMatches  = isPro ? matches.slice(0, 37) : matches.slice(0, 8);
+  const lockedCount     = 37 - visibleMatches.length;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
@@ -864,7 +864,7 @@ export default function WizardResultsPage() {
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
-              {visibleMatches.length} of 25 visible
+              {visibleMatches.length} of 37 visible
             </span>
           </div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
@@ -962,7 +962,7 @@ export default function WizardResultsPage() {
                 }}
                   onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
-                  Unlock all 25 — €4.99 <ArrowRight size={13} />
+                  Unlock all 37 — €4.99 <ArrowRight size={13} />
                 </Link>
               </div>
               {/* Download report option */}
@@ -981,7 +981,7 @@ export default function WizardResultsPage() {
           )}
           {isPro && matches.length >= 3 && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 25 countries ranked for you</p>
+              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 37 countries ranked for you</p>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <button onClick={handleReportCheckout} disabled={reportLoading} style={{
                   fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",

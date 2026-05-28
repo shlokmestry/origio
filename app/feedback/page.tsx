@@ -81,7 +81,7 @@ export default function FeedbackPage() {
                 Tell us what's missing.
               </h1>
               <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.7, maxWidth: 440 }}>
-                25 countries, 8 quiz questions. We know it's not complete. Tell us what you want to see — countries, job roles, quiz questions, anything.
+                37 countries, 8 quiz questions. We know it's not complete. Tell us what you want to see — countries, job roles, quiz questions, anything.
               </p>
             </div>
 
