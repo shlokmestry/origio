@@ -87,8 +87,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           .cp-body-grid { grid-template-columns: 1fr !important; }
           .cp-cost-grid  { grid-template-columns: 1fr 1fr !important; }
           .cp-cta-grid   { grid-template-columns: 1fr !important; }
-          .cp-modal      { max-height: 88vh !important; border-radius: 16px 16px 0 0 !important; }
-          .cp-wrap       { padding: 0 !important; align-items: flex-end !important; }
+          .cp-modal      { max-height: calc(100vh - 64px) !important; border-radius: 16px 16px 0 0 !important; }
+          .cp-wrap       { padding: 64px 0 0 !important; align-items: flex-end !important; }
         }
       `}</style>
       {/* Backdrop */}
@@ -116,7 +116,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "1rem",
+          padding: "80px 1rem 1rem",
           pointerEvents: "none",
         }}
       >
@@ -126,7 +126,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             pointerEvents: "auto",
             width: "100%",
             maxWidth: "680px",
-            maxHeight: "90vh",
+            maxHeight: "calc(100vh - 96px)",
             overflowY: "auto",
             overscrollBehavior: "contain",
             background: "#111111",
