@@ -28,12 +28,16 @@ const PANEL  = "#0f0f0f";
 const ANON_MAX_RUNS    = 3;
 const FREE_MAX_RUNS    = 5;
 const ANON_STORAGE_KEY = "origio_quiz_runs";
-const TOTAL_STEPS      = 8;
+// Steps 1–9: Location, Reason, Role, Priorities, Vibe, Budget, Languages, Deal breakers
+// (step 0 is the passport intro — not counted in progress)
+const TOTAL_STEPS      = 9;
 
 const STEP_LABELS = [
-  "Origin", "Reason", "Role", "Priorities",
+  "Location", "Reason", "Role", "Priorities",
   "Vibe", "Budget", "Languages", "Deal breakers",
 ];
+
+const PROGRESS_KEY = "wizardProgress";
 
 // ── Static data ────────────────────────────────────────────────────────────
 const PASSPORTS = [
@@ -41,6 +45,21 @@ const PASSPORTS = [
   "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
   "Canada","USA","Singapore","Japan","South Korea","UAE","India","China",
   "Brazil","South Africa","Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
+];
+
+const COUNTRIES_LIST = [
+  "Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria",
+  "Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Czech Republic",
+  "Denmark","Ecuador","Egypt","Estonia","Ethiopia","Finland","France","Georgia",
+  "Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland",
+  "Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Kuwait","Latvia","Lebanon",
+  "Lithuania","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway",
+  "Pakistan","Peru","Philippines","Poland","Portugal","Romania","Russia","Saudi Arabia",
+  "Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea",
+  "Spain","Sri Lanka","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey",
+  "UAE","Uganda","Ukraine","United Kingdom","Uruguay","USA","Uzbekistan","Venezuela",
+  "Vietnam","Zambia","Zimbabwe","Other",
 ];
 
 const NO_DUAL_CITIZENSHIP: Record<string, string> = {
@@ -172,7 +191,41 @@ function OptionCard({ selected, onClick, children, badge }: {
   );
 }
 
-
+// ── Searchable select ──────────────────────────────────────────────────────
+function SearchableSelect({ value, onChange, options, placeholder }: {
+  value: string; onChange: (v: string) => void; options: string[]; placeholder: string;
+}) {
+  const [search, setSearch] = useState('');
+  const [showList, setShowList] = useState(false);
+  const displayValue = value ? (options.find(o => o.toLowerCase() === value) ?? value) : search;
+  const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase())).slice(0, 40);
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value ? displayValue : search}
+        onFocus={() => { setShowList(true); if (value) setSearch(''); }}
+        onBlur={() => setTimeout(() => setShowList(false), 150)}
+        onChange={e => { setSearch(e.target.value); onChange(''); setShowList(true); }}
+        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${value ? MINT : LINE}`, borderRadius: 10, color: value ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" as const }}
+      />
+      {showList && filtered.length > 0 && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 220, overflowY: "auto" }}>
+          {filtered.map(opt => {
+            const slug = opt.toLowerCase();
+            return (
+              <button key={slug} onMouseDown={() => { onChange(slug); setSearch(''); setShowList(false); }}
+                style={{ width: "100%", padding: "10px 16px", background: value === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: value === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" as const }}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function WizardPage() {
@@ -191,6 +244,9 @@ export default function WizardPage() {
   const [showIntroPassportList, setShowIntroPassportList] = useState(false);
   const [showIntroSecondList, setShowIntroSecondList] = useState(false);
 
+  // step 1: current location
+  const [currentCountrySearch, setCurrentCountrySearch] = useState('');
+
   const [gateChecked, setGateChecked] = useState(false);
   const [gateType, setGateType]       = useState<"anon" | "free" | null>(null);
   const [runsUsed, setRunsUsed]       = useState(0);
@@ -204,6 +260,15 @@ export default function WizardPage() {
     sessionStorage.removeItem("wizardAnswers");
     sessionStorage.removeItem("wizardCountries");
   }, []);
+
+  // Persist answers to sessionStorage on every change so a refresh doesn't lose progress
+  useEffect(() => {
+    if (step > 0) {
+      try {
+        sessionStorage.setItem(PROGRESS_KEY, JSON.stringify({ step, answers, hasDualPassport, introPassport, introSecondPassport }));
+      } catch { /* ignore */ }
+    }
+  }, [step, answers, hasDualPassport, introPassport, introSecondPassport]);
 
   // Advance on Enter key when the current step is complete
   useEffect(() => {
@@ -226,13 +291,19 @@ export default function WizardPage() {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
           if (stored >= ANON_MAX_RUNS) setGateType("anon");
-          // restore passport context if they were mid-flow
+          // restore progress from sessionStorage if available
           try {
-            const pctx = sessionStorage.getItem("wizardPassportContext");
-            if (pctx) {
-              const { passport, secondPassport } = JSON.parse(pctx);
-              if (passport) { setIntroPassport(passport); setHasDualPassport(!!secondPassport); }
-              if (secondPassport) setIntroSecondPassport(secondPassport);
+            const saved = sessionStorage.getItem(PROGRESS_KEY);
+            if (saved) {
+              const { step: s, answers: a, hasDualPassport: hdp, introPassport: ip, introSecondPassport: isp } = JSON.parse(saved);
+              if (s > 0) { setStep(s); setAnswers(a); setHasDualPassport(hdp); setIntroPassport(ip || ''); setIntroSecondPassport(isp || ''); }
+            } else {
+              const pctx = sessionStorage.getItem("wizardPassportContext");
+              if (pctx) {
+                const { passport, secondPassport } = JSON.parse(pctx);
+                if (passport) { setIntroPassport(passport); setHasDualPassport(!!secondPassport); }
+                if (secondPassport) setIntroSecondPassport(secondPassport);
+              }
             }
           } catch { /* ignore */ }
           setGateChecked(true); return;
@@ -243,12 +314,18 @@ export default function WizardPage() {
         const runs = profile?.quiz_runs_count ?? 0;
         setIsPro(pro); setRunsUsed(runs);
         if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
-        // pre-fill passport from profile
+        // restore progress, fall back to profile passport
+        try {
+          const saved = sessionStorage.getItem(PROGRESS_KEY);
+          if (saved) {
+            const { step: s, answers: a, hasDualPassport: hdp, introPassport: ip, introSecondPassport: isp } = JSON.parse(saved);
+            if (s > 0) { setStep(s); setAnswers(a); setHasDualPassport(hdp); setIntroPassport(ip || ''); setIntroSecondPassport(isp || ''); setGateChecked(true); return; }
+          }
+        } catch { /* ignore */ }
         if (profile?.passport_slug) setIntroPassport(profile.passport_slug);
         if (profile?.second_passport_slug) { setIntroSecondPassport(profile.second_passport_slug); setHasDualPassport(true); }
         else if (profile?.passport_slug) setHasDualPassport(false);
       } catch (err) {
-        // Network / Supabase error — allow the quiz to proceed rather than hanging forever
         console.error("checkGate error:", err);
       } finally {
         setGateChecked(true);
@@ -258,12 +335,28 @@ export default function WizardPage() {
   }, []);
 
   const isJobOffer = answers.moveReason === "job";
-  const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
-  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; if (cur === 2 && introPassport) return 0; return cur - 1; };
-  const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
-  const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
+  // Job offer flow: 0 → 1 → 2 → 3 → 6 → 7 → 8 → 9 (skips priorities/vibe, keeps rent/languages/dealbreakers)
+  const getNextStep = (cur: number) => {
+    if (cur === 3 && isJobOffer) return 6;
+    if (cur === 6 && isJobOffer) return 7; // skip vibe — but we go to budget (step 6 IS budget now)
+    return cur + 1;
+  };
+  const getPrevStep = (cur: number) => {
+    if (cur === 7 && isJobOffer) return 6;
+    if (cur === 6 && isJobOffer) return 3;
+    if (cur === 2 && introPassport) return 0;
+    return cur - 1;
+  };
+  // Job offer skips priorities (4) and vibe (5) — 7 effective steps
+  const getEffectiveTotalSteps = () => isJobOffer ? 7 : TOTAL_STEPS;
+  const getEffectiveStep = () => {
+    if (!isJobOffer) return step;
+    if (step <= 3) return step;
+    if (step >= 6) return step - 2;
+    return step;
+  };
   const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
-  const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
+  const isLastStep = step === TOTAL_STEPS;
   const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
   const runsLeft   = isPro ? null : Math.max(0, maxRuns - runsUsed);
 
@@ -284,23 +377,22 @@ export default function WizardPage() {
   const startQuiz = () => {
     if (introPassport) {
       setAnswers(prev => ({ ...prev, passport: introPassport, secondPassport: introSecondPassport || undefined }));
-      // persist for anonymous users who sign up mid-flow
       try {
         sessionStorage.setItem("wizardPassportContext", JSON.stringify({ passport: introPassport, secondPassport: introSecondPassport || null }));
       } catch { /* ignore */ }
     }
-    setStep(introPassport ? 2 : 1);
+    setStep(introPassport ? 1 : 1); // always go to step 1 (location) now
   };
 
   const canProceed = () => {
     if (step === 0) return hasDualPassport !== null && introPassport !== '';
-    if (step === 1) return !!answers.passport;
+    if (step === 1) return !!answers.currentCountry; // where do you live now?
     if (step === 2) {
       if (!answers.moveReason) return false;
       if (answers.moveReason === "remote" || answers.moveReason === "career") return !!answers.workType;
       return true;
     }
-    // jobRole optional for retire/lifestyle/study — salary isn't the focus
+    // jobRole optional for retire/lifestyle/study
     if (step === 3) {
       const roleOptional = ["retire", "lifestyle", "study"].includes(answers.moveReason ?? "");
       return roleOptional ? true : !!answers.jobRole;
@@ -309,17 +401,29 @@ export default function WizardPage() {
     if (step === 5) return !!answers.cityVibe;
     if (step === 6) return !!answers.rentBudget;
     if (step === 7) return (answers.languages?.length ?? 0) > 0;
-    if (step === 8) return (answers.dealBreakers?.length ?? 0) > 0;
+    if (step === 8) return !!answers.passport; // fallback passport step (only reached if step 0 was skipped)
+    if (step === 9) return (answers.dealBreakers?.length ?? 0) > 0;
     return false;
   };
 
   const scrollToTop = () => { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const handleNext = () => { if (step === 0) { startQuiz(); scrollToTop(); return; } const next = getNextStep(step); if (next <= TOTAL_STEPS) { setStep(next); scrollToTop(); } else handleSubmit(); };
-  const handleBack = () => { if (step === 1) { setStep(0); scrollToTop(); } else if (step === 0) router.push("/"); else { setStep(getPrevStep(step)); scrollToTop(); } };
+  const handleNext = () => {
+    if (step === 0) { startQuiz(); scrollToTop(); return; }
+    const next = getNextStep(step);
+    if (next <= TOTAL_STEPS) { setStep(next); scrollToTop(); }
+    else handleSubmit();
+  };
+  const handleBack = () => {
+    if (step === 1) { setStep(0); scrollToTop(); }
+    else if (step === 0) router.push("/");
+    else { setStep(getPrevStep(step)); scrollToTop(); }
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     setSubmitError(null);
+    // clear saved progress on submit so a back-nav starts fresh
+    try { sessionStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
     try {
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 10000);
@@ -487,9 +591,9 @@ export default function WizardPage() {
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}>
             {STEP_LABELS.map((label, i) => {
               const num     = i + 1;
-              const isCur   = num === step;
-              const done    = num < step;
-              const skipped = isJobOffer && (num === 4 || num === 5 || num === 6);
+              const isCur   = num === effectiveStep;
+              const done    = num < effectiveStep;
+              const skipped = isJobOffer && (num === 4 || num === 5);
               return (
                 <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
                   <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -506,7 +610,7 @@ export default function WizardPage() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 12, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 37 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 25 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>
@@ -600,8 +704,16 @@ export default function WizardPage() {
                     </div>
                   )}
 
+                  {/* "Other" passport warning */}
+                  {introPassport === "other" && (
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                      <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ Unrecognised passport</p>
+                      <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6, margin: 0 }}>We'll treat your passport as Tier 3 access (100–139 visa-free countries). Results may be less accurate — if your country is listed above, select it instead.</p>
+                    </div>
+                  )}
+
                   {/* Passport strength indicator */}
-                  {introPassport && (() => {
+                  {introPassport && introPassport !== "other" && (() => {
                     const { primary: p, secondary: s } = resolveEffectivePassports(introPassport, introSecondPassport || undefined);
                     const p1 = getPassportStrength(p);
                     const p2 = s ? getPassportStrength(s) : null;
@@ -628,35 +740,31 @@ export default function WizardPage() {
                   )}
                 </div>
               )}
-
             </>
           )}
 
-          {/* Step 1 */}
+          {/* ── Step 1: Where do you live now? ──────────────────────────── */}
           {step === 1 && (
             <>
-              <EyebrowLabel>Step 01 · Origin</EyebrowLabel>
-              <StepHeading>Where are you <Mint>from?</Mint></StepHeading>
-              <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
-              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
-                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
-                onFocus={e => (e.currentTarget.style.borderColor = MINT)}
-                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
-                <option value="" disabled>Select your passport country</option>
-                {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
-              </select>
-              {answers.secondPassport && (
-                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM }}>+ second passport:</span>
-                  <span style={{ fontSize: 13, color: MINT }}>{PASSPORTS.find(p => p.toLowerCase() === answers.secondPassport) ?? answers.secondPassport}</span>
-                  <button onClick={() => setAnswers({ ...answers, secondPassport: undefined })}
-                    style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+              <EyebrowLabel>Step 01 · Location</EyebrowLabel>
+              <StepHeading>Where do you <Mint>live now?</Mint></StepHeading>
+              <StepSub>We exclude your current country from results. This also helps calibrate cost-of-living comparisons.</StepSub>
+              <SearchableSelect
+                value={answers.currentCountry ?? ''}
+                onChange={v => setAnswers({ ...answers, currentCountry: v })}
+                options={COUNTRIES_LIST}
+                placeholder="Search country..."
+              />
+              {answers.currentCountry && answers.currentCountry !== answers.passport?.toLowerCase() && answers.passport && (
+                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: DIM }}>Passport:</span>
+                  <span style={{ fontSize: 13, color: MINT }}>{PASSPORTS.find(p => p.toLowerCase() === answers.passport) ?? answers.passport}</span>
                 </div>
               )}
             </>
           )}
 
-          {/* Step 2 */}
+          {/* Step 2: Reason */}
           {step === 2 && (
             <>
               <EyebrowLabel>Step 02 · Reason</EyebrowLabel>
@@ -678,7 +786,6 @@ export default function WizardPage() {
                 ))}
               </div>
 
-              {/* Work type — shown when remote/career selected */}
               {(answers.moveReason === "remote" || answers.moveReason === "career") && (
                 <div style={{ marginTop: 28, borderTop: `1px solid ${LINE}`, paddingTop: 24 }}>
                   <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 14 }}>How do you work?</div>
@@ -699,7 +806,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3: Role */}
           {step === 3 && (
             <>
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
@@ -720,7 +827,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 4 */}
+          {/* Step 4: Priorities */}
           {step === 4 && (
             <>
               <EyebrowLabel>Step 04 · Priorities</EyebrowLabel>
@@ -758,7 +865,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 5 */}
+          {/* Step 5: Vibe */}
           {step === 5 && (
             <>
               <EyebrowLabel>Step 05 · Vibe</EyebrowLabel>
@@ -780,7 +887,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 6 */}
+          {/* Step 6: Budget */}
           {step === 6 && (
             <>
               <EyebrowLabel>Step 06 · Budget</EyebrowLabel>
@@ -797,7 +904,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 7 */}
+          {/* Step 7: Languages */}
           {step === 7 && (
             <>
               <EyebrowLabel>Step 07 · Languages</EyebrowLabel>
@@ -824,8 +931,24 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 8 */}
-          {step === 8 && (
+          {/* Step 8: Passport fallback (only if skipped step 0) */}
+          {step === 8 && !answers.passport && (
+            <>
+              <EyebrowLabel>Step 08 · Passport</EyebrowLabel>
+              <StepHeading>Your <Mint>passport?</Mint></StepHeading>
+              <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
+              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
+                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
+                onFocus={e => (e.currentTarget.style.borderColor = MINT)}
+                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
+                <option value="" disabled>Select your passport country</option>
+                {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
+              </select>
+            </>
+          )}
+
+          {/* Step 9: Deal breakers */}
+          {step === 9 && (
             <>
               <EyebrowLabel>Final step · Deal breakers</EyebrowLabel>
               <StepHeading>Anything <Mint>non-negotiable?</Mint></StepHeading>

@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports, scoreCountriesForWizard } from "@/lib/wizard";
-import { JOB_ROLES, CountryWithData } from "@/types";
+import { CountryWithData, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -102,49 +102,36 @@ function generateSummary(match: CountryMatch, answers: Partial<WizardAnswers>, s
   return summary;
 }
 
-function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>): { name: string; reason: string }[] {
+// Derives filtered-out countries from actual algorithm constants (matches lib/wizard.ts exactly)
+function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>, allCountries: CountryWithData[]): { name: string; reason: string }[] {
   const dealBreakers = answers.dealBreakers ?? [];
   const excluded: { name: string; reason: string }[] = [];
-  const REASON_MAP: Record<string, string> = {
-    lowtax: "high income tax", lowcost: "high cost of living",
-    europe: "not in Europe", english: "not English-speaking",
-    warm: "cold climate", lowcrime: "crime rate too high",
-    nomadvisa: "no digital nomad visa", healthcare: "weak public healthcare",
-  };
-  const SLUG_TO_NAME: Record<string, string> = {
-    "australia": "Australia", "canada": "Canada", "norway": "Norway",
-    "singapore": "Singapore", "switzerland": "Switzerland", "new-zealand": "New Zealand",
-    "sweden": "Sweden", "germany": "Germany", "ireland": "Ireland",
-    "united-kingdom": "United Kingdom", "netherlands": "Netherlands",
-    "france": "France", "finland": "Finland", "belgium": "Belgium",
-    "denmark": "Denmark", "austria": "Austria", "italy": "Italy",
-    "usa": "USA", "japan": "Japan", "india": "India",
-    "uae": "UAE", "brazil": "Brazil", "malaysia": "Malaysia",
-    "portugal": "Portugal", "spain": "Spain", "poland": "Poland",
-  };
+
+  const EUROPEAN_COUNTRIES = ["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"];
+  const ENGLISH_SPEAKING   = ["ireland","united-kingdom","australia","new-zealand","canada","usa","singapore"];
+  const HIGH_TAX_COUNTRIES = ["sweden","finland","germany","denmark","austria","ireland","united-kingdom","italy","netherlands","belgium","norway","australia","new-zealand","france","canada"];
+  const HIGH_COST_COUNTRIES= ["singapore","switzerland","norway","australia","new-zealand","ireland","united-kingdom","usa","canada","denmark"];
+  const WARM_COUNTRIES     = ["uae","spain","portugal","singapore","australia","india","brazil","malaysia","thailand","vietnam","philippines","mexico","colombia","costa-rica","panama","greece"];
+  const NOMAD_VISA         = ["portugal","spain","germany","netherlands","uae","malaysia","new-zealand"];
+  const STRONG_HEALTHCARE  = ["germany","france","switzerland","austria","netherlands","sweden","norway","denmark","finland","belgium","australia","canada","new-zealand","singapore","japan","united-kingdom","ireland","portugal","spain","italy"];
+
   const current = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
-  if (current && SLUG_TO_NAME[current] && !matchSlugs.includes(current)) {
-    excluded.push({ name: SLUG_TO_NAME[current], reason: "your current country" });
-  }
-  dealBreakers.forEach((db) => {
-    if (db === "none") return;
-    const reason = REASON_MAP[db] ?? db;
-    if (db === "lowtax") {
-      ["australia","canada","norway","sweden","germany","ireland","united-kingdom","netherlands","france","finland","belgium","denmark","austria","italy","new-zealand"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
-    if (db === "lowcost") {
-      ["singapore","switzerland","norway","australia","new-zealand","ireland","united-kingdom","usa","canada"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
-    if (db === "europe") {
-      ["australia","canada","usa","uae","singapore","japan","india","brazil","malaysia"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
+
+  allCountries.forEach(c => {
+    if (matchSlugs.includes(c.slug)) return; // already in results
+    let reason = "";
+    if (current && c.slug === current) reason = "your current country";
+    else if (dealBreakers.includes("europe") && !EUROPEAN_COUNTRIES.includes(c.slug)) reason = "not in Europe";
+    else if (dealBreakers.includes("english") && !ENGLISH_SPEAKING.includes(c.slug)) reason = "not English-speaking";
+    else if (dealBreakers.includes("lowtax") && HIGH_TAX_COUNTRIES.includes(c.slug)) reason = "high income tax";
+    else if (dealBreakers.includes("lowcost") && HIGH_COST_COUNTRIES.includes(c.slug)) reason = "high cost of living";
+    else if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(c.slug)) reason = "cold climate";
+    else if (dealBreakers.includes("lowcrime") && c.data.scoreCrimeRate < 7.5) reason = "crime rate too high";
+    else if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA.includes(c.slug)) reason = "no digital nomad visa";
+    else if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE.includes(c.slug)) reason = "weak public healthcare";
+    if (reason) excluded.push({ name: c.name, reason });
   });
+
   const seen = new Set<string>();
   return excluded.filter(e => { if (seen.has(e.name)) return false; seen.add(e.name); return true; });
 }
@@ -196,9 +183,47 @@ function WhyToggle({ match, answers, jobRoleDef, rank }: {
 }
 
 // ── Take-home card ─────────────────────────────────────────────────────────
-function TakeHomeCard({ match, jobRoleDef, isPro }: {
-  match: CountryMatch; jobRoleDef: typeof JOB_ROLES[0] | undefined; isPro: boolean;
+function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
+  match: CountryMatch; jobRoleDef: typeof JOB_ROLES[0] | undefined; isPro: boolean; moveReason?: string;
 }) {
+  const cs = getCurrencySymbol(match.country.currency);
+  const rent = match.country.data.costRentCityCentre;
+  const groceries = match.country.data.costGroceriesMonthly;
+  const transport = match.country.data.costTransportMonthly;
+  const totalCosts = rent + groceries + transport;
+
+  // Retirement / remote without role: show cost-of-living breakdown instead of salary
+  const isLifestyleMode = (moveReason === "retire" || moveReason === "remote") && !jobRoleDef;
+  if (isLifestyleMode) {
+    const rowStyle = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderBottom: `1px solid ${LINE}` };
+    const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: DIM };
+    const valStyle = { fontFamily: SERIF, fontSize: 16, color: FG };
+    return (
+      <div style={{ border: `1px solid #2a2a2a`, background: PANEL, overflow: "hidden" }}>
+        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${LINE}`, background: BG }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>
+            Monthly cost of living · {match.country.name}
+          </span>
+        </div>
+        <div style={{ padding: "8px 0" }}>
+          <div style={rowStyle}><span style={labelStyle}>Rent (city centre)</span><span style={valStyle}>{cs}{rent.toLocaleString()}/mo</span></div>
+          <div style={rowStyle}><span style={labelStyle}>Groceries</span><span style={valStyle}>{cs}{groceries.toLocaleString()}/mo</span></div>
+          <div style={rowStyle}><span style={labelStyle}>Transport</span><span style={valStyle}>{cs}{transport.toLocaleString()}/mo</span></div>
+          <div style={{ height: 1, background: "#2a2a2a", margin: "2px 0" }} />
+          <div style={{ ...rowStyle, borderBottom: "none" }}>
+            <span style={{ ...labelStyle, color: FG }}>Total estimated</span>
+            <span style={{ fontFamily: SERIF, fontSize: 20, color: MINT }}>{cs}{totalCosts.toLocaleString()}/mo</span>
+          </div>
+        </div>
+        <div style={{ padding: "10px 18px", borderTop: `1px solid ${LINE}` }}>
+          <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", lineHeight: 1.6, margin: 0 }}>
+            * Single person estimate. Actual costs vary by city and lifestyle.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!jobRoleDef) return null;
   const cs = getCurrencySymbol(match.country.currency);
   const gross = match.country.data[jobRoleDef.salaryKey] as number;
@@ -421,6 +446,7 @@ export default function WizardResultsPage() {
   const router = useRouter();
   const [matches, setMatches]         = useState<CountryMatch[]>([]);
   const [answers, setAnswers]         = useState<Partial<WizardAnswers>>({});
+  const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -461,6 +487,10 @@ export default function WizardResultsPage() {
         try {
           setMatches(JSON.parse(raw));
           if (answersRaw) setAnswers(JSON.parse(answersRaw));
+          try {
+            const countriesRaw = sessionStorage.getItem("wizardCountries");
+            if (countriesRaw) setAllCountries(JSON.parse(countriesRaw));
+          } catch { /* ignore */ }
         } catch {
           setSessionExpired(true);
           setIsLoading(false);
@@ -605,7 +635,7 @@ export default function WizardResultsPage() {
   const lockedCount     = 37 - visibleMatches.length;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
-  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
+  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
 
   // Passport power derived values
   const { primary: effectivePrimary, secondary: effectiveSecondary } = resolveEffectivePassports(
@@ -733,7 +763,7 @@ export default function WizardResultsPage() {
               </div>
             )}
             {top.reasons.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 28 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
                 {top.reasons.map(r => (
                   <span key={r} style={{
                     fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
@@ -742,6 +772,19 @@ export default function WizardResultsPage() {
                     display: "flex", alignItems: "center", gap: 8,
                   }}>
                     <span style={{ color: MINT, fontSize: 8 }}>✦</span> {r}
+                  </span>
+                ))}
+              </div>
+            )}
+            {(answers.priorities ?? []).length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#333" }}>Weighted by:</span>
+                {(answers.priorities ?? []).slice(0, 4).map((p, i) => (
+                  <span key={p} style={{
+                    fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                    padding: "3px 8px", border: `1px solid #2a2a2a`, color: i === 0 ? MINT : DIM,
+                  }}>
+                    {i === 0 ? "↑ " : ""}{p}
                   </span>
                 ))}
               </div>
@@ -779,7 +822,7 @@ export default function WizardResultsPage() {
             </div>
           </div>
           <div style={{ position: "sticky", top: 80 }}>
-            <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
+            <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} moveReason={answers.moveReason} />
           </div>
         </section>
 
