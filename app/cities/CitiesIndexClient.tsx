@@ -176,21 +176,6 @@ interface CitiesIndexClientProps { cities: City[] }
 export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [sort, setSort] = useState<SortKey>('score')
-  const [waitlistInput, setWaitlistInput] = useState('')
-  const [waitlistDone, setWaitlistDone] = useState(false)
-  const [waitlistLoading, setWaitlistLoading] = useState(false)
-
-  const handleWaitlistSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    const city = waitlistInput.trim().slice(0, 100).replace(/[^a-zA-ZÀ-ÿ0-9 \-,.']/g, '')
-    if (!city || waitlistLoading) return
-    setWaitlistLoading(true)
-    await supabase.from('city_waitlist').insert({ city })
-    setWaitlistInput('')
-    setWaitlistDone(true)
-    setWaitlistLoading(false)
-  }, [waitlistInput, waitlistLoading])
-
   const enriched = useMemo(() =>
     cities
       .map(c => ({ ...c, extra: CITY_EXTRAS[c.slug] }))
@@ -450,22 +435,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           </Link>
         </section>
 
-        {/* WAITLIST */}
-        <section className={`${styles.waitlist} ${styles.fu} ${styles.d4}`}>
-          <div>
-            <p className={styles.wlEyebrow}>Don&apos;t see your city?</p>
-            <h3 className={styles.wlTitle}>We add <span className={styles.it}>two cities</span> every quarter.</h3>
-            <p className={styles.wlSub}>Tell us the city you&apos;re researching we&apos;ll prioritise the most-requested ones, and email you when the report goes live.</p>
-          </div>
-          <form className={styles.wlForm} onSubmit={handleWaitlistSubmit}>
-            <input type="text" placeholder="e.g. Mexico City, Bali, Cape Town"
-              value={waitlistInput} onChange={e => setWaitlistInput(e.target.value)}
-              disabled={waitlistLoading} />
-            <button type="submit" disabled={waitlistLoading || waitlistDone}>
-              {waitlistDone ? '✓ Added' : waitlistLoading ? 'Adding…' : 'Notify Me →'}
-            </button>
-          </form>
-        </section>
 
       </div>
 
