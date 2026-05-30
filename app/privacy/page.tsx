@@ -15,8 +15,8 @@ const S = {
   dimmer: 'rgba(240,240,232,0.28)',
   accent: '#00ffd5',
   text: '#f0f0e8',
-  serif: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
-  sans: "'Inter', sans-serif",
+  serif: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+  sans: "'Satoshi', sans-serif",
 }
 
 export default function PrivacyPage() {
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           <section>
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: S.text, margin: '0 0 16px' }}>Who we are</h2>
             <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.8, margin: '0 0 12px' }}>
-              Origio is a relocation research tool operated by Shlok Mestry, based in Ireland. We help people compare salaries, visas, cost of living and quality of life across 25 countries.
+              Origio is a relocation research tool operated by Shlok Mestry, based in Ireland. We help people compare salaries, visas, cost of living and quality of life across 37 countries.
             </p>
             <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.8, margin: 0 }}>
               Contact:{' '}

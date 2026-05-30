@@ -1,11 +1,11 @@
-// app/api/webhook/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { resend } from '@/lib/resend'
+import { getResend } from '@/lib/resend'
 import WelcomePro from '@/emails/WelcomePro'
 import { createElement } from 'react'
 import { rateLimit } from '@/lib/rate-limit'
+import * as Sentry from "@sentry/nextjs"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
@@ -17,10 +17,10 @@ const adminSupabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 )
 
-export async function POST(request: Request) {
-  // Rate limit: max 20 webhook calls per minute (Stripe retries can burst)
+export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
   if (limited) return limited
+
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
 
@@ -33,6 +33,9 @@ export async function POST(request: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { route: 'webhook', type: 'signature_verification_failed' },
+    })
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
@@ -42,32 +45,51 @@ export async function POST(request: Request) {
 
     const userId = session.metadata?.user_id ?? session.client_reference_id
     if (!userId) {
+      Sentry.captureMessage('No user_id in session metadata', 'error')
       console.error('No user_id in session metadata')
       return NextResponse.json({ error: 'No user_id' }, { status: 400 })
     }
 
-    const { error } = await adminSupabase
-      .from('profiles')
-      .update({ is_pro: true })
-      .eq('id', userId)
+    try {
+      const { error } = await adminSupabase
+        .from('profiles')
+        .update({ is_pro: true })
+        .eq('id', userId)
 
-    if (error) {
-      console.error('Failed to update profile:', error)
-      return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-    }
+      if (error) {
+        Sentry.captureException(error, {
+          tags: { route: 'webhook', type: 'profile_update_failed', user_id: userId },
+        })
+        console.error('Failed to update profile:', error)
+        return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
+      }
 
-    // Send Pro welcome email
-    if (session.customer_email) {
-      const customerName = session.customer_details?.name ?? 'there'
-      await resend.emails.send({
-        from: 'Origio <noreply@findorigio.com>',
-        to: session.customer_email,
-        subject: 'Welcome to Origio Pro ✨',
-        react: createElement(WelcomePro, { name: customerName }),
+      if (session.customer_email) {
+        try {
+          const resend = getResend()
+          const customerName = session.customer_details?.name ?? 'there'
+          await resend.emails.send({
+            from: 'Origio <onboarding@resend.dev>',
+            to: session.customer_email,
+            subject: 'Welcome to Origio Pro ✨',
+            react: createElement(WelcomePro, { name: customerName }),
+          })
+        } catch (emailErr) {
+          Sentry.captureException(emailErr, {
+            tags: { route: 'webhook', type: 'email_send_failed', user_id: userId },
+          })
+          console.error('Failed to send welcome email:', emailErr)
+        }
+      }
+
+      console.log(`✅ User ${userId} upgraded to Pro`)
+    } catch (err) {
+      Sentry.captureException(err, {
+        tags: { route: 'webhook', type: 'checkout_processing_error', user_id: userId },
       })
+      console.error('Error processing checkout:', err)
+      return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
     }
-
-    console.log(`✅ User ${userId} upgraded to Pro`)
   }
 
   return NextResponse.json({ received: true })

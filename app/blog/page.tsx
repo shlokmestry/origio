@@ -50,9 +50,9 @@ function getSupabase() {
 }
 
 // ── Shared token styles ────────────────────────────────────────────────────
-const SERIF = "'Georgia', 'DM Serif Display', serif";
+const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', 'system-ui', sans-serif";
-const MONO  = "'Cabinet Grotesk', 'monospace'";
+const MONO  = "'Satoshi', sans-serif";
 
 export default async function BlogPage() {
   const supabase = getSupabase();
@@ -87,7 +87,7 @@ export default async function BlogPage() {
             color: "#f0f0e8",
           }}>
             Inside Origio:{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>Blog</em>
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>Blog</em>
           </h1>
           <p style={{
             fontFamily: SANS,
@@ -357,7 +357,7 @@ export default async function BlogPage() {
             margin: "0 0 16px",
           }}>
             Not sure which country{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>fits you</em>?
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>fits you</em>?
           </h2>
           <p style={{
             fontFamily: SANS,
@@ -367,7 +367,7 @@ export default async function BlogPage() {
             maxWidth: 460,
             lineHeight: 1.6,
           }}>
-            Answer 8 quick questions and get a personalised ranking across all 25 countries based on your role, passport, and priorities.
+            Answer 8 quick questions and get a personalised ranking across all 37 countries based on your role, passport, and priorities.
           </p>
           <Link
             href="/wizard"

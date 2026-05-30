@@ -7,13 +7,14 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
 import { JOB_ROLES } from "@/types";
-import { WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
+import { WizardAnswers, scoreCountriesForWizard, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import QuizGate from "@/components/QuizGate";
+import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
-const SERIF  = "'DM Serif Display', Georgia, serif";
+const SERIF  = "'Cabinet Grotesk', sans-serif";
 const SANS   = "'Satoshi', system-ui, sans-serif";
 const MONO   = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const BG     = "#0a0a0a";
@@ -27,20 +28,50 @@ const PANEL  = "#0f0f0f";
 const ANON_MAX_RUNS    = 3;
 const FREE_MAX_RUNS    = 5;
 const ANON_STORAGE_KEY = "origio_quiz_runs";
-const TOTAL_STEPS      = 8;
+// Steps 1–9: Location, Reason, Role, Priorities, Vibe, Budget, Languages, Deal breakers
+// (step 0 is the passport intro — not counted in progress)
+const TOTAL_STEPS      = 9;
 
 const STEP_LABELS = [
-  "Origin", "Reason", "Role", "Priorities",
-  "Vibe", "Budget", "Languages", "Deal breakers",
+  "Location", "Reason", "Role", "Priorities",
+  "Vibe", "Budget", "Languages", "Passport", "Deal breakers",
 ];
+
+const PROGRESS_KEY = "wizardProgress";
 
 // ── Static data ────────────────────────────────────────────────────────────
 const PASSPORTS = [
   "Ireland","United Kingdom","Germany","France","Netherlands","Spain",
   "Portugal","Sweden","Norway","Switzerland","Australia","New Zealand",
-  "Canada","USA","Singapore","UAE","India","China","Brazil","South Africa",
-  "Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
+  "Canada","USA","Singapore","Japan","South Korea","UAE","India","China",
+  "Brazil","South Africa","Nigeria","Kenya","Philippines","Italy","Poland","Romania","Other",
 ];
+
+const COUNTRIES_LIST = [
+  "Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria",
+  "Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Czech Republic",
+  "Denmark","Ecuador","Egypt","Estonia","Ethiopia","Finland","France","Georgia",
+  "Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland",
+  "Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Kuwait","Latvia","Lebanon",
+  "Lithuania","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway",
+  "Pakistan","Peru","Philippines","Poland","Portugal","Romania","Russia","Saudi Arabia",
+  "Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea",
+  "Spain","Sri Lanka","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey",
+  "UAE","Uganda","Ukraine","United Kingdom","Uruguay","USA","Uzbekistan","Venezuela",
+  "Vietnam","Zambia","Zimbabwe","Other",
+];
+
+const NO_DUAL_CITIZENSHIP: Record<string, string> = {
+  'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+  'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+  'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+  'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+  'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+  'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+  'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+  'south korea': 'South Korea generally does not permit dual citizenship for adults.',
+};
 
 function getRentBudgets(passport: string) {
   const p = passport.toLowerCase();
@@ -129,7 +160,7 @@ function StepSub({ children }: { children: React.ReactNode }) {
 }
 
 function Mint({ children }: { children: React.ReactNode }) {
-  return <em style={{ color: MINT, fontStyle: "italic" }}>{children}</em>;
+  return <em style={{ color: MINT, fontStyle: "normal" }}>{children}</em>;
 }
 
 function OptionCard({ selected, onClick, children, badge }: {
@@ -160,15 +191,61 @@ function OptionCard({ selected, onClick, children, badge }: {
   );
 }
 
-
+// ── Searchable select ──────────────────────────────────────────────────────
+function SearchableSelect({ value, onChange, options, placeholder }: {
+  value: string; onChange: (v: string) => void; options: string[]; placeholder: string;
+}) {
+  const [search, setSearch] = useState('');
+  const [showList, setShowList] = useState(false);
+  const displayValue = value ? (options.find(o => o.toLowerCase() === value) ?? value) : search;
+  const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase())).slice(0, 40);
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value ? displayValue : search}
+        onFocus={() => { setShowList(true); if (value) setSearch(''); }}
+        onBlur={() => setTimeout(() => setShowList(false), 150)}
+        onChange={e => { setSearch(e.target.value); onChange(''); setShowList(true); }}
+        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${value ? MINT : LINE}`, borderRadius: 10, color: value ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" as const }}
+      />
+      {showList && filtered.length > 0 && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 220, overflowY: "auto" }}>
+          {filtered.map(opt => {
+            const slug = opt.toLowerCase();
+            return (
+              <button key={slug} onMouseDown={() => { onChange(slug); setSearch(''); setShowList(false); }}
+                style={{ width: "100%", padding: "10px 16px", background: value === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: value === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" as const }}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function WizardPage() {
   const router = useRouter();
-  const [step, setStep]     = useState(1);
+  const [step, setStep]     = useState(0);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
+
+  // dual-passport intro state (step 0)
+  const [hasDualPassport, setHasDualPassport] = useState<boolean | null>(null);
+  const [introPassport, setIntroPassport] = useState('');
+  const [introSecondPassport, setIntroSecondPassport] = useState('');
+  const [introPassportSearch, setIntroPassportSearch] = useState('');
+  const [introSecondPassportSearch, setIntroSecondPassportSearch] = useState('');
+  const [showIntroPassportList, setShowIntroPassportList] = useState(false);
+  const [showIntroSecondList, setShowIntroSecondList] = useState(false);
+
+  // step 1: current location
+  const [currentCountrySearch, setCurrentCountrySearch] = useState('');
 
   const [gateChecked, setGateChecked] = useState(false);
   const [gateType, setGateType]       = useState<"anon" | "free" | null>(null);
@@ -176,24 +253,79 @@ export default function WizardPage() {
   const [isPro, setIsPro]             = useState(false);
   const [isSignedIn, setIsSignedIn]   = useState(false);
 
+  // Clear stale results whenever the wizard page is opened so expired
+  // sessionStorage data can't resurface on the results page.
+  useEffect(() => {
+    sessionStorage.removeItem("wizardMatches");
+    sessionStorage.removeItem("wizardAnswers");
+    sessionStorage.removeItem("wizardCountries");
+  }, []);
+
+  // Persist answers to sessionStorage on every change so a refresh doesn't lose progress
+  useEffect(() => {
+    if (step > 0) {
+      try {
+        sessionStorage.setItem(PROGRESS_KEY, JSON.stringify({ step, answers, hasDualPassport, introPassport, introSecondPassport }));
+      } catch { /* ignore */ }
+    }
+  }, [step, answers, hasDualPassport, introPassport, introSecondPassport]);
+
+  // Advance on Enter key when the current step is complete
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && canProceed() && !loading) {
+        handleNext();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
+
   useEffect(() => {
     async function checkGate() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const anonSession = { data: { session: null }, error: null } as const;
+        const timeout = new Promise<typeof anonSession>(resolve => setTimeout(() => resolve(anonSession), 4000));
+        const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout]);
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
           if (stored >= ANON_MAX_RUNS) setGateType("anon");
+          // restore progress from sessionStorage if available
+          try {
+            const saved = sessionStorage.getItem(PROGRESS_KEY);
+            if (saved) {
+              const { step: s, answers: a, hasDualPassport: hdp, introPassport: ip, introSecondPassport: isp } = JSON.parse(saved);
+              if (s > 0) { setStep(s); setAnswers(a); setHasDualPassport(hdp); setIntroPassport(ip || ''); setIntroSecondPassport(isp || ''); }
+            } else {
+              const pctx = sessionStorage.getItem("wizardPassportContext");
+              if (pctx) {
+                const { passport, secondPassport } = JSON.parse(pctx);
+                if (passport) { setIntroPassport(passport); setHasDualPassport(!!secondPassport); }
+                if (secondPassport) setIntroSecondPassport(secondPassport);
+              }
+            }
+          } catch { /* ignore */ }
           setGateChecked(true); return;
         }
         setIsSignedIn(true);
-        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count").eq("id", session.user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count, passport_slug, second_passport_slug").eq("id", session.user.id).single();
         const pro  = profile?.is_pro ?? false;
         const runs = profile?.quiz_runs_count ?? 0;
         setIsPro(pro); setRunsUsed(runs);
         if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
+        // restore progress, fall back to profile passport
+        try {
+          const saved = sessionStorage.getItem(PROGRESS_KEY);
+          if (saved) {
+            const { step: s, answers: a, hasDualPassport: hdp, introPassport: ip, introSecondPassport: isp } = JSON.parse(saved);
+            if (s > 0) { setStep(s); setAnswers(a); setHasDualPassport(hdp); setIntroPassport(ip || ''); setIntroSecondPassport(isp || ''); setGateChecked(true); return; }
+          }
+        } catch { /* ignore */ }
+        if (profile?.passport_slug) setIntroPassport(profile.passport_slug);
+        if (profile?.second_passport_slug) { setIntroSecondPassport(profile.second_passport_slug); setHasDualPassport(true); }
+        else if (profile?.passport_slug) setHasDualPassport(false);
       } catch (err) {
-        // Network / Supabase error — allow the quiz to proceed rather than hanging forever
         console.error("checkGate error:", err);
       } finally {
         setGateChecked(true);
@@ -203,33 +335,95 @@ export default function WizardPage() {
   }, []);
 
   const isJobOffer = answers.moveReason === "job";
-  const getNextStep = (cur: number) => { if (cur === 2 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 7; return cur + 1; };
-  const getPrevStep = (cur: number) => { if (cur === 7 && isJobOffer) return 3; if (cur === 3 && isJobOffer) return 2; return cur - 1; };
-  const getEffectiveTotalSteps = () => isJobOffer ? 5 : TOTAL_STEPS;
-  const getEffectiveStep = () => { if (!isJobOffer) return step; if (step <= 3) return step; if (step >= 7) return step - 3; return step; };
-  const progress   = (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
-  const isLastStep = isJobOffer ? step === 8 : step === TOTAL_STEPS;
+  // Job offer flow: 0 → 1 → 2 → 3 → 6 → 7 → 8 → 9 (skips priorities/vibe, keeps rent/languages/dealbreakers)
+  const getNextStep = (cur: number) => {
+    if (cur === 3 && isJobOffer) return 6;
+    if (cur === 6 && isJobOffer) return 7; // skip vibe — but we go to budget (step 6 IS budget now)
+    return cur + 1;
+  };
+  const getPrevStep = (cur: number) => {
+    if (cur === 7 && isJobOffer) return 6;
+    if (cur === 6 && isJobOffer) return 3;
+    if (cur === 2 && introPassport) return 0;
+    return cur - 1;
+  };
+  // Job offer skips priorities (4) and vibe (5) — 7 effective steps
+  const getEffectiveTotalSteps = () => isJobOffer ? 7 : TOTAL_STEPS;
+  const getEffectiveStep = () => {
+    if (!isJobOffer) return step;
+    if (step <= 3) return step;
+    if (step >= 6) return step - 2;
+    return step;
+  };
+  const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
+  const isLastStep = step === TOTAL_STEPS;
   const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
   const runsLeft   = isPro ? null : Math.max(0, maxRuns - runsUsed);
 
+  const introDualConflict = (() => {
+    if (!introPassport || !introSecondPassport) return null;
+    if (NO_DUAL_CITIZENSHIP[introPassport]) return NO_DUAL_CITIZENSHIP[introPassport];
+    if (NO_DUAL_CITIZENSHIP[introSecondPassport]) return NO_DUAL_CITIZENSHIP[introSecondPassport];
+    return null;
+  })();
+
+  const introPassportOptions = PASSPORTS.map(p => p.toLowerCase()).filter(p =>
+    p.includes(introPassportSearch.toLowerCase()) && p !== introSecondPassport
+  );
+  const introSecondOptions = PASSPORTS.map(p => p.toLowerCase()).filter(p =>
+    p.includes(introSecondPassportSearch.toLowerCase()) && p !== introPassport
+  );
+
+  const startQuiz = () => {
+    if (introPassport) {
+      setAnswers(prev => ({ ...prev, passport: introPassport, secondPassport: introSecondPassport || undefined }));
+      try {
+        sessionStorage.setItem("wizardPassportContext", JSON.stringify({ passport: introPassport, secondPassport: introSecondPassport || null }));
+      } catch { /* ignore */ }
+    }
+    setStep(1);
+  };
+
   const canProceed = () => {
-    if (step === 1) return !!answers.passport;
-    if (step === 2) return !!answers.moveReason;
-    if (step === 3) return !!answers.jobRole;
+    if (step === 0) return hasDualPassport !== null && introPassport !== '';
+    if (step === 1) return !!answers.currentCountry; // where do you live now?
+    if (step === 2) {
+      if (!answers.moveReason) return false;
+      if (answers.moveReason === "remote" || answers.moveReason === "career") return !!answers.workType;
+      return true;
+    }
+    // jobRole optional for retire/lifestyle/study
+    if (step === 3) {
+      const roleOptional = ["retire", "lifestyle", "study"].includes(answers.moveReason ?? "");
+      return roleOptional ? true : !!answers.jobRole;
+    }
     if (step === 4) return (answers.priorities?.length ?? 0) >= 3;
     if (step === 5) return !!answers.cityVibe;
     if (step === 6) return !!answers.rentBudget;
     if (step === 7) return (answers.languages?.length ?? 0) > 0;
-    if (step === 8) return (answers.dealBreakers?.length ?? 0) > 0;
+    if (step === 8) return !!answers.passport; // fallback passport step (only reached if step 0 was skipped)
+    if (step === 9) return (answers.dealBreakers?.length ?? 0) > 0;
     return false;
   };
 
-  const handleNext = () => { const next = getNextStep(step); if (next <= TOTAL_STEPS) setStep(next); else handleSubmit(); };
-  const handleBack = () => { if (step === 1) router.push("/"); else setStep(getPrevStep(step)); };
+  const scrollToTop = () => { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleNext = () => {
+    if (step === 0) { startQuiz(); scrollToTop(); return; }
+    const next = getNextStep(step);
+    if (next <= TOTAL_STEPS) { setStep(next); scrollToTop(); }
+    else handleSubmit();
+  };
+  const handleBack = () => {
+    if (step === 1) { setStep(0); scrollToTop(); }
+    else if (step === 0) router.push("/");
+    else { setStep(getPrevStep(step)); scrollToTop(); }
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     setSubmitError(null);
+    // clear saved progress on submit so a back-nav starts fresh
+    try { sessionStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
     try {
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 10000);
@@ -256,25 +450,41 @@ export default function WizardPage() {
       }
       let matches = scoreCountriesForWizard(countries, answers as WizardAnswers);
       try {
-        const vController = new AbortController();
-        const vTimeout    = setTimeout(() => vController.abort(), 3000);
-        const vRes        = await fetch("/api/validate-results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matches, answers }), signal: vController.signal });
-        clearTimeout(vTimeout);
-        if (vRes.ok) {
-          const v = await vRes.json();
-          if (!v.valid && v.flaggedCountries?.length > 0) {
-            const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
-            matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
+        const { data: { session: vSession } } = await supabase.auth.getSession();
+        if (vSession?.access_token) {
+          const vController = new AbortController();
+          const vTimeout    = setTimeout(() => vController.abort(), 3000);
+          const vRes        = await fetch("/api/validate-results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${vSession.access_token}` },
+            body: JSON.stringify({ matches, answers }),
+            signal: vController.signal,
+          });
+          clearTimeout(vTimeout);
+          if (vRes.ok) {
+            const v = await vRes.json();
+            if (!v.valid && v.flaggedCountries?.length > 0) {
+              const flagged = v.flaggedCountries.map((n: string) => n.toLowerCase());
+              matches = [...matches.filter(m => !flagged.includes(m.country.name.toLowerCase())), ...matches.filter(m => flagged.includes(m.country.name.toLowerCase())).map(m => ({ ...m, matchPercent: Math.min(m.matchPercent, 40) }))];
+            }
           }
         }
       } catch { /* silent — validation is non-critical */ }
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) { await supabase.rpc("increment_quiz_runs", { user_id: session.user.id }); }
-        else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
-      } catch { /* silent — run tracking is non-critical */ }
+      if (matches.length > 0) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await supabase.rpc("increment_quiz_runs", { user_id: session.user.id });
+            if (answers.secondPassport !== undefined) {
+              await supabase.from("profiles").update({ second_passport_slug: answers.secondPassport || null }).eq("id", session.user.id);
+            }
+          }
+          else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
+        } catch { /* silent — run tracking is non-critical */ }
+      }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
+      sessionStorage.setItem("wizardCountries", JSON.stringify(countries));
       router.push("/wizard/results");
     } catch (err) {
       console.error("handleSubmit error:", err);
@@ -289,9 +499,30 @@ export default function WizardPage() {
   const stepPad       = (n: number) => String(n).padStart(2, "0");
 
   if (!gateChecked) return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 120, height: 2, background: LINE }}>
-        <div style={{ width: "40%", height: "100%", background: MINT, animation: "pulse 1.5s infinite" }} />
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
+      <style>{`
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(250%)} }
+        @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.3} 40%{transform:translateY(-6px);opacity:1} }
+      `}</style>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: MINT, display: "inline-block", animation: "pulse 1.5s infinite" }} />
+        <span style={{ fontFamily: SERIF, fontSize: 28, letterSpacing: "-0.02em", color: FG }}>
+          origio<span style={{ color: MINT }}>.</span>
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", gap: 7 }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: MINT, display: "inline-block", animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+          ))}
+        </div>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM }}>
+          Preparing your quiz
+        </span>
+      </div>
+      <div style={{ position: "absolute", bottom: 32, fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#333" }}>
+        findorigio.com
       </div>
     </div>
   );
@@ -310,10 +541,14 @@ export default function WizardPage() {
         }
         @media(max-width:600px){
           .wiz-grid-2  { grid-template-columns: 1fr !important; }
-          .wiz-header-inner { padding: 12px 18px !important; }
-          .wiz-main { padding: 32px 18px 100px !important; }
-          .wiz-step-heading { font-size: clamp(28px,8vw,44px) !important; }
-          .wiz-nav-btns { gap: 10px !important; }
+          .wiz-header-inner { padding: 12px 16px !important; }
+          .wiz-main { padding: 24px 16px 100px !important; max-width: 100vw !important; overflow-x: hidden !important; }
+          .wiz-step-heading { font-size: clamp(26px,7vw,40px) !important; }
+          .wiz-nav-btns { gap: 10px !important; flex-wrap: wrap !important; }
+        }
+        @media(max-width:400px){
+          .wiz-main { padding: 20px 12px 100px !important; }
+          .wiz-nav-btns button { padding: 12px 18px !important; font-size: 11px !important; }
         }
       `}</style>
 
@@ -351,14 +586,14 @@ export default function WizardPage() {
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <aside className="wiz-sidebar" style={{ position: "sticky", top: 88, alignSelf: "start" }}>
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 18 }}>
-            ✦ Quiz · 8 questions
+            ✦ Quiz · {totalSteps} questions
           </div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}>
             {STEP_LABELS.map((label, i) => {
               const num     = i + 1;
-              const isCur   = num === step;
-              const done    = num < step;
-              const skipped = isJobOffer && (num === 4 || num === 5 || num === 6);
+              const isCur   = num === effectiveStep;
+              const done    = num < effectiveStep;
+              const skipped = isJobOffer && (num === 4 || num === 5);
               return (
                 <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
                   <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -382,23 +617,154 @@ export default function WizardPage() {
 
         {/* ── Step content ────────────────────────────────────────────────── */}
         <section key={step} style={{ animation: "fadeUp 0.38s ease both", maxWidth: 660 }}>
-          {/* Step 1 */}
-          {step === 1 && (
+
+          {/* ── Step 0: Dual passport intro ──────────────────────────────── */}
+          {step === 0 && (
             <>
-              <EyebrowLabel>Step 01 · Origin</EyebrowLabel>
-              <StepHeading>Where are you <Mint>from?</Mint></StepHeading>
-              <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
-              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
-                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
-                onFocus={e => (e.currentTarget.style.borderColor = MINT)}
-                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
-                <option value="" disabled>Select your passport country</option>
-                {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
-              </select>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", border: `1px solid ${LINE}`, fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: MINT, marginBottom: 20 }}>
+                ✦ Before we start
+              </div>
+              <StepHeading>Do you hold <Mint>more than one passport?</Mint></StepHeading>
+              <StepSub>Dual citizenship can significantly change your visa access and which countries are viable. We factor both passports into your results.</StepSub>
+
+              <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
+                <OptionCard selected={hasDualPassport === false} onClick={() => { setHasDualPassport(false); setIntroSecondPassport(''); }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: FG }}>No — one passport</div>
+                  <div style={{ fontSize: 13, color: DIM }}>I hold citizenship of a single country</div>
+                </OptionCard>
+                <OptionCard selected={hasDualPassport === true} onClick={() => setHasDualPassport(true)}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: FG }}>Yes — dual / multiple passports</div>
+                  <div style={{ fontSize: 13, color: DIM }}>I hold citizenship of two or more countries</div>
+                </OptionCard>
+              </div>
+
+              {hasDualPassport !== null && (
+                <div style={{ display: "grid", gap: 12, marginBottom: 28 }}>
+                  {/* Primary passport */}
+                  <div>
+                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, marginBottom: 8 }}>
+                      Primary passport
+                    </div>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder="Search country..."
+                        value={introPassport ? PASSPORTS.find(p => p.toLowerCase() === introPassport) ?? introPassport : introPassportSearch}
+                        onFocus={() => { setShowIntroPassportList(true); if (introPassport) setIntroPassportSearch(''); }}
+                        onBlur={() => setTimeout(() => setShowIntroPassportList(false), 150)}
+                        onChange={e => { setIntroPassportSearch(e.target.value); setIntroPassport(''); setShowIntroPassportList(true); }}
+                        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introPassport ? MINT : LINE}`, borderRadius: 10, color: introPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                      />
+                      {showIntroPassportList && (
+                        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                          {introPassportOptions.map(slug => {
+                            const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
+                            return (
+                              <button key={slug} onMouseDown={() => { setIntroPassport(slug); setIntroPassportSearch(''); setShowIntroPassportList(false); }}
+                                style={{ width: "100%", padding: "10px 16px", background: introPassport === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: introPassport === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" }}>
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Second passport — only if dual selected */}
+                  {hasDualPassport && (
+                    <div>
+                      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, marginBottom: 8 }}>
+                        Second passport
+                      </div>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search country..."
+                          value={introSecondPassport ? PASSPORTS.find(p => p.toLowerCase() === introSecondPassport) ?? introSecondPassport : introSecondPassportSearch}
+                          onFocus={() => { setShowIntroSecondList(true); if (introSecondPassport) setIntroSecondPassportSearch(''); }}
+                          onBlur={() => setTimeout(() => setShowIntroSecondList(false), 150)}
+                          onChange={e => { setIntroSecondPassportSearch(e.target.value); setIntroSecondPassport(''); setShowIntroSecondList(true); }}
+                          style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introSecondPassport ? MINT : LINE}`, borderRadius: 10, color: introSecondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                        />
+                        {showIntroSecondList && (
+                          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                            {introSecondOptions.map(slug => {
+                              const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
+                              return (
+                                <button key={slug} onMouseDown={() => { setIntroSecondPassport(slug); setIntroSecondPassportSearch(''); setShowIntroSecondList(false); }}
+                                  style={{ width: "100%", padding: "10px 16px", background: introSecondPassport === slug ? "rgba(0,255,213,0.06)" : "transparent", border: "none", borderBottom: `1px solid ${LINE}`, color: introSecondPassport === slug ? MINT : FG, fontSize: 13, fontFamily: SANS, cursor: "pointer", textAlign: "left" }}>
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* "Other" passport warning */}
+                  {introPassport === "other" && (
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                      <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ Unrecognised passport</p>
+                      <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6, margin: 0 }}>We'll treat your passport as Tier 3 access (100–139 visa-free countries). Results may be less accurate — if your country is listed above, select it instead.</p>
+                    </div>
+                  )}
+
+                  {/* Passport strength indicator */}
+                  {introPassport && introPassport !== "other" && (() => {
+                    const { primary: p, secondary: s } = resolveEffectivePassports(introPassport, introSecondPassport || undefined);
+                    const p1 = getPassportStrength(p);
+                    const p2 = s ? getPassportStrength(s) : null;
+                    const best = p2 ? Math.min(p1, p2) as 1|2|3|4 : p1;
+                    const upgraded = p2 && best < p1;
+                    return (
+                      <div style={{ padding: "12px 16px", background: "rgba(0,255,213,0.04)", border: `1px solid rgba(0,255,213,0.15)`, borderRadius: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: upgraded ? 6 : 0 }}>
+                          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport strength</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT, background: "rgba(0,255,213,0.1)", padding: "2px 8px", borderRadius: 4 }}>TIER {best}</span>
+                        </div>
+                        <p style={{ fontSize: 12, color: DIM, lineHeight: 1.5, margin: 0 }}>{PASSPORT_TIER_LABEL[best]}</p>
+                        {upgraded && <p style={{ fontSize: 11, color: MINT, marginTop: 4, margin: 0 }}>↑ Up from Tier {p1} with your second passport</p>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Dual citizenship conflict warning */}
+                  {introDualConflict && (
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                      <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ No dual citizenship</p>
+                      <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6 }}>{introDualConflict}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
-          {/* Step 2 */}
+          {/* ── Step 1: Where do you live now? ──────────────────────────── */}
+          {step === 1 && (
+            <>
+              <EyebrowLabel>Step 01 · Location</EyebrowLabel>
+              <StepHeading>Where do you <Mint>live now?</Mint></StepHeading>
+              <StepSub>We exclude your current country from results. This also helps calibrate cost-of-living comparisons.</StepSub>
+              <SearchableSelect
+                value={answers.currentCountry ?? ''}
+                onChange={v => setAnswers({ ...answers, currentCountry: v })}
+                options={COUNTRIES_LIST}
+                placeholder="Search country..."
+              />
+              {answers.currentCountry && answers.currentCountry !== answers.passport?.toLowerCase() && answers.passport && (
+                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: DIM }}>Passport:</span>
+                  <span style={{ fontSize: 13, color: MINT }}>{PASSPORTS.find(p => p.toLowerCase() === answers.passport) ?? answers.passport}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Step 2: Reason */}
           {step === 2 && (
             <>
               <EyebrowLabel>Step 02 · Reason</EyebrowLabel>
@@ -408,7 +774,7 @@ export default function WizardPage() {
                 {[
                   { key: "job",       label: "I have a job offer",          sub: "Moving for a specific role" },
                   { key: "career",    label: "Better career opportunities", sub: "Higher salary, growth, tech hubs" },
-                  { key: "remote",    label: "I work remotely",             sub: "Location flexibility, low tax, fast internet" },
+                  { key: "remote",    label: "I work remotely / run a business", sub: "Location flexibility, tax optimisation, nomad visa" },
                   { key: "retire",    label: "Retirement / FIRE",           sub: "Low cost, healthcare, passive income" },
                   { key: "study",     label: "Study abroad",                sub: "Universities, student visas" },
                   { key: "lifestyle", label: "Lifestyle change",            sub: "Weather, culture, quality of life" },
@@ -419,19 +785,41 @@ export default function WizardPage() {
                   </OptionCard>
                 ))}
               </div>
+
+              {(answers.moveReason === "remote" || answers.moveReason === "career") && (
+                <div style={{ marginTop: 28, borderTop: `1px solid ${LINE}`, paddingTop: 24 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 14 }}>How do you work?</div>
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {[
+                      { key: "employee",   label: "Employed",         sub: "Salary from a company — visa tied to employer" },
+                      { key: "freelancer", label: "Freelancer / contractor", sub: "Self-employed, invoice clients — nomad visa routes" },
+                      { key: "company",    label: "I own a company",  sub: "Director / founder — tax residency + corporate structure" },
+                    ].map(opt => (
+                      <OptionCard key={opt.key} selected={answers.workType === opt.key} onClick={() => setAnswers({ ...answers, workType: opt.key })}>
+                        <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
+                        <div style={{ fontSize: 13, color: DIM }}>{opt.sub}</div>
+                      </OptionCard>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3: Role */}
           {step === 3 && (
             <>
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
               <StepHeading>What's your <Mint>job?</Mint></StepHeading>
-              <StepSub>Used to show realistic salary expectations per country.</StepSub>
+              {["retire","lifestyle","study"].includes(answers.moveReason ?? "") ? (
+                <StepSub>Optional — pick your role to see salary comparisons, or skip to continue.</StepSub>
+              ) : (
+                <StepSub>Used to show realistic salary expectations per country.</StepSub>
+              )}
               <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {JOB_ROLES.map(r => (
                   <OptionCard key={r.key} selected={answers.jobRole === r.key} onClick={() => setAnswers({ ...answers, jobRole: r.key })}
-                    badge={<span style={{ fontSize: 20, flexShrink: 0 }}>{r.emoji}</span>}>
+                    badge={<JobRoleIcon roleKey={r.key} size={22} color={answers.jobRole === r.key ? MINT : DIM} />}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: FG }}>{r.label}</div>
                   </OptionCard>
                 ))}
@@ -439,7 +827,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 4 */}
+          {/* Step 4: Priorities */}
           {step === 4 && (
             <>
               <EyebrowLabel>Step 04 · Priorities</EyebrowLabel>
@@ -462,7 +850,7 @@ export default function WizardPage() {
                     <OptionCard key={opt.key} selected={selected}
                       onClick={() => { const cur = answers.priorities ?? []; setAnswers({ ...answers, priorities: selected ? cur.filter(x => x !== opt.key) : [...cur, opt.key] }); }}
                       badge={
-                        <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "italic", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: `1px solid ${selected ? MINT : LINE}`, color: selected ? MINT : DIM, background: selected ? "rgba(0,255,213,0.08)" : "transparent", fontFamily: SERIF, fontStyle: "normal", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {selected ? idx + 1 : "·"}
                         </span>
                       }>
@@ -477,7 +865,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 5 */}
+          {/* Step 5: Vibe */}
           {step === 5 && (
             <>
               <EyebrowLabel>Step 05 · Vibe</EyebrowLabel>
@@ -499,7 +887,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 6 */}
+          {/* Step 6: Budget */}
           {step === 6 && (
             <>
               <EyebrowLabel>Step 06 · Budget</EyebrowLabel>
@@ -516,7 +904,7 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 7 */}
+          {/* Step 7: Languages */}
           {step === 7 && (
             <>
               <EyebrowLabel>Step 07 · Languages</EyebrowLabel>
@@ -543,8 +931,24 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 8 */}
-          {step === 8 && (
+          {/* Step 8: Passport fallback (only if skipped step 0) */}
+          {step === 8 && !answers.passport && (
+            <>
+              <EyebrowLabel>Step 08 · Passport</EyebrowLabel>
+              <StepHeading>Your <Mint>passport?</Mint></StepHeading>
+              <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
+              <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
+                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
+                onFocus={e => (e.currentTarget.style.borderColor = MINT)}
+                onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
+                <option value="" disabled>Select your passport country</option>
+                {PASSPORTS.map(p => <option key={p} value={p.toLowerCase()}>{p}</option>)}
+              </select>
+            </>
+          )}
+
+          {/* Step 9: Deal breakers */}
+          {step === 9 && (
             <>
               <EyebrowLabel>Final step · Deal breakers</EyebrowLabel>
               <StepHeading>Anything <Mint>non-negotiable?</Mint></StepHeading>

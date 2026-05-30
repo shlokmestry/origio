@@ -15,8 +15,8 @@ const S = {
   borderMd: 'rgba(255,255,255,0.12)',
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.2)',
-  serif: "'DM Serif Display', Georgia, serif",
-  sans: "'Inter', sans-serif",
+  serif: "'Cabinet Grotesk', sans-serif",
+  sans: "'Satoshi', sans-serif",
 };
 
 export default function FeedbackPage() {
@@ -81,7 +81,7 @@ export default function FeedbackPage() {
                 Tell us what's missing.
               </h1>
               <p style={{ fontSize: 15, color: S.dim, lineHeight: 1.7, maxWidth: 440 }}>
-                25 countries, 8 quiz questions. We know it's not complete. Tell us what you want to see — countries, job roles, quiz questions, anything.
+                37 countries, 8 quiz questions. We know it's not complete. Tell us what you want to see — countries, job roles, quiz questions, anything.
               </p>
             </div>
 

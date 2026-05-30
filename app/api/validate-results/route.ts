@@ -1,7 +1,26 @@
 // app/api/validate-results/route.ts
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
+  const limited = await rateLimit(request, { name: "validate-results", maxRequests: 10, windowSeconds: 60 });
+  if (limited) return limited;
+
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const token = authHeader.replace("Bearer ", "");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { matches, answers } = await request.json();
 

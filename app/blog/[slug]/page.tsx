@@ -11,9 +11,9 @@ export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
-const SERIF = "var(--font-heading, 'DM Serif Display', Georgia, serif)";
-const SANS  = "'Inter', sans-serif";
-const MONO  = "'monospace'";
+const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)";
+const SANS  = "'Satoshi', sans-serif";
+const MONO  = "'Satoshi', sans-serif";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Insights":         "#a78bfa",
@@ -107,7 +107,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <main style={{ background: "#0a0a0a", color: "#f0f0e8", minHeight: "100vh" }}>
 
-      {/* JSON-LD */}
+      {/* JSON-LD — JSON.stringify escapes all special chars; replace </script> sequences as extra defence */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -120,7 +120,7 @@ export default async function BlogPostPage({ params }: Props) {
             dateModified: post.published_at,
             publisher: { "@type": "Organization", name: "Origio", url: "https://findorigio.com" },
             mainEntityOfPage: `https://findorigio.com/blog/${slug}`,
-          }),
+          }).replace(/<\/script>/gi, '<\\/script>'),
         }}
       />
 
@@ -236,7 +236,14 @@ export default async function BlogPostPage({ params }: Props) {
       {/* ── ARTICLE BODY ── */}
       <article style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px 96px" }}>
         <div className="blog-prose">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content_md}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              table: ({ children }) => (
+                <div className="table-wrap"><table>{children}</table></div>
+              ),
+            }}
+          >{post.content_md}</ReactMarkdown>
         </div>
 
         {/* Related posts */}
@@ -293,13 +300,13 @@ export default async function BlogPostPage({ params }: Props) {
             color: "#f0f0e8", margin: "0 0 14px",
           }}>
             Where does your salary{" "}
-            <em style={{ color: "#00ffd5", fontStyle: "italic" }}>stretch furthest?</em>
+            <em style={{ color: "#00ffd5", fontStyle: "normal" }}>stretch furthest?</em>
           </h3>
           <p style={{
             fontFamily: SANS, fontSize: 14, lineHeight: 1.7,
             color: "rgba(240,240,232,0.45)", margin: "0 auto 32px", maxWidth: 380,
           }}>
-            Answer 8 questions and get a personalised ranking across 25 countries based on your role, passport, and priorities.
+            Answer 8 questions and get a personalised ranking across 37 countries based on your role, passport, and priorities.
           </p>
           <Link href="/wizard" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
@@ -337,17 +344,18 @@ export default async function BlogPostPage({ params }: Props) {
         .blog-prose h3 { font-family: ${SERIF}; font-size: clamp(18px,2.5vw,22px); font-weight: 400; line-height: 1.25; color: #f0f0e8; margin: 40px 0 16px; }
         .blog-prose h4 { font-size: 9px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(240,240,232,0.4); margin: 32px 0 12px; }
         .blog-prose strong { color: #f0f0e8; font-weight: 700; }
-        .blog-prose em { color: rgba(240,240,232,0.85); font-style: italic; }
+        .blog-prose em { color: rgba(240,240,232,0.85); font-style: normal; }
         .blog-prose a { color: #00ffd5; text-decoration: none; border-bottom: 1px solid rgba(0,255,213,0.3); transition: border-color 0.15s; }
         .blog-prose a:hover { border-color: #00ffd5; }
         .blog-prose ul, .blog-prose ol { margin: 0 0 24px; padding-left: 20px; color: rgba(240,240,232,0.65); font-size: 16px; line-height: 1.8; }
         .blog-prose li { margin-bottom: 8px; }
         .blog-prose li::marker { color: #00ffd5; }
-        .blog-prose blockquote { border-left: 2px solid #00ffd5; margin: 32px 0; padding: 4px 0 4px 24px; color: rgba(240,240,232,0.55); font-style: italic; font-size: 18px; line-height: 1.7; }
+        .blog-prose blockquote { border-left: 2px solid #00ffd5; margin: 32px 0; padding: 4px 0 4px 24px; color: rgba(240,240,232,0.55); font-style: normal; font-size: 18px; line-height: 1.7; }
         .blog-prose code { font-family: 'Fira Code', monospace; font-size: 13px; background: #111; color: #00ffd5; padding: 2px 7px; border: 1px solid #2a2a2a; }
         .blog-prose pre { background: #0f0f0f; border: 1px solid #2a2a2a; padding: 20px 24px; overflow-x: auto; margin: 0 0 28px; }
         .blog-prose pre code { background: none; border: none; padding: 0; font-size: 13px; color: rgba(240,240,232,0.8); }
-        .blog-prose table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0 0 32px; border: 1px solid #2a2a2a; }
+        .blog-prose .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 32px; }
+        .blog-prose table { width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #2a2a2a; }
         .blog-prose th { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(240,240,232,0.4); font-weight: 800; text-align: left; padding: 10px 14px; border-bottom: 1px solid #2a2a2a; background: #111; }
         .blog-prose td { padding: 12px 14px; color: rgba(240,240,232,0.65); border-bottom: 1px solid #1a1a1a; font-size: 14px; line-height: 1.5; }
         .blog-prose tr:last-child td { border-bottom: none; }

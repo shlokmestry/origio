@@ -18,7 +18,7 @@ interface TopMatch {
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 const PRO_FEATURES = [
-  { n: '01', title: 'All 25 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
+  { n: '01', title: 'All 37 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
   { n: '02', title: 'Full personalised report',   desc: 'Salary, take-home after tax, costs, visa path — specific to you.' },
   { n: '03', title: 'Salary calculator',          desc: 'Real take-home after tax in any country, for your salary.' },
   { n: '04', title: 'Visa checklist',             desc: 'Every document, in order, with official links — country-specific.' },
@@ -53,7 +53,7 @@ function Tile({ char, state }: { char: string; state: TileState }) {
     <span style={{
       position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: 46, height: 64, background: bgs[state], border: `1px solid ${borders[state]}`,
-      borderRadius: 6, fontFamily: "'Space Mono', monospace", fontSize: 28, fontWeight: 700,
+      borderRadius: 6, fontFamily: "'Satoshi', sans-serif", fontSize: 28, fontWeight: 700,
       color: colors[state], overflow: 'hidden', flexShrink: 0,
       transition: 'color 0.06s, background 0.1s', userSelect: 'none',
     }}>
@@ -149,7 +149,7 @@ function StatusBadge({ mode }: { mode: 'confirmed' | 'searching' | 'failed' | 'n
   const labels = { confirmed: 'Confirmed', searching: 'Searching', failed: 'Failed' }
   const col = colors[mode]
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: col }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: "'Satoshi', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: col }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, flexShrink: 0, animation: mode === 'confirmed' ? 'breathe 2s ease-in-out infinite' : mode === 'searching' ? 'pulse 1.1s ease-in-out infinite' : 'none' }} />
       {labels[mode]}
     </span>
@@ -165,7 +165,7 @@ function DepartureBoard({ destTiles, matchTiles, statusMode, glowing }: {
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'grid', gridTemplateColumns: '1fr 160px 200px', padding: '12px 28px' }}>
         {['Destination', 'Match', 'Status'].map(l => (
-          <span key={l} style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.16)' }}>{l}</span>
+          <span key={l} style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.16)' }}>{l}</span>
         ))}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 200px', padding: '26px 28px', alignItems: 'center', minHeight: 108, position: 'relative', zIndex: 1 }}>
@@ -269,7 +269,7 @@ export default function SuccessClient() {
   }, [sessionId, router, mounted, goSuccess, goError])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', fontFamily: "'Inter', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
+    <div style={{ minHeight: '100vh', background: '#050508', color: '#fff', fontFamily: "'Satoshi', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
       <style>{`
         @keyframes breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
         @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.3} }
@@ -293,7 +293,7 @@ export default function SuccessClient() {
 
         {pageStatus === 'verifying' && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '28vh' }}>
-            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
+            <p style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>
               Verifying payment_
             </p>
           </div>
@@ -301,14 +301,14 @@ export default function SuccessClient() {
 
         {pageStatus === 'error' && (
           <div className="fu d2" style={{ maxWidth: 420 }}>
-            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#ff4f4f', marginBottom: 22 }}>
+            <p style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#ff4f4f', marginBottom: 22 }}>
               {'// ERR_402 · payment incomplete'}
             </p>
-            <h1 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(48px,8vw,72px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '-0.02em', color: '#fff', marginBottom: 22 }}>
+            <h1 style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 'clamp(48px,8vw,72px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '-0.02em', color: '#fff', marginBottom: 22 }}>
               No charge<br /><em>was made.</em>
             </h1>
             <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, marginBottom: 32, maxWidth: 380 }}>{errorMsg}</p>
-            <Link href="/pro" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 22px', border: '1px solid rgba(255,255,255,0.12)', fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', textDecoration: 'none' }}>
+            <Link href="/pro" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 22px', border: '1px solid rgba(255,255,255,0.12)', fontFamily: "'Satoshi', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', textDecoration: 'none' }}>
               ← Back to Pro
             </Link>
           </div>
@@ -320,10 +320,10 @@ export default function SuccessClient() {
             <div>
               <div className="fu d2" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(77,230,204,0.10)', border: '1px solid rgba(77,230,204,0.22)', borderRadius: 100, padding: '6px 14px', marginBottom: 28 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#4de6cc', animation: 'breathe 2.5s ease-in-out infinite' }} />
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#4de6cc' }}>Pro active</span>
+                <span style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#4de6cc' }}>Pro active</span>
               </div>
 
-              <h1 className="fu d3" style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(56px,8vw,88px)', fontWeight: 400, lineHeight: 0.90, letterSpacing: '-0.02em', color: '#fff', marginBottom: 24 }}>
+              <h1 className="fu d3" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 'clamp(56px,8vw,88px)', fontWeight: 400, lineHeight: 0.90, letterSpacing: '-0.02em', color: '#fff', marginBottom: 24 }}>
                 Pro<br /><em>unlocked.</em>
               </h1>
 
@@ -334,20 +334,20 @@ export default function SuccessClient() {
               </p>
 
               <div className="fu d5" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                <Link href="/wizard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: '#4de6cc', color: '#050508', fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', textDecoration: 'none', boxShadow: '3px 3px 0 rgba(77,230,204,0.3)' }}>
-                  Run quiz — see all 25 <ArrowRight size={13} />
+                <Link href="/wizard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: '#4de6cc', color: '#050508', fontFamily: "'Satoshi', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', textDecoration: 'none', boxShadow: '3px 3px 0 rgba(77,230,204,0.3)' }}>
+                  Run quiz — see all 37 <ArrowRight size={13} />
                 </Link>
-                <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', textDecoration: 'none' }}>
+                <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: "'Satoshi', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)', textDecoration: 'none' }}>
                   Explore globe <ArrowRight size={11} />
                 </Link>
               </div>
             </div>
 
             <div className="fu d4">
-              <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 24 }}>Now included</p>
+              <p style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 24 }}>Now included</p>
               {PRO_FEATURES.map((f, i) => (
                 <div key={f.n} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', paddingTop: i === 0 ? 0 : 18, paddingBottom: i < PRO_FEATURES.length - 1 ? 18 : 0, borderBottom: i < PRO_FEATURES.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                  <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', flexShrink: 0, paddingTop: 2, letterSpacing: '0.08em' }}>{f.n}</span>
+                  <span style={{ fontFamily: "'Satoshi', sans-serif", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', flexShrink: 0, paddingTop: 2, letterSpacing: '0.08em' }}>{f.n}</span>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: '0.02em', marginBottom: 4 }}>{f.title}</p>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.32)', lineHeight: 1.6 }}>{f.desc}</p>

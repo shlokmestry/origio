@@ -1,9 +1,18 @@
 // app/api/feedback/route.ts
 import { NextResponse } from "next/server";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
+export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "feedback", maxRequests: 3, windowSeconds: 60 });
   if (limited) return limited;
 
@@ -17,29 +26,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Message too long" }, { status: 400 });
     }
 
+    const safeMessage = escapeHtml(message)
+    const safeEmail = email ? escapeHtml(email) : null
+
     // Email yourself
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "Origio Feedback <onboarding@resend.dev>",
       to: "shlok@findorigio.com",
-      subject: `New feedback${email ? ` from ${email}` : " (anonymous)"}`,
+      subject: `New feedback${safeEmail ? ` from ${safeEmail}` : " (anonymous)"}`,
       html: `
         <div style="font-family:monospace;max-width:600px;padding:24px;background:#0a0a0a;color:#f0f0e8;">
           <h2 style="color:#00ffd5;text-transform:uppercase;letter-spacing:0.1em;font-size:14px;margin:0 0 16px">New Origio Feedback</h2>
           <div style="border:1px solid #2a2a2a;padding:16px;margin-bottom:16px;">
             <p style="color:#888880;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px">Message</p>
-            <p style="font-size:14px;line-height:1.6;margin:0;color:#f0f0e8;">${message}</p>
+            <p style="font-size:14px;line-height:1.6;margin:0;color:#f0f0e8;">${safeMessage}</p>
           </div>
           <div style="border:1px solid #2a2a2a;padding:16px;">
             <p style="color:#888880;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px">Email</p>
-            <p style="font-size:14px;margin:0;color:#f0f0e8;">${email ? email : "Not provided"}</p>
+            <p style="font-size:14px;margin:0;color:#f0f0e8;">${safeEmail ?? "Not provided"}</p>
           </div>
         </div>
       `,
     });
 
     // If email provided, send them a confirmation
-    if (email && email.includes("@")) {
-      await resend.emails.send({
+    if (safeEmail && email.includes("@")) {
+      await getResend().emails.send({
         from: "Shlok at Origio <onboarding@resend.dev>",
         to: email,
         subject: "Got your feedback — thanks",

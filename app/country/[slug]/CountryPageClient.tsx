@@ -17,7 +17,8 @@ import { CountryWithData, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel, getVisaColor } from "@/lib/utils";
 import SaveCountryButton from "@/components/SaveCountryButton";
 import { supabase } from "@/lib/supabase";
-import { WizardAnswers } from "@/lib/wizard";
+import { WizardAnswers, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
+import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
@@ -57,6 +58,12 @@ const TO_USD: Record<string, number> = {
   INR: 0.012, BRL: 0.20, MYR: 0.22,
 };
 
+const TESTIMONIALS = [
+  { quote: "Origio's visa checklist saved me 3 weeks of research. Moved to Portugal in 2024.", name: "L.H.", role: "Software Engineer" },
+  { quote: "Finally a tool that shows real take-home, not just headline salary. Changed my whole decision.", name: "M.K.", role: "Product Manager" },
+  { quote: "Compared 6 countries in an afternoon. Ended up in Singapore — best decision I made.", name: "A.R.", role: "Marketing Director" },
+]
+
 export default function CountryPageClient({ country, otherCountries }: Props) {
   const { data } = country;
   const scoreBreakdown = getScoreBreakdown(data);
@@ -64,6 +71,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const currencySymbol = getCurrencySymbol(country.currency);
   const visaColor = getVisaColor(data.visaDifficulty);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // ── Personalisation state ──────────────────────────────────────────────────
@@ -81,6 +89,8 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
       // 2. Supabase override for logged-in users (more persistent)
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', session.user.id).maybeSingle()
+        setIsPro(profile?.is_pro ?? false)
         const { data: result } = await supabase
           .from("wizard_results")
           .select("answers, top_countries")
@@ -123,6 +133,20 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const userRole = wizardAnswers?.jobRole
     ? JOB_ROLES.find((r) => r.key === wizardAnswers.jobRole)
     : null;
+
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
+  const passportContext = (() => {
+    if (!wizardAnswers?.passport) return null;
+    const { primary, secondary } = resolveEffectivePassports(
+      wizardAnswers.passport.toLowerCase(),
+      (wizardAnswers.secondPassport ?? "").toLowerCase() || undefined,
+    );
+    const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
+    const rawTier = getPassportStrength(wizardAnswers.passport.toLowerCase());
+    const isEU = EU_PASSPORT_SLUGS.has(primary) || (secondary ? EU_PASSPORT_SLUGS.has(secondary) : false);
+    const upgraded = !!secondary && tier < rawTier;
+    return { tier, rawTier, upgraded, isEU, hasDual: !!wizardAnswers.secondPassport, secondary };
+  })();
   const userSalary = userRole
     ? (data[userRole.salaryKey] as number)
     : null;
@@ -201,14 +225,20 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           </Link>
           <div className="flex items-center gap-3">
             <SaveCountryButton countrySlug={country.slug} />
-            <button
-              onClick={handleGetReport}
-              disabled={generatingPDF}
-              className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2"
-            >
-              {generatingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-              {generatingPDF ? "Generating..." : "Download PDF"}
-            </button>
+            {isPro ? (
+              <button
+                onClick={handleGetReport}
+                disabled={generatingPDF}
+                className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2"
+              >
+                {generatingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                {generatingPDF ? "Generating..." : "Download PDF"}
+              </button>
+            ) : (
+              <Link href="/pro" className="ghost-button px-4 py-2 text-xs font-bold uppercase tracking-wide flex items-center gap-2">
+                Get Full Report →
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -230,8 +260,9 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
               {/* Role salary highlight */}
               {userRole && userSalary && (
                 <div className="flex items-center justify-between border border-[#2a2a2a] px-4 py-3">
-                  <span className="text-sm font-bold text-text-muted">
-                    {userRole.emoji} {userRole.label} salary here
+                  <span className="flex items-center gap-2 text-sm font-bold text-text-muted">
+                    <JobRoleIcon roleKey={userRole.key} size={15} color="#888" />
+                    {userRole.label} salary here
                   </span>
                   <span className="font-heading text-xl font-extrabold text-text-primary">
                     {currencySymbol}{userSalary.toLocaleString()}/yr
@@ -333,6 +364,19 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          {/* ── Social proof ─────────────────────────────────────────────── */}
+          <section className="border-t-2 border-[#1a1a1a] pt-10">
+            <p className="text-[10px] font-bold text-[#888880] uppercase tracking-widest mb-6">From people who moved</p>
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+              {TESTIMONIALS.map((t, i) => (
+                <div key={i} className="border border-[#1a1a1a] p-5" style={{ borderLeft: '2px solid #2a2a2a' }}>
+                  <p className="text-sm text-[#888880] leading-relaxed mb-4">"{t.quote}"</p>
+                  <p className="text-xs font-bold text-[#f0f0e8] uppercase tracking-wide">{t.name} · <span className="text-[#555]">{t.role}</span></p>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -438,6 +482,22 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
                   Difficulty {data.visaDifficulty}/5
                 </span>
               </div>
+              {passportContext && (
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-accent/40 text-accent">
+                    Tier {passportContext.tier} passport
+                  </span>
+                  {passportContext.isEU && <span className="text-[10px] font-bold uppercase tracking-widest text-accent/70">EU free movement</span>}
+                  {passportContext.upgraded && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-400/70">
+                      ↑ Upgraded from Tier {passportContext.rawTier} via second passport
+                    </span>
+                  )}
+                  {passportContext.hasDual && !passportContext.upgraded && passportContext.tier <= 2 && (
+                    <span className="text-[10px] font-medium text-white/30">Dual passport · stronger visa access</span>
+                  )}
+                </div>
+              )}
               <p className="text-sm text-text-muted leading-relaxed">{data.visaNotes}</p>
               {data.visaPopularRoutes?.length > 0 && (
                 <div className="flex flex-wrap gap-2">

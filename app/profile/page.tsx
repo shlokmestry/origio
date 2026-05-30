@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
+import { getPassportStrength, resolveEffectivePassports } from '@/lib/wizard'
 import Nav from '@/components/Nav'
 import {
   LogOut, Trash2, Sparkles, Pencil,
@@ -23,6 +24,7 @@ type WizardResult = {
 }
 type Profile = {
   passport_slug: string | null
+  second_passport_slug: string | null
   job_title: string | null
   onboarded: boolean
   is_pro: boolean
@@ -91,12 +93,15 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
-  const [wizardResult, setWizardResult] = useState<WizardResult | null>(null)
+  const [wizardResults, setWizardResults] = useState<WizardResult[] | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editJobTitle, setEditJobTitle] = useState('')
   const [editPassport, setEditPassport] = useState<string | null>(null)
+  const [editSecondPassport, setEditSecondPassport] = useState<string | null>(null)
+  const [secondPassportSearch, setSecondPassportSearch] = useState('')
+  const [showSecondPassportEdit, setShowSecondPassportEdit] = useState(false)
   const [passportSearch, setPassportSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -127,30 +132,41 @@ export default function ProfilePage() {
           supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', userId)
-            .maybeSingle(),
+            .order('created_at', { ascending: false })
+            .limit(3),
           supabase.from('profiles')
-            .select('passport_slug, job_title, onboarded, is_pro')
+            .select('passport_slug, second_passport_slug, job_title, onboarded, is_pro')
             .eq('id', userId)
             .maybeSingle(),
         ])
         if (savesRes.error) console.error('saved_countries error:', savesRes.error)
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
-        setWizardResult(wizardRes.data ?? null)
+        setWizardResults((wizardRes.data as WizardResult[]) ?? null)
         const p = profileRes.data ?? null
         setProfile(p)
-        if (p) { setEditJobTitle(p.job_title ?? ''); setEditPassport(p.passport_slug) }
-        if (p && !p.onboarded) { window.location.href = '/onboarding'; return }
+        if (p) {
+          setEditJobTitle(p.job_title ?? '')
+          setEditPassport(p.passport_slug)
+          setEditSecondPassport(p.second_passport_slug)
+          setShowSecondPassportEdit(!!p.second_passport_slug)
+        }
+        if (p && !p.onboarded) { router.push('/onboarding'); return }
       } catch { setLoadError(true) }
       setLoading(false)
     }
     loadData()
-  }, [user, authLoading, router])
+  // router from useRouter is stable — safe to omit from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading])
 
   const openEdit = () => {
     setEditName(displayName)
     setEditJobTitle(profile?.job_title ?? '')
     setEditPassport(profile?.passport_slug ?? null)
+    setEditSecondPassport(profile?.second_passport_slug ?? null)
+    setShowSecondPassportEdit(!!profile?.second_passport_slug)
     setPassportSearch('')
+    setSecondPassportSearch('')
     setSaveError('')
     setEditing(true)
   }
@@ -165,7 +181,7 @@ export default function ProfilePage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
       const { error: profileError } = await supabase.from('profiles')
-        .update({ job_title: editJobTitle.trim() || null, passport_slug: editPassport })
+        .update({ job_title: editJobTitle.trim() || null, passport_slug: editPassport, second_passport_slug: editSecondPassport })
         .eq('id', user.id)
       if (profileError) throw profileError
       if (editName.trim()) {
@@ -177,7 +193,7 @@ export default function ProfilePage() {
         } catch (e) { console.error('Name update failed:', e) }
       }
       setDisplayName(editName.trim() || displayName)
-      setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport } : prev)
+      setProfile(prev => prev ? { ...prev, job_title: editJobTitle.trim() || null, passport_slug: editPassport, second_passport_slug: editSecondPassport } : prev)
       setEditing(false)
     } catch (err: any) {
       setSaveError(err?.message || 'Failed to save. Please try again.')
@@ -186,11 +202,13 @@ export default function ProfilePage() {
 
   const removeSave = async (id: string) => {
     if (!user) return
-    await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
+    const snapshot = savedCountries
     setSavedCountries(prev => prev.filter(s => s.id !== id))
+    const { error } = await supabase.from('saved_countries').delete().eq('id', id).eq('user_id', user.id)
+    if (error) setSavedCountries(snapshot)
   }
 
-  const signOut = async () => { await supabase.auth.signOut(); window.location.href = '/' }
+  const signOut = async () => { await supabase.auth.signOut(); router.push('/') }
 
   const deleteAccount = async () => {
     if (!user) return
@@ -208,7 +226,7 @@ export default function ProfilePage() {
         setDeleteLoading(false); return
       }
       await supabase.auth.signOut()
-      window.location.href = '/'
+      router.push('/')
     } catch {
       setDeleteError('Network error. Please try again.')
       setDeleteLoading(false)
@@ -228,8 +246,38 @@ export default function ProfilePage() {
   const isGoogleUser = user?.app_metadata?.provider === 'google' ||
     (user?.identities ?? []).every((id: any) => id.provider === 'google')
 
+  const NO_DUAL_CITIZENSHIP: Record<string, string> = {
+    'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+    'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+    'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+    'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+    'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+    'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+    'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+    'south-korea': 'South Korea generally does not permit dual citizenship for adults.',
+  }
+
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"])
+  const EU_COUNTRY_SLUGS  = new Set(["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"])
+  const savedPassportCtx = (() => {
+    if (!profile?.passport_slug) return null
+    const { primary, secondary } = resolveEffectivePassports(profile.passport_slug, profile.second_passport_slug ?? undefined)
+    const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4
+    const isEU = EU_PASSPORT_SLUGS.has(primary) || (secondary ? EU_PASSPORT_SLUGS.has(secondary) : false)
+    return { tier, isEU, hasDual: !!profile.second_passport_slug }
+  })()
   const passportData = profile?.passport_slug ? PASSPORT_FLAGS[profile.passport_slug] : null
+  const secondPassportData = profile?.second_passport_slug ? PASSPORT_FLAGS[profile.second_passport_slug] : null
+  const filteredSecondPassports = PASSPORT_LIST.filter(p =>
+    p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== editPassport
+  )
+  const editDualConflict = editPassport && editSecondPassport
+    ? (NO_DUAL_CITIZENSHIP[editPassport] ? { slug: editPassport, message: NO_DUAL_CITIZENSHIP[editPassport] }
+      : NO_DUAL_CITIZENSHIP[editSecondPassport] ? { slug: editSecondPassport, message: NO_DUAL_CITIZENSHIP[editSecondPassport] }
+      : null)
+    : null
   const isPro = profile?.is_pro ?? false
+  const wizardResult = wizardResults?.[0] ?? null
   const topMatch = wizardResult?.top_countries?.[0]
   const memberSince = user?.created_at ? formatDate(user.created_at) : null
   const filteredPassports = PASSPORT_LIST.filter(p =>
@@ -255,7 +303,7 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Satoshi, sans-serif' }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <div className="max-w-[1000px] mx-auto px-10 pt-28 pb-20" style={{ paddingLeft: 'clamp(20px, 4vw, 40px)', paddingRight: 'clamp(20px, 4vw, 40px)' }}>
@@ -277,7 +325,7 @@ export default function ProfilePage() {
                 className="w-[72px] h-[72px] rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.14)' }}
               >
-                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, color: '#fff' }}>
+                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 28, color: '#fff' }}>
                   {(displayName?.[0] ?? user.email?.[0] ?? '?').toUpperCase()}
                 </span>
               </div>
@@ -286,7 +334,7 @@ export default function ProfilePage() {
             <div>
               {/* Name + Pro badge */}
               <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
+                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
                   {displayName}
                 </span>
                 {isPro && (
@@ -306,7 +354,12 @@ export default function ProfilePage() {
                 {passportData && (
                   <>
                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'inline-block' }} />
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{passportData.flag} {passportData.name}</span>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                      {passportData.flag} {passportData.name}
+                      {secondPassportData && (
+                        <span style={{ marginLeft: 6 }}>· {secondPassportData.flag} {secondPassportData.name}</span>
+                      )}
+                    </span>
                   </>
                 )}
                 {memberSince && (
@@ -348,13 +401,13 @@ export default function ProfilePage() {
                 <Zap className="w-4 h-4 text-white/60" />
               </div>
               <div>
-                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 25 countries · €19.99 one-time</p>
+                <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 37 countries · €4.99 one-time</p>
               </div>
             </div>
             <a href="/pro"
               className="inline-flex items-center gap-2 transition-all"
-              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 100, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 0, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
               <Sparkles className="w-3.5 h-3.5" /> Get Pro
             </a>
           </div>
@@ -363,13 +416,88 @@ export default function ProfilePage() {
         {/* ── CARDS GRID ── */}
         <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
 
+          {/* Passport Card */}
+          {profile?.passport_slug && (
+            <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+              <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Your Passports
+                </span>
+                <button onClick={openEdit} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>
+              </div>
+              <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Primary */}
+                <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.passport_slug]?.flag}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.passport_slug]?.name}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Primary passport</p>
+                  </div>
+                  {savedPassportCtx && (
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', background: savedPassportCtx.tier === 1 ? 'rgba(0,255,213,0.12)' : 'rgba(255,255,255,0.07)', color: savedPassportCtx.tier === 1 ? '#00ffd5' : 'rgba(255,255,255,0.45)', border: `1px solid ${savedPassportCtx.tier === 1 ? 'rgba(0,255,213,0.25)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 6 }}>
+                      T{getPassportStrength(profile.passport_slug)}
+                    </span>
+                  )}
+                </div>
+                {/* Second passport or add prompt */}
+                {profile.second_passport_slug ? (
+                  <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                    <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.flag}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.name}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Second passport</p>
+                    </div>
+                    {savedPassportCtx?.hasDual && savedPassportCtx.tier < getPassportStrength(profile.passport_slug) && (
+                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', background: 'rgba(255,200,80,0.1)', color: 'rgba(255,200,80,0.8)', border: '1px solid rgba(255,200,80,0.2)', borderRadius: 6 }}>↑ upgrades</span>
+                    )}
+                  </div>
+                ) : (
+                  <button onClick={openEdit} style={{ width: '100%', padding: '12px 14px', background: 'transparent', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.04em' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)' }}>
+                    + Add second passport
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {wizardResult && (() => {
+            const daysAgo = Math.floor((Date.now() - new Date(wizardResult.created_at).getTime()) / 86400000)
+            return daysAgo > 30 ? (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+                padding: '12px 16px', marginBottom: 16,
+                borderLeft: '2px solid #facc15', background: 'rgba(250,204,21,0.04)',
+              }}>
+                <p style={{ fontFamily: "var(--font-body,'Satoshi',sans-serif)", fontSize: 13, color: '#facc15', margin: 0 }}>
+                  Your results are {daysAgo} days old — priorities change.
+                </p>
+                <button onClick={() => router.push('/wizard')} style={{
+                  fontFamily: "'Cabinet Grotesk','Satoshi',sans-serif", fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.16em', textTransform: 'uppercase', color: '#facc15',
+                  background: 'none', border: '1px solid #facc15', padding: '6px 14px', cursor: 'pointer',
+                }}>
+                  Retake →
+                </button>
+              </div>
+            ) : null
+          })()}
+
           {/* Country Matches */}
           <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
             {/* Card head */}
             <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
-                Your Country Matches
-              </span>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Your Country Matches
+                </span>
+                {wizardResult?.created_at && (
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
+                    Updated {Math.floor((Date.now() - new Date(wizardResult.created_at).getTime()) / 86400000)}d ago
+                  </span>
+                )}
+              </div>
               <a href="/wizard" className="flex items-center gap-1.5 transition-colors"
                 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
@@ -395,7 +523,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                       <span style={{ fontSize: 40, lineHeight: 1 }}>{topMatch.flagEmoji}</span>
                       <div>
-                        <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
+                        <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
                           {topMatch.name}
                         </div>
                         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
@@ -404,7 +532,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 42, color: '#fff', lineHeight: 1 }}>
+                      <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 42, color: '#fff', lineHeight: 1 }}>
                         {capPercent(topMatch.matchPercent ?? 0)}%
                       </div>
                       <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -433,8 +561,33 @@ export default function ProfilePage() {
                   )
                 })}
 
-                <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
-                  {wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}
+                {/* Actions row */}
+                <div className="flex items-center justify-between flex-wrap gap-3" style={{ padding: '14px 22px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <button
+                    onClick={() => {
+                      if (wizardResult?.answers) sessionStorage.setItem('wizardAnswers', JSON.stringify(wizardResult.answers))
+                      router.push('/wizard')
+                    }}
+                    style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, letterSpacing: '0.04em' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'}>
+                    What if I changed my priorities? →
+                  </button>
+                  {wizardResult.top_countries.length >= 2 && (
+                    <a href={`/compare?a=${wizardResult.top_countries[0].slug}&b=${wizardResult.top_countries[1].slug}`}
+                      style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00ffd5'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'}>
+                      Compare top 2 →
+                    </a>
+                  )}
+                </div>
+
+                <div style={{ padding: '10px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>{wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}</span>
+                  {(wizardResults?.length ?? 0) > 1 && (
+                    <span style={{ color: 'rgba(255,255,255,0.15)' }}>You&apos;ve run this {wizardResults!.length} times</span>
+                  )}
                 </div>
               </>
             )}
@@ -475,6 +628,9 @@ export default function ProfilePage() {
               <>
                 {savedCountries.slice(0, 6).map(s => {
                   const countryData = PASSPORT_FLAGS[s.country_slug]
+                  const isEUCountry = EU_COUNTRY_SLUGS.has(s.country_slug)
+                  const showEUBadge = savedPassportCtx?.isEU && isEUCountry
+                  const showDualBadge = savedPassportCtx?.hasDual && !showEUBadge && savedPassportCtx.tier <= 2
                   return (
                     <div key={s.id} className="group flex items-center gap-3 transition-colors"
                       style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
@@ -487,6 +643,16 @@ export default function ProfilePage() {
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}>
                         {countryData?.name ?? formatSlug(s.country_slug)}
                       </a>
+                      {showEUBadge && (
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00ffd5', border: '1px solid rgba(0,255,213,0.25)', padding: '2px 6px', flexShrink: 0 }}>
+                          EU ✓
+                        </span>
+                      )}
+                      {showDualBadge && (
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(0,255,213,0.6)', flexShrink: 0 }}>
+                          T{savedPassportCtx!.tier}
+                        </span>
+                      )}
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginRight: 8 }}>{formatDateShort(s.created_at)}</span>
                       {/* Hover actions */}
                       <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -604,7 +770,7 @@ export default function ProfilePage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, color: '#fff', marginBottom: 24 }}>Edit Profile</h3>
+            <h3 style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 24 }}>Edit Profile</h3>
 
             <div className="space-y-5">
               {/* Name */}
@@ -670,7 +836,68 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
+
+              {/* Second Passport */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                    Second Passport
+                  </label>
+                  {!showSecondPassportEdit && (
+                    <button onClick={() => setShowSecondPassportEdit(true)}
+                      style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      + Add
+                    </button>
+                  )}
+                  {showSecondPassportEdit && (
+                    <button onClick={() => { setShowSecondPassportEdit(false); setEditSecondPassport(null); setSecondPassportSearch('') }}
+                      style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {showSecondPassportEdit && (
+                  <>
+                    {editSecondPassport && (
+                      <div className="flex items-center justify-between mb-2"
+                        style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>
+                          {PASSPORT_FLAGS[editSecondPassport]?.flag} {PASSPORT_FLAGS[editSecondPassport]?.name}
+                        </span>
+                        <button onClick={() => setEditSecondPassport(null)}
+                          style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative mb-2">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                      <input placeholder="Search second passport..." value={secondPassportSearch}
+                        onChange={e => setSecondPassportSearch(e.target.value)}
+                        style={{ width: '100%', paddingLeft: 36, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                      {filteredSecondPassports.slice(0, 20).map(p => (
+                        <button key={p.slug} onClick={() => { setEditSecondPassport(p.slug); setSecondPassportSearch('') }}
+                          className="w-full flex items-center gap-2.5 text-left"
+                          style={{ padding: '10px 14px', fontSize: 13, background: editSecondPassport === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', color: editSecondPassport === p.slug ? '#fff' : 'rgba(255,255,255,0.6)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', width: '100%' }}>
+                          <span>{p.flag}</span>
+                          <span style={{ flex: 1, fontWeight: 500 }}>{p.name}</span>
+                          {editSecondPassport === p.slug && <Check className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
+
+            {editDualConflict && (
+              <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(255,200,50,0.05)', border: '1px solid rgba(255,200,50,0.2)', borderRadius: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.8)', marginBottom: 3 }}>⚠ No dual citizenship</p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>{editDualConflict.message}</p>
+              </div>
+            )}
 
             {saveError && <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginTop: 12 }}>{saveError}</p>}
 
@@ -700,7 +927,7 @@ export default function ProfilePage() {
               <X className="w-4 h-4" />
             </button>
 
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, color: '#fff', marginBottom: 16 }}>Delete account?</h3>
+            <h3 style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 22, color: '#fff', marginBottom: 16 }}>Delete account?</h3>
 
             {/* Warning box */}
             <div className="flex items-center gap-3.5 mb-5"
