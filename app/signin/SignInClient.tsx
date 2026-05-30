@@ -186,13 +186,13 @@ export default function SignInClient() {
         <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', padding: '36px 40px' }}>
           {/* Logo */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 28, height: 28, background: '#4de6cc', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="4" fill="#050508"/>
-                <circle cx="7" cy="7" r="1.5" fill="#4de6cc"/>
+            <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
+                <circle cx="6" cy="6" r="3" fill="#fff"/>
               </svg>
             </div>
-            <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#fff', letterSpacing: '-0.02em' }}>Origio</span>
+            <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 15, color: '#fff', letterSpacing: '-0.02em' }}>Origio</span>
           </Link>
 
           {/* Bottom copy */}

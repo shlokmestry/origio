@@ -884,7 +884,15 @@ export default function CityPageClient({ city }: Props) {
 
       {/* NAV */}
       <nav>
-        <Link href="/" className="nav-logo">ORIGIO</Link>
+        <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
+              <circle cx="6" cy="6" r="3" fill="#fff"/>
+            </svg>
+          </div>
+          <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>Origio</span>
+        </Link>
         <div className="nav-center">
           <a href="/cities" style={{ textDecoration: "none", color: "var(--dimmer)" }}>CITIES</a>
           <span className="nav-crumb">·</span>

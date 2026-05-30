@@ -158,8 +158,13 @@ export default function OnboardingPage() {
 
       {/* ── Logo ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '40px 0 32px' }}>
-        <div style={{ width: 14, height: 14, background: '#fff', borderRadius: 3 }} />
-        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#fff' }}>Origio</span>
+        <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
+            <circle cx="6" cy="6" r="3" fill="#fff"/>
+          </svg>
+        </div>
+        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>Origio</span>
       </div>
 
       {/* ── Progress dots ── */}
