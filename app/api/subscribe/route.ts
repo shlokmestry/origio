@@ -7,6 +7,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
   if (limited) return limited;
 
+  // Secondary daily cap — each call triggers a Claude Haiku generation.
+  // 2 per IP per day prevents runaway cost from automation.
+  const dailyCap = await rateLimit(req, { name: "subscribe-daily", maxRequests: 2, windowSeconds: 86400 });
+  if (dailyCap) return dailyCap;
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

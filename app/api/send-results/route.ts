@@ -1,16 +1,36 @@
 import { NextResponse } from 'next/server'
 import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
   const limited = await rateLimit(request, { name: 'send-results', maxRequests: 3, windowSeconds: 60 })
   if (limited) return limited
+
+  // Require auth — prevents sending emails to arbitrary addresses
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ ok: false }, { status: 401 })
+  }
+  const token = authHeader.replace('Bearer ', '')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !user) {
+    return NextResponse.json({ ok: false }, { status: 401 })
+  }
 
   try {
     const { email, top3 } = await request.json()
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ ok: false }, { status: 400 })
+    }
+    // Only allow sending to the authenticated user's own email
+    if (email !== user.email) {
+      return NextResponse.json({ ok: false }, { status: 403 })
     }
     if (!Array.isArray(top3) || top3.length === 0 || top3.length > 3) {
       return NextResponse.json({ ok: false }, { status: 400 })

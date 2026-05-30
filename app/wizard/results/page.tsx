@@ -560,14 +560,20 @@ export default function WizardResultsPage() {
           }));
           await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
           // Fire email — no await, don't block UI
-          fetch('/api/send-results', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: user.email,
-              top3: topCountries.slice(0, 3),
-            }),
-          }).catch(() => {})
+          supabase.auth.getSession().then(({ data: { session: s } }) => {
+            if (!s?.access_token) return
+            fetch('/api/send-results', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${s.access_token}`,
+              },
+              body: JSON.stringify({
+                email: user.email,
+                top3: topCountries.slice(0, 3),
+              }),
+            }).catch(() => {})
+          })
         } catch (err) { console.error("Failed to save:", err); }
       };
       save();
