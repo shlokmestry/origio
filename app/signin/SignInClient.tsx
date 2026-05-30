@@ -64,12 +64,6 @@ export default function SignInClient() {
         setError('An account with this email already exists.'); setTab('signin')
       } else {
         setSuccess('Account created! Check your email to confirm.')
-        if (data.session) {
-          fetch('/api/welcome-user', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${data.session.access_token}` },
-          }).catch(() => {})
-        }
       }
     }
     setLoading(false)
