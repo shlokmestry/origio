@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createElement } from 'react'
+import { getResend } from '@/lib/resend'
+import WelcomeUser from '@/emails/WelcomeUser'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { session, user } } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (user) {
       const { data: profile } = await supabase
@@ -39,11 +42,18 @@ export async function GET(request: NextRequest) {
         .single()
 
       const isNewUser = !profile?.onboarded
-      if (isNewUser && session) {
-        fetch(`${origin}/api/welcome-user`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }).catch(() => {})
+      if (isNewUser && user.email) {
+        try {
+          const name = user.user_metadata?.full_name?.split(' ')[0] || ''
+          await getResend().emails.send({
+            from: 'Origio <hello@findorigio.com>',
+            to: user.email,
+            subject: 'Welcome to Origio',
+            react: createElement(WelcomeUser, { name }),
+          })
+        } catch (err) {
+          console.error('[welcome-user]', err)
+        }
       }
 
       if (isNewUser) {
