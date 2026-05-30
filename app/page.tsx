@@ -134,7 +134,7 @@ function CitiesSection() {
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/cities-hero.jpg"
+          src="/manstandingalone.jpg"
           alt="Person standing in a city at night"
           style={{
             width:      "100%",
@@ -464,7 +464,7 @@ export default function Home() {
         {/* Background photo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/hero-city.jpg"
+          src="/manincity.jpg"
           alt=""
           aria-hidden
           style={{
