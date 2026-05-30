@@ -117,7 +117,7 @@ export default function ProPage() {
   return (
     <>
       <Nav />
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', paddingTop: 100, paddingBottom: 80, fontFamily: "'Satoshi', sans-serif" }}>
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', paddingTop: 'clamp(72px,10vh,100px)', paddingBottom: 'clamp(48px,8vh,80px)', fontFamily: "'Satoshi', sans-serif", padding: 'clamp(72px,10vh,100px) clamp(16px,4vw,24px) clamp(48px,8vh,80px)' }}>
         <style>{`
           @keyframes cardPushUp {
             0%   { transform: translateY(60px); opacity: 0; }
@@ -135,6 +135,7 @@ export default function ProPage() {
             margin: 0 auto;
             overflow: hidden;
             position: relative;
+            box-sizing: border-box;
             animation: cardPushUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
           }
           .pro-cta-btn {

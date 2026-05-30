@@ -366,7 +366,7 @@ export default function Home() {
           <h1 style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
             fontWeight:    800,
-            fontSize:      "clamp(22px, 5.2vw, 80px)",
+            fontSize:      "clamp(14px, 5.2vw, 80px)",
             lineHeight:    1.0,
             letterSpacing: "-0.03em",
             color:         "#ffffff",

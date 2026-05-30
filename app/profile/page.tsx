@@ -334,7 +334,7 @@ export default function ProfilePage() {
             <div>
               {/* Name + Pro badge */}
               <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 36, fontWeight: 400, lineHeight: 1, color: '#fff' }}>
+                <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 400, lineHeight: 1, color: '#fff' }}>
                   {displayName}
                 </span>
                 {isPro && (
