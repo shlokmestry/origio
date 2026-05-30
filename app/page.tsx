@@ -394,26 +394,32 @@ export default function Home() {
               display:       "inline-flex",
               alignItems:    "center",
               justifyContent: "center",
-              gap:           8,
-              background:    "#f0f0e8",
-              color:         "#0a0a0a",
+              gap:           10,
+              background:    "transparent",
+              color:         "#00ffd5",
               fontFamily:    "Satoshi, sans-serif",
               fontSize:      "clamp(13px, 1.4vw, 15px)",
               fontWeight:    700,
               padding:       "clamp(13px, 1.6vh, 17px) clamp(36px, 5vw, 60px)",
-              border:        "none",
+              border:        "2px solid #00ffd5",
               cursor:        "pointer",
               letterSpacing: "0.05em",
               textTransform: "uppercase" as const,
-              boxShadow:     "3px 3px 0 rgba(240,240,232,0.2)",
-              transition:    "box-shadow 0.12s ease",
+              boxShadow:     "4px 4px 0 #00ffd5",
+              transition:    "box-shadow 0.12s ease, background 0.12s ease",
             }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "1px 1px 0 rgba(240,240,232,0.2)"}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 rgba(240,240,232,0.2)"}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,255,213,0.07)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "2px 2px 0 #00ffd5";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "4px 4px 0 #00ffd5";
+            }}
           >
             Find My Country
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
-              <path d="M2 6.5h9M7 2.5l4 4-4 4" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 6.5h9M7 2.5l4 4-4 4" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
