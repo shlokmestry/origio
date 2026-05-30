@@ -54,7 +54,10 @@ export default function SignInClient() {
         router.push(next)
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding` },
+      })
       if (error) {
         const msg = error.message.toLowerCase()
         if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already') || msg.includes('email already')) {

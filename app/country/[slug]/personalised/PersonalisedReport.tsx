@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Calculator } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
 import { WizardAnswers, CountryMatch, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { JOB_ROLES, CountryWithData } from "@/types";
 import { getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
@@ -204,11 +205,12 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const cs = sym(country.currency);
   const scoreBreakdown = getScoreBreakdown(data);
 
+  const { user, loading: authLoading } = useAuth();
   const [answers, setAnswers] = useState<Partial<WizardAnswers> | null>(null);
   const [match, setMatch] = useState<{ percent: number; reasons: string[] } | null>(null);
   const [otherMatches, setOtherMatches] = useState<CountryMatch[]>([]);
   const [isPro, setIsPro] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [headline, setHeadline] = useState<string | null>(null);
   const [headlineLoading, setHeadlineLoading] = useState(false);
   const [customSalary, setCustomSalary] = useState<string>("");
@@ -216,7 +218,9 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   // Interactive checklist state
   const [checked, setChecked] = useState<Record<number, boolean>>({});
 
+  // Wait for auth to resolve before loading data
   useEffect(() => {
+    if (authLoading) return;
     async function load() {
       let ans: Partial<WizardAnswers> | null = null;
       const rawA = sessionStorage.getItem("wizardAnswers");
@@ -230,16 +234,15 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 22));
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
+      if (user) {
         const { data: profile } = await supabase
-          .from("profiles").select("is_pro").eq("id", session.user.id).single();
+          .from("profiles").select("is_pro").eq("id", user.id).single();
         if (profile?.is_pro) setIsPro(true);
 
         const { data: result } = await supabase
           .from("wizard_results")
           .select("answers, top_countries")
-          .eq("user_id", session.user.id)
+          .eq("user_id", user.id)
           .maybeSingle();
 
         if (result?.answers) ans = result.answers;
@@ -259,10 +262,12 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
       }
 
       setAnswers(ans);
-      setLoading(false);
+      setDataLoading(false);
     }
     load();
-  }, [country.slug, allCountries]);
+  }, [authLoading, user, country.slug, allCountries]);
+
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     if (!loading && !answers) {

@@ -11,6 +11,7 @@ import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER
 import { CountryWithData, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/AuthProvider";
 import type { User } from "@supabase/supabase-js";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
@@ -359,6 +360,7 @@ function SaveResultsBanner() {
         background: "#0d0d0d",
         borderBottom: `1px solid #2a2a2a`,
         padding: "13px 32px",
+        marginTop: 92,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -446,32 +448,18 @@ export default function WizardResultsPage() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [revealed, setRevealed]       = useState(false);
-  const [user, setUser]               = useState<User | null>(null);
+  const { user, loading: authLoading }  = useAuth();
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
 
-  // Auth — also listens for post-OAuth redirect sign-in
+  // Fetch pro status whenever user changes
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const { data } = await supabase.from("profiles").select("is_pro").eq("id", session.user.id).single();
-        setIsPro(data?.is_pro ?? false);
-      }
+    if (!user) { setIsPro(false); return; }
+    supabase.from("profiles").select("is_pro").eq("id", user.id).single().then(({ data }) => {
+      setIsPro(data?.is_pro ?? false);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        setUser(session.user);
-        const { data } = await supabase.from("profiles").select("is_pro").eq("id", session.user.id).single();
-        setIsPro(data?.is_pro ?? false);
-        // auto-save fires via the save useEffect below once user state updates
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     async function load() {
@@ -493,12 +481,11 @@ export default function WizardResultsPage() {
         }
       } else {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
+          if (user) {
             const { data: result } = await supabase
               .from("wizard_results")
               .select("answers, top_countries")
-              .eq("user_id", session.user.id)
+              .eq("user_id", user.id)
               .order("created_at", { ascending: false })
               .limit(1)
               .maybeSingle();
@@ -532,9 +519,9 @@ export default function WizardResultsPage() {
       return () => clearInterval(interval);
     }
 
-    load();
+    if (!authLoading) load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, user]);
 
   // Auto-save whenever user becomes available (including post-OAuth redirect)
   // Guard: only save once per page load by tracking whether we've already saved
