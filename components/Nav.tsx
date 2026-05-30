@@ -278,7 +278,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           align-items: center;
           gap: 12px;
           padding: 18px 24px;
-          font-size: 22px;
+          font-size: clamp(18px, 5vw, 22px);
           font-weight: 700;
           color: rgba(255,255,255,0.6);
           text-decoration: none;

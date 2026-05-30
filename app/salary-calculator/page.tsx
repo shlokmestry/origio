@@ -814,7 +814,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
         </div>
       </div>
       <div style={{ overflowX: "auto", marginLeft: -4, marginRight: -4, padding: "0 4px" }}>
-        <div style={{ minWidth: 360 }}>
+        <div style={{ minWidth: 280 }}>
           {rows.map((r, i) => {
             const selected = r.code === selectedCountry;
             const widthPct = chartMode === "gross" ? r.grossWidthPct : r.netWidthPct;
@@ -825,7 +825,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
               : `${r.d.symbol}${localVal.toLocaleString("en")}`;
             return (
               <div key={r.code} style={{
-                display: "grid", gridTemplateColumns: "minmax(0, 140px) 1fr minmax(0, 120px)",
+                display: "grid", gridTemplateColumns: "minmax(0, clamp(80px, 22vw, 140px)) 1fr minmax(0, clamp(70px, 18vw, 120px))",
                 alignItems: "center", gap: 14, padding: "9px 0",
                 opacity: mounted ? 1 : 0,
                 transform: mounted ? "translateY(0)" : "translateY(4px)",

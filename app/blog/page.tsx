@@ -73,7 +73,7 @@ export default async function BlogPage() {
       <Nav />
 
       {/* ── Page wrapper ── */}
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "160px 24px 128px" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "clamp(96px,14vh,160px) 24px clamp(64px,10vh,128px)" }}>
 
         {/* ── 1. HEADER ── */}
         <div style={{ marginBottom: 80 }}>
@@ -110,7 +110,7 @@ export default async function BlogPage() {
             <div style={{
               display: "grid",
               gridTemplateColumns: "7fr 5fr",
-              gap: 56,
+              gap: "clamp(24px, 4vw, 56px)",
               alignItems: "center",
             }}
               className="blog-featured"
@@ -396,11 +396,14 @@ export default async function BlogPage() {
       {/* ── Hover styles injected via style tag ── */}
       <style>{`
         @media (max-width: 768px) {
-          .blog-featured { grid-template-columns: 1fr !important; }
-          .blog-grid { grid-template-columns: 1fr !important; }
+          .blog-featured { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .blog-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
         }
         @media (max-width: 1024px) {
           .blog-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 480px) {
+          .blog-featured { margin-bottom: 40px !important; }
         }
         .blog-card:hover .blog-card-title { color: #00ffd5 !important; }
         .blog-card:hover .blog-cover-img { transform: scale(1.03); }

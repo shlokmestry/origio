@@ -125,7 +125,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           style={{
             pointerEvents: "auto",
             width: "100%",
-            maxWidth: "680px",
+            maxWidth: "clamp(300px, 95vw, 680px)",
             maxHeight: "calc(100vh - 96px)",
             overflowY: "auto",
             overscrollBehavior: "contain",
