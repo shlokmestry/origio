@@ -6,6 +6,7 @@ import {
   DollarSign, Home, Heart, Shield, Plane, Receipt,
   Languages, Banknote, Sparkles, AlertTriangle,
   TrendingUp, Wifi, ExternalLink, Loader2,
+  type LucideIcon,
 } from "lucide-react";
 import generatePDF, { Margin } from "react-to-pdf";
 import { CountryWithData, GlobeCountry, JOB_ROLES } from "@/types";
@@ -57,8 +58,7 @@ const RENT_BUDGET_USD: Record<string, number> = {
   under800:800,"800to1500":1500,"1500to2500":2500,any:99999,
 };
 
-type IconComp = (props: { size: number; color?: string; style?: React.CSSProperties }) => JSX.Element;
-const SCORE_ICON: Record<string, IconComp> = {
+const SCORE_ICON: Record<string, LucideIcon> = {
   "Salary": DollarSign,
   "Affordability": Home,
   "Quality of Life": Heart,
