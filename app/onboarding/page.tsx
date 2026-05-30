@@ -2,7 +2,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Search, Check, X, ArrowRight, ArrowLeft } from 'lucide-react'
+import {
+  Search, Check, X, ArrowRight, ArrowLeft,
+  Code2, Bot, BarChart2, Cloud, GitBranch, Shield, LayoutDashboard,
+  PenTool, Palette, Stethoscope, Heart, Smile, Pill, Activity, Brain,
+  Microscope, TrendingUp, Receipt, Scale, Building, HardHat, Leaf,
+  Plane, BookOpen, Users, BarChart, Megaphone, Package, Zap, ChefHat,
+  type LucideIcon,
+} from 'lucide-react'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -70,37 +77,37 @@ const COUNTRIES = [
 ]
 
 // ── Job roles ─────────────────────────────────────────────────────────────────
-const JOB_ROLES = [
-  { key: 'softwareEngineer',        label: 'Software Engineer',       emoji: '💻' },
-  { key: 'aiMlEngineer',            label: 'AI / ML Engineer',        emoji: '🤖' },
-  { key: 'dataScientist',           label: 'Data Scientist',          emoji: '📊' },
-  { key: 'cloudArchitect',          label: 'Cloud Architect',         emoji: '☁️' },
-  { key: 'devOps',                  label: 'DevOps Engineer',         emoji: '⚙️' },
-  { key: 'cybersecurity',           label: 'Cybersecurity',           emoji: '🔐' },
-  { key: 'productManager',          label: 'Product Manager',         emoji: '🗂️' },
-  { key: 'uxDesigner',              label: 'UX Designer',             emoji: '🎨' },
-  { key: 'graphicDesigner',         label: 'Graphic Designer',        emoji: '🖌️' },
-  { key: 'doctor',                  label: 'Doctor',                  emoji: '🩺' },
-  { key: 'nurse',                   label: 'Nurse',                   emoji: '🏥' },
-  { key: 'dentist',                 label: 'Dentist',                 emoji: '🦷' },
-  { key: 'pharmacist',              label: 'Pharmacist',              emoji: '💊' },
-  { key: 'physiotherapist',         label: 'Physiotherapist',         emoji: '🏃' },
-  { key: 'psychologist',            label: 'Psychologist',            emoji: '🧠' },
-  { key: 'biomedicalEngineer',      label: 'Biomedical Engineer',     emoji: '🔬' },
-  { key: 'financialAnalyst',        label: 'Financial Analyst',       emoji: '💹' },
-  { key: 'accountant',              label: 'Accountant',              emoji: '🧾' },
-  { key: 'lawyer',                  label: 'Lawyer',                  emoji: '⚖️' },
-  { key: 'architect',               label: 'Architect',               emoji: '🏛️' },
-  { key: 'civilEngineer',           label: 'Civil Engineer',          emoji: '🏗️' },
-  { key: 'renewableEnergyEngineer', label: 'Renewable Energy Eng.',   emoji: '🌱' },
-  { key: 'pilot',                   label: 'Pilot',                   emoji: '✈️' },
-  { key: 'teacher',                 label: 'Teacher',                 emoji: '📚' },
-  { key: 'hrManager',               label: 'HR Manager',              emoji: '👥' },
-  { key: 'salesManager',            label: 'Sales Manager',           emoji: '📈' },
-  { key: 'marketingManager',        label: 'Marketing Manager',       emoji: '📣' },
-  { key: 'supplyChainManager',      label: 'Supply Chain Manager',    emoji: '📦' },
-  { key: 'electrician',             label: 'Electrician',             emoji: '⚡' },
-  { key: 'chef',                    label: 'Chef',                    emoji: '👨‍🍳' },
+const JOB_ROLES: { key: string; label: string; icon: LucideIcon }[] = [
+  { key: 'softwareEngineer',        label: 'Software Engineer',     icon: Code2 },
+  { key: 'aiMlEngineer',            label: 'AI / ML Engineer',      icon: Bot },
+  { key: 'dataScientist',           label: 'Data Scientist',        icon: BarChart2 },
+  { key: 'cloudArchitect',          label: 'Cloud Architect',       icon: Cloud },
+  { key: 'devOps',                  label: 'DevOps Engineer',       icon: GitBranch },
+  { key: 'cybersecurity',           label: 'Cybersecurity',         icon: Shield },
+  { key: 'productManager',          label: 'Product Manager',       icon: LayoutDashboard },
+  { key: 'uxDesigner',              label: 'UX Designer',           icon: PenTool },
+  { key: 'graphicDesigner',         label: 'Graphic Designer',      icon: Palette },
+  { key: 'doctor',                  label: 'Doctor',                icon: Stethoscope },
+  { key: 'nurse',                   label: 'Nurse',                 icon: Heart },
+  { key: 'dentist',                 label: 'Dentist',               icon: Smile },
+  { key: 'pharmacist',              label: 'Pharmacist',            icon: Pill },
+  { key: 'physiotherapist',         label: 'Physiotherapist',       icon: Activity },
+  { key: 'psychologist',            label: 'Psychologist',          icon: Brain },
+  { key: 'biomedicalEngineer',      label: 'Biomedical Engineer',   icon: Microscope },
+  { key: 'financialAnalyst',        label: 'Financial Analyst',     icon: TrendingUp },
+  { key: 'accountant',              label: 'Accountant',            icon: Receipt },
+  { key: 'lawyer',                  label: 'Lawyer',                icon: Scale },
+  { key: 'architect',               label: 'Architect',             icon: Building },
+  { key: 'civilEngineer',           label: 'Civil Engineer',        icon: HardHat },
+  { key: 'renewableEnergyEngineer', label: 'Renewable Energy Eng.', icon: Leaf },
+  { key: 'pilot',                   label: 'Pilot',                 icon: Plane },
+  { key: 'teacher',                 label: 'Teacher',               icon: BookOpen },
+  { key: 'hrManager',               label: 'HR Manager',            icon: Users },
+  { key: 'salesManager',            label: 'Sales Manager',         icon: BarChart },
+  { key: 'marketingManager',        label: 'Marketing Manager',     icon: Megaphone },
+  { key: 'supplyChainManager',      label: 'Supply Chain Manager',  icon: Package },
+  { key: 'electrician',             label: 'Electrician',           icon: Zap },
+  { key: 'chef',                    label: 'Chef',                  icon: ChefHat },
 ]
 
 const NO_DUAL: Record<string, string> = {
@@ -406,12 +413,13 @@ export default function OnboardingPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 24 }}>
               {filteredRoles.map(r => {
                 const sel = selectedRole === r.key
+                const Icon = r.icon
                 return (
                   <button key={r.key}
                     className={`role-tile${sel ? ' selected' : ''}`}
                     onClick={() => { setSelectedRole(sel ? null : r.key); setCustomJob('') }}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '14px 16px', background: 'transparent', border: `1px solid ${sel ? C.primary : C.border}`, borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s', textAlign: 'left', fontFamily: BODY, gap: 6 }}>
-                    <span style={{ fontSize: 22, lineHeight: 1 }}>{r.emoji}</span>
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '14px 16px', background: 'transparent', border: `1px solid ${sel ? C.primary : C.border}`, borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s', textAlign: 'left', fontFamily: BODY, gap: 8 }}>
+                    <Icon size={18} color={sel ? C.bg : C.muted} strokeWidth={1.75} />
                     <span className="role-label" style={{ fontSize: 12, fontWeight: 600, color: sel ? C.bg : C.primary, lineHeight: 1.3 }}>{r.label}</span>
                   </button>
                 )
