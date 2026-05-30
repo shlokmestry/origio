@@ -225,16 +225,11 @@ function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
   }
 
   if (!jobRoleDef) return null;
-  const cs = getCurrencySymbol(match.country.currency);
   const gross = match.country.data[jobRoleDef.salaryKey] as number;
   const taxRate = match.country.data.incomeTaxRateMid / 100;
   const taxAmount = Math.round(gross * taxRate);
   const netAnnual = gross - taxAmount;
   const netMonthly = Math.round(netAnnual / 12);
-  const rent = match.country.data.costRentCityCentre;
-  const groceries = match.country.data.costGroceriesMonthly;
-  const transport = match.country.data.costTransportMonthly;
-  const totalCosts = rent + groceries + transport;
   const disposable = netMonthly - totalCosts;
 
   const rowStyle = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderBottom: `1px solid ${LINE}` };
