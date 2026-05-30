@@ -254,19 +254,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         }
         .nav-mobile-btn:hover { color: #fff; }
 
-        /* ── Product Hunt badge ─────────────────────────── */
-        .ph-badge {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 101;
-          display: block;
-          line-height: 0;
-          opacity: 0.88;
-          transition: opacity 0.15s;
-        }
-        .ph-badge:hover { opacity: 1; }
-
         /* ── Responsive ─────────────────────────────────── */
         @media (max-width: 768px) {
           .nav-pill {
@@ -379,20 +366,6 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           </a>
         )}
       </nav>
-
-      {/* Product Hunt badge */}
-      <a
-        href="https://www.producthunt.com/products/origio?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-origio"
-        target="_blank" rel="noopener noreferrer"
-        className="ph-badge" aria-label="Origio on Product Hunt"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt="Origio on Product Hunt"
-          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1138152&theme=dark&t=1779092788392"
-          width={250} height={54} style={{ display: "block" }}
-        />
-      </a>
 
       {/* Mobile full-screen menu */}
       <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="Mobile navigation">
