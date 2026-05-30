@@ -191,21 +191,7 @@ export default function Home() {
         </div>
       </div>
       {!showHero && !selectedSlug && (
-        <div className="home-hint-bar fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
-          <button
-            onClick={handleBackToHome}
-            className="bg-[#1a1a1a] border border-white/10 px-4 py-2.5 flex items-center gap-2 text-xs font-bold text-white/50 hover:text-white hover:border-white/25 transition-colors rounded-full uppercase tracking-widest"
-            aria-label="Back to home"
-          >
-            <ArrowLeft className="w-3 h-3" /> Home
-          </button>
-          <div className="bg-[#1a1a1a] border border-white/10 px-5 py-2.5 flex items-center gap-2.5 rounded-full">
-            <div className="w-1.5 h-1.5 bg-[#00ffd5] rounded-full" />
-            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">
-              {highlightedSlugs.length > 0 ? "Your matches are highlighted" : "Click a country to explore"}
-            </span>
-          </div>
-        </div>
+        <></>
       )}
     </>
   );
