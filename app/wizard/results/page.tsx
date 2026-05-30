@@ -1060,7 +1060,7 @@ export default function WizardResultsPage() {
                 }}
                   onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.color = FG; (e.currentTarget as HTMLElement).style.borderColor = "#555"; } }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = DIM; (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; }}>
-                  ↓ Download report · €4.99
+                  ↓ Download report
                 </button>
                 <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
                   onMouseEnter={e => (e.currentTarget.style.color = MINT)}

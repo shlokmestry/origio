@@ -46,23 +46,47 @@ export async function POST(request: Request) {
       to: email,
       subject: 'Your top 3 matches are ready',
       text: `Here are your top matches:\n\n${countryLines}\n\nSee all 37 countries ranked → https://findorigio.com/pro\n\nSalary after tax · Visa checklist · 3-country compare\n\nOrigio`,
-      html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;color:#f0f0e8;padding:40px 32px;">
-        <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#888880;margin:0 0 24px;">ORIGIO</p>
-        <h1 style="font-size:28px;margin:0 0 8px;font-weight:900;">Your top 3 matches</h1>
-        <p style="color:#888880;font-size:14px;margin:0 0 32px;">Based on your role, passport and priorities.</p>
-        ${top3.map((c: { flagEmoji: string; name: string; matchPercent: number }, i: number) => `
-          <div style="border:1px solid #1f1f1f;padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-            <span style="font-size:11px;color:#555;font-weight:700;min-width:20px;">${String(i + 1).padStart(2, '0')}</span>
-            <span style="font-size:22px;">${c.flagEmoji}</span>
-            <span style="font-size:16px;font-weight:700;flex:1;">${c.name}</span>
-            <span style="font-size:14px;color:#00ffd5;font-weight:700;">${c.matchPercent}%</span>
-          </div>`).join('')}
-        <div style="margin:32px 0;border-top:1px solid #1f1f1f;"></div>
-        <a href="https://findorigio.com/pro" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 28px;text-decoration:none;">
-          Unlock all countries — €4.99 forever
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;">
+  <tr><td align="center" style="padding:40px 16px;">
+    <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+      <tr><td style="padding:0 0 24px 0;">
+        <span style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#555550;font-family:sans-serif;">ORIGIO</span>
+      </td></tr>
+      <tr><td style="padding:0 0 8px 0;">
+        <span style="font-size:28px;font-weight:900;color:#f0f0e8;font-family:sans-serif;">Your top 3 matches</span>
+      </td></tr>
+      <tr><td style="padding:0 0 32px 0;">
+        <span style="font-size:14px;color:#666660;font-family:sans-serif;">Based on your role, passport and priorities.</span>
+      </td></tr>
+      ${top3.map((c: { flagEmoji: string; name: string; matchPercent: number }, i: number) => `
+      <tr><td style="padding:0 0 8px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #2a2a2a;background:#111111;">
+          <tr>
+            <td width="32" style="padding:16px 0 16px 20px;font-size:11px;color:#555550;font-weight:700;font-family:sans-serif;vertical-align:middle;">${String(i + 1).padStart(2, '0')}</td>
+            <td width="36" style="padding:16px 8px;font-size:22px;vertical-align:middle;">${c.flagEmoji}</td>
+            <td style="padding:16px 0;font-size:16px;font-weight:700;color:#f0f0e8;font-family:sans-serif;vertical-align:middle;">${c.name}</td>
+            <td width="60" align="right" style="padding:16px 20px 16px 0;font-size:14px;color:#00ffd5;font-weight:700;font-family:sans-serif;vertical-align:middle;">${c.matchPercent}%</td>
+          </tr>
+        </table>
+      </td></tr>`).join('')}
+      <tr><td style="padding:32px 0;border-top:1px solid #2a2a2a;"></td></tr>
+      <tr><td style="padding:0 0 12px 0;">
+        <a href="https://findorigio.com/pro" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 28px;text-decoration:none;font-family:sans-serif;">
+          Unlock all countries &mdash; &euro;4.99 forever
         </a>
-        <p style="font-size:11px;color:#555;margin-top:12px;">Salary calc · Visa checklist · 3-country compare</p>
-      </div>`,
+      </td></tr>
+      <tr><td>
+        <span style="font-size:11px;color:#555550;font-family:sans-serif;">Salary calc &middot; Visa checklist &middot; 3-country compare</span>
+      </td></tr>
+      <tr><td style="padding:40px 0 0 0;">
+        <span style="font-size:11px;color:#333330;font-family:sans-serif;">findorigio.com &middot; You received this because you used the wizard.</span>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`,
     })
     return NextResponse.json({ ok: true })
   } catch (err) {
