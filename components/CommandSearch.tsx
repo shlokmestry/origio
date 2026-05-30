@@ -14,7 +14,6 @@ import {
 
 import { GlobeCountry } from "@/types";
 import { getScoreColor } from "@/lib/utils";
-import SearchIllustration from "./SearchIllustration";
 
 interface CommandSearchProps {
   countries: GlobeCountry[];
@@ -215,14 +214,9 @@ export default function CommandSearch({
   const [recentSlugs, setRecentSlugs] =
     useState<string[]>([]);
 
-  const [isTyping, setIsTyping] = useState(false);
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
-
-  const typingTimer =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -258,15 +252,6 @@ export default function CommandSearch({
 
     setActiveFilter(null);
 
-    setIsTyping(true);
-
-    if (typingTimer.current) {
-      clearTimeout(typingTimer.current);
-    }
-
-    typingTimer.current = setTimeout(() => {
-      setIsTyping(false);
-    }, 800);
   };
 
   const results = useMemo(() => {
@@ -379,9 +364,6 @@ export default function CommandSearch({
 
   if (!open) return null;
 
-  const illustrationVisible =
-    query.length > 0 || !!activeFilter;
-
   return (
     <>
       {/* Backdrop */}
@@ -408,37 +390,6 @@ export default function CommandSearch({
           pointerEvents: "none",
         }}
       >
-        {/* Illustration */}
-{/* Illustration */}
-<div
-  className="search-illustration-wrap"
-  style={{
-    position: "fixed",
-    left: "48px",
-bottom: "48px",
-width: "280px",   // ⬆ explicitly set to 280px
-height: "280px",  
-
-    opacity: illustrationVisible ? 1 : 0,
-
-    transform: illustrationVisible
-      ? "translateY(0px) scale(1)"
-      : "translateY(14px) scale(0.92)",
-
-    transition:
-      "all 0.35s cubic-bezier(0.22,1,0.36,1)",
-
-    pointerEvents: "none",
-
-    zIndex: 0,
-  }}
->
-  <SearchIllustration
-    isTyping={isTyping}
-    isVisible={illustrationVisible}
-  />
-</div>
-
         {/* Modal */}
         <div
           role="dialog"
@@ -556,11 +507,6 @@ height: "280px",
           }
         }
 
-        @media (max-width: 1200px) {
-          .search-illustration-wrap {
-            display: none;
-          }
-        }
       `}</style>
     </>
   );
