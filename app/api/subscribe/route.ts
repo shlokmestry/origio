@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
+  const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
+  if (limited) return limited;
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const token = authHeader.replace("Bearer ", "");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const {
     email,
     source,
@@ -17,6 +36,11 @@ export async function POST(req: NextRequest) {
   } = await req.json();
 
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+
+  // Only allow sending to the authenticated user's own email
+  if (email !== user.email) {
+    return NextResponse.json({ error: "Email mismatch" }, { status: 403 });
+  }
 
   // 1. Generate personalised email with Claude
   const prompt = `You are writing a short, personal email to someone who just used Origio (findorigio.com) to find their best country to move to.
@@ -117,6 +141,3 @@ Origio`;
 
   return NextResponse.json({ success: true });
 }
-
-
-

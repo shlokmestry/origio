@@ -25,7 +25,7 @@ export default async function OgImage() {
         }} />
 
         {/* Logo image */}
-        <img src={logoBase64} style={{ height: 64, width: "auto", marginBottom: 48 }} />
+        <img src={logoBase64} alt="" style={{ height: 64, width: "auto", marginBottom: 48 }} />
 
         {/* Tagline */}
         <div style={{ fontSize: 40, fontWeight: 800, color: "#f0f0e8", letterSpacing: "-1px", marginBottom: 12, display: "flex" }}>
@@ -40,7 +40,7 @@ export default async function OgImage() {
 
         {/* Pills */}
         <div style={{ display: "flex", gap: 12 }}>
-          {["🌐 25 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
+          {["🌐 37 Countries", "💰 Salaries", "✈️ Visas", "🏠 Cost of Living"].map((label) => (
             <div key={label} style={{
               background: "rgba(0,255,213,0.08)", border: "1px solid rgba(0,255,213,0.25)",
               padding: "10px 22px", fontSize: 18, color: "#00ffd5", display: "flex",

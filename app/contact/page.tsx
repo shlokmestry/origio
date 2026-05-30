@@ -21,8 +21,8 @@ const TIPS = [
   { label: 'Feature requests', tip: 'Describe the problem you are trying to solve, not just the solution.' },
 ]
 
-const SERIF = "var(--font-heading, 'DM Serif Display', Georgia, serif)"
-const SANS  = "'Inter', sans-serif"
+const SERIF = "var(--font-heading, 'Cabinet Grotesk', sans-serif)"
+const SANS  = "'Satoshi', sans-serif"
 
 export default function ContactPage() {
   return (

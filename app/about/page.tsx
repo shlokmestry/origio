@@ -66,15 +66,15 @@ function HowItWorksScribble() {
       </defs>
       <path filter="url(#wobbly)" d="M 222 95 C 258 82, 300 88, 322 114 C 346 142, 344 182, 328 208 C 312 234, 280 250, 248 252 C 216 254, 184 242, 164 218 C 144 194, 140 160, 156 134 C 172 108, 200 98, 222 95 Z" fill="none" stroke="#f0f0e8" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
       <path filter="url(#wobbly-sm)" d="M 228 98 C 264 86, 304 92, 326 118 C 348 146, 345 186, 328 212" fill="none" stroke="#f0f0e8" strokeWidth="0.8" strokeLinecap="round" opacity="0.15" />
-      <text x="245" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>01</text>
+      <text x="245" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>01</text>
       <text x="245" y="200" textAnchor="middle" fill="rgba(240,240,232,0.52)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>answer 8 questions</text>
       <path filter="url(#wobbly)" d="M 578 94 C 614 82, 658 90, 680 118 C 702 146, 700 186, 684 212 C 668 238, 638 252, 606 252 C 574 252, 544 238, 528 212 C 512 186, 512 148, 534 120 C 552 96, 572 96, 578 94 Z" fill="none" stroke="#f0f0e8" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
       <path filter="url(#wobbly-sm)" d="M 582 97 C 618 85, 660 94, 682 122 C 704 150, 701 190, 684 216" fill="none" stroke="#f0f0e8" strokeWidth="0.8" strokeLinecap="round" opacity="0.15" />
-      <text x="605" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>02</text>
+      <text x="605" y="168" textAnchor="middle" fill="#f0f0e8" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>02</text>
       <text x="605" y="200" textAnchor="middle" fill="rgba(240,240,232,0.52)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>get your top countries</text>
       <path filter="url(#wobbly)" d="M 400 378 C 440 366, 486 372, 512 400 C 538 428, 536 470, 518 498 C 500 526, 466 540, 432 540 C 398 540, 364 526, 346 498 C 328 470, 328 430, 352 402 C 370 380, 388 380, 400 378 Z" fill="none" stroke="#00ffd5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.93" />
       <path filter="url(#wobbly-sm)" d="M 406 381 C 444 370, 488 377, 514 406 C 540 434, 537 474, 518 502" fill="none" stroke="#00ffd5" strokeWidth="0.9" strokeLinecap="round" opacity="0.2" />
-      <text x="428" y="455" textAnchor="middle" fill="#00ffd5" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 34, fontWeight: 400 }}>03</text>
+      <text x="428" y="455" textAnchor="middle" fill="#00ffd5" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 34, fontWeight: 400 }}>03</text>
       <text x="428" y="488" textAnchor="middle" fill="rgba(0,255,213,0.6)" style={{ fontFamily: "system-ui, sans-serif", fontSize: 13 }}>dive into the data</text>
       <path filter="url(#wobbly-sm)" d="M 324 128 C 358 92, 444 80, 498 104 C 524 116, 538 136, 542 156" fill="none" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="5.5 10" markerEnd="url(#pen-tip)" opacity="0.82" />
       <path filter="url(#wobbly-sm)" d="M 326 133 C 362 98, 448 86, 500 110" fill="none" stroke="#00ffd5" strokeWidth="0.55" strokeLinecap="round" opacity="0.18" />
@@ -104,7 +104,7 @@ function NewspaperSpoof() {
     },
     {
       them: "Reddit thread: 'should I move to Portugal?' — 340 opinions, zero data",
-      us: "25 countries ranked by your actual priorities, not strangers' vibes",
+      us: "37 countries ranked by your actual priorities, not strangers' vibes",
     },
     {
       them: "Government visa website lists requirements. Does not mention 14-month wait.",
@@ -126,7 +126,7 @@ function NewspaperSpoof() {
         justifyContent: "space-between",
       }}>
         <span style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "'Cabinet Grotesk', sans-serif",
           fontSize: "clamp(22px, 4vw, 36px)",
           fontWeight: 700,
           color: "#f0f0e8",
@@ -136,7 +136,7 @@ function NewspaperSpoof() {
           The Expat Times
         </span>
         <span style={{
-          fontFamily: "monospace",
+          fontFamily: "Satoshi, sans-serif",
           fontSize: 10,
           color: "rgba(240,240,232,0.3)",
           letterSpacing: "0.08em",
@@ -158,7 +158,7 @@ function NewspaperSpoof() {
       >
         {["BREAKING", "SALARY NEWS", "VISA CHAOS", "COST OF LIVING SPECIAL"].map(tag => (
           <span key={tag} style={{
-            fontFamily: "monospace", fontSize: 9,
+            fontFamily: "Satoshi, sans-serif", fontSize: 9,
             color: "rgba(240,240,232,0.25)", letterSpacing: "0.1em",
           }}>{tag}</span>
         ))}
@@ -180,7 +180,7 @@ function NewspaperSpoof() {
             {/* Crossed-out headline */}
             <div style={{ position: "relative", marginBottom: 12 }}>
               <p style={{
-                fontFamily: "Georgia, serif",
+                fontFamily: "'Cabinet Grotesk', sans-serif",
                 fontSize: "clamp(14px, 2vw, 17px)",
                 lineHeight: 1.45,
                 color: "rgba(240,240,232,0.28)",
@@ -196,7 +196,7 @@ function NewspaperSpoof() {
                 viewBox="0 0 24 24"
                 style={{
                   position: "absolute",
-                  top: -4, left: -28,
+                  top: -4, left: "clamp(-28px, -3vw, -12px)",
                   width: 20, height: 20,
                   opacity: inView ? 0.5 : 0,
                   transition: `opacity 0.3s ease ${i * 120 + 300}ms`,
@@ -209,7 +209,7 @@ function NewspaperSpoof() {
             {/* Origio replacement */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <span style={{
-                fontFamily: "monospace", fontSize: 10,
+                fontFamily: "Satoshi, sans-serif", fontSize: 10,
                 color: "#00ffd5", letterSpacing: "0.1em",
                 textTransform: "uppercase", flexShrink: 0,
                 marginTop: 3,
@@ -238,10 +238,10 @@ function NewspaperSpoof() {
         justifyContent: "space-between",
         alignItems: "center",
       }}>
-        <span style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
+        <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, color: "rgba(240,240,232,0.2)", letterSpacing: "0.08em" }}>
           ALL STORIES BASED ON REAL SEARCHES MADE AT 2AM
         </span>
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "italic" }}>
+        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 11, color: "rgba(240,240,232,0.2)", fontStyle: "normal" }}>
           findorigio.com
         </span>
       </div>
@@ -269,7 +269,7 @@ function AlgorithmScribble() {
     <div ref={ref}>
       {/* Label */}
       <div style={{
-        fontFamily: "monospace", fontSize: 11, letterSpacing: "0.18em",
+        fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.18em",
         textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
         marginBottom: 32, textAlign: "center",
         opacity: inView ? 1 : 0, transition: "opacity 0.5s ease",
@@ -338,7 +338,7 @@ function AlgorithmScribble() {
                 y={by + 24}
                 textAnchor="middle"
                 fill={f.color}
-                style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: 400 }}
+                style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 13, fontWeight: 400 }}
               >
                 {f.label}
               </text>
@@ -350,7 +350,7 @@ function AlgorithmScribble() {
                 textAnchor="middle"
                 fill={f.color}
                 opacity="0.55"
-                style={{ fontFamily: "monospace", fontSize: 11 }}
+                style={{ fontFamily: "Satoshi, sans-serif", fontSize: 11 }}
               >
                 {f.weight}
               </text>
@@ -362,7 +362,7 @@ function AlgorithmScribble() {
                   y={by + 30}
                   textAnchor="middle"
                   fill="rgba(240,240,232,0.25)"
-                  style={{ fontFamily: "Georgia, serif", fontSize: 20 }}
+                  style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20 }}
                 >
                   +
                 </text>
@@ -395,14 +395,14 @@ function AlgorithmScribble() {
             opacity="0.8"
           />
           <text x="400" y="220" textAnchor="middle" fill="#00ffd5"
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 22, fontWeight: 400 }}>
+            style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 22, fontWeight: 400 }}>
             Move Score
           </text>
         </g>
 
         {/* Scrawled note bottom-left */}
         <text x="24" y="268" fill="rgba(240,240,232,0.18)"
-          style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: "0.05em", opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" }}
+          style={{ fontFamily: "Satoshi, sans-serif", fontSize: 9, letterSpacing: "0.05em", opacity: inView ? 1 : 0, transition: "opacity 0.4s ease 900ms" }}
         >
           * weights shift based on your wizard answers
         </text>
@@ -455,13 +455,13 @@ export default function AboutPage() {
             minHeight: "calc(100vh - 80px)", padding: "0 24px",
           }}>
             <h1 style={{
-              fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 400,
+              fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 400,
               fontSize: "clamp(48px, 9vw, 128px)", lineHeight: 1.05,
               letterSpacing: "-0.02em", color: "#ffffff", textAlign: "center",
               maxWidth: "16ch", textShadow: "0 4px 48px rgba(0,0,0,0.5)", margin: 0,
             }}>
               what the fuck is{" "}
-              <em style={{ color: "#00ffd5", fontStyle: "italic" }}>origio</em>?
+              <em style={{ color: "#00ffd5", fontStyle: "normal" }}>origio</em>?
             </h1>
           </div>
           <div style={{
@@ -470,7 +470,7 @@ export default function AboutPage() {
             display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
             color: "rgba(240,240,232,0.5)",
           }}>
-            <span style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>scroll</span>
+            <span style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>scroll</span>
             <div style={{ width: 1, height: 36, background: "linear-gradient(180deg, rgba(240,240,232,0.5), transparent)" }} />
           </div>
         </section>
@@ -480,7 +480,7 @@ export default function AboutPage() {
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <FadeIn>
               <span style={{
-                fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                 textTransform: "uppercase", color: "#00ffd5",
                 borderBottom: "2px solid #00ffd5", paddingBottom: 4,
                 display: "inline-block", marginBottom: 32,
@@ -488,11 +488,11 @@ export default function AboutPage() {
             </FadeIn>
             <FadeIn delay={80}>
               <p style={{
-                fontFamily: "Georgia, serif", fontSize: "clamp(20px, 2.8vw, 30px)",
+                fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(20px, 2.8vw, 30px)",
                 lineHeight: 1.55, color: "#f0f0e8", fontWeight: 400, margin: "0 0 32px",
               }}>
                 Origio was built by{" "}
-                <em style={{ color: "#00ffd5", fontStyle: "italic" }}>Shlok Mestry</em>{" "}
+                <em style={{ color: "#00ffd5", fontStyle: "normal" }}>Shlok Mestry</em>{" "}
                 after spending weeks manually researching countries to move to and
                 realising there was no single place that had all the information needed
                 to make a proper decision.
@@ -506,7 +506,7 @@ export default function AboutPage() {
             <FadeIn delay={240}>
               <p style={{ fontFamily: "system-ui, sans-serif", fontSize: 17, lineHeight: 1.75, color: "rgba(240,240,232,0.72)", margin: 0 }}>
                 If you're not sure where to start, the{" "}
-                <strong style={{ color: "#f0f0e8" }}>Find My Country</strong> quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 25 countries and gives you a personalised ranked list.
+                <strong style={{ color: "#f0f0e8" }}>Find My Country</strong> quiz asks 8 questions about your priorities, job, passport, and budget — then scores all 37 countries and gives you a personalised ranked list.
               </p>
             </FadeIn>
           </div>
@@ -521,18 +521,18 @@ export default function AboutPage() {
             <FadeIn>
               <div style={{ marginBottom: 56 }}>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                   textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
                   display: "inline-block", marginBottom: 20,
                 }}>the problem</span>
                 <h2 style={{
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Cabinet Grotesk', sans-serif",
                   fontSize: "clamp(36px, 5.5vw, 80px)",
                   lineHeight: 1.0, letterSpacing: "-0.025em",
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
                 }}>
                   why not just use{" "}
-                  <em style={{ color: "rgba(240,240,232,0.35)", fontStyle: "italic", textDecoration: "line-through", textDecorationColor: "rgba(255,60,60,0.5)" }}>Numbeo</em>?
+                  <em style={{ color: "rgba(240,240,232,0.35)", fontStyle: "normal", textDecoration: "line-through", textDecorationColor: "rgba(255,60,60,0.5)" }}>Numbeo</em>?
                 </h2>
               </div>
             </FadeIn>
@@ -555,14 +555,14 @@ export default function AboutPage() {
                 gap: 16, marginBottom: 72,
               }}>
                 <h2 style={{
-                  fontFamily: "Georgia, serif", fontSize: "clamp(40px, 6vw, 88px)",
+                  fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(40px, 6vw, 88px)",
                   lineHeight: 1, letterSpacing: "-0.02em",
                   color: "#f0f0e8", fontWeight: 400, margin: 0,
                 }}>
-                  how does this <em style={{ color: "#00ffd5", fontStyle: "italic" }}>work</em>?
+                  how does this <em style={{ color: "#00ffd5", fontStyle: "normal" }}>work</em>?
                 </h2>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11,
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11,
                   letterSpacing: "0.2em", textTransform: "uppercase",
                   color: "rgba(240,240,232,0.35)",
                 }}>
@@ -602,18 +602,18 @@ export default function AboutPage() {
             <FadeIn>
               <div style={{ marginBottom: 64 }}>
                 <span style={{
-                  fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                   textTransform: "uppercase", color: "rgba(240,240,232,0.3)",
                   display: "inline-block", marginBottom: 20,
                 }}>the score</span>
                 <h2 style={{
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "'Cabinet Grotesk', sans-serif",
                   fontSize: "clamp(36px, 5.5vw, 78px)",
                   lineHeight: 1.0, letterSpacing: "-0.025em",
                   color: "#f0f0e8", fontWeight: 400, margin: "0 0 20px",
                 }}>
                   how the{" "}
-                  <em style={{ color: "#00ffd5", fontStyle: "italic" }}>algorithm</em>{" "}
+                  <em style={{ color: "#00ffd5", fontStyle: "normal" }}>algorithm</em>{" "}
                   works
                 </h2>
                 <p style={{
@@ -658,7 +658,7 @@ export default function AboutPage() {
                       marginBottom: 12,
                     }} />
                     <p style={{
-                      fontFamily: "monospace", fontSize: 10,
+                      fontFamily: "Satoshi, sans-serif", fontSize: 10,
                       letterSpacing: "0.14em", textTransform: "uppercase",
                       color: f.color, margin: "0 0 8px",
                     }}>{f.label}</p>
@@ -700,19 +700,19 @@ export default function AboutPage() {
           }}>
             <FadeIn>
               <span style={{
-                fontFamily: "monospace", fontSize: 11, letterSpacing: "0.2em",
+                fontFamily: "Satoshi, sans-serif", fontSize: 11, letterSpacing: "0.2em",
                 textTransform: "uppercase", color: "#00ffd5",
                 borderBottom: "2px solid #00ffd5", paddingBottom: 4, display: "inline-block",
               }}>the data</span>
             </FadeIn>
             <FadeIn delay={80}>
               <h2 style={{
-                fontFamily: "Georgia, serif", fontSize: "clamp(36px, 5vw, 68px)",
+                fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: "clamp(36px, 5vw, 68px)",
                 lineHeight: 1.1, letterSpacing: "-0.02em",
                 color: "#ffffff", fontWeight: 400, margin: 0,
                 textShadow: "0 2px 24px rgba(0,0,0,0.7)",
               }}>
-                where does the <em style={{ color: "#00ffd5", fontStyle: "italic" }}>data</em> come from?
+                where does the <em style={{ color: "#00ffd5", fontStyle: "normal" }}>data</em> come from?
               </h2>
             </FadeIn>
           </div>

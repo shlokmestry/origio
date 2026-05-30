@@ -87,16 +87,28 @@ const CONTINENT_MAP: Record<string, string> = {
   spain: "Southern Europe",
   portugal: "Southern Europe",
   italy: "Southern Europe",
+  greece: "Southern Europe",
+  croatia: "Southern Europe",
+  "czech-republic": "Central Europe",
+  poland: "Central Europe",
   canada: "North America",
   usa: "North America",
+  mexico: "North America",
+  panama: "Central America",
+  "costa-rica": "Central America",
+  colombia: "South America",
+  brazil: "South America",
   australia: "Oceania",
   "new-zealand": "Oceania",
   singapore: "Southeast Asia",
+  malaysia: "Southeast Asia",
+  thailand: "Southeast Asia",
+  vietnam: "Southeast Asia",
+  india: "South Asia",
   japan: "East Asia",
-  uae: "Middle East",
   "south-korea": "East Asia",
-  estonia: "Northern Europe",
-  czechia: "Central Europe",
+  uae: "Middle East",
+  georgia: "Caucasus",
 };
 
 const S = {
@@ -105,7 +117,7 @@ const S = {
   borderMd: "rgba(255,255,255,0.14)",
   dim: "rgba(255,255,255,0.38)",
   dimmer: "rgba(255,255,255,0.18)",
-  sans: "'Inter', sans-serif",
+  sans: "'Satoshi', sans-serif",
 };
 
 function getRecent(): string[] {
@@ -174,7 +186,7 @@ function ScoreBar({ score }: { score: number }) {
       <span
         style={{
           fontSize: 11,
-          fontFamily: "monospace",
+          fontFamily: "Satoshi, sans-serif",
           fontWeight: 700,
           color: "rgba(255,255,255,0.5)",
         }}
@@ -523,7 +535,7 @@ height: "280px",
                     color: S.dim,
                   }}
                 >
-                  25 countries. Start typing.
+                  37 countries. Start typing.
                 </div>
               )}
             </div>

@@ -19,7 +19,7 @@ const SECTIONS = [
   {
     n: '2',
     title: 'What Origio is',
-    body: 'Origio is a relocation research tool that provides informational data on salaries, cost of living, visa routes, and quality of life across 25 countries. It is designed to help you research and explore options — it is not financial, legal, or immigration advice.\n\nWe do our best to keep data accurate and up to date, but we make no guarantees about the completeness, accuracy, or timeliness of any information. Always verify critical information with official government sources before making any relocation decision.',
+    body: 'Origio is a relocation research tool that provides informational data on salaries, cost of living, visa routes, and quality of life across 37 countries. It is designed to help you research and explore options — it is not financial, legal, or immigration advice.\n\nWe do our best to keep data accurate and up to date, but we make no guarantees about the completeness, accuracy, or timeliness of any information. Always verify critical information with official government sources before making any relocation decision.',
   },
   {
     n: '3',
@@ -87,8 +87,8 @@ const S = {
   dimmer: 'rgba(240,240,232,0.28)',
   accent: '#00ffd5',
   text: '#f0f0e8',
-  serif: "var(--font-heading, 'DM Serif Display', Georgia, serif)",
-  sans: "'Inter', sans-serif",
+  serif: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
+  sans: "'Satoshi', sans-serif",
 }
 
 export default function TermsPage() {

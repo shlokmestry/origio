@@ -8,7 +8,7 @@ const faqs = [
   {
     category: "About Origio",
     items: [
-      { q: "What is Origio?", a: "Origio is a relocation research tool that helps you compare salaries, cost of living, visa requirements, and quality of life across 25 countries — all in one place." },
+      { q: "What is Origio?", a: "Origio is a relocation research tool that helps you compare salaries, cost of living, visa requirements, and quality of life across 37 countries — all in one place." },
       { q: "Who built Origio?", a: "Origio was built by Shlok Mestry, after spending weeks manually researching countries to move to and realising there was no single place that had everything." },
       { q: "Which countries are covered?", a: "Australia, Austria, Belgium, Brazil, Canada, Denmark, Finland, France, Germany, India, Ireland, Italy, Japan, Malaysia, Netherlands, New Zealand, Norway, Portugal, Singapore, Spain, Sweden, Switzerland, UAE, United Kingdom, and USA." },
     ],
@@ -34,8 +34,8 @@ const faqs = [
     category: "Account & Pro",
     items: [
       { q: "Do I need an account to use Origio?", a: "No. The globe, country pages, compare tool, and Find My Country top 3 results are all free without an account." },
-      { q: "What does the Pro plan include?", a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of €19.99 — no subscription, ever." },
-      { q: "Is this really a one-time payment?", a: "Yes. Pay €19.99 once and access Pro forever. No subscription, no hidden fees, no recurring charges." },
+      { q: "What does the Pro plan include?", a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of €4.99 — no subscription, ever." },
+      { q: "Is this really a one-time payment?", a: "Yes. Pay €4.99 once and access Pro forever. No subscription, no hidden fees, no recurring charges." },
       { q: "What payment methods are accepted?", a: "All major credit and debit cards via Stripe. Safe and secure." },
       { q: "Can I get a refund?", a: "If you have an issue, contact us and we'll sort it out." },
     ],
@@ -49,8 +49,8 @@ const S = {
   borderMd: 'rgba(255,255,255,0.12)',
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.2)',
-  serif: "'DM Serif Display', Georgia, serif",
-  sans: "'Inter', sans-serif",
+  serif: "'Cabinet Grotesk', sans-serif",
+  sans: "'Satoshi', sans-serif",
 };
 
 export default function FAQPage() {

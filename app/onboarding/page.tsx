@@ -62,8 +62,8 @@ const S = {
   borderInput: 'rgba(255,255,255,0.10)',
   dim: 'rgba(255,255,255,0.38)',
   dimmer: 'rgba(255,255,255,0.18)',
-  serif: "'DM Serif Display', Georgia, serif",
-  sans: "'Inter', sans-serif",
+  serif: "'Cabinet Grotesk', sans-serif",
+  sans: "'Satoshi', sans-serif",
 }
 
 function PassportSVG({ design }: { design: PassportDesign }) {
@@ -84,8 +84,8 @@ function PassportSVG({ design }: { design: PassportDesign }) {
       <circle cx="100" cy="110" r="36" fill={design.accentColor} opacity="0.1" />
       <circle cx="100" cy="110" r="32" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.35" />
       <text x="100" y="120" textAnchor="middle" fontSize="30" fill={design.textColor} opacity="0.9">{design.emblem}</text>
-      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="serif" fontWeight="bold">{design.name.toUpperCase()}</text>
-      <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="serif">{design.coverText}</text>
+      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="Cabinet Grotesk, sans-serif" fontWeight="bold">{design.name.toUpperCase()}</text>
+      <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="Cabinet Grotesk, sans-serif">{design.coverText}</text>
       <text x="100" y="225" textAnchor="middle" fontSize="22" opacity="0.9">{design.flag}</text>
       <rect x="10" y="248" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
       <rect x="10" y="255" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
@@ -100,6 +100,9 @@ export default function OnboardingPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [passportSearch, setPassportSearch] = useState('')
   const [passportSlug, setPassportSlug] = useState<string | null>(null)
+  const [secondPassportSlug, setSecondPassportSlug] = useState<string | null>(null)
+  const [secondPassportSearch, setSecondPassportSearch] = useState('')
+  const [showSecondPassport, setShowSecondPassport] = useState(false)
   const [jobTitle, setJobTitle] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -113,15 +116,38 @@ export default function OnboardingPage() {
   }, [router])
 
   const filteredPassports = PASSPORT_LIST.filter(p =>
-    p.name.toLowerCase().includes(passportSearch.toLowerCase())
+    p.name.toLowerCase().includes(passportSearch.toLowerCase()) && p.slug !== secondPassportSlug
+  )
+  const filteredSecondPassports = PASSPORT_LIST.filter(p =>
+    p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== passportSlug
   )
   const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
+  const selectedSecondPassport = secondPassportSlug ? PASSPORTS[secondPassportSlug] : null
+
+  const NO_DUAL_SLUGS: Record<string, string> = {
+    'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
+    'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
+    'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
+    'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
+    'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
+    'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
+    'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
+    'south-korea': 'South Korea generally does not permit dual citizenship for adults. Exceptions apply in limited circumstances.',
+  }
+
+  const dualConflictWarning = (() => {
+    if (!passportSlug || !secondPassportSlug) return null
+    if (NO_DUAL_SLUGS[passportSlug]) return { country: PASSPORTS[passportSlug]?.name, message: NO_DUAL_SLUGS[passportSlug] }
+    if (NO_DUAL_SLUGS[secondPassportSlug]) return { country: PASSPORTS[secondPassportSlug]?.name, message: NO_DUAL_SLUGS[secondPassportSlug] }
+    return null
+  })()
 
   const handleFinish = async () => {
     if (!userId || jobTitle.trim().length < 2) return
     setSaving(true)
     await supabase.from('profiles').upsert({
       id: userId, passport_slug: passportSlug,
+      second_passport_slug: secondPassportSlug,
       job_title: jobTitle.trim(), onboarded: true,
     }, { onConflict: 'id' })
     router.push('/profile')
@@ -163,7 +189,8 @@ export default function OnboardingPage() {
                 This helps us show you the most relevant visa routes and options.
               </p>
 
-              <div style={{ display: 'flex', gap: 20 }}>
+              <style>{`@media (max-width: 480px) { .passport-layout { flex-direction: column !important; } .passport-preview { width: 100% !important; max-width: 180px; align-self: center; } }`}</style>
+              <div className="passport-layout" style={{ display: 'flex', gap: 20 }}>
                 {/* Left: search + list */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {/* Selected pill */}
@@ -212,7 +239,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Right: passport preview */}
-                <div style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
+                <div className="passport-preview" style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
                   {selectedPassport ? (
                     <div style={{ width: '100%' }}>
                       <PassportSVG design={selectedPassport} />
@@ -225,6 +252,72 @@ export default function OnboardingPage() {
                   )}
                 </div>
               </div>
+
+              {/* Second passport toggle */}
+              {passportSlug && (
+                <div style={{ marginTop: 20 }}>
+                  {!showSecondPassport ? (
+                    <button onClick={() => setShowSecondPassport(true)}
+                      style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', color: S.dim, background: 'rgba(255,255,255,0.04)', border: `1px dashed rgba(255,255,255,0.14)`, borderRadius: 10, padding: '10px 16px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'border-color 0.15s, color 0.15s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = S.dim }}>
+                      + Add second passport
+                    </button>
+                  ) : (
+                    <div style={{ border: `1px solid rgba(255,255,255,0.10)`, borderRadius: 12, padding: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>Second Passport</span>
+                        <button onClick={() => { setShowSecondPassport(false); setSecondPassportSlug(null); setSecondPassportSearch('') }}
+                          style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dimmer, background: 'none', border: 'none', cursor: 'pointer' }}>
+                          Remove
+                        </button>
+                      </div>
+                      {selectedSecondPassport && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 100, marginBottom: 8 }}>
+                          <span style={{ fontSize: 16 }}>{selectedSecondPassport.flag}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{selectedSecondPassport.name}</span>
+                          <button onClick={() => setSecondPassportSlug(null)}
+                            style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <X style={{ width: 8, height: 8, color: 'rgba(255,255,255,0.7)' }} />
+                          </button>
+                        </div>
+                      )}
+                      <div style={{ position: 'relative', marginBottom: 6 }}>
+                        <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, color: S.dimmer, pointerEvents: 'none' }} />
+                        <input type="text" placeholder="Search country..." value={secondPassportSearch}
+                          onChange={e => setSecondPassportSearch(e.target.value)}
+                          style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 10, padding: '11px 14px 11px 36px', fontSize: 13, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ border: `1px solid ${S.border}`, borderRadius: 10, overflow: 'hidden', maxHeight: 180, overflowY: 'auto', background: S.card }}>
+                        {filteredSecondPassports.map(p => (
+                          <button key={p.slug} onClick={() => { setSecondPassportSlug(p.slug); setSecondPassportSearch('') }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: secondPassportSlug === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer', textAlign: 'left' }}>
+                            <span style={{ fontSize: 16 }}>{p.flag}</span>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: secondPassportSlug === p.slug ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1 }}>{p.name}</span>
+                            {secondPassportSlug === p.slug && (
+                              <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Check style={{ width: 8, height: 8, color: '#0a0a0a' }} />
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Dual citizenship conflict warning */}
+              {dualConflictWarning && (
+                <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,200,50,0.06)', border: '1px solid rgba(255,200,50,0.22)', borderRadius: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.85)', marginBottom: 4 }}>
+                    ⚠ {dualConflictWarning.country} — No Dual Citizenship
+                  </p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                    {dualConflictWarning.message}
+                  </p>
+                </div>
+              )}
 
               {/* Actions */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>

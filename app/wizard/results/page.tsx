@@ -1,20 +1,23 @@
 // app/wizard/results/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Globe, Lock, Sparkles, X } from "lucide-react";
-import { CountryMatch, WizardAnswers } from "@/lib/wizard";
-import { JOB_ROLES, CountryWithData } from "@/types";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports, scoreCountriesForWizard } from "@/lib/wizard";
+import { CountryWithData, JOB_ROLES } from "@/types";
+import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
-const SERIF = "'DM Serif Display', Georgia, serif";
+const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
-const BG    = "#0a0a0a";
+const BG    = "#0e0d0c";
 const FG    = "#f0f0e8";
 const MINT  = "#00ffd5";
 const DIM   = "#888880";
@@ -26,7 +29,7 @@ const LOADING_STEPS = [
   "Crunching salary data...",
   "Checking visa routes...",
   "Weighing your priorities...",
-  "Ranking 25 countries...",
+  "Ranking 37 countries...",
   "Almost done...",
 ];
 const RANK_COLORS = [MINT, "#facc15", "#a78bfa"];
@@ -54,21 +57,6 @@ function getCurrencySymbol(currency: string): string {
   return s[currency] ?? currency + " ";
 }
 
-function getVisaLabel(d: number) {
-  if (d <= 1) return "Easy";
-  if (d <= 2) return "Straightforward";
-  if (d <= 3) return "Moderate";
-  if (d <= 4) return "Difficult";
-  return "Very hard";
-}
-
-const TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
-  NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
-  NOK: 0.093, SEK: 0.096, DKK: 0.145,
-  JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
-};
-
 function toUSD(amount: number, currency: string): number {
   return amount * (TO_USD[currency] ?? 1);
 }
@@ -82,13 +70,22 @@ function computeScoreBreakdown(country: CountryWithData, answers: Partial<Wizard
   const rentUSD = toUSD(data.costRentCityCentre, country.currency);
   const salaryRaw = jobRoleDef ? data[jobRoleDef.salaryKey] as number : data.salarySoftwareEngineer;
   const salaryUSD = toUSD(salaryRaw, country.currency);
+  // Use same passport-aware visa score as the scoring algorithm
+  const { primary: ep, secondary: es } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const str = Math.min(getPassportStrength(ep), es ? getPassportStrength(es) : 4) as 1|2|3|4;
+  const reductions: Record<1|2|3|4, number> = { 1: 2.0, 2: 1.0, 3: 0, 4: -1.0 };
+  const effDiff = Math.max(0, data.visaDifficulty - reductions[str]);
+  const visaScore = Math.max(0, Math.min(10, 10 - effDiff * 2));
   return {
     salary:        { label: "Salary",          value: normalise(salaryUSD, 25000, 200000), desc: `${getCurrencySymbol(country.currency)}${salaryRaw.toLocaleString()}/yr` },
     affordability: { label: "Affordability",   value: 10 - normalise(rentUSD, 300, 4000),  desc: `${getCurrencySymbol(country.currency)}${data.costRentCityCentre.toLocaleString()}/mo rent` },
     tax:           { label: "Tax efficiency",  value: 10 - normalise(data.incomeTaxRateMid, 0, 55), desc: `${data.incomeTaxRateMid}% income tax` },
     safety:        { label: "Safety",          value: data.scoreSafety,                    desc: `${data.scoreSafety}/10 safety score` },
     quality:       { label: "Quality of life", value: data.scoreQualityOfLife,             desc: `${data.scoreQualityOfLife}/10 QoL score` },
-    visa:          { label: "Visa access",     value: 10 - data.visaDifficulty * 2,        desc: getVisaLabel(data.visaDifficulty) + " visa process" },
+    visa:          { label: "Visa access",     value: visaScore,                           desc: getVisaLabel(data.visaDifficulty) + " visa process" },
   };
 }
 
@@ -105,49 +102,36 @@ function generateSummary(match: CountryMatch, answers: Partial<WizardAnswers>, s
   return summary;
 }
 
-function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>): { name: string; reason: string }[] {
+// Derives filtered-out countries from actual algorithm constants (matches lib/wizard.ts exactly)
+function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>, allCountries: CountryWithData[]): { name: string; reason: string }[] {
   const dealBreakers = answers.dealBreakers ?? [];
   const excluded: { name: string; reason: string }[] = [];
-  const REASON_MAP: Record<string, string> = {
-    lowtax: "high income tax", lowcost: "high cost of living",
-    europe: "not in Europe", english: "not English-speaking",
-    warm: "cold climate", lowcrime: "crime rate too high",
-    nomadvisa: "no digital nomad visa", healthcare: "weak public healthcare",
-  };
-  const SLUG_TO_NAME: Record<string, string> = {
-    "australia": "Australia", "canada": "Canada", "norway": "Norway",
-    "singapore": "Singapore", "switzerland": "Switzerland", "new-zealand": "New Zealand",
-    "sweden": "Sweden", "germany": "Germany", "ireland": "Ireland",
-    "united-kingdom": "United Kingdom", "netherlands": "Netherlands",
-    "france": "France", "finland": "Finland", "belgium": "Belgium",
-    "denmark": "Denmark", "austria": "Austria", "italy": "Italy",
-    "usa": "USA", "japan": "Japan", "india": "India",
-    "uae": "UAE", "brazil": "Brazil", "malaysia": "Malaysia",
-    "portugal": "Portugal", "spain": "Spain", "poland": "Poland",
-  };
+
+  const EUROPEAN_COUNTRIES = ["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"];
+  const ENGLISH_SPEAKING   = ["ireland","united-kingdom","australia","new-zealand","canada","usa","singapore"];
+  const HIGH_TAX_COUNTRIES = ["sweden","finland","germany","denmark","austria","ireland","united-kingdom","italy","netherlands","belgium","norway","australia","new-zealand","france","canada"];
+  const HIGH_COST_COUNTRIES= ["singapore","switzerland","norway","australia","new-zealand","ireland","united-kingdom","usa","canada","denmark"];
+  const WARM_COUNTRIES     = ["uae","spain","portugal","singapore","australia","india","brazil","malaysia","thailand","vietnam","philippines","mexico","colombia","costa-rica","panama","greece"];
+  const NOMAD_VISA         = ["portugal","spain","germany","netherlands","uae","malaysia","new-zealand"];
+  const STRONG_HEALTHCARE  = ["germany","france","switzerland","austria","netherlands","sweden","norway","denmark","finland","belgium","australia","canada","new-zealand","singapore","japan","united-kingdom","ireland","portugal","spain","italy"];
+
   const current = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
-  if (current && SLUG_TO_NAME[current] && !matchSlugs.includes(current)) {
-    excluded.push({ name: SLUG_TO_NAME[current], reason: "your current country" });
-  }
-  dealBreakers.forEach((db) => {
-    if (db === "none") return;
-    const reason = REASON_MAP[db] ?? db;
-    if (db === "lowtax") {
-      ["australia","canada","norway","sweden","germany","ireland","united-kingdom","netherlands","france","finland","belgium","denmark","austria","italy","new-zealand"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
-    if (db === "lowcost") {
-      ["singapore","switzerland","norway","australia","new-zealand","ireland","united-kingdom","usa","canada"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
-    if (db === "europe") {
-      ["australia","canada","usa","uae","singapore","japan","india","brazil","malaysia"]
-        .filter(s => !matchSlugs.includes(s) && SLUG_TO_NAME[s]).slice(0, 3)
-        .forEach(s => excluded.push({ name: SLUG_TO_NAME[s], reason }));
-    }
+
+  allCountries.forEach(c => {
+    if (matchSlugs.includes(c.slug)) return; // already in results
+    let reason = "";
+    if (current && c.slug === current) reason = "your current country";
+    else if (dealBreakers.includes("europe") && !EUROPEAN_COUNTRIES.includes(c.slug)) reason = "not in Europe";
+    else if (dealBreakers.includes("english") && !ENGLISH_SPEAKING.includes(c.slug)) reason = "not English-speaking";
+    else if (dealBreakers.includes("lowtax") && HIGH_TAX_COUNTRIES.includes(c.slug)) reason = "high income tax";
+    else if (dealBreakers.includes("lowcost") && HIGH_COST_COUNTRIES.includes(c.slug)) reason = "high cost of living";
+    else if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(c.slug)) reason = "cold climate";
+    else if (dealBreakers.includes("lowcrime") && c.data.scoreCrimeRate < 7.5) reason = "crime rate too high";
+    else if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA.includes(c.slug)) reason = "no digital nomad visa";
+    else if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE.includes(c.slug)) reason = "weak public healthcare";
+    if (reason) excluded.push({ name: c.name, reason });
   });
+
   const seen = new Set<string>();
   return excluded.filter(e => { if (seen.has(e.name)) return false; seen.add(e.name); return true; });
 }
@@ -199,20 +183,53 @@ function WhyToggle({ match, answers, jobRoleDef, rank }: {
 }
 
 // ── Take-home card ─────────────────────────────────────────────────────────
-function TakeHomeCard({ match, jobRoleDef, isPro }: {
-  match: CountryMatch; jobRoleDef: typeof JOB_ROLES[0] | undefined; isPro: boolean;
+function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
+  match: CountryMatch; jobRoleDef: typeof JOB_ROLES[0] | undefined; isPro: boolean; moveReason?: string;
 }) {
-  if (!jobRoleDef) return null;
   const cs = getCurrencySymbol(match.country.currency);
+  const rent = match.country.data.costRentCityCentre;
+  const groceries = match.country.data.costGroceriesMonthly;
+  const transport = match.country.data.costTransportMonthly;
+  const totalCosts = rent + groceries + transport;
+
+  // Retirement / remote without role: show cost-of-living breakdown instead of salary
+  const isLifestyleMode = (moveReason === "retire" || moveReason === "remote") && !jobRoleDef;
+  if (isLifestyleMode) {
+    const rowStyle = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderBottom: `1px solid ${LINE}` };
+    const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: DIM };
+    const valStyle = { fontFamily: SERIF, fontSize: 16, color: FG };
+    return (
+      <div style={{ border: `1px solid #2a2a2a`, background: PANEL, overflow: "hidden" }}>
+        <div style={{ padding: "12px 18px", borderBottom: `1px solid ${LINE}`, background: BG }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>
+            Monthly cost of living · {match.country.name}
+          </span>
+        </div>
+        <div style={{ padding: "8px 0" }}>
+          <div style={rowStyle}><span style={labelStyle}>Rent (city centre)</span><span style={valStyle}>{cs}{rent.toLocaleString()}/mo</span></div>
+          <div style={rowStyle}><span style={labelStyle}>Groceries</span><span style={valStyle}>{cs}{groceries.toLocaleString()}/mo</span></div>
+          <div style={rowStyle}><span style={labelStyle}>Transport</span><span style={valStyle}>{cs}{transport.toLocaleString()}/mo</span></div>
+          <div style={{ height: 1, background: "#2a2a2a", margin: "2px 0" }} />
+          <div style={{ ...rowStyle, borderBottom: "none" }}>
+            <span style={{ ...labelStyle, color: FG }}>Total estimated</span>
+            <span style={{ fontFamily: SERIF, fontSize: 20, color: MINT }}>{cs}{totalCosts.toLocaleString()}/mo</span>
+          </div>
+        </div>
+        <div style={{ padding: "10px 18px", borderTop: `1px solid ${LINE}` }}>
+          <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", lineHeight: 1.6, margin: 0 }}>
+            * Single person estimate. Actual costs vary by city and lifestyle.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!jobRoleDef) return null;
   const gross = match.country.data[jobRoleDef.salaryKey] as number;
   const taxRate = match.country.data.incomeTaxRateMid / 100;
   const taxAmount = Math.round(gross * taxRate);
   const netAnnual = gross - taxAmount;
   const netMonthly = Math.round(netAnnual / 12);
-  const rent = match.country.data.costRentCityCentre;
-  const groceries = match.country.data.costGroceriesMonthly;
-  const transport = match.country.data.costTransportMonthly;
-  const totalCosts = rent + groceries + transport;
   const disposable = netMonthly - totalCosts;
 
   const rowStyle = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderBottom: `1px solid ${LINE}` };
@@ -234,7 +251,7 @@ function TakeHomeCard({ match, jobRoleDef, isPro }: {
           In {match.country.name}
         </p>
         <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: 0 }}>
-          In <em style={{ color: MINT, fontStyle: "italic" }}>{match.country.name}</em>
+          In <em style={{ color: MINT, fontStyle: "normal" }}>{match.country.name}</em>
         </h3>
       </div>
       <div style={{ padding: "8px 0" }}>
@@ -296,7 +313,7 @@ function SessionExpired() {
       <span style={{ fontSize: 48 }}>🌍</span>
       <div>
         <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,42px)", fontWeight: 400, color: FG, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
-          Your session <em style={{ color: MINT, fontStyle: "italic" }}>expired</em>
+          Your session <em style={{ color: MINT, fontStyle: "normal" }}>expired</em>
         </h2>
         <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 340, margin: "0 auto" }}>
           We couldn't find your results — this usually happens after a page refresh or opening from a new tab. Retake the quiz to see your matches again (takes 2 minutes).
@@ -307,7 +324,7 @@ function SessionExpired() {
         style={{
           fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
           padding: "13px 28px", background: MINT, color: BG, border: "none",
-          borderRadius: 999, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
+          borderRadius: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
           boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
         }}>
         Retake quiz →
@@ -400,11 +417,31 @@ function SaveResultsBanner() {
   );
 }
 
+// ── Country role label ─────────────────────────────────────────────────────
+function getCountryRoleLabel(m: CountryMatch, jobRoleDef: typeof JOB_ROLES[0] | undefined, allMatches: CountryMatch[]): string {
+  const d = m.country.data;
+  const salary = jobRoleDef ? d[jobRoleDef.salaryKey] as number : 0;
+  const salaryUSD = salary * (TO_USD[m.country.currency] ?? 1);
+  const topSalaryUSD = allMatches.slice(0, 5).reduce((max, x) => {
+    const s = jobRoleDef ? x.country.data[jobRoleDef.salaryKey] as number : 0;
+    return Math.max(max, s * (TO_USD[x.country.currency] ?? 1));
+  }, 0);
+  if (salaryUSD >= topSalaryUSD * 0.97) return "Best salary";
+  if (d.visaDifficulty <= 1) return "Fastest visa";
+  if (d.incomeTaxRateMid <= 12) return "Low tax";
+  if (d.costRentCityCentre <= 800) return "Lowest cost";
+  if (d.scoreSafety >= 8.5) return "Safest";
+  if (d.scoreQualityOfLife >= 8.5) return "Best QoL";
+  if (m.country.language === "English") return "English-speaking";
+  return "";
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function WizardResultsPage() {
   const router = useRouter();
   const [matches, setMatches]         = useState<CountryMatch[]>([]);
   const [answers, setAnswers]         = useState<Partial<WizardAnswers>>({});
+  const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -412,6 +449,7 @@ export default function WizardResultsPage() {
   const [user, setUser]               = useState<User | null>(null);
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Auth — also listens for post-OAuth redirect sign-in
   useEffect(() => {
@@ -444,6 +482,10 @@ export default function WizardResultsPage() {
         try {
           setMatches(JSON.parse(raw));
           if (answersRaw) setAnswers(JSON.parse(answersRaw));
+          try {
+            const countriesRaw = sessionStorage.getItem("wizardCountries");
+            if (countriesRaw) setAllCountries(JSON.parse(countriesRaw));
+          } catch { /* ignore */ }
         } catch {
           setSessionExpired(true);
           setIsLoading(false);
@@ -457,6 +499,8 @@ export default function WizardResultsPage() {
               .from("wizard_results")
               .select("answers, top_countries")
               .eq("user_id", session.user.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
               .maybeSingle();
 
             if (result?.top_countries && result.top_countries.length > 0) {
@@ -493,20 +537,37 @@ export default function WizardResultsPage() {
   }, []);
 
   // Auto-save whenever user becomes available (including post-OAuth redirect)
+  // Guard: only save once per page load by tracking whether we've already saved
+  const hasSavedRef = React.useRef(false);
   useEffect(() => {
-    if (!isLoading && matches.length > 0 && user) {
+    if (!isLoading && matches.length > 0 && user && !hasSavedRef.current) {
+      hasSavedRef.current = true;
       const save = async () => {
         try {
+          // Check for a recent save (within 5 minutes) to avoid duplicates on fast reloads
+          const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+          const { data: existing } = await supabase
+            .from("wizard_results")
+            .select("id")
+            .eq("user_id", user.id)
+            .gte("created_at", fiveMinAgo)
+            .limit(1)
+            .maybeSingle();
+          if (existing) return; // already saved this session
           const topCountries = matches.slice(0, 25).map(m => ({
             slug: m.country.slug, name: m.country.name,
             flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
           }));
-          const { data: existing } = await supabase.from("wizard_results").select("id").eq("user_id", user.id).maybeSingle();
-          if (existing) {
-            await supabase.from("wizard_results").update({ top_countries: topCountries, answers, created_at: new Date().toISOString() }).eq("id", existing.id);
-          } else {
-            await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
-          }
+          await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
+          // Fire email — no await, don't block UI
+          fetch('/api/send-results', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user.email,
+              top3: topCountries.slice(0, 3),
+            }),
+          }).catch(() => {})
         } catch (err) { console.error("Failed to save:", err); }
       };
       save();
@@ -519,6 +580,26 @@ export default function WizardResultsPage() {
     router.push("/");
   };
 
+  const handleReportCheckout = async () => {
+    setReportLoading(true);
+    try {
+      const body: Record<string, string> = {};
+      if (user?.email) body.email = user.email;
+      const { data: { session: checkoutSession } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (checkoutSession?.access_token) headers["Authorization"] = `Bearer ${checkoutSession.access_token}`;
+      const res = await fetch("/api/checkout-report", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) { window.location.href = data.url; return; }
+      console.error("[checkout-report]", data.error ?? res.status);
+    } catch (e) { console.error("[checkout-report]", e); }
+    setReportLoading(false);
+  };
+
   // ── Loading screen ─────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -528,7 +609,7 @@ export default function WizardResultsPage() {
         <div style={{ textAlign: "center" }}>
           <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12 }}>◆ Computing</p>
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,48px)", fontWeight: 400, letterSpacing: "-0.02em", color: FG, margin: 0 }}>
-            Finding your <em style={{ color: MINT, fontStyle: "italic" }}>country…</em>
+            Finding your <em style={{ color: MINT, fontStyle: "normal" }}>country…</em>
           </h2>
         </div>
         <div style={{ width: "100%", maxWidth: 320 }}>
@@ -548,11 +629,49 @@ export default function WizardResultsPage() {
   if (matches.length === 0) return <SessionExpired />;
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches  = isPro ? matches.slice(0, 25) : matches.slice(0, 8);
-  const lockedCount     = 25 - visibleMatches.length;
+  const visibleMatches  = isPro ? matches : matches.slice(0, 8);
+  const lockedCount     = matches.length - visibleMatches.length;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
-  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers) : [];
+  const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
+
+  // Passport power derived values
+  const { primary: effectivePrimary, secondary: effectiveSecondary } = resolveEffectivePassports(
+    (answers.passport ?? "").toLowerCase(),
+    (answers.secondPassport ?? "").toLowerCase() || undefined,
+  );
+  const passportTier    = Math.min(getPassportStrength(effectivePrimary), effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4) as 1|2|3|4;
+  const rawPrimaryTier  = getPassportStrength((answers.passport ?? "").toLowerCase());
+  const tierUpgraded    = !!effectiveSecondary && passportTier < rawPrimaryTier;
+  const hasDualPassport = !!(answers.secondPassport);
+  const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
+  const EU_COUNTRY_SLUGS  = new Set(["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"]);
+  // Which passport drives a given country's visa advantage
+  function passportDrivingVisa(countrySlug: string): string | null {
+    if (!hasDualPassport) return null;
+    const p1IsEU = EU_PASSPORT_SLUGS.has(effectivePrimary);
+    const p2IsEU = effectiveSecondary ? EU_PASSPORT_SLUGS.has(effectiveSecondary) : false;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && !p1IsEU && p2IsEU) return effectiveSecondary ?? null;
+    if (EU_COUNTRY_SLUGS.has(countrySlug) && p1IsEU) return effectivePrimary;
+    const t1 = getPassportStrength(effectivePrimary);
+    const t2 = effectiveSecondary ? getPassportStrength(effectiveSecondary) : 4;
+    if (t2 < t1) return effectiveSecondary ?? null; // second is stronger
+    return null; // primary drives it — no need to call it out
+  }
+
+  // Delta: where would top match rank without the second passport?
+  const passportDelta = (() => {
+    if (!hasDualPassport || !answers.secondPassport) return null;
+    try {
+      const countriesRaw = sessionStorage.getItem("wizardCountries");
+      if (!countriesRaw) return null;
+      const countries = JSON.parse(countriesRaw);
+      const withoutSecond = scoreCountriesForWizard(countries, { ...answers, secondPassport: undefined } as WizardAnswers);
+      const topSlug = matches[0]?.country.slug;
+      const rankWithout = withoutSecond.findIndex(m => m.country.slug === topSlug) + 1;
+      return rankWithout > 1 ? rankWithout : null;
+    } catch { return null; }
+  })();
 
   const top       = matches[0];
   const pctColor  = matchPercentColor(top.matchPercent);
@@ -579,45 +698,8 @@ export default function WizardResultsPage() {
         }
       `}</style>
 
-      <div style={{
-        position: "fixed", top: 0, right: 0, width: 600, height: 600,
-        background: "radial-gradient(ellipse at 80% 0%, #00ffd508 0%, transparent 55%)",
-        pointerEvents: "none", zIndex: 0,
-      }} />
-
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
-      <nav className="res-nav" style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(10,10,10,0.85)", backdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${LINE}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 32px",
-      }}>
-        <button onClick={() => router.push("/wizard")} style={{
-          background: "none", border: "none", cursor: "pointer",
-          fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
-          color: DIM, display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s",
-        }}
-          onMouseEnter={e => (e.currentTarget.style.color = FG)}
-          onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-          <ArrowLeft size={14} /> Retake
-        </button>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: FG }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: MINT, display: "inline-block" }} />
-          <span style={{ fontFamily: SERIF, fontSize: 20, letterSpacing: "-0.02em" }}>
-            origio<span style={{ color: MINT }}>.</span>
-          </span>
-        </Link>
-        <button onClick={handleViewOnGlobe} style={{
-          background: "none", border: "none", cursor: "pointer",
-          fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
-          color: DIM, display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s",
-        }}
-          onMouseEnter={e => (e.currentTarget.style.color = FG)}
-          onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-          <Globe size={13} /> Globe
-        </button>
-      </nav>
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
       {/* ── Save results banner — only for logged-out users ────────────────── */}
       {!user && <SaveResultsBanner />}
@@ -627,19 +709,42 @@ export default function WizardResultsPage() {
         {/* ── HERO ────────────────────────────────────────────────────────── */}
         <section className="res-hero" style={{ padding: "56px 0 48px", borderBottom: `1px solid ${LINE}`, display: "grid", gridTemplateColumns: "1fr 320px", gap: "48px 52px", alignItems: "start" }}>
           <div>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 28, display: "flex", alignItems: "center", gap: 6 }}>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: hasDualPassport ? 14 : 28, display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: MINT }}>●</span> Top match{jobRoleDef ? ` · ${jobRoleDef.label}` : ""}
             </p>
+            {hasDualPassport && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "7px 14px", border: `1px solid rgba(0,255,213,0.2)`, marginBottom: 28, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport power</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT }}>TIER {passportTier}</span>
+                <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{PASSPORT_TIER_LABEL[passportTier].split("—")[1]?.trim()}</span>
+                {tierUpgraded && <span style={{ fontFamily: MONO, fontSize: 10, color: MINT }}>↑ from Tier {rawPrimaryTier}</span>}
+                {passportDelta && (
+                  <>
+                    <span style={{ width: 1, height: 12, background: "rgba(0,255,213,0.2)" }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: "rgba(255,200,50,0.8)" }}>
+                      Without second passport: #{passportDelta}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>
               <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>
               <h1 style={{ fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92, margin: 0, color: FG }}>
                 {top.country.name}
               </h1>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
               <span style={{ fontFamily: SERIF, fontSize: 48, color: pctColor }}>{top.matchPercent}%</span>
               <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM }}>match for your profile</span>
             </div>
+            <p style={{ fontFamily: SANS, fontSize: 15, color: "rgba(240,240,232,0.7)", lineHeight: 1.7, marginBottom: 24, maxWidth: 480 }}>
+              {(() => {
+                const scores = computeScoreBreakdown(top.country, answers, jobRoleDef);
+                return generateSummary(top, answers, scores, 1);
+              })()}
+            </p>
             {topSalary && (
               <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE, marginBottom: 24 }}>
                 {[
@@ -656,149 +761,173 @@ export default function WizardResultsPage() {
               </div>
             )}
             {top.reasons.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
                 {top.reasons.map(r => (
                   <span key={r} style={{
-                    fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-                    padding: "5px 12px", border: `1px solid rgba(0,255,213,0.3)`, color: MINT,
-                    display: "flex", alignItems: "center", gap: 4,
+                    fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+                    padding: "6px 10px", borderLeft: `2px solid ${MINT}`,
+                    background: "rgba(0,255,213,0.04)", color: MINT,
+                    display: "flex", alignItems: "center", gap: 8,
                   }}>
-                    <span style={{ color: MINT, fontWeight: 700 }}>+</span> {r}
+                    <span style={{ color: MINT, fontSize: 8 }}>✦</span> {r}
                   </span>
                 ))}
               </div>
             )}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            {(answers.priorities ?? []).length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#333" }}>Weighted by:</span>
+                {(answers.priorities ?? []).slice(0, 4).map((p, i) => (
+                  <span key={p} style={{
+                    fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                    padding: "3px 8px", border: `1px solid #2a2a2a`, color: i === 0 ? MINT : DIM,
+                  }}>
+                    {i === 0 ? "↑ " : ""}{p}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
               <Link href={`/country/${top.country.slug}/personalised`} style={{
                 fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
                 padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-                borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
-                transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                boxShadow: `3px 3px 0 #00aa90`, transition: "transform .1s, box-shadow .1s",
               }}
-                onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+                onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
                 View full report <ArrowRight size={14} />
               </Link>
               <button onClick={handleViewOnGlobe} style={{
-                fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-                padding: "13px 28px", background: "transparent", color: DIM,
-                border: `1px solid #2a2a2a`, borderRadius: 999, cursor: "pointer", transition: "all 0.15s",
+                fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
+                background: "none", border: "none", color: DIM, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6, padding: 0,
+                borderBottom: `1px solid #2a2a2a`, paddingBottom: 2, transition: "color .1s, border-color .1s",
               }}
-                onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#444"; }}
+                onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#555"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
-                See on globe
+                <Globe size={12} /> See on globe
               </button>
+              <Link href="/salary-calculator" style={{
+                fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: DIM, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
+                borderBottom: '1px solid #2a2a2a', paddingBottom: 1, transition: 'color .12s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.color = FG)}
+                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                Calculate exact take-home →
+              </Link>
             </div>
           </div>
           <div style={{ position: "sticky", top: 80 }}>
-            <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} />
+            <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} moveReason={answers.moveReason} />
           </div>
         </section>
 
         {/* ── PODIUM ──────────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>◆ Podium</p>
             <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-              Your <em style={{ color: MINT, fontStyle: "italic" }}>top three</em>
+              Your <em style={{ fontStyle: "normal" }}>top three</em>
             </h2>
           </div>
-          <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: LINE }}>
-            {matches.slice(0, 3).map((m, i) => {
-              const mcs    = getCurrencySymbol(m.country.currency);
-              const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
-              return (
-                <div key={m.country.slug} style={{ background: BG, padding: "24px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: RANK_COLORS[i] }}>#{i + 1}</span>
-                    <span style={{ fontFamily: SERIF, fontSize: 20, color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: LINE }}>
+            {/* #1 — dominant */}
+            <div style={{ background: BG, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>01</span>
+                <span style={{ fontSize: 40 }}>{matches[0].country.flagEmoji}</span>
+                <div>
+                  <div style={{ fontFamily: SERIF, fontSize: 28, color: FG, marginBottom: 4 }}>{matches[0].country.name}</div>
+                  {(() => { const driver = passportDrivingVisa(matches[0].country.slug); return driver ? (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 4, opacity: 0.8 }}>✦ visa via {driver} passport</div>
+                  ) : null; })()}
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: DIM, letterSpacing: "0.14em" }}>
+                    {jobRoleDef ? `${getCurrencySymbol(matches[0].country.currency)}${(matches[0].country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr · ${getVisaLabel(matches[0].country.data.visaDifficulty)} visa` : ""}
                   </div>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{m.country.flagEmoji}</div>
-                  <div style={{ fontFamily: SERIF, fontSize: 22, color: FG, marginBottom: 8 }}>{m.country.name}</div>
-                  {salary && (
-                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: DIM, lineHeight: 1.8 }}>
-                      <span>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</span><br />
-                      <span>{mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo rent · {m.country.language}</span>
-                    </div>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
-                    <Link href={`/country/${m.country.slug}/personalised`} style={{
-                      fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-                      color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
-                    }}>
-                      Report →
-                    </Link>
-                  </div>
-                  <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 1} />
                 </div>
-              );
-            })}
-          </div>
-          {isPro && (
-            <div style={{ marginTop: 20 }}>
-              <Link href={compareHref} style={{
-                fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase",
-                color: DIM, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, transition: "color 0.15s",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Compare these 3 side by side <ArrowRight size={13} />
-              </Link>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                <span style={{ fontFamily: SERIF, fontSize: 40, color: matchPercentColor(matches[0].matchPercent) }}>{matches[0].matchPercent}%</span>
+                <Link href={`/country/${matches[0].country.slug}/personalised`} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                  Report →
+                </Link>
+              </div>
             </div>
-          )}
+            {/* #2 and #3 — quieter */}
+            <div className="res-podium" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: LINE }}>
+              {matches.slice(1, 3).map((m, i) => {
+                const salary = jobRoleDef ? m.country.data[jobRoleDef.salaryKey] as number : null;
+                const mcs = getCurrencySymbol(m.country.currency);
+                return (
+                  <div key={m.country.slug} style={{ background: BG, padding: "20px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{String(i + 2).padStart(2, "0")}</span>
+                      <span style={{ fontFamily: SERIF, fontSize: 18, color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</span>
+                    </div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>{m.country.flagEmoji}</div>
+                    <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 6 }}>{m.country.name}</div>
+                    {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
+                      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 6, opacity: 0.8 }}>✦ visa via {driver} passport</div>
+                    ) : null; })()}
+                    {salary && <div style={{ fontFamily: MONO, fontSize: 10, color: DIM, letterSpacing: "0.1em" }}>{mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa</div>}
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${LINE}` }}>
+                      <Link href={`/country/${m.country.slug}/personalised`} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, transition: "color .12s" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = FG)}
+                        onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                        Report →
+                      </Link>
+                    </div>
+                    <WhyToggle match={m} answers={answers} jobRoleDef={jobRoleDef} rank={i + 2} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ── AT A GLANCE ─────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0", borderBottom: `1px solid ${LINE}` }}>
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ At a glance</p>
-            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-              What this <em style={{ color: MINT, fontStyle: "italic" }}>means</em>
+            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>Analysis</p>
+            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+              What your results say
             </h2>
           </div>
-          <div className="res-stats4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: LINE }}>
-            {[
-              {
-                label: "Best salary",
-                value: (() => { if (!jobRoleDef) return "—"; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${best.country.flagEmoji} ${best.country.name}`; })(),
-                sub: (() => { if (!jobRoleDef) return ""; const best = [...matches.slice(0, 3)].sort((a, b) => (b.country.data[jobRoleDef.salaryKey] as number) - (a.country.data[jobRoleDef.salaryKey] as number))[0]; return `${getCurrencySymbol(best.country.currency)}${(best.country.data[jobRoleDef.salaryKey] as number).toLocaleString()}/yr`; })(),
-              },
-              {
-                label: "Easiest visa",
-                value: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return `${e.country.flagEmoji} ${e.country.name}`; })(),
-                sub: (() => { const e = [...matches.slice(0, 3)].sort((a, b) => a.country.data.visaDifficulty - b.country.data.visaDifficulty)[0]; return getVisaLabel(e.country.data.visaDifficulty); })(),
-              },
-              {
-                label: "Lowest rent",
-                value: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${c.country.flagEmoji} ${c.country.name}`; })(),
-                sub: (() => { const c = [...matches.slice(0, 3)].sort((a, b) => a.country.data.costRentCityCentre - b.country.data.costRentCityCentre)[0]; return `${getCurrencySymbol(c.country.currency)}${c.country.data.costRentCityCentre.toLocaleString()}/mo`; })(),
-              },
-              {
-                label: "Safest",
-                value: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.flagEmoji} ${s.country.name}`; })(),
-                sub: (() => { const s = [...matches.slice(0, 3)].sort((a, b) => b.country.data.scoreSafety - a.country.data.scoreSafety)[0]; return `${s.country.data.scoreSafety}/10`; })(),
-              },
-            ].map(item => (
-              <div key={item.label} style={{ background: BG, padding: "20px 22px" }}>
-                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>{item.label}</div>
-                <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 4 }}>{item.value}</div>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: MINT, letterSpacing: "0.1em" }}>{item.sub}</div>
+          {(() => {
+            const topReasons = top.reasons.slice(0, 2);
+            const reasonsText = topReasons.length > 0 ? topReasons.join(" and ") : "your stated priorities";
+            const strongestText = `${top.country.flagEmoji} ${top.country.name} leads because it scores highest on ${reasonsText}.`;
+            const topScores = computeScoreBreakdown(top.country, answers, jobRoleDef);
+            const bottomMetric = Object.values(topScores).sort((a, b) => a.value - b.value)[0];
+            const tradeoffText = `The trade-off: ${bottomMetric.label} is lower than your other matches. ${bottomMetric.desc}.`;
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 1, background: LINE }}>
+                <div style={{ background: BG, padding: "24px 28px" }}>
+                  <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Strongest signal</p>
+                  <p style={{ fontFamily: SANS, fontSize: 15, color: FG, lineHeight: 1.6, margin: 0 }}>{strongestText}</p>
+                </div>
+                <div style={{ background: BG, padding: "24px 28px", borderLeft: `1px solid ${LINE}` }}>
+                  <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Main trade-off</p>
+                  <p style={{ fontFamily: SANS, fontSize: 15, color: "rgba(240,240,232,0.6)", lineHeight: 1.6, margin: 0 }}>{tradeoffText}</p>
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </section>
 
         {/* ── FULL RANKING ────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0 80px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
             <div>
-              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ The ranking</p>
-              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-                All <em style={{ color: MINT, fontStyle: "italic" }}>twenty-five</em>
+              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ The ranking</p>
+              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+                All <em style={{ fontStyle: "normal" }}>{matches.length}</em>
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
-              {visibleMatches.length} of 25 visible
+              {visibleMatches.length} of {matches.length} visible
             </span>
           </div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
@@ -824,6 +953,14 @@ export default function WizardResultsPage() {
                     <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>
                     <div>
                       <div style={{ fontFamily: SERIF, fontSize: 15, color: FG, marginBottom: 2 }}>{m.country.name}</div>
+                      {(() => {
+                        const label = getCountryRoleLabel(m, jobRoleDef, matches);
+                        return label ? (
+                          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3a3a3a", marginTop: 2, display: "block" }}>
+                            {label}
+                          </span>
+                        ) : null;
+                      })()}
                       {salary && (
                         <div style={{ fontFamily: MONO, fontSize: 10, color: "#333", letterSpacing: "0.08em" }}>
                           {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa · {mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo
@@ -847,54 +984,84 @@ export default function WizardResultsPage() {
             })}
           </div>
           {!isPro && lockedCount > 0 && (
-            <div style={{ position: "relative" }}>
-              <div style={{ filter: "blur(4px)", opacity: 0.4, pointerEvents: "none", userSelect: "none" }}>
-                {[visibleMatches.length + 1, visibleMatches.length + 2, visibleMatches.length + 3].map((n, i) => (
-                  <div key={n} style={{ display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px", alignItems: "center", gap: 14, padding: "14px 10px", borderBottom: `1px solid #0f0f0f`, opacity: 1 - i * 0.25 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: "#1a1a1a", textAlign: "right" }}>{String(n).padStart(2, "0")}</span>
-                    <span style={{ fontSize: 20 }}>🌍</span>
-                    <div>
-                      <div style={{ height: 10, width: 100, background: "#1a1a1a", marginBottom: 6 }} />
-                      <div style={{ height: 8, width: 140, background: "#111" }} />
-                    </div>
-                    <div style={{ height: 2, background: "#111" }} />
-                    <div style={{ height: 10, width: 28, background: "#1a1a1a" }} />
+            <div>
+              {/* 3 locked rows inline */}
+              {[4, 5, 6].map((n) => (
+                <div key={n} style={{
+                  display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px",
+                  alignItems: "center", gap: 14, padding: "14px 10px",
+                  borderBottom: `1px solid #0d0d0d`,
+                  opacity: 0.3, userSelect: "none", pointerEvents: "none",
+                }} className="res-row">
+                  <span style={{ fontFamily: MONO, fontSize: 11, textAlign: "right", color: "#2a2a2a" }}>{String(n).padStart(2, "0")}</span>
+                  <Lock size={12} style={{ color: "#2a2a2a" }} />
+                  <div>
+                    <div style={{ height: 8, width: 80 + n * 10, background: "#1a1a1a", marginBottom: 5 }} />
+                    <div style={{ height: 6, width: 50, background: "#111" }} />
                   </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 0 32px" }}>
-                <div style={{ border: `1px solid ${MINT}`, background: BG, padding: "28px 32px", textAlign: "center", maxWidth: 360, width: "100%" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <Lock size={12} /> {lockedCount} more locked
-                  </div>
-                  <h3 style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 400, letterSpacing: "-0.01em", color: FG, margin: "0 0 12px" }}>
-                    Unlock the <em style={{ color: MINT, fontStyle: "italic" }}>full ranking</em>
-                  </h3>
-                  <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, lineHeight: 1.6, margin: "0 0 20px" }}>
-                    See every country scored, side-by-side compare, and a personalised written report.
-                  </p>
-                  <Link href="/pro" style={{
-                    fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-                    padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-                    borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
-                    transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-                    <Sparkles size={13} /> Get Pro · €19.99
-                  </Link>
+                  <div style={{ height: 1, background: "#111", width: "100%" }} />
+                  <div style={{ height: 8, width: 28, background: "#1a1a1a" }} />
                 </div>
+              ))}
+              {/* Inline upgrade strip */}
+              <div style={{
+                borderTop: `1px solid ${MINT}`, borderBottom: `1px solid #1a1a1a`,
+                padding: "20px 10px",
+                display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+              }}>
+                <div>
+                  <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>
+                    <Lock size={10} style={{ display: "inline", marginRight: 6 }} />{lockedCount} countries locked
+                  </p>
+                  <p style={{ fontFamily: SANS, fontSize: 14, color: FG, margin: 0 }}>
+                    Salary calc · Visa checklist · 3-country compare
+                  </p>
+                </div>
+                <Link href="/pro" style={{
+                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+                  padding: "11px 24px", background: MINT, color: BG, textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s", flexShrink: 0,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
+                  Unlock all 37 — €4.99 <ArrowRight size={13} />
+                </Link>
+              </div>
+              {/* Download report option */}
+              <div style={{ padding: "12px 10px", borderBottom: `1px solid #0d0d0d` }}>
+                <button onClick={handleReportCheckout} disabled={reportLoading} style={{
+                  fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+                  color: "#444", background: "none", border: "none", cursor: reportLoading ? "default" : "pointer",
+                  display: "flex", alignItems: "center", gap: 6, padding: 0, transition: "color .12s",
+                }}
+                  onMouseEnter={e => { if (!reportLoading) (e.currentTarget as HTMLElement).style.color = DIM; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#444"; }}>
+                  ↓ {reportLoading ? "Redirecting…" : "Top 5 report only · €4.99"}
+                </button>
               </div>
             </div>
           )}
           {isPro && matches.length >= 3 && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 25 countries ranked for you</p>
-              <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
-                onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Compare top 3 <ArrowRight size={13} />
-              </Link>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 37 countries ranked for you</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <button onClick={handleReportCheckout} disabled={reportLoading} style={{
+                  fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+                  color: DIM, background: "none", border: "none", borderBottom: "1px solid #2a2a2a",
+                  paddingBottom: 1, cursor: reportLoading ? "default" : "pointer",
+                  display: "flex", alignItems: "center", gap: 5, transition: "color .12s, border-color .12s",
+                }}
+                  onMouseEnter={e => { if (!reportLoading) { (e.currentTarget as HTMLElement).style.color = FG; (e.currentTarget as HTMLElement).style.borderColor = "#555"; } }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = DIM; (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; }}>
+                  ↓ Download report · €4.99
+                </button>
+                <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = MINT)}
+                  onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                  Compare top 3 <ArrowRight size={13} />
+                </Link>
+              </div>
             </div>
           )}
         </section>
@@ -903,9 +1070,9 @@ export default function WizardResultsPage() {
         {excludedCountries.length > 0 && (
           <section style={{ padding: "52px 0", borderTop: `1px solid ${LINE}` }}>
             <div style={{ marginBottom: 28 }}>
-              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT, marginBottom: 10 }}>◆ Edge cases</p>
-              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>
-                Filtered <em style={{ color: MINT, fontStyle: "italic" }}>out</em>
+              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ Edge cases</p>
+              <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
+                Filtered <em style={{ fontStyle: "normal" }}>out</em>
               </h2>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 1, background: LINE }}>
@@ -924,35 +1091,7 @@ export default function WizardResultsPage() {
       </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: `1px solid ${LINE}`, padding: "64px 32px", textAlign: "center" }}>
-        <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", color: "#444", marginBottom: 20 }}>
-          51.5074° N · 0.1278° W <span style={{ color: MINT }}>→</span> 47.3769° N · 8.5417° E
-        </p>
-        <h2 style={{ fontFamily: SERIF, fontSize: "clamp(36px,6vw,64px)", fontWeight: 400, letterSpacing: "-0.02em", margin: "0 0 32px", lineHeight: 1.05, color: FG }}>
-          Your move starts <em style={{ color: MINT, fontStyle: "italic" }}>somewhere.</em>
-        </h2>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={() => router.push("/wizard")} style={{
-            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-            padding: "13px 28px", background: "transparent", color: DIM,
-            border: `1px solid #2a2a2a`, borderRadius: 999, cursor: "pointer", transition: "all 0.15s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#444"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
-            Retake quiz
-          </button>
-          <Link href="/pro" style={{
-            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
-            padding: "13px 28px", background: MINT, color: BG, textDecoration: "none",
-            borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8,
-            transition: "all 0.15s", boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
-          }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-            onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
-            <Sparkles size={13} /> Unlock Pro
-          </Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

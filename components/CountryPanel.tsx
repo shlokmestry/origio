@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   X, DollarSign, Home, Shield, Wifi, Heart, Plane,
   TrendingUp, Receipt, ChevronDown, ChevronUp, ArrowRightLeft,
@@ -8,6 +8,7 @@ import {
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { JobRoleIcon } from "@/components/JobRoleIcon";
 
 interface CountryPanelProps {
   country: CountryWithData | null;
@@ -48,6 +49,18 @@ const SCORE_BAR_COLORS = [
 export default function CountryPanel({ country, onClose, selectedRole, onRoleChange }: CountryPanelProps) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
+  const [roleDropOpen, setRoleDropOpen] = useState(false);
+  const roleDropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (roleDropRef.current && !roleDropRef.current.contains(e.target as Node)) {
+        setRoleDropOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (country) requestAnimationFrame(() => setIsVisible(true));
@@ -74,8 +87,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           .cp-body-grid { grid-template-columns: 1fr !important; }
           .cp-cost-grid  { grid-template-columns: 1fr 1fr !important; }
           .cp-cta-grid   { grid-template-columns: 1fr !important; }
-          .cp-modal      { max-height: 88vh !important; border-radius: 16px 16px 0 0 !important; }
-          .cp-wrap       { padding: 0 !important; align-items: flex-end !important; }
+          .cp-modal      { max-height: calc(100vh - 64px) !important; border-radius: 16px 16px 0 0 !important; }
+          .cp-wrap       { padding: 64px 0 0 !important; align-items: flex-end !important; }
         }
       `}</style>
       {/* Backdrop */}
@@ -103,7 +116,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "1rem",
+          padding: "80px 1rem 1rem",
           pointerEvents: "none",
         }}
       >
@@ -113,7 +126,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             pointerEvents: "auto",
             width: "100%",
             maxWidth: "680px",
-            maxHeight: "90vh",
+            maxHeight: "calc(100vh - 96px)",
             overflowY: "auto",
             overscrollBehavior: "contain",
             background: "#111111",
@@ -247,29 +260,50 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
                   <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                     Job Role
                   </p>
-                  <div style={{ position: "relative" }}>
-                    <select
-                      value={selectedRole}
-                      onChange={(e) => onRoleChange(e.target.value as JobRole)}
+                  <div ref={roleDropRef} style={{ position: "relative" }}>
+                    {/* Trigger */}
+                    <button
+                      type="button"
+                      onClick={() => setRoleDropOpen(o => !o)}
                       style={{
-                        width: "100%",
-                        padding: "8px 32px 8px 10px",
-                        background: "#0f0f0f",
-                        border: "1px solid #2a2a2a",
-                        color: "#f0f0e8",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        outline: "none",
-                        appearance: "none",
-                        cursor: "pointer",
-                        borderRadius: 0,
+                        width: "100%", display: "flex", alignItems: "center", gap: 8,
+                        padding: "8px 10px", background: "#0f0f0f",
+                        border: "1px solid #2a2a2a", color: "#f0f0e8",
+                        fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                        textAlign: "left", borderRadius: 0,
                       }}
                     >
-                      {JOB_ROLES.map((r) => (
-                        <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={12} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }} />
+                      <JobRoleIcon roleKey={selectedRole} size={16} color="#00ffd5" />
+                      <span style={{ flex: 1 }}>{currentRole.label}</span>
+                      <ChevronDown size={12} style={{ color: "#555", flexShrink: 0, transform: roleDropOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+                    </button>
+                    {/* Dropdown list */}
+                    {roleDropOpen && (
+                      <div style={{
+                        position: "absolute", top: "calc(100% + 2px)", left: 0, right: 0,
+                        background: "#0f0f0f", border: "1px solid #2a2a2a",
+                        zIndex: 200, maxHeight: 260, overflowY: "auto",
+                      }}>
+                        {JOB_ROLES.map((r) => (
+                          <button
+                            key={r.key}
+                            type="button"
+                            onClick={() => { onRoleChange(r.key as JobRole); setRoleDropOpen(false); }}
+                            style={{
+                              width: "100%", display: "flex", alignItems: "center", gap: 10,
+                              padding: "8px 12px", background: r.key === selectedRole ? "rgba(0,255,213,0.07)" : "transparent",
+                              border: "none", borderBottom: "1px solid #1a1a1a",
+                              color: r.key === selectedRole ? "#00ffd5" : "#f0f0e8",
+                              fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                              textAlign: "left",
+                            }}
+                          >
+                            <JobRoleIcon roleKey={r.key} size={15} color={r.key === selectedRole ? "#00ffd5" : "#888"} />
+                            {r.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

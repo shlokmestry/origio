@@ -85,22 +85,19 @@ function inMemoryCheck(
   return false // allowed
 }
 
-// Cleanup stale in-memory entries every 5 minutes
-setInterval(() => {
-  const now = Date.now()
-  const MAX_AGE = 10 * 60 * 1000
-  buckets.forEach((bucket) => {
-    bucket.forEach((entry, key) => {
-      if (now - entry.lastRefill > MAX_AGE) bucket.delete(key)
-    })
-  })
-}, 5 * 60 * 1000)
-
-// ── Identifier extraction (IP-based) — L-4 fix ───────────────────────────────
+// ── Identifier extraction (IP-based) ─────────────────────────────────────────
+// Use x-real-ip (set by Vercel/trusted proxy, not spoofable) first.
+// Fall back to the rightmost IP in X-Forwarded-For (added by the last trusted
+// proxy in the chain) rather than the leftmost (which can be spoofed by clients).
 function getIdentifier(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
   const realIp = request.headers.get('x-real-ip')
-  return forwarded?.split(',')[0]?.trim() ?? realIp ?? 'unknown'
+  if (realIp) return realIp.trim()
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    const parts = forwarded.split(',')
+    return parts[parts.length - 1].trim()
+  }
+  return 'unknown'
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

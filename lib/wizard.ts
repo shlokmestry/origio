@@ -4,7 +4,9 @@ import { normalise } from "@/lib/utils";
 
 export interface WizardAnswers {
   passport: string;
+  secondPassport?: string;
   moveReason: string;
+  workType?: string; // 'employee' | 'freelancer' | 'company'
   jobRole: string;
   priorities: string[];
   cityVibe: string;
@@ -27,6 +29,76 @@ const EU_PASSPORTS = [
   "finland", "italy", "poland", "romania",
 ];
 
+// Passport strength tiers — how much visa-free access / ease of movement
+// Tier 1: near-universal visa-free (180+ countries), strong bilateral treaties
+// Tier 2: good access (140–179 countries)
+// Tier 3: moderate (100–139 countries)
+// Tier 4: restricted (<100 countries)
+const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
+  // Tier 1 — strongest
+  "germany": 1, "france": 1, "italy": 1, "spain": 1, "finland": 1,
+  "sweden": 1, "austria": 1, "denmark": 1, "netherlands": 1, "norway": 1,
+  "switzerland": 1, "portugal": 1, "ireland": 1, "belgium": 1,
+  "new-zealand": 1, "australia": 1, "japan": 1, "singapore": 1,
+  "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1,
+  // space-variant aliases (wizard PASSPORTS array uses .toLowerCase())
+  "new zealand": 1, "united kingdom": 1, "usa": 1, "south korea": 1,
+  // Tier 2
+  "poland": 2, "romania": 2, "malaysia": 2, "brazil": 2, "uae": 2,
+  "mexico": 2, "chile": 2, "argentina": 2,
+  // Tier 3
+  "china": 3, "india": 3, "turkey": 3, "south-africa": 3, "ukraine": 3,
+  "south africa": 3,
+  "philippines": 3, "indonesia": 3, "vietnam": 3, "thailand": 3,
+  // Tier 4 — most restricted
+  "nigeria": 4, "pakistan": 4, "ghana": 4,
+};
+
+export function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {
+  return PASSPORT_STRENGTH[slug] ?? 3;
+}
+
+export const PASSPORT_TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
+  1: "Tier 1 — visa-free access to 180+ countries",
+  2: "Tier 2 — visa-free access to 140–179 countries",
+  3: "Tier 3 — visa-free access to 100–139 countries",
+  4: "Tier 4 — visa-free access to fewer than 100 countries",
+};
+
+// Countries that do not allow dual citizenship
+export const NO_DUAL_CITIZENSHIP_SLUGS = new Set([
+  "india", "china", "japan", "singapore", "uae",
+  "indonesia", "malaysia", "south-korea", "south korea",
+]);
+
+// If a no-dual passport is paired with another, the user has renounced the no-dual one.
+// Return the passports that are actually valid for scoring.
+export function resolveEffectivePassports(primary: string, secondary?: string): { primary: string; secondary?: string } {
+  if (!secondary) return { primary };
+  const primaryNoD  = NO_DUAL_CITIZENSHIP_SLUGS.has(primary);
+  const secondNoD   = NO_DUAL_CITIZENSHIP_SLUGS.has(secondary);
+  if (primaryNoD && !secondNoD) return { primary: secondary }; // renounced primary
+  if (secondNoD && !primaryNoD) return { primary };            // renounced secondary
+  return { primary, secondary };                               // both allow dual (or both no-dual — edge case)
+}
+
+// Returns the effective (best) passport strength for scoring
+function effectiveStrength(primary: string, secondary?: string): 1 | 2 | 3 | 4 {
+  const s1 = getPassportStrength(primary);
+  const s2 = secondary ? getPassportStrength(secondary) : 4;
+  return Math.min(s1, s2) as 1 | 2 | 3 | 4; // lower number = stronger
+}
+
+// Visa score modifier based on passport strength vs country difficulty
+// Strong passport in hard-to-enter country → less penalty
+function passportVisaModifier(strength: 1 | 2 | 3 | 4, visaDifficulty: number): number {
+  // Tier 1 passport: visa difficulty is effectively reduced by up to 2 points globally
+  // Tier 4 passport: difficulty is felt fully, even amplified on strict countries
+  const reductions: Record<1 | 2 | 3 | 4, number> = { 1: 2.0, 2: 1.0, 3: 0, 4: -1.0 };
+  const effectiveDifficulty = Math.max(0, visaDifficulty - reductions[strength]);
+  return 10 - effectiveDifficulty * 2; // normalised visa score
+}
+
 const ENGLISH_SPEAKING_COUNTRIES = [
   "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore",
 ];
@@ -34,41 +106,63 @@ const ENGLISH_SPEAKING_COUNTRIES = [
 const EUROPEAN_COUNTRIES = [
   "germany", "netherlands", "portugal", "spain", "ireland", "france",
   "italy", "united-kingdom", "sweden", "switzerland", "norway", "austria",
-  "finland", "belgium", "denmark", "poland",
+  "finland", "belgium", "denmark", "poland", "greece", "croatia", "czech-republic",
 ];
 
 const WARM_COUNTRIES = [
   "uae", "spain", "portugal", "singapore", "australia", "india",
   "brazil", "malaysia", "thailand", "vietnam", "philippines",
+  "mexico", "colombia", "costa-rica", "panama", "greece",
+];
+
+// City vibe preferences
+const BIG_CITY_COUNTRIES = [
+  "usa", "united-kingdom", "singapore", "japan", "germany", "france",
+  "australia", "canada", "uae", "netherlands",
+];
+const COASTAL_COUNTRIES = [
+  "portugal", "spain", "australia", "new-zealand", "brazil", "malaysia",
+  "thailand", "philippines", "vietnam", "uae", "italy",
+];
+const MID_CITY_COUNTRIES = [
+  "portugal", "germany", "netherlands", "austria", "sweden", "norway",
+  "denmark", "finland", "belgium", "poland", "ireland", "new-zealand",
 ];
 
 const HIGH_COST_COUNTRIES = [
   "singapore", "switzerland", "norway", "australia", "new-zealand",
-  "ireland", "united-kingdom", "usa", "canada", "denmark",
+  "ireland", "united-kingdom", "usa", "canada", "denmark", "south-korea",
 ];
 
 const HIGH_TAX_COUNTRIES = [
   "sweden", "finland", "germany", "denmark", "austria", "ireland",
   "united-kingdom", "italy", "netherlands", "belgium", "norway",
-  "australia", "new-zealand", "france", "canada",
+  "australia", "new-zealand", "france", "canada", "poland",
 ];
 
-const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal"];
-const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand"];
-const NOMAD_VISA_COUNTRIES       = ["portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand"];
+const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica"];
+const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama"];
+const NOMAD_VISA_COUNTRIES       = [
+  "portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand",
+  "mexico", "colombia", "panama", "thailand", "greece", "croatia", "costa-rica", "south-korea",
+  "georgia", "vietnam", "czech-republic",
+];
 
 const STRONG_HEALTHCARE_COUNTRIES = [
   "germany", "france", "switzerland", "austria", "netherlands",
   "sweden", "norway", "denmark", "finland", "belgium",
   "australia", "canada", "new-zealand", "singapore", "japan",
-  "united-kingdom", "ireland", "portugal", "spain", "italy",
+  "united-kingdom", "ireland", "portugal", "spain", "italy", "south-korea",
 ];
 
-const TO_USD: Record<string, number> = {
-  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, CAD: 0.74,
-  NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
+export const TO_USD: Record<string, number> = {
+  USD: 1,     EUR: 1.08,  GBP: 1.27,  AUD: 0.65,  CAD: 0.74,
+  NZD: 0.61,  CHF: 1.13,  SGD: 0.74,  AED: 0.27,
   NOK: 0.093, SEK: 0.096, DKK: 0.145,
   JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
+  // 2025/2026 additions
+  MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
+  CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
 };
 
 function toUSD(amount: number, currency: string): number {
@@ -101,6 +195,8 @@ export function scoreCountriesForWizard(
     if (dealBreakers.includes("lowtax")   && HIGH_TAX_COUNTRIES.includes(country.slug))        return false;
     if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA_COUNTRIES.includes(country.slug))    return false;
     if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) return false;
+    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug))               return false;
+    if (dealBreakers.includes("lowcrime") && country.data.scoreCrimeRate < 7.5)                return false;
     if (dealBreakers.includes("lowcost")) {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (HIGH_COST_COUNTRIES.includes(country.slug)) return false;
@@ -113,6 +209,13 @@ export function scoreCountriesForWizard(
     return true;
   });
 
+  // ── Passport resolution (drop renounced no-dual passport) ───────
+  const rawPrimary   = (answers.passport ?? "").toLowerCase();
+  const rawSecondary = (answers.secondPassport ?? "").toLowerCase() || undefined;
+  const { primary: primarySlug, secondary: secondarySlug } = resolveEffectivePassports(rawPrimary, rawSecondary);
+  const strength = effectiveStrength(primarySlug, secondarySlug);
+  const hasDual  = !!secondarySlug;
+
   // ── SCORING ─────────────────────────────────────────────────────
   const results: CountryMatch[] = eligible.map((country) => {
     const data = country.data;
@@ -124,7 +227,8 @@ export function scoreCountriesForWizard(
     const qualityScore  = data.scoreQualityOfLife;
     const safetyScore   = data.scoreSafety;
     const healthScore   = data.scoreHealthcare;
-    const visaScore     = 10 - data.visaDifficulty * 2;
+    // visa score now accounts for passport strength — strong passport → easier access everywhere
+    const visaScore     = Math.max(0, Math.min(10, passportVisaModifier(strength, data.visaDifficulty)));
     const taxScore      = 10 - normalise(data.incomeTaxRateMid, 0, 55);
     const internetScore = data.scoreInternetSpeed;
 
@@ -172,6 +276,15 @@ export function scoreCountriesForWizard(
       if (internetScore >= 8.5) reasons.push("Excellent internet speeds");
       if (taxScore >= 8)        reasons.push("Very tax efficient");
       if (affordScore >= 7)     reasons.push("Low cost of living");
+      // workType bonuses for remote workers
+      if (answers.workType === "freelancer") {
+        if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.4; reasons.push("Freelancer-friendly nomad visa"); }
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("No tax on foreign freelance income"); }
+      }
+      if (answers.workType === "company") {
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.5; reasons.push("Territorial tax — company profits taxed locally only"); }
+        if (["estonia", "georgia", "portugal", "uae", "singapore"].includes(country.slug)) { score += 0.5; reasons.push("Strong company formation + low corporate tax"); }
+      }
 
     // ── STANDARD scoring path ────────────────────────────────────
     } else {
@@ -204,16 +317,123 @@ export function scoreCountriesForWizard(
         score += 0.4; reasons.push("Free or low-cost university education");
       }
       if (answers.moveReason === "job" && data.visaDifficulty <= 2) score += 0.3;
+
+      // ── PROFESSION-SPECIFIC BONUSES ──────────────────────────
+      const role = answers.jobRole;
+
+      // Healthcare professionals — bonus for countries with shortage lists / healthcare system strength
+      if (["doctor","nurse","pharmacist","physiotherapist","psychologist","dentist"].includes(role)) {
+        if (data.scoreHealthcare >= 8.5) { score += 0.4; reasons.push("Excellent public healthcare system to work in"); }
+        if (["australia","canada","germany","netherlands","ireland","new-zealand","norway","sweden","denmark"].includes(country.slug)) {
+          score += 0.5; reasons.push("Active healthcare worker visa sponsorship"); }
+        if (["physiotherapist","psychologist"].includes(role) &&
+          ["australia","canada","new-zealand","ireland","united-kingdom"].includes(country.slug)) {
+          score += 0.3; reasons.push("Shortage occupation — faster visa processing"); }
+      }
+
+      // AI/ML + Cloud Architect — tech hub bonus, low corporate tax
+      if (["aiMlEngineer","cloudArchitect","softwareEngineer","devOps","cybersecurity","dataScientist"].includes(role)) {
+        if (["usa","singapore","united-kingdom","germany","netherlands","ireland","canada","australia"].includes(country.slug)) {
+          score += 0.4; reasons.push("Major tech hub — strong demand for this role"); }
+        if (["aiMlEngineer","cloudArchitect"].includes(role) &&
+          ["usa","singapore","united-kingdom","germany","netherlands","switzerland"].includes(country.slug)) {
+          score += 0.3; reasons.push("High AI/cloud investment — premium salaries"); }
+      }
+
+      // Pilot — aviation hub bonus, UAE/Singapore/Australia flag carriers
+      if (role === "pilot") {
+        if (["uae","singapore","australia","ireland","germany","norway","netherlands"].includes(country.slug)) {
+          score += 0.6; reasons.push("Major aviation hub — active pilot recruitment"); }
+        if (data.visaDifficulty <= 2) { score += 0.3; reasons.push("Employer-sponsored pilot visas available"); }
+      }
+
+      // Renewable Energy Engineer — EU green economy bonus
+      if (role === "renewableEnergyEngineer") {
+        if (["germany","netherlands","denmark","sweden","norway","spain","portugal","austria","finland","belgium"].includes(country.slug)) {
+          score += 0.6; reasons.push("EU green energy investment — strong sector growth"); }
+        if (["australia","canada","new-zealand","usa"].includes(country.slug)) {
+          score += 0.3; reasons.push("Growing renewable energy sector"); }
+      }
+
+      // Biomedical Engineer — medtech clusters
+      if (role === "biomedicalEngineer") {
+        if (["switzerland","germany","singapore","usa","netherlands","ireland"].includes(country.slug)) {
+          score += 0.5; reasons.push("Major medtech/pharma cluster — high demand"); }
+      }
+
+      // Graphic Designer — creative economy / remote-friendly
+      if (role === "graphicDesigner") {
+        if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.4; reasons.push("Nomad visa — work remotely as a designer"); }
+        if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Tax efficient for freelance design income"); }
+      }
+
+      // Supply Chain Manager — logistics hubs
+      if (role === "supplyChainManager") {
+        if (["singapore","netherlands","germany","uae","belgium"].includes(country.slug)) {
+          score += 0.5; reasons.push("Global logistics hub — top supply chain roles"); }
+      }
+
+      // workType bonuses for career path (mirrors remote path)
+      if (answers.moveReason === "career") {
+        if (answers.workType === "freelancer") {
+          if (NOMAD_VISA_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Freelancer-friendly nomad visa"); }
+          if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.2; reasons.push("Tax efficient for freelance income"); }
+        }
+        if (answers.workType === "company") {
+          if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug)) { score += 0.3; reasons.push("Territorial tax — company profits taxed locally only"); }
+          if (["estonia","georgia","portugal","uae","singapore"].includes(country.slug)) { score += 0.3; reasons.push("Strong company formation + low corporate tax"); }
+        }
+      }
+    }
+
+    // ── CITY VIBE ────────────────────────────────────────────────
+    if (answers.cityVibe === "big-city" && BIG_CITY_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Major global city — matches your vibe");
+    }
+    if (answers.cityVibe === "coastal" && COASTAL_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Coastal lifestyle — beaches and ocean access");
+    }
+    if (answers.cityVibe === "mid-city" && MID_CITY_COUNTRIES.includes(country.slug)) {
+      score += 0.3; reasons.push("Liveable mid-size city — less hectic, great quality of life");
     }
 
     // ── SHARED BONUSES ───────────────────────────────────────────
-    const passportLower = (answers.passport ?? "").toLowerCase();
-    const isEU = EU_PASSPORTS.includes(passportLower);
+    const isEU = EU_PASSPORTS.includes(primarySlug) || (secondarySlug ? EU_PASSPORTS.includes(secondarySlug) : false);
+    const euPassportLabel = EU_PASSPORTS.includes(primarySlug) ? "your EU passport" : "your second EU passport";
+
     if (isEU && EUROPEAN_COUNTRIES.includes(country.slug)) {
       score += 0.5;
-      reasons.push("Easy visa with your EU passport");
+      reasons.push(`Free movement with ${euPassportLabel}`);
     }
-    if (data.visaDifficulty <= 2 && !reasons.includes("Easy visa with your EU passport")) {
+
+    // Passport strength bonuses/penalties
+    if (strength === 1) {
+      // Tier 1: virtually no visa barriers globally → reward high-difficulty countries
+      if (data.visaDifficulty >= 3) {
+        score += 0.4;
+        if (!reasons.some(r => r.toLowerCase().includes("visa"))) {
+          reasons.push("Strong passport — minimal visa barriers");
+        }
+      }
+    } else if (strength === 4) {
+      // Tier 4: restricted access → penalise hard-to-enter countries further
+      if (data.visaDifficulty >= 3) {
+        score -= 0.8;
+      }
+    }
+
+    // Dual passport bonus: access to routes either passport unlocks
+    if (hasDual) {
+      if (data.visaDifficulty >= 3 && strength <= 2) {
+        score += 0.4;
+        if (!reasons.some(r => r.toLowerCase().includes("visa") || r.toLowerCase().includes("passport"))) {
+          reasons.push("Dual passport unlocks additional visa routes");
+        }
+      }
+      // If one passport is EU and destination is European — already captured above
+    }
+
+    if (data.visaDifficulty <= 2 && !reasons.some(r => r.toLowerCase().includes("visa") || r.toLowerCase().includes("movement") || r.toLowerCase().includes("passport"))) {
       reasons.push("Straightforward visa process");
     }
     if (answers.priorities?.includes("english") && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) {
@@ -251,11 +471,11 @@ export function scoreCountriesForWizard(
       score += 0.3; reasons.push("French is a bonus in Canada");
     }
 
-    // Soft deal breaker penalties (warm/crime — can't hard filter, subjective)
-    if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug)) score -= 2.5;
-    if (dealBreakers.includes("lowcrime")) {
-      if (data.scoreCrimeRate < 8.0) score -= 2.5;
-      else reasons.push("Very low crime rate");
+    // warm + lowcrime are now hard filters in the exclusion pass above.
+    // Only add positive reason labels here for countries that passed.
+    if (dealBreakers.includes("lowcrime")) reasons.push("Very low crime rate");
+    if (dealBreakers.includes("warm") && !reasons.some(r => r.toLowerCase().includes("warm") || r.toLowerCase().includes("climate"))) {
+      reasons.push("Warm climate");
     }
 
     if (affordScore >= 7.5 && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost"))) {
@@ -274,10 +494,15 @@ export function scoreCountriesForWizard(
 
   results.sort((a, b) => b.matchScore - a.matchScore);
 
-  // ── PERCENT: absolute scale, real spread ─────────────────────
+  // ── PERCENT: relative scale with real spread ─────────────────
+  const topScore  = results[0]?.matchScore ?? 10;
+  const botScore  = results[results.length - 1]?.matchScore ?? 0;
+  const scoreSpan = Math.max(topScore - botScore, 0.1);
   results.forEach((r) => {
-    const pct = Math.round(45 + (r.matchScore / 10) * 50);
-    r.matchPercent = Math.min(95, Math.max(45, pct));
+    // Top match → ~88–95%, last match → ~30–45%, linear in between
+    const relative = (r.matchScore - botScore) / scoreSpan;
+    const pct = Math.round(30 + relative * 65);
+    r.matchPercent = Math.min(95, Math.max(20, pct));
   });
 
   return results;
