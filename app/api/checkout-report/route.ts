@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request): Promise<Response> {
@@ -14,12 +15,23 @@ export async function POST(request: Request): Promise<Response> {
   const requestOrigin = request.headers.get('origin') ?? ''
   const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
 
-  // Optional: email from body (if user provided it)
   let customerEmail: string | undefined
+  let userId: string | undefined
   try {
     const body = await request.json()
     if (typeof body.email === 'string' && body.email.includes('@')) customerEmail = body.email
-  } catch { /* no body — anon is fine */ }
+
+    const authHeader = request.headers.get('Authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data: { user } } = await supabase.auth.getUser(token)
+      if (user) userId = user.id
+    }
+  } catch { /* ignore */ }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -28,7 +40,7 @@ export async function POST(request: Request): Promise<Response> {
       ...(customerEmail ? { customer_email: customerEmail } : {}),
       success_url: `${origin}/report/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/wizard/results`,
-      metadata: { type: 'report' },
+      metadata: { type: 'report', ...(userId ? { user_id: userId } : {}) },
       ...(customerEmail ? {} : { billing_address_collection: 'auto' }),
     })
     return NextResponse.json({ url: session.url })

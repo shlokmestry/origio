@@ -29,7 +29,7 @@ export async function POST(request: Request) {
           </div>`).join('')}
         <div style="margin:32px 0;border-top:1px solid #1f1f1f;"></div>
         <a href="https://findorigio.com/pro" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 28px;text-decoration:none;">
-          Unlock all 37 countries — €5 forever
+          Unlock all countries — €4.99 forever
         </a>
         <p style="font-size:11px;color:#555;margin-top:12px;">Salary calc · Visa checklist · 3-country compare</p>
       </div>`,

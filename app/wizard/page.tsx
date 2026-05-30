@@ -34,7 +34,7 @@ const TOTAL_STEPS      = 9;
 
 const STEP_LABELS = [
   "Location", "Reason", "Role", "Priorities",
-  "Vibe", "Budget", "Languages", "Deal breakers",
+  "Vibe", "Budget", "Languages", "Passport", "Deal breakers",
 ];
 
 const PROGRESS_KEY = "wizardProgress";
@@ -381,7 +381,7 @@ export default function WizardPage() {
         sessionStorage.setItem("wizardPassportContext", JSON.stringify({ passport: introPassport, secondPassport: introSecondPassport || null }));
       } catch { /* ignore */ }
     }
-    setStep(introPassport ? 1 : 1); // always go to step 1 (location) now
+    setStep(1);
   };
 
   const canProceed = () => {
