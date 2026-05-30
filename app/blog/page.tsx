@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import SimpleNav from "@/components/SimpleNav";
+import Nav from "@/components/Nav";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
@@ -70,7 +70,7 @@ export default async function BlogPage() {
 
   return (
     <main style={{ background: "#0a0a0a", color: "#f0f0e8", minHeight: "100vh" }}>
-      <SimpleNav />
+      <Nav countries={[]} onCountrySelect={() => {}} />
 
       {/* ── Page wrapper ── */}
       <div style={{ maxWidth: 1152, margin: "0 auto", padding: "160px 24px 128px" }}>

@@ -460,7 +460,7 @@ export default function AboutPage() {
               letterSpacing: "-0.02em", color: "#ffffff", textAlign: "center",
               maxWidth: "16ch", textShadow: "0 4px 48px rgba(0,0,0,0.5)", margin: 0,
             }}>
-              what the fuck is{" "}
+              what is{" "}
               <em style={{ color: "#00ffd5", fontStyle: "normal" }}>origio</em>?
             </h1>
           </div>
@@ -576,7 +576,7 @@ export default function AboutPage() {
             <FadeIn delay={200}>
               <div style={{ marginTop: 64, textAlign: "center" }}>
                 <Link
-                  href="/"
+                  href="/wizard"
                   style={{
                     fontFamily: "system-ui, sans-serif", fontSize: 15, fontWeight: 600,
                     color: "#f0f0e8", textDecoration: "none", letterSpacing: "0.04em",
@@ -586,7 +586,7 @@ export default function AboutPage() {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#00ffd5"; (e.currentTarget as HTMLElement).style.borderColor = "#00ffd5"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#f0f0e8"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(240,240,232,0.3)"; }}
                 >
-                  try the globe →
+                  try the quiz →
                 </Link>
               </div>
             </FadeIn>
