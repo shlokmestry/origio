@@ -1,25 +1,25 @@
-/* ── Compare — "The Race" — full-bleed cream folio ── */
+/* ── Compare — "The Race" — full-bleed dark folio ── */
 
 /* Page-level palette tokens (inherited by all descendants) */
 .page {
-  --paper:     #efe9d8;
-  --paper2:    #e6dfc9;
-  --paperD:    #d8cfb2;
-  --paperInk:  #15140f;
-  --paperDim:  rgba(21,20,15,0.42);
-  --paperRule: rgba(21,20,15,0.16);
-  --amber:     #d68a3a;
-  --amberD:    #a8651e;
-  --teal:      #2f7d6b;
-  --tealD:     #1f5a4d;
-  --rose:      #b03c4e;
-  --plum:      #6f3e6b;
-  --moss:      #5f6d2d;
-  --slate:     #3b485c;
-  --rust:      #a04c2a;
-  --dim:       rgba(240,240,237,0.36);
-  --dimmer:    rgba(240,240,237,0.13);
-  --rule:      rgba(240,240,237,0.085);
+  --paper:     #0a0a0a;
+  --paper2:    #111111;
+  --paperD:    #1a1a1a;
+  --paperInk:  #f0f0e8;
+  --paperDim:  rgba(240,240,232,0.28);
+  --paperRule: rgba(240,240,232,0.085);
+  --amber:     #f0b07a;
+  --amberD:    #d68a3a;
+  --teal:      #00ffd5;
+  --tealD:     #00c4a0;
+  --rose:      #f87171;
+  --plum:      #c084fc;
+  --moss:      #4ade80;
+  --slate:     #7dd3fc;
+  --rust:      #fb923c;
+  --dim:       rgba(240,240,232,0.36);
+  --dimmer:    rgba(240,240,232,0.13);
+  --rule:      rgba(240,240,232,0.085);
 }
 
 /* ── NAV (dark sticky) ── */
@@ -76,9 +76,9 @@
   position: relative;
   min-height: 100vh;
   background-image:
-    repeating-linear-gradient(0deg, rgba(21,20,15,0.018) 0 1px, transparent 1px 28px),
-    radial-gradient(ellipse 80% 60% at 90% 0%, rgba(214,138,58,0.10), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(47,125,107,0.08), transparent 60%);
+    repeating-linear-gradient(0deg, rgba(240,240,232,0.028) 0 1px, transparent 1px 28px),
+    radial-gradient(ellipse 80% 60% at 90% 0%, rgba(214,138,58,0.08), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(0,255,213,0.05), transparent 60%);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
@@ -109,7 +109,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
 }
 .folioIt {
   font-family: 'Cabinet Grotesk', sans-serif;
@@ -146,7 +146,7 @@
   color: var(--paperInk);
 }
 .it { font-style: normal; }
-.grey { color: rgba(21,20,15,0.30); }
+.grey { color: rgba(240,240,232,0.22); }
 .amberText { color: var(--amberD); font-style: normal; }
 .stamp {
   display: inline-block; transform: rotate(-3deg);
@@ -170,7 +170,7 @@
   font-family: 'Cabinet Grotesk', sans-serif;
   font-style: normal;
   font-size: clamp(17px, 1.7vw, 22px);
-  line-height: 1.45; color: rgba(21,20,15,0.62);
+  line-height: 1.45; color: rgba(240,240,232,0.55);
   max-width: 760px;
 }
 .currToggle {
@@ -190,7 +190,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
   text-align: right; line-height: 1.6;
 }
 .raceSubRIt {
@@ -215,7 +215,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
   margin-right: 14px;
   display: inline-flex; align-items: center; gap: 8px;
 }
@@ -227,9 +227,9 @@
 .pickChip {
   font-family: 'Satoshi', sans-serif;
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
-  color: rgba(21,20,15,0.7);
+  color: rgba(240,240,232,0.7);
   background: transparent;
-  border: 1px solid rgba(21,20,15,0.22);
+  border: 1px solid rgba(240,240,232,0.18);
   padding: 7px 12px; cursor: pointer;
   transition: all 0.15s;
   display: inline-flex; align-items: center; gap: 7px;
@@ -246,7 +246,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55); white-space: nowrap;
+  color: rgba(240,240,232,0.45); white-space: nowrap;
 }
 .pickCapNum {
   font-family: 'Cabinet Grotesk', sans-serif;
@@ -261,7 +261,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
   margin-right: 14px;
   display: inline-flex; align-items: center; gap: 8px;
 }
@@ -278,9 +278,9 @@
   transition: border-color 0.15s, background 0.15s;
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: rgba(21,20,15,0.78);
+  text-transform: uppercase; color: rgba(240,240,232,0.7);
 }
-.legendKey:hover { border-color: rgba(21,20,15,0.22); }
+.legendKey:hover { border-color: rgba(240,240,232,0.18); }
 .legendKeyOn { background: var(--paperInk) !important; color: var(--paper) !important; }
 .legendKeyOn .lkSw { box-shadow: 0 0 0 2px var(--paper); }
 .legendKeyDim { opacity: 0.28; }
@@ -301,10 +301,10 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
 }
 .scaleTrack { position: relative; height: 22px; }
-.scaleTick { position: absolute; bottom: 0; width: 1px; background: rgba(21,20,15,0.32); height: 6px; }
+.scaleTick { position: absolute; bottom: 0; width: 1px; background: rgba(240,240,232,0.25); height: 6px; }
 .scaleTickMajor { height: 12px !important; background: var(--paperInk) !important; }
 .scaleLabel {
   position: absolute; bottom: 14px;
@@ -317,7 +317,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55); text-align: right;
+  color: rgba(240,240,232,0.45); text-align: right;
 }
 
 /* ── RACE ROWS ── */
@@ -359,7 +359,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
 }
 
 /* Bar track */
@@ -379,7 +379,7 @@
 .rrSeg {
   position: relative; cursor: default;
   transition: opacity 0.18s, filter 0.18s;
-  border-right: 1px solid rgba(21,20,15,0.18);
+  border-right: 1px solid rgba(240,240,232,0.12);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -429,12 +429,12 @@
   color: var(--paperInk);
 }
 .isCheap .rrTotal { color: var(--moss); }
-.isDear .rrTotal { color: rgba(21,20,15,0.55); }
+.isDear .rrTotal { color: rgba(240,240,232,0.45); }
 .rrDelta {
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(21,20,15,0.5); margin-top: 4px;
+  color: rgba(240,240,232,0.4); margin-top: 4px;
 }
 .deltaUp   { color: var(--rose) !important; }
 .deltaDown { color: var(--moss) !important; }
@@ -509,7 +509,7 @@
   text-decoration: line-through;
   text-decoration-thickness: 3px;
   text-decoration-color: var(--rose);
-  color: rgba(21,20,15,0.55);
+  color: rgba(240,240,232,0.45);
 }
 .verdictR { display: flex; flex-direction: column; gap: 14px; }
 .vrCard {
@@ -523,7 +523,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 8.5px; font-weight: 700;
   letter-spacing: 0.24em; text-transform: uppercase;
-  color: rgba(21,20,15,0.55); margin-bottom: 8px;
+  color: rgba(240,240,232,0.45); margin-bottom: 8px;
 }
 .vrBody {
   font-family: 'Cabinet Grotesk', sans-serif;
@@ -556,7 +556,7 @@
 .spacer { flex-grow: 1; }
 .note {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-style: normal; font-size: 14px; color: rgba(21,20,15,0.62);
+  font-style: normal; font-size: 14px; color: rgba(240,240,232,0.55);
 }
 
 /* Empty state */
@@ -564,14 +564,14 @@
   padding: 80px 56px; text-align: center;
   font-family: 'Cabinet Grotesk', sans-serif; font-style: normal;
   font-size: clamp(26px, 3vw, 40px);
-  color: rgba(21,20,15,0.42); line-height: 1.25;
+  color: rgba(240,240,232,0.35); line-height: 1.25;
 }
 .raceEmpty span {
   display: block; margin-top: 14px;
   font-family: 'Satoshi', sans-serif; font-style: normal;
   font-size: 11px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.42);
+  color: rgba(240,240,232,0.35);
 }
 
 /* Bureau footer */
@@ -582,7 +582,7 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; font-weight: 700;
   letter-spacing: 0.22em; text-transform: uppercase;
-  color: rgba(21,20,15,0.5);
+  color: rgba(240,240,232,0.4);
 }
 .seal {
   font-family: 'Cabinet Grotesk', sans-serif;
