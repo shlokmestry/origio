@@ -2,108 +2,134 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ArrowRight, ArrowLeft, Search, Check, X } from 'lucide-react'
+import { Search, Check, X, ArrowRight, ArrowLeft } from 'lucide-react'
 
-type PassportDesign = {
-  name: string; flag: string; bgColor: string; accentColor: string
-  textColor: string; pattern: 'lines' | 'dots' | 'waves' | 'grid'; emblem: string; coverText: string
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const C = {
+  bg:      '#0a0a0a',
+  surface: '#111111',
+  border:  '#222222',
+  borderMd:'#333333',
+  primary: '#f0f0e8',
+  muted:   '#555550',
+  dim:     '#3a3a38',
+  accent:  '#00ffd5',
 }
+const HEAD = "'Cabinet Grotesk', sans-serif"
+const BODY = "'Satoshi', sans-serif"
 
-const PASSPORTS: Record<string, PassportDesign> = {
-  'united-states': { name: 'United States', flag: '🇺🇸', bgColor: '#1a3055', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT' },
-  'united-kingdom': { name: 'United Kingdom', flag: '🇬🇧', bgColor: '#012169', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '👑', coverText: 'PASSPORT' },
-  'canada': { name: 'Canada', flag: '🇨🇦', bgColor: '#cc0001', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🍁', coverText: 'PASSPORT' },
-  'australia': { name: 'Australia', flag: '🇦🇺', bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'dots', emblem: '🦘', coverText: 'PASSPORT' },
-  'germany': { name: 'Germany', flag: '🇩🇪', bgColor: '#2a2a2a', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS' },
-  'france': { name: 'France', flag: '🇫🇷', bgColor: '#002395', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'waves', emblem: '⚜️', coverText: 'PASSEPORT' },
-  'netherlands': { name: 'Netherlands', flag: '🇳🇱', bgColor: '#ae1c28', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '👑', coverText: 'PASPOORT' },
-  'sweden': { name: 'Sweden', flag: '🇸🇪', bgColor: '#006aa7', accentColor: '#fecc02', textColor: '#ffffff', pattern: 'grid', emblem: '⚜️', coverText: 'PASS' },
-  'norway': { name: 'Norway', flag: '🇳🇴', bgColor: '#ef2b2d', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🦁', coverText: 'PASS' },
-  'denmark': { name: 'Denmark', flag: '🇩🇰', bgColor: '#c60c30', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '👑', coverText: 'PAS' },
-  'finland': { name: 'Finland', flag: '🇫🇮', bgColor: '#003580', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🦁', coverText: 'PASSI' },
-  'switzerland': { name: 'Switzerland', flag: '🇨🇭', bgColor: '#d52b1e', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'dots', emblem: '✚', coverText: 'PASSEPORT' },
-  'singapore': { name: 'Singapore', flag: '🇸🇬', bgColor: '#c8102e', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🦁', coverText: 'PASSPORT' },
-  'japan': { name: 'Japan', flag: '🇯🇵', bgColor: '#1a3a6b', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'waves', emblem: '🌸', coverText: 'パスポート' },
-  'south-korea': { name: 'South Korea', flag: '🇰🇷', bgColor: '#003478', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '☯️', coverText: '여권' },
-  'new-zealand': { name: 'New Zealand', flag: '🇳🇿', bgColor: '#00205b', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'dots', emblem: '🌿', coverText: 'PASSPORT' },
-  'ireland': { name: 'Ireland', flag: '🇮🇪', bgColor: '#169b62', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'waves', emblem: '☘️', coverText: 'PAS' },
-  'portugal': { name: 'Portugal', flag: '🇵🇹', bgColor: '#006600', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '⚔️', coverText: 'PASSAPORTE' },
-  'spain': { name: 'Spain', flag: '🇪🇸', bgColor: '#c60b1e', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '👑', coverText: 'PASAPORTE' },
-  'italy': { name: 'Italy', flag: '🇮🇹', bgColor: '#009246', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'waves', emblem: '⭐', coverText: 'PASSAPORTO' },
-  'austria': { name: 'Austria', flag: '🇦🇹', bgColor: '#ed2939', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'REISEPASS' },
-  'india': { name: 'India', flag: '🇮🇳', bgColor: '#003580', accentColor: '#ff9933', textColor: '#ffffff', pattern: 'dots', emblem: '☸️', coverText: 'PASSPORT' },
-  'brazil': { name: 'Brazil', flag: '🇧🇷', bgColor: '#009c3b', accentColor: '#ffdf00', textColor: '#ffffff', pattern: 'lines', emblem: '⭐', coverText: 'PASSAPORTE' },
-  'uae': { name: 'UAE', flag: '🇦🇪', bgColor: '#00732f', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT' },
-  'china': { name: 'China', flag: '🇨🇳', bgColor: '#de2910', accentColor: '#ffde00', textColor: '#ffffff', pattern: 'lines', emblem: '⭐', coverText: '护照' },
-  'mexico': { name: 'Mexico', flag: '🇲🇽', bgColor: '#006847', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'dots', emblem: '🦅', coverText: 'PASAPORTE' },
-  'south-africa': { name: 'South Africa', flag: '🇿🇦', bgColor: '#007A4D', accentColor: '#FFB612', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT' },
-  'nigeria': { name: 'Nigeria', flag: '🇳🇬', bgColor: '#008751', accentColor: '#c8a84b', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'PASSPORT' },
-  'philippines': { name: 'Philippines', flag: '🇵🇭', bgColor: '#0038a8', accentColor: '#fcd116', textColor: '#ffffff', pattern: 'lines', emblem: '☀️', coverText: 'PASSPORT' },
-  'malaysia': { name: 'Malaysia', flag: '🇲🇾', bgColor: '#cc0001', accentColor: '#ffd700', textColor: '#ffffff', pattern: 'lines', emblem: '🌙', coverText: 'PASPORT' },
-  'turkey': { name: 'Turkey', flag: '🇹🇷', bgColor: '#e30a17', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🌙', coverText: 'PASAPORT' },
-  'poland': { name: 'Poland', flag: '🇵🇱', bgColor: '#dc143c', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🦅', coverText: 'PASZPORT' },
-  'ukraine': { name: 'Ukraine', flag: '🇺🇦', bgColor: '#005bbb', accentColor: '#ffd500', textColor: '#ffffff', pattern: 'lines', emblem: '🌾', coverText: 'ПАСПОРТ' },
-  'ghana': { name: 'Ghana', flag: '🇬🇭', bgColor: '#006b3f', accentColor: '#fcd116', textColor: '#ffffff', pattern: 'lines', emblem: '⭐', coverText: 'PASSPORT' },
-  'pakistan': { name: 'Pakistan', flag: '🇵🇰', bgColor: '#01411c', accentColor: '#ffffff', textColor: '#ffffff', pattern: 'lines', emblem: '🌙', coverText: 'PASSPORT' },
-}
-
-const PASSPORT_LIST = Object.entries(PASSPORTS).map(([slug, d]) => ({ slug, ...d }))
-
-const JOB_SUGGESTIONS = [
-  'Software Engineer', 'Nurse', 'Teacher', 'Designer', 'Marketing',
-  'Accountant', 'Student', 'Freelancer', 'Consultant', 'Doctor',
+// ── Countries ─────────────────────────────────────────────────────────────────
+const COUNTRIES = [
+  { slug: 'united-states',  name: 'United States',   flag: '🇺🇸' },
+  { slug: 'united-kingdom', name: 'United Kingdom',  flag: '🇬🇧' },
+  { slug: 'canada',         name: 'Canada',          flag: '🇨🇦' },
+  { slug: 'australia',      name: 'Australia',       flag: '🇦🇺' },
+  { slug: 'germany',        name: 'Germany',         flag: '🇩🇪' },
+  { slug: 'france',         name: 'France',          flag: '🇫🇷' },
+  { slug: 'netherlands',    name: 'Netherlands',     flag: '🇳🇱' },
+  { slug: 'sweden',         name: 'Sweden',          flag: '🇸🇪' },
+  { slug: 'norway',         name: 'Norway',          flag: '🇳🇴' },
+  { slug: 'denmark',        name: 'Denmark',         flag: '🇩🇰' },
+  { slug: 'finland',        name: 'Finland',         flag: '🇫🇮' },
+  { slug: 'switzerland',    name: 'Switzerland',     flag: '🇨🇭' },
+  { slug: 'singapore',      name: 'Singapore',       flag: '🇸🇬' },
+  { slug: 'japan',          name: 'Japan',           flag: '🇯🇵' },
+  { slug: 'south-korea',    name: 'South Korea',     flag: '🇰🇷' },
+  { slug: 'new-zealand',    name: 'New Zealand',     flag: '🇳🇿' },
+  { slug: 'ireland',        name: 'Ireland',         flag: '🇮🇪' },
+  { slug: 'portugal',       name: 'Portugal',        flag: '🇵🇹' },
+  { slug: 'spain',          name: 'Spain',           flag: '🇪🇸' },
+  { slug: 'italy',          name: 'Italy',           flag: '🇮🇹' },
+  { slug: 'austria',        name: 'Austria',         flag: '🇦🇹' },
+  { slug: 'belgium',        name: 'Belgium',         flag: '🇧🇪' },
+  { slug: 'poland',         name: 'Poland',          flag: '🇵🇱' },
+  { slug: 'romania',        name: 'Romania',         flag: '🇷🇴' },
+  { slug: 'india',          name: 'India',           flag: '🇮🇳' },
+  { slug: 'brazil',         name: 'Brazil',          flag: '🇧🇷' },
+  { slug: 'uae',            name: 'UAE',             flag: '🇦🇪' },
+  { slug: 'china',          name: 'China',           flag: '🇨🇳' },
+  { slug: 'mexico',         name: 'Mexico',          flag: '🇲🇽' },
+  { slug: 'south-africa',   name: 'South Africa',    flag: '🇿🇦' },
+  { slug: 'nigeria',        name: 'Nigeria',         flag: '🇳🇬' },
+  { slug: 'philippines',    name: 'Philippines',     flag: '🇵🇭' },
+  { slug: 'malaysia',       name: 'Malaysia',        flag: '🇲🇾' },
+  { slug: 'turkey',         name: 'Turkey',          flag: '🇹🇷' },
+  { slug: 'ukraine',        name: 'Ukraine',         flag: '🇺🇦' },
+  { slug: 'ghana',          name: 'Ghana',           flag: '🇬🇭' },
+  { slug: 'pakistan',       name: 'Pakistan',        flag: '🇵🇰' },
+  { slug: 'indonesia',      name: 'Indonesia',       flag: '🇮🇩' },
+  { slug: 'egypt',          name: 'Egypt',           flag: '🇪🇬' },
+  { slug: 'argentina',      name: 'Argentina',       flag: '🇦🇷' },
+  { slug: 'colombia',       name: 'Colombia',        flag: '🇨🇴' },
+  { slug: 'kenya',          name: 'Kenya',           flag: '🇰🇪' },
+  { slug: 'thailand',       name: 'Thailand',        flag: '🇹🇭' },
+  { slug: 'vietnam',        name: 'Vietnam',         flag: '🇻🇳' },
+  { slug: 'greece',         name: 'Greece',          flag: '🇬🇷' },
+  { slug: 'czechia',        name: 'Czechia',         flag: '🇨🇿' },
+  { slug: 'hungary',        name: 'Hungary',         flag: '🇭🇺' },
 ]
 
-const S = {
-  bg: '#050508',
-  card: '#0d0d10',
-  border: 'rgba(255,255,255,0.08)',
-  borderMd: 'rgba(255,255,255,0.14)',
-  borderInput: 'rgba(255,255,255,0.10)',
-  dim: 'rgba(255,255,255,0.38)',
-  dimmer: 'rgba(255,255,255,0.18)',
-  serif: "'Cabinet Grotesk', sans-serif",
-  sans: "'Satoshi', sans-serif",
-}
+// ── Job roles ─────────────────────────────────────────────────────────────────
+const JOB_ROLES = [
+  { key: 'softwareEngineer',        label: 'Software Engineer',       emoji: '💻' },
+  { key: 'aiMlEngineer',            label: 'AI / ML Engineer',        emoji: '🤖' },
+  { key: 'dataScientist',           label: 'Data Scientist',          emoji: '📊' },
+  { key: 'cloudArchitect',          label: 'Cloud Architect',         emoji: '☁️' },
+  { key: 'devOps',                  label: 'DevOps Engineer',         emoji: '⚙️' },
+  { key: 'cybersecurity',           label: 'Cybersecurity',           emoji: '🔐' },
+  { key: 'productManager',          label: 'Product Manager',         emoji: '🗂️' },
+  { key: 'uxDesigner',              label: 'UX Designer',             emoji: '🎨' },
+  { key: 'graphicDesigner',         label: 'Graphic Designer',        emoji: '🖌️' },
+  { key: 'doctor',                  label: 'Doctor',                  emoji: '🩺' },
+  { key: 'nurse',                   label: 'Nurse',                   emoji: '🏥' },
+  { key: 'dentist',                 label: 'Dentist',                 emoji: '🦷' },
+  { key: 'pharmacist',              label: 'Pharmacist',              emoji: '💊' },
+  { key: 'physiotherapist',         label: 'Physiotherapist',         emoji: '🏃' },
+  { key: 'psychologist',            label: 'Psychologist',            emoji: '🧠' },
+  { key: 'biomedicalEngineer',      label: 'Biomedical Engineer',     emoji: '🔬' },
+  { key: 'financialAnalyst',        label: 'Financial Analyst',       emoji: '💹' },
+  { key: 'accountant',              label: 'Accountant',              emoji: '🧾' },
+  { key: 'lawyer',                  label: 'Lawyer',                  emoji: '⚖️' },
+  { key: 'architect',               label: 'Architect',               emoji: '🏛️' },
+  { key: 'civilEngineer',           label: 'Civil Engineer',          emoji: '🏗️' },
+  { key: 'renewableEnergyEngineer', label: 'Renewable Energy Eng.',   emoji: '🌱' },
+  { key: 'pilot',                   label: 'Pilot',                   emoji: '✈️' },
+  { key: 'teacher',                 label: 'Teacher',                 emoji: '📚' },
+  { key: 'hrManager',               label: 'HR Manager',              emoji: '👥' },
+  { key: 'salesManager',            label: 'Sales Manager',           emoji: '📈' },
+  { key: 'marketingManager',        label: 'Marketing Manager',       emoji: '📣' },
+  { key: 'supplyChainManager',      label: 'Supply Chain Manager',    emoji: '📦' },
+  { key: 'electrician',             label: 'Electrician',             emoji: '⚡' },
+  { key: 'chef',                    label: 'Chef',                    emoji: '👨‍🍳' },
+]
 
-function PassportSVG({ design }: { design: PassportDesign }) {
-  const pid = `p-${design.name.replace(/\W/g, '')}`
-  const patterns: Record<string, React.ReactElement> = {
-    lines: <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.4" opacity="0.15" /></pattern>,
-    dots: <pattern id={pid} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r="1" fill={design.accentColor} opacity="0.2" /></pattern>,
-    waves: <pattern id={pid} x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse"><path d="M0 10 Q10 0 20 10 Q30 20 40 10" stroke={design.accentColor} strokeWidth="0.5" fill="none" opacity="0.15" /></pattern>,
-    grid: <pattern id={pid} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="20" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" /><line x1="0" y1="0" x2="20" y2="0" stroke={design.accentColor} strokeWidth="0.3" opacity="0.12" /></pattern>,
-  }
-  return (
-    <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
-      <defs>{patterns[design.pattern]}</defs>
-      <rect x="0" y="0" width="200" height="280" rx="6" fill={design.bgColor} />
-      <rect x="0" y="0" width="200" height="280" rx="6" fill={`url(#${pid})`} />
-      <rect x="0" y="0" width="200" height="4" fill={design.accentColor} opacity="0.5" />
-      <rect x="0" y="276" width="200" height="4" fill={design.accentColor} opacity="0.5" />
-      <circle cx="100" cy="110" r="36" fill={design.accentColor} opacity="0.1" />
-      <circle cx="100" cy="110" r="32" fill="none" stroke={design.accentColor} strokeWidth="0.8" opacity="0.35" />
-      <text x="100" y="120" textAnchor="middle" fontSize="30" fill={design.textColor} opacity="0.9">{design.emblem}</text>
-      <text x="100" y="168" textAnchor="middle" fontSize="7" fill={design.accentColor} opacity="0.8" letterSpacing="3" fontFamily="Cabinet Grotesk, sans-serif" fontWeight="bold">{design.name.toUpperCase()}</text>
-      <text x="100" y="186" textAnchor="middle" fontSize="10" fill={design.textColor} opacity="0.65" letterSpacing="4" fontFamily="Cabinet Grotesk, sans-serif">{design.coverText}</text>
-      <text x="100" y="225" textAnchor="middle" fontSize="22" opacity="0.9">{design.flag}</text>
-      <rect x="10" y="248" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
-      <rect x="10" y="255" width="180" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
-      <rect x="10" y="262" width="120" height="3" rx="0" fill={design.accentColor} opacity="0.1" />
-    </svg>
-  )
+const NO_DUAL: Record<string, string> = {
+  'india':       'India does not recognise dual citizenship.',
+  'china':       'China does not recognise dual citizenship.',
+  'japan':       'Japan requires citizens to choose one nationality by age 22.',
+  'singapore':   'Singapore does not allow dual citizenship.',
+  'uae':         'The UAE does not permit dual citizenship for its nationals.',
+  'indonesia':   'Indonesia does not permit dual citizenship for adults.',
+  'malaysia':    'Malaysia does not allow dual citizenship.',
+  'south-korea': 'South Korea generally does not permit dual citizenship for adults.',
 }
 
 export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [userId, setUserId] = useState<string | null>(null)
+
+  // Step 1
   const [passportSearch, setPassportSearch] = useState('')
   const [passportSlug, setPassportSlug] = useState<string | null>(null)
-  const [secondPassportSlug, setSecondPassportSlug] = useState<string | null>(null)
-  const [secondPassportSearch, setSecondPassportSearch] = useState('')
-  const [showSecondPassport, setShowSecondPassport] = useState(false)
-  const [jobTitle, setJobTitle] = useState('')
+  const [showSecond, setShowSecond] = useState(false)
+  const [secondSearch, setSecondSearch] = useState('')
+  const [secondSlug, setSecondSlug] = useState<string | null>(null)
+
+  // Step 2
+  const [roleSearch, setRoleSearch] = useState('')
+  const [selectedRole, setSelectedRole] = useState<string | null>(null)
+  const [customJob, setCustomJob] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -115,305 +141,321 @@ export default function OnboardingPage() {
     })
   }, [router])
 
-  const filteredPassports = PASSPORT_LIST.filter(p =>
-    p.name.toLowerCase().includes(passportSearch.toLowerCase()) && p.slug !== secondPassportSlug
+  const filtered = COUNTRIES.filter(c =>
+    c.name.toLowerCase().includes(passportSearch.toLowerCase()) && c.slug !== secondSlug
   )
-  const filteredSecondPassports = PASSPORT_LIST.filter(p =>
-    p.name.toLowerCase().includes(secondPassportSearch.toLowerCase()) && p.slug !== passportSlug
+  const filteredSecond = COUNTRIES.filter(c =>
+    c.name.toLowerCase().includes(secondSearch.toLowerCase()) && c.slug !== passportSlug
   )
-  const selectedPassport = passportSlug ? PASSPORTS[passportSlug] : null
-  const selectedSecondPassport = secondPassportSlug ? PASSPORTS[secondPassportSlug] : null
+  const filteredRoles = JOB_ROLES.filter(r =>
+    r.label.toLowerCase().includes(roleSearch.toLowerCase())
+  )
 
-  const NO_DUAL_SLUGS: Record<string, string> = {
-    'india': 'India does not recognise dual citizenship. If you hold another passport, you are no longer an Indian citizen — you may hold OCI (Overseas Citizen of India) instead.',
-    'china': 'China does not recognise dual citizenship. Naturalising elsewhere means renouncing Chinese citizenship.',
-    'japan': 'Japan requires citizens to choose one nationality by age 22. Holding another passport means you have renounced Japanese citizenship.',
-    'singapore': 'Singapore does not allow dual citizenship. Acquiring another nationality automatically terminates Singapore citizenship.',
-    'uae': 'The UAE does not permit dual citizenship for its nationals. Naturalisation elsewhere requires renouncing UAE citizenship.',
-    'indonesia': 'Indonesia does not permit dual citizenship for adults. A second passport means Indonesian citizenship has been relinquished.',
-    'malaysia': 'Malaysia does not allow dual citizenship. Acquiring another nationality results in automatic loss of Malaysian citizenship.',
-    'south-korea': 'South Korea generally does not permit dual citizenship for adults. Exceptions apply in limited circumstances.',
-  }
+  const selectedCountry = passportSlug ? COUNTRIES.find(c => c.slug === passportSlug) : null
+  const secondCountry = secondSlug ? COUNTRIES.find(c => c.slug === secondSlug) : null
 
-  const dualConflictWarning = (() => {
-    if (!passportSlug || !secondPassportSlug) return null
-    if (NO_DUAL_SLUGS[passportSlug]) return { country: PASSPORTS[passportSlug]?.name, message: NO_DUAL_SLUGS[passportSlug] }
-    if (NO_DUAL_SLUGS[secondPassportSlug]) return { country: PASSPORTS[secondPassportSlug]?.name, message: NO_DUAL_SLUGS[secondPassportSlug] }
+  const dualWarn = (() => {
+    if (!passportSlug || !secondSlug) return null
+    if (NO_DUAL[passportSlug]) return NO_DUAL[passportSlug]
+    if (NO_DUAL[secondSlug]) return NO_DUAL[secondSlug]
     return null
   })()
 
+  const jobTitle = selectedRole
+    ? (JOB_ROLES.find(r => r.key === selectedRole)?.label ?? customJob)
+    : customJob
+
+  const canFinish = userId && jobTitle.trim().length >= 2
+
   const handleFinish = async () => {
-    if (!userId || jobTitle.trim().length < 2) return
+    if (!canFinish) return
     setSaving(true)
     await supabase.from('profiles').upsert({
       id: userId, passport_slug: passportSlug,
-      second_passport_slug: secondPassportSlug,
+      second_passport_slug: secondSlug,
       job_title: jobTitle.trim(), onboarded: true,
     }, { onConflict: 'id' })
     router.push('/profile')
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: S.bg, color: '#fff', fontFamily: S.sans, display: 'flex', flexDirection: 'column' }}>
-
-      {/* ── Logo ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '40px 0 32px' }}>
-        <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-            <circle cx="6" cy="6" r="3" fill="#fff"/>
-          </svg>
-        </div>
-        <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>Origio</span>
-      </div>
-
-      {/* ── Progress dots ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 56 }}>
-        {[1, 2].map(n => (
-          <div key={n} style={{
-            height: 2, width: 48, borderRadius: 2, transition: 'background 0.4s ease',
-            background: step > n ? 'rgba(255,255,255,0.85)' : step === n ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.10)',
-          }} />
-        ))}
-      </div>
-
-      {/* ── Stage ── */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '0 24px 80px' }}>
-        <div style={{ width: '100%', maxWidth: 520 }}>
-
-          {/* ── Step 1: Passport ── */}
-          {step === 1 && (
-            <div style={{ animation: 'fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: S.dim, marginBottom: 14 }}>
-                Step 1 of 2
-              </p>
-              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, lineHeight: 1.08, color: '#fff', marginBottom: 10 }}>
-                Which passport do you hold?
-              </h1>
-              <p style={{ fontSize: 13, fontWeight: 500, color: S.dim, lineHeight: 1.6, marginBottom: 28 }}>
-                This helps us show you the most relevant visa routes and options.
-              </p>
-
-              <style>{`@media (max-width: 480px) { .passport-layout { flex-direction: column !important; } .passport-preview { width: 100% !important; max-width: 180px; align-self: center; } }`}</style>
-              <div className="passport-layout" style={{ display: 'flex', gap: 20 }}>
-                {/* Left: search + list */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Selected pill */}
-                  {selectedPassport && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.16)`, borderRadius: 100, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>{selectedPassport.flag}</span>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{selectedPassport.name}</span>
-                      <button onClick={() => setPassportSlug(null)}
-                        style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <X style={{ width: 9, height: 9, color: 'rgba(255,255,255,0.7)' }} />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Search input */}
-                  <div style={{ position: 'relative', marginBottom: 8 }}>
-                    <Search style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: S.dimmer, pointerEvents: 'none' }} />
-                    <input
-                      type="text"
-                      placeholder="Search country..."
-                      value={passportSearch}
-                      onChange={e => setPassportSearch(e.target.value)}
-                      style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 12, padding: '13px 16px 13px 42px', fontSize: 14, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-                      onFocus={e => (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.35)'}
-                      onBlur={e => (e.target as HTMLElement).style.borderColor = S.borderInput}
-                    />
-                  </div>
-
-                  {/* Country list */}
-                  <div style={{ border: `1px solid ${S.border}`, borderRadius: 12, overflow: 'hidden', maxHeight: 240, overflowY: 'auto', background: S.card }}>
-                    {filteredPassports.map(p => (
-                      <button key={p.slug} onClick={() => { setPassportSlug(p.slug); setPassportSearch('') }}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: passportSlug === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s' }}
-                        onMouseEnter={e => { if (passportSlug !== p.slug) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
-                        onMouseLeave={e => { if (passportSlug !== p.slug) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                        <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{p.flag}</span>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: passportSlug === p.slug ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1 }}>{p.name}</span>
-                        {passportSlug === p.slug && (
-                          <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Check style={{ width: 9, height: 9, color: '#0a0a0a' }} />
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: passport preview */}
-                <div className="passport-preview" style={{ width: 110, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4 }}>
-                  {selectedPassport ? (
-                    <div style={{ width: '100%' }}>
-                      <PassportSVG design={selectedPassport} />
-                    </div>
-                  ) : (
-                    <div style={{ width: '100%', aspectRatio: '200/280', border: `1px dashed rgba(255,255,255,0.12)`, borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 28, opacity: 0.2 }}>🛂</span>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: S.dimmer, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Select to preview</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Second passport toggle */}
-              {passportSlug && (
-                <div style={{ marginTop: 20 }}>
-                  {!showSecondPassport ? (
-                    <button onClick={() => setShowSecondPassport(true)}
-                      style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', color: S.dim, background: 'rgba(255,255,255,0.04)', border: `1px dashed rgba(255,255,255,0.14)`, borderRadius: 10, padding: '10px 16px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'border-color 0.15s, color 0.15s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = S.dim }}>
-                      + Add second passport
-                    </button>
-                  ) : (
-                    <div style={{ border: `1px solid rgba(255,255,255,0.10)`, borderRadius: 12, padding: 14 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>Second Passport</span>
-                        <button onClick={() => { setShowSecondPassport(false); setSecondPassportSlug(null); setSecondPassportSearch('') }}
-                          style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dimmer, background: 'none', border: 'none', cursor: 'pointer' }}>
-                          Remove
-                        </button>
-                      </div>
-                      {selectedSecondPassport && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'rgba(255,255,255,0.06)', border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 100, marginBottom: 8 }}>
-                          <span style={{ fontSize: 16 }}>{selectedSecondPassport.flag}</span>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{selectedSecondPassport.name}</span>
-                          <button onClick={() => setSecondPassportSlug(null)}
-                            style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <X style={{ width: 8, height: 8, color: 'rgba(255,255,255,0.7)' }} />
-                          </button>
-                        </div>
-                      )}
-                      <div style={{ position: 'relative', marginBottom: 6 }}>
-                        <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 13, height: 13, color: S.dimmer, pointerEvents: 'none' }} />
-                        <input type="text" placeholder="Search country..." value={secondPassportSearch}
-                          onChange={e => setSecondPassportSearch(e.target.value)}
-                          style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 10, padding: '11px 14px 11px 36px', fontSize: 13, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box' }} />
-                      </div>
-                      <div style={{ border: `1px solid ${S.border}`, borderRadius: 10, overflow: 'hidden', maxHeight: 180, overflowY: 'auto', background: S.card }}>
-                        {filteredSecondPassports.map(p => (
-                          <button key={p.slug} onClick={() => { setSecondPassportSlug(p.slug); setSecondPassportSearch('') }}
-                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: secondPassportSlug === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.04)`, cursor: 'pointer', textAlign: 'left' }}>
-                            <span style={{ fontSize: 16 }}>{p.flag}</span>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: secondPassportSlug === p.slug ? '#fff' : 'rgba(255,255,255,0.75)', flex: 1 }}>{p.name}</span>
-                            {secondPassportSlug === p.slug && (
-                              <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Check style={{ width: 8, height: 8, color: '#0a0a0a' }} />
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Dual citizenship conflict warning */}
-              {dualConflictWarning && (
-                <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,200,50,0.06)', border: '1px solid rgba(255,200,50,0.22)', borderRadius: 10 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,200,50,0.85)', marginBottom: 4 }}>
-                    ⚠ {dualConflictWarning.country} — No Dual Citizenship
-                  </p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-                    {dualConflictWarning.message}
-                  </p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>
-                <button onClick={() => { setPassportSlug(null); setStep(2) }}
-                  style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
-                  Skip for now
-                </button>
-                <button onClick={() => setStep(2)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '13px 28px', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 16px rgba(255,255,255,0.10)', transition: 'background 0.15s, transform 0.1s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ebebeb'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
-                  Continue <ArrowRight style={{ width: 14, height: 14 }} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 2: Job title ── */}
-          {step === 2 && (
-            <div style={{ animation: 'fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: S.dim, marginBottom: 14 }}>
-                Step 2 of 2
-              </p>
-              <h1 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,5vw,40px)', fontWeight: 400, lineHeight: 1.08, color: '#fff', marginBottom: 10 }}>
-                What do you do?
-              </h1>
-              <p style={{ fontSize: 13, fontWeight: 500, color: S.dim, lineHeight: 1.6, marginBottom: 28 }}>
-                Tell us your job, field, or if you're a student — anything works.
-              </p>
-
-              {/* Job input */}
-              <input
-                type="text"
-                placeholder="e.g. Software Engineer, Student, Marketing Manager..."
-                value={jobTitle}
-                onChange={e => setJobTitle(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && jobTitle.trim().length >= 2) handleFinish() }}
-                autoFocus
-                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${S.borderInput}`, borderRadius: 12, padding: '14px 16px', fontSize: 15, fontWeight: 500, color: '#fff', outline: 'none', fontFamily: S.sans, boxSizing: 'border-box', transition: 'border-color 0.2s, background 0.2s' }}
-                onFocus={e => { (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.35)'; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)' }}
-                onBlur={e => { (e.target as HTMLElement).style.borderColor = S.borderInput; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
-              />
-
-              {jobTitle.length > 0 && jobTitle.trim().length < 2 && (
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,90,90,0.85)', marginTop: 10 }}>
-                  Please enter at least 2 characters
-                </p>
-              )}
-
-              {/* Job suggestion pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
-                {JOB_SUGGESTIONS.map(s => (
-                  <button key={s} onClick={() => setJobTitle(s)}
-                    style={{ fontSize: 12, fontWeight: 600, color: S.dim, border: `1px solid ${S.border}`, borderRadius: 100, padding: '5px 13px', background: 'transparent', cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s, background 0.15s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = S.dim; (e.currentTarget as HTMLElement).style.borderColor = S.border; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 36 }}>
-                <button onClick={() => setStep(1)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dim, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = S.dim}>
-                  <ArrowLeft style={{ width: 13, height: 13 }} /> Back
-                </button>
-                <button onClick={handleFinish} disabled={saving || jobTitle.trim().length < 2}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 100, padding: '13px 32px', fontSize: 13, fontWeight: 700, cursor: jobTitle.trim().length >= 2 ? 'pointer' : 'default', opacity: (saving || jobTitle.trim().length < 2) ? 0.28 : 1, boxShadow: '0 2px 16px rgba(255,255,255,0.10)', transition: 'background 0.15s, transform 0.1s, opacity 0.2s' }}
-                  onMouseEnter={e => { if (jobTitle.trim().length >= 2 && !saving) { (e.currentTarget as HTMLElement).style.background = '#ebebeb'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' } }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
-                  {saving ? 'Saving...' : 'Finish setup'}
-                </button>
-              </div>
-            </div>
-          )}
-
-        </div>
-      </div>
-
-      {/* Fade-up keyframe */}
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.primary, fontFamily: BODY }}>
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        .ob-step { animation: slideIn 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        .country-chip:hover { background: rgba(240,240,232,0.08) !important; }
+        .country-chip.selected { background: ${C.primary} !important; color: ${C.bg} !important; }
+        .country-chip.selected span { color: ${C.bg} !important; }
+        .role-tile:hover { background: rgba(240,240,232,0.07) !important; border-color: rgba(240,240,232,0.18) !important; }
+        .role-tile.selected { background: ${C.primary} !important; border-color: ${C.primary} !important; }
+        .role-tile.selected .role-label { color: ${C.bg} !important; }
+        input:focus { outline: none; border-color: rgba(240,240,232,0.3) !important; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(240,240,232,0.12); border-radius: 2px; }
       `}</style>
+
+      {/* ── Header bar ── */}
+      <div style={{ borderBottom: `1px solid ${C.border}`, padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 20, height: 20, background: C.primary, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
+              <circle cx="6" cy="6" r="3" fill="#f0f0e8"/>
+            </svg>
+          </div>
+          <span style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 800, letterSpacing: '-0.02em', color: C.primary }}>Origio</span>
+        </div>
+
+        {/* Step indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          {[1, 2].map(n => (
+            <div key={n} style={{
+              height: 2, width: 32, borderRadius: 1, transition: 'background 0.3s',
+              background: step >= n ? C.primary : C.dim,
+            }} />
+          ))}
+        </div>
+
+        <div style={{ width: 80 }} /> {/* spacer */}
+      </div>
+
+      {/* ── Main content ── */}
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 40px 80px' }}>
+
+        {/* ══ STEP 1: Passport ══════════════════════════════════════════════ */}
+        {step === 1 && (
+          <div className="ob-step">
+            {/* Step label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+              <span style={{ fontFamily: HEAD, fontSize: 72, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.05em', color: C.dim }}>01</span>
+              <div style={{ height: 1, flex: 1, background: C.border }} />
+              <span style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: C.muted }}>of 02</span>
+            </div>
+
+            <h1 style={{ fontFamily: HEAD, fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', textTransform: 'uppercase', color: C.primary, margin: '0 0 8px', lineHeight: 0.92 }}>
+              Which passport<br />do you hold?
+            </h1>
+            <p style={{ fontSize: 14, color: C.muted, marginBottom: 36, lineHeight: 1.6 }}>
+              We use this to calculate your visa options across all 37 countries.
+            </p>
+
+            {/* Selected passport display */}
+            {selectedCountry && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', background: C.surface, border: `1px solid ${C.borderMd}`, borderRadius: 0, marginBottom: 20 }}>
+                <span style={{ fontSize: 28, lineHeight: 1 }}>{selectedCountry.flag}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: C.primary, margin: 0 }}>{selectedCountry.name}</p>
+                  <p style={{ fontFamily: BODY, fontSize: 11, color: C.muted, margin: 0, marginTop: 2 }}>Primary passport selected</p>
+                </div>
+                <button onClick={() => setPassportSlug(null)} style={{ width: 28, height: 28, background: C.dim, border: 'none', borderRadius: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.borderMd}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.dim}>
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Search */}
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.muted, pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Search country..."
+                value={passportSearch}
+                onChange={e => setPassportSearch(e.target.value)}
+                style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 0, padding: '12px 16px 12px 40px', fontSize: 14, fontWeight: 500, color: C.primary, fontFamily: BODY, boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+              />
+            </div>
+
+            {/* Country grid */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 300, overflowY: 'auto', padding: '2px 0' }}>
+              {filtered.map(c => {
+                const sel = passportSlug === c.slug
+                return (
+                  <button key={c.slug}
+                    className={`country-chip${sel ? ' selected' : ''}`}
+                    onClick={() => { setPassportSlug(c.slug); setPassportSearch('') }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'transparent', border: `1px solid ${sel ? C.primary : C.border}`, borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s', fontFamily: BODY }}>
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>{c.flag}</span>
+                    <span style={{ fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? C.bg : C.primary, whiteSpace: 'nowrap' }}>{c.name}</span>
+                    {sel && <Check size={11} style={{ color: C.bg, marginLeft: 2 }} />}
+                  </button>
+                )
+              })}
+              {filtered.length === 0 && (
+                <p style={{ fontSize: 13, color: C.muted, padding: '20px 0' }}>No countries found.</p>
+              )}
+            </div>
+
+            {/* Second passport */}
+            {passportSlug && (
+              <div style={{ marginTop: 24, borderTop: `1px solid ${C.border}`, paddingTop: 24 }}>
+                {!showSecond ? (
+                  <button onClick={() => setShowSecond(true)}
+                    style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.muted, background: 'none', border: `1px dashed ${C.border}`, padding: '10px 18px', cursor: 'pointer', transition: 'all 0.15s', borderRadius: 0, fontFamily: BODY }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = C.borderMd; (e.currentTarget as HTMLElement).style.color = C.primary }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = C.border; (e.currentTarget as HTMLElement).style.color = C.muted }}>
+                    + Add second passport
+                  </button>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <span style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>Second passport</span>
+                      <button onClick={() => { setShowSecond(false); setSecondSlug(null); setSecondSearch('') }}
+                        style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.muted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: BODY }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.primary}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.muted}>
+                        Remove
+                      </button>
+                    </div>
+
+                    {secondCountry && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: C.surface, border: `1px solid ${C.borderMd}`, borderRadius: 0, marginBottom: 12 }}>
+                        <span style={{ fontSize: 18 }}>{secondCountry.flag}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>{secondCountry.name}</span>
+                        <button onClick={() => setSecondSlug(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 2 }}>
+                          <X size={11} />
+                        </button>
+                      </div>
+                    )}
+
+                    <div style={{ position: 'relative', marginBottom: 12 }}>
+                      <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.muted, pointerEvents: 'none' }} />
+                      <input type="text" placeholder="Search country..." value={secondSearch} onChange={e => setSecondSearch(e.target.value)}
+                        style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 0, padding: '10px 14px 10px 36px', fontSize: 13, color: C.primary, fontFamily: BODY, boxSizing: 'border-box' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, maxHeight: 200, overflowY: 'auto' }}>
+                      {filteredSecond.map(c => {
+                        const sel = secondSlug === c.slug
+                        return (
+                          <button key={c.slug}
+                            className={`country-chip${sel ? ' selected' : ''}`}
+                            onClick={() => { setSecondSlug(c.slug); setSecondSearch('') }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: 'transparent', border: `1px solid ${sel ? C.primary : C.border}`, borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s', fontFamily: BODY }}>
+                            <span style={{ fontSize: 15 }}>{c.flag}</span>
+                            <span style={{ fontSize: 12, fontWeight: sel ? 700 : 500, color: sel ? C.bg : C.primary }}>{c.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Dual citizenship warning */}
+            {dualWarn && (
+              <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 0 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(250,204,21,0.9)', margin: '0 0 4px' }}>⚠ Dual citizenship note</p>
+                <p style={{ fontSize: 12, color: 'rgba(250,204,21,0.6)', lineHeight: 1.6, margin: 0 }}>{dualWarn}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 48, borderTop: `1px solid ${C.border}`, paddingTop: 32 }}>
+              <button onClick={() => { setPassportSlug(null); setStep(2) }}
+                style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.muted, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.primary}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.muted}>
+                Skip for now
+              </button>
+              <button onClick={() => setStep(2)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.primary, color: C.bg, border: 'none', borderRadius: 100, padding: '13px 28px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: BODY, transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#dcdcd4'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.primary}>
+                Continue <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ══ STEP 2: Job Role ══════════════════════════════════════════════ */}
+        {step === 2 && (
+          <div className="ob-step">
+            {/* Step label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+              <span style={{ fontFamily: HEAD, fontSize: 72, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.05em', color: C.dim }}>02</span>
+              <div style={{ height: 1, flex: 1, background: C.border }} />
+              <span style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: C.muted }}>of 02</span>
+            </div>
+
+            <h1 style={{ fontFamily: HEAD, fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', textTransform: 'uppercase', color: C.primary, margin: '0 0 8px', lineHeight: 0.92 }}>
+              What do<br />you do?
+            </h1>
+            <p style={{ fontSize: 14, color: C.muted, marginBottom: 32, lineHeight: 1.6 }}>
+              We show you local salaries for your role. Pick yours or type a custom one below.
+            </p>
+
+            {/* Search roles */}
+            <div style={{ position: 'relative', marginBottom: 20 }}>
+              <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.muted, pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder="Filter roles..."
+                value={roleSearch}
+                onChange={e => setRoleSearch(e.target.value)}
+                style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 0, padding: '12px 16px 12px 40px', fontSize: 14, fontWeight: 500, color: C.primary, fontFamily: BODY, boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+              />
+            </div>
+
+            {/* Role grid — 3 columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 24 }}>
+              {filteredRoles.map(r => {
+                const sel = selectedRole === r.key
+                return (
+                  <button key={r.key}
+                    className={`role-tile${sel ? ' selected' : ''}`}
+                    onClick={() => { setSelectedRole(sel ? null : r.key); setCustomJob('') }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '14px 16px', background: 'transparent', border: `1px solid ${sel ? C.primary : C.border}`, borderRadius: 0, cursor: 'pointer', transition: 'all 0.12s', textAlign: 'left', fontFamily: BODY, gap: 6 }}>
+                    <span style={{ fontSize: 22, lineHeight: 1 }}>{r.emoji}</span>
+                    <span className="role-label" style={{ fontSize: 12, fontWeight: 600, color: sel ? C.bg : C.primary, lineHeight: 1.3 }}>{r.label}</span>
+                  </button>
+                )
+              })}
+              {filteredRoles.length === 0 && (
+                <div style={{ gridColumn: '1/-1', padding: '20px 0' }}>
+                  <p style={{ fontSize: 13, color: C.muted }}>No roles matched. Use the field below.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Custom / override input */}
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20, marginBottom: 4 }}>
+              <p style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted, marginBottom: 10 }}>
+                {selectedRole ? 'Override with custom title' : 'Or type your own'}
+              </p>
+              <input
+                type="text"
+                placeholder={selectedRole ? JOB_ROLES.find(r => r.key === selectedRole)?.label ?? '' : 'e.g. Freelancer, Student, Product Designer...'}
+                value={customJob}
+                onChange={e => { setCustomJob(e.target.value); if (e.target.value) setSelectedRole(null) }}
+                onKeyDown={e => { if (e.key === 'Enter' && canFinish) handleFinish() }}
+                style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 0, padding: '12px 16px', fontSize: 14, fontWeight: 500, color: C.primary, fontFamily: BODY, boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+              />
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 48, borderTop: `1px solid ${C.border}`, paddingTop: 32 }}>
+              <button onClick={() => setStep(1)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BODY, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.muted, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', transition: 'color 0.15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.primary}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.muted}>
+                <ArrowLeft size={13} /> Back
+              </button>
+              <button onClick={handleFinish} disabled={saving || !canFinish}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: canFinish ? C.primary : C.dim, color: canFinish ? C.bg : C.muted, border: 'none', borderRadius: 100, padding: '13px 32px', fontSize: 13, fontWeight: 700, cursor: canFinish ? 'pointer' : 'default', fontFamily: BODY, transition: 'background 0.15s, color 0.15s' }}
+                onMouseEnter={e => { if (canFinish && !saving) (e.currentTarget as HTMLElement).style.background = '#dcdcd4' }}
+                onMouseLeave={e => { if (canFinish) (e.currentTarget as HTMLElement).style.background = C.primary }}>
+                {saving ? 'Saving...' : 'Finish setup'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
