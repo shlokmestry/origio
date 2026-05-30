@@ -656,19 +656,12 @@
   border-color: var(--c-amber) !important;
 }
 
-/* Why this city hint — shown when filters active */
+/* Why this city hint — always visible when rendered (filters active + match) */
 .whyHint {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.cityCard:hover .whyHint {
-  opacity: 1;
-  transform: translateY(0);
 }
 .whyTag {
   font-family: 'Satoshi', sans-serif;
@@ -1007,9 +1000,6 @@
 .soon { color: var(--c-dim); }
 .unit { font-family: 'Satoshi', sans-serif; font-size: 11px; color: var(--c-dimmer); font-weight: 400; letter-spacing: 0.1em; }
 
-/* ── Pref popover open state ── */
-.prefWord.open .prefPopover { display: flex; }
-.alignRight .prefPopover { left: auto !important; right: 0 !important; }
 .manifest { position: relative; overflow: hidden; }
 
 /* ── ANIMATIONS ── */

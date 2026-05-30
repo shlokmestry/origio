@@ -84,12 +84,14 @@ const CITY_EXTRAS: Record<string, CityExtra> = {
   'abu-dhabi':    { climateBand:'warm',      climate:'Desert',                vibes:['family','culture'],                          rentEur:515,   status:'soon' },
 }
 
+const TOTAL_CITIES = Object.keys(CITY_EXTRAS).length
+
 const CCY: Record<string, string> = {
   EUR:'€', GBP:'£', USD:'$', JPY:'¥', SGD:'S$', AUD:'A$', CAD:'CA$', AED:'AED ',
 }
 
 function formatRent(rent: number | undefined, currency: string): string {
-  if (!rent) return '—'
+  if (rent == null) return '—'
   return `${CCY[currency] ?? currency}${rent.toLocaleString()}`
 }
 
@@ -174,6 +176,7 @@ function ChipGroup({ label, options, value, onChange }: ChipGroupProps) {
             type="button"
             className={`${styles.chip}${value === o.val ? ' ' + styles.chipOn : ''}`}
             onClick={() => onChange(o.val)}
+            aria-pressed={value === o.val}
           >
             {o.label}
           </button>
@@ -193,13 +196,20 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   const [waitlistInput, setWaitlistInput] = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
   const [waitlistLoading, setWaitlistLoading] = useState(false)
+  const [waitlistError, setWaitlistError] = useState(false)
 
   const handleWaitlistSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     const city = waitlistInput.trim().slice(0, 100).replace(/[^a-zA-ZÀ-ÿ0-9 \-,.']/g, '')
     if (!city || waitlistLoading) return
     setWaitlistLoading(true)
-    await supabase.from('city_waitlist').insert({ city })
+    setWaitlistError(false)
+    const { error } = await supabase.from('city_waitlist').insert({ city })
+    if (error) {
+      setWaitlistError(true)
+      setWaitlistLoading(false)
+      return
+    }
     setWaitlistInput('')
     setWaitlistDone(true)
     setWaitlistLoading(false)
@@ -282,7 +292,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                   Origio Atlas
                   <span className={styles.it}>Twenty-four cities</span>
                 </div>
-                <div className={styles.ledgerCount}>{liveCities.length}<span className={styles.denom}>/ 36</span></div>
+                <div className={styles.ledgerCount}>{liveCities.length}<span className={styles.denom}>/ {TOTAL_CITIES}</span></div>
               </div>
               <div className={styles.ledgerRows}>
                 {liveCities.map((c, i) => (
@@ -384,7 +394,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                 const href = `/city/${c.slug}`
                 const reasons = anyFilterActive ? matchReasons(extra, filters) : []
                 return (
-                  <a key={c.id} href={href}
+                  <Link key={c.id} href={href}
                     className={styles.cityCard}
                     data-climate={extra.climateBand}
                     data-slug={c.slug}
@@ -435,7 +445,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       </div>
                       <span className={styles.ccArrow}>View city →</span>
                     </div>
-                  </a>
+                  </Link>
                 )
               })}
             </div>
@@ -474,10 +484,24 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           <form className={styles.wlForm} onSubmit={handleWaitlistSubmit}>
             <input type="text" placeholder="e.g. Mexico City, Bali, Cape Town"
               value={waitlistInput} onChange={e => setWaitlistInput(e.target.value)}
-              disabled={waitlistLoading} />
+              disabled={waitlistLoading || waitlistDone} />
             <button type="submit" disabled={waitlistLoading || waitlistDone}>
-              {waitlistDone ? '✓ Added' : waitlistLoading ? 'Adding…' : 'Notify Me →'}
+              {waitlistDone ? '✓ Added' : waitlistLoading ? 'Adding…' : waitlistError ? 'Try again →' : 'Notify Me →'}
             </button>
+            {waitlistDone && (
+              <button
+                type="button"
+                className={styles.resetChip}
+                onClick={() => { setWaitlistDone(false); setWaitlistInput('') }}
+              >
+                + Add another city
+              </button>
+            )}
+            {waitlistError && (
+              <p style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>
+                Something went wrong — please try again.
+              </p>
+            )}
           </form>
         </section>
 
