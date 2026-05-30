@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { session, user } } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (user) {
       const { data: profile } = await supabase
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
             react: createElement(WelcomeUser, { name }),
           })
         } catch (err) {
-          console.error('[welcome-user google]', err)
+          console.error('[welcome-user]', err)
         }
       }
 
