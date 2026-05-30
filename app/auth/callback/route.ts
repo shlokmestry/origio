@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session, user } } = await supabase.auth.exchangeCodeForSession(code)
 
     if (user) {
       const { data: profile } = await supabase
@@ -38,7 +38,15 @@ export async function GET(request: NextRequest) {
         .eq('id', user.id)
         .single()
 
-      if (!profile?.onboarded) {
+      const isNewUser = !profile?.onboarded
+      if (isNewUser && session) {
+        fetch(`${origin}/api/welcome-user`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).catch(() => {})
+      }
+
+      if (isNewUser) {
         return NextResponse.redirect(`${origin}/onboarding`)
       }
     }

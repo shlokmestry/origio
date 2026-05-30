@@ -931,8 +931,8 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 8: Passport fallback (only if skipped step 0) */}
-          {step === 8 && !answers.passport && (
+          {/* Step 8: Passport (confirm or set) */}
+          {step === 8 && (
             <>
               <EyebrowLabel>Step 08 · Passport</EyebrowLabel>
               <StepHeading>Your <Mint>passport?</Mint></StepHeading>
