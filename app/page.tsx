@@ -84,115 +84,149 @@ function CitiesSection() {
       aria-label="Explore cities"
       style={{
         background:    "#0a0a0a",
-        padding:       "clamp(80px, 12vh, 128px) clamp(24px, 6vw, 80px)",
+        padding:       "clamp(72px, 10vh, 112px) clamp(16px, 3vw, 40px)",
         display:       "flex",
         flexDirection: "column",
         alignItems:    "center",
         borderTop:     "1px solid #1a1a1a",
       }}
     >
-      {/* NEW badge */}
+      {/* Editorial dateline — newspaper masthead style, not a badge */}
       <div style={{
-        display:       "inline-flex",
-        alignItems:    "center",
-        gap:           6,
-        background:    "#0f0f0f",
-        border:        "1px solid #2a2a2a",
-        padding:       "5px 12px",
-        marginBottom:  "clamp(32px, 5vh, 52px)",
+        width:         "100%",
+        maxWidth:      1040,
+        marginBottom:  "clamp(24px, 4vh, 40px)",
         opacity:       inView ? 1 : 0,
         transition:    "opacity 0.4s ease",
       }}>
-        <span style={{
-          width:        6,
-          height:       6,
-          borderRadius: "50%",
-          background:   "#00ffd5",
-          flexShrink:   0,
-          display:      "block",
-        }} />
-        <span style={{
-          fontFamily:    "Satoshi, sans-serif",
-          fontSize:      11,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase" as const,
-          color:         "#00ffd5",
+        <div style={{
+          borderTop:     "2px solid #f0f0e8",
+          borderBottom:  "1px solid #2a2a2a",
+          padding:       "8px 0 6px",
+          display:       "flex",
+          alignItems:    "baseline",
+          justifyContent: "space-between",
+          gap:           16,
         }}>
-          Just added
-        </span>
+          <span style={{
+            fontFamily:    "Cabinet Grotesk, sans-serif",
+            fontWeight:    800,
+            fontSize:      "clamp(13px, 1.8vw, 17px)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase" as const,
+            color:         "#f0f0e8",
+          }}>
+            Cities
+          </span>
+          <span style={{
+            fontFamily:    "Satoshi, sans-serif",
+            fontSize:      10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase" as const,
+            color:         "rgba(240,240,232,0.22)",
+          }}>
+            Now live · 50+ cities
+          </span>
+        </div>
       </div>
 
-      {/* Photo — centered with border */}
+      {/* Photo — wider, with border */}
       <div style={{
-        position:  "relative",
-        width:     "100%",
-        maxWidth:  860,
-        marginBottom: "clamp(40px, 6vh, 64px)",
-        opacity:   inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity 0.7s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) 80ms",
+        position:     "relative",
+        width:        "100%",
+        maxWidth:     1040,
+        marginBottom: "clamp(32px, 5vh, 52px)",
+        opacity:      inView ? 1 : 0,
+        transform:    inView ? "translateY(0)" : "translateY(20px)",
+        transition:   "opacity 0.7s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) 80ms",
       }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/manincity.jpg"
           alt="Person standing in a city at night"
           style={{
-            width:      "100%",
-            height:     "clamp(340px, 48vw, 540px)",
-            objectFit:  "cover",
-            objectPosition: "center",
-            display:    "block",
-            border:     "3px solid rgba(240,240,232,0.18)",
-            boxShadow:  "6px 6px 0 rgba(240,240,232,0.06)",
+            width:          "100%",
+            height:         "clamp(320px, 44vw, 560px)",
+            objectFit:      "cover",
+            objectPosition: "center 40%",
+            display:        "block",
+            border:         "2px solid rgba(240,240,232,0.14)",
+            boxShadow:      "5px 5px 0 rgba(240,240,232,0.05)",
           }}
         />
 
-        {/* Text overlay at bottom of photo */}
+        {/* Text overlay at bottom */}
         <div style={{
           position:   "absolute",
           bottom:     0,
           left:       0,
           right:      0,
-          padding:    "clamp(24px, 4vw, 48px)",
-          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
+          padding:    "clamp(20px, 3.5vw, 44px)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 55%, transparent 100%)",
         }}>
           <p style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
             fontWeight:    800,
-            fontSize:      "clamp(28px, 4.5vw, 58px)",
+            fontSize:      "clamp(28px, 4.5vw, 60px)",
             letterSpacing: "-0.03em",
             lineHeight:    1.05,
             color:         "#f0f0e8",
             margin:        0,
-            textWrap:      "balance" as const,
           }}>
             Explore{" "}
             <Link
               href="/cities"
               style={{
-                color:          "inherit",
-                textDecoration: "underline",
-                textDecorationColor: "rgba(240,240,232,0.5)",
-                textUnderlineOffset: "4px",
+                color:                   "inherit",
+                textDecoration:          "underline",
+                textDecorationColor:     "rgba(240,240,232,0.45)",
+                textUnderlineOffset:     "5px",
                 textDecorationThickness: "2px",
-                transition:     "text-decoration-color 0.15s ease",
+                transition:              "text-decoration-color 0.15s ease",
               }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "#00ffd5"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "rgba(240,240,232,0.5)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "rgba(240,240,232,0.45)"}
             >
               Cities
             </Link>
           </p>
+
+          {/* Click hint — tiny annotation below */}
+          <Link
+            href="/cities"
+            aria-hidden
+            tabIndex={-1}
+            style={{
+              display:        "inline-flex",
+              alignItems:     "center",
+              gap:            5,
+              marginTop:      8,
+              textDecoration: "none",
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden style={{ opacity: 0.4 }}>
+              <path d="M1 10L10 1M10 1H4M10 1V7" stroke="#f0f0e8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{
+              fontFamily:    "Satoshi, sans-serif",
+              fontSize:      10,
+              letterSpacing: "0.1em",
+              color:         "rgba(240,240,232,0.35)",
+              textTransform: "uppercase" as const,
+            }}>
+              click to explore
+            </span>
+          </Link>
         </div>
       </div>
 
       {/* Sub-line */}
       <p style={{
         fontFamily:  "Satoshi, sans-serif",
-        fontSize:    "clamp(13px, 1.5vw, 16px)",
-        color:       "rgba(240,240,232,0.38)",
+        fontSize:    "clamp(13px, 1.4vw, 15px)",
+        color:       "rgba(240,240,232,0.32)",
         lineHeight:  1.65,
-        maxWidth:    480,
+        maxWidth:    460,
         textAlign:   "center",
         margin:      0,
         opacity:     inView ? 1 : 0,
@@ -204,148 +238,7 @@ function CitiesSection() {
   );
 }
 
-// ─── Score Methodology section ────────────────────────────────────────────────
-const SCORE_FACTORS = [
-  { label: "Salary after tax",   weight: 30, example: "€3,100/mo in Portugal",     color: "#00ffd5" },
-  { label: "Cost of living",     weight: 25, example: "€1,400/mo all-in in Lisbon", color: "#a78bfa" },
-  { label: "Visa accessibility", weight: 20, example: "EU passport: score 9/10",    color: "#60a5fa" },
-  { label: "Quality of life",    weight: 15, example: "Netherlands: 84/100",        color: "#34d399" },
-  { label: "Safety index",       weight: 10, example: "Japan: 97/100",              color: "#f472b6" },
-] as const;
 
-function ScoreMethodologySection() {
-  const { ref, inView } = useInView(0.15);
-
-  return (
-    <section
-      ref={ref}
-      aria-label="How scoring works"
-      style={{
-        background: "#0a0a0a",
-        borderTop:  "1px solid #1a1a1a",
-        padding:    "clamp(72px, 10vh, 112px) 24px",
-      }}
-    >
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <div style={{
-          display:        "flex",
-          alignItems:     "baseline",
-          justifyContent: "space-between",
-          flexWrap:       "wrap",
-          gap:            12,
-          marginBottom:   "clamp(36px, 5vh, 56px)",
-          opacity:        inView ? 1 : 0,
-          transition:     "opacity 0.5s ease",
-        }}>
-          <h2 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(24px, 3.5vw, 40px)",
-            letterSpacing: "-0.02em",
-            lineHeight:    1.1,
-            color:         "#f0f0e8",
-            margin:        0,
-          }}>
-            The algorithm
-          </h2>
-          <Link
-            href="/about"
-            style={{
-              fontFamily:    "Satoshi, sans-serif",
-              fontSize:      13,
-              color:         "rgba(240,240,232,0.35)",
-              textDecoration: "none",
-              letterSpacing: "0.02em",
-              transition:    "color 0.15s ease",
-              whiteSpace:    "nowrap",
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#00ffd5"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(240,240,232,0.35)"}
-          >
-            Full methodology →
-          </Link>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {SCORE_FACTORS.map((f, i) => (
-            <div
-              key={f.label}
-              style={{
-                borderTop:  "1px solid #1a1a1a",
-                padding:    "clamp(16px, 2.5vh, 22px) 0",
-                display:    "grid",
-                gridTemplateColumns: "1fr auto",
-                alignItems: "center",
-                gap:        "12px 24px",
-                opacity:    inView ? 1 : 0,
-                transform:  inView ? "translateX(0)" : "translateX(-10px)",
-                transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 90}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 90}ms`,
-              }}
-            >
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                  <span style={{
-                    fontFamily: "Cabinet Grotesk, sans-serif",
-                    fontWeight: 700,
-                    fontSize:   "clamp(14px, 1.8vw, 16px)",
-                    color:      "#f0f0e8",
-                    lineHeight: 1.2,
-                  }}>
-                    {f.label}
-                  </span>
-                  <span style={{
-                    fontFamily:    "Satoshi, sans-serif",
-                    fontSize:      11,
-                    color:         "rgba(240,240,232,0.28)",
-                    letterSpacing: "0.02em",
-                  }}>
-                    {f.example}
-                  </span>
-                </div>
-                <div style={{ height: 4, background: "#1a1a1a", position: "relative", overflow: "hidden" }}>
-                  <div style={{
-                    position:        "absolute",
-                    inset:           0,
-                    background:      f.color,
-                    transformOrigin: "left center",
-                    transform:       inView ? `scaleX(${f.weight / 100})` : "scaleX(0)",
-                    transition:      `transform 0.8s cubic-bezier(0.16,1,0.3,1) ${200 + i * 90}ms`,
-                    opacity:         0.75,
-                  }} />
-                </div>
-              </div>
-              <span style={{
-                fontFamily:    "Cabinet Grotesk, sans-serif",
-                fontWeight:    700,
-                fontSize:      "clamp(18px, 2.5vw, 26px)",
-                color:         f.color,
-                letterSpacing: "-0.01em",
-                lineHeight:    1,
-                opacity:       0.9,
-                flexShrink:    0,
-              }}>
-                {f.weight}%
-              </span>
-            </div>
-          ))}
-          <div style={{ borderTop: "1px solid #1a1a1a" }} />
-        </div>
-
-        <p style={{
-          fontFamily: "Satoshi, sans-serif",
-          fontSize:   12,
-          color:      "rgba(240,240,232,0.2)",
-          marginTop:  "clamp(20px, 3vh, 28px)",
-          lineHeight: 1.6,
-          opacity:    inView ? 1 : 0,
-          transition: "opacity 0.5s ease 600ms",
-        }}>
-          Weights adjust based on your wizard answers. A &quot;visa-first&quot; answer shifts Visa Accessibility to 35%.
-        </p>
-      </div>
-    </section>
-  );
-}
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Home() {
@@ -605,9 +498,6 @@ export default function Home() {
 
       {/* ── SECTION 3: CITIES TEASER ── */}
       <CitiesSection />
-
-      {/* ── SECTION 4: SCORE METHODOLOGY ── */}
-      <ScoreMethodologySection />
 
       <Footer />
       {overlays}
