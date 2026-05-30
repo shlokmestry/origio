@@ -7,6 +7,8 @@ export default function Footer() {
       links: [
         { href: "/wizard",  label: "Find My Country" },
         { href: "/compare", label: "Compare Countries" },
+        { href: "/cities",  label: "Find My City" },
+        { href: "/cities/compare", label: "Compare Cities" },
         { href: "/pro",     label: "Origio Pro" },
         { href: "/blog",    label: "Blog" },
       ],
