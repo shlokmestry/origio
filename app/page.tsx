@@ -91,45 +91,6 @@ function CitiesSection() {
         borderTop:     "1px solid #1a1a1a",
       }}
     >
-      {/* Editorial dateline — newspaper masthead style, not a badge */}
-      <div style={{
-        width:         "100%",
-        maxWidth:      1040,
-        marginBottom:  "clamp(24px, 4vh, 40px)",
-        opacity:       inView ? 1 : 0,
-        transition:    "opacity 0.4s ease",
-      }}>
-        <div style={{
-          borderTop:     "2px solid #f0f0e8",
-          borderBottom:  "1px solid #2a2a2a",
-          padding:       "8px 0 6px",
-          display:       "flex",
-          alignItems:    "baseline",
-          justifyContent: "space-between",
-          gap:           16,
-        }}>
-          <span style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(13px, 1.8vw, 17px)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-            color:         "#f0f0e8",
-          }}>
-            Cities
-          </span>
-          <span style={{
-            fontFamily:    "Satoshi, sans-serif",
-            fontSize:      10,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase" as const,
-            color:         "rgba(240,240,232,0.22)",
-          }}>
-            Now live · 50+ cities
-          </span>
-        </div>
-      </div>
-
       {/* Photo — wider, with border */}
       <div style={{
         position:     "relative",
@@ -232,7 +193,7 @@ function CitiesSection() {
         opacity:     inView ? 1 : 0,
         transition:  "opacity 0.5s ease 200ms",
       }}>
-        50+ cities across your matched countries. Rent, internet, liveability — side by side.
+        20+ cities across your matched countries. Rent, internet, liveability — side by side.
       </p>
     </section>
   );
@@ -401,17 +362,16 @@ export default function Home() {
           textAlign:     "center",
           padding:       "clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 8vh, 100px)",
           width:         "100%",
-          maxWidth:      720,
         }}>
           <h1 style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
             fontWeight:    800,
-            fontSize:      "clamp(42px, 7vw, 88px)",
+            fontSize:      "clamp(22px, 5.2vw, 80px)",
             lineHeight:    1.0,
             letterSpacing: "-0.03em",
             color:         "#ffffff",
             marginBottom:  "clamp(20px, 3vh, 32px)",
-            textWrap:      "balance" as const,
+            whiteSpace:    "nowrap",
           }}>
             Find Where You <FlickerWord />
           </h1>
