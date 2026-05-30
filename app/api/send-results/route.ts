@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
 import { getResend } from '@/lib/resend'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
+  const limited = await rateLimit(request, { name: 'send-results', maxRequests: 3, windowSeconds: 60 })
+  if (limited) return limited
+
   try {
     const { email, top3 } = await request.json()
-    if (!email || !top3?.length) return NextResponse.json({ ok: false })
+
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return NextResponse.json({ ok: false }, { status: 400 })
+    }
+    if (!Array.isArray(top3) || top3.length === 0 || top3.length > 3) {
+      return NextResponse.json({ ok: false }, { status: 400 })
+    }
 
     const resend = getResend()
     const countryLines = top3.map((c: { flagEmoji: string; name: string; matchPercent: number }, i: number) =>

@@ -5,6 +5,8 @@ import { mapRowToCountry } from "@/lib/mappers";
 import { CountryWithData } from "@/types";
 import CountryPageClient from "./CountryPageClient";
 
+export const revalidate = 86400
+
 function getServerSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

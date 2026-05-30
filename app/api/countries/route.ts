@@ -2,11 +2,16 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { mapRowToCountry } from '@/lib/mappers'
+import { rateLimit } from '@/lib/rate-limit'
 
+// Country data changes at most daily — allow CDN/edge caching for 1hr,
+// stale-while-revalidate for another hour so DB is never hammered.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  // Initialised inside the handler so env vars are guaranteed to be set at runtime
+export async function GET(request: Request) {
+  const limited = await rateLimit(request, { name: 'countries', maxRequests: 30, windowSeconds: 60 })
+  if (limited) return limited
+
   const supabaseServer = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -37,6 +42,8 @@ export async function GET() {
   })
 
   return NextResponse.json(merged, {
-    headers: { 'Cache-Control': 'no-store' },
+    headers: {
+      'Cache-Control': 's-maxage=3600, stale-while-revalidate=3600',
+    },
   })
 }

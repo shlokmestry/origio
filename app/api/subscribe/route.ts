@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
+import { fetchWithTimeout } from "@/lib/utils";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
@@ -66,7 +67,7 @@ Tone: Direct, data-first, human. No marketing speak. No bullet points. No hyphen
   let emailBody = "";
 
   try {
-    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const aiRes = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": process.env.ANTHROPIC_API_KEY!,
@@ -100,7 +101,7 @@ Origio`;
 
   // 2. Send via Resend
   try {
-    await fetch("https://api.resend.com/emails", {
+    await fetchWithTimeout("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
@@ -119,7 +120,7 @@ Origio`;
 
   // 3. Add to Loops for future campaigns
   try {
-    await fetch("https://app.loops.so/api/v1/contacts/create", {
+    await fetchWithTimeout("https://app.loops.so/api/v1/contacts/create", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.LOOPS_API_KEY}`,

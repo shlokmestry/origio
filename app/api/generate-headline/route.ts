@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
+import { fetchWithTimeout } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "generate-headline", maxRequests: 10, windowSeconds: 60 });
@@ -103,7 +104,7 @@ RULES:
 
 Output ONLY the two sentences. No labels, no quotes, nothing else.`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

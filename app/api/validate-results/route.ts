@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
+import { fetchWithTimeout } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "validate-results", maxRequests: 10, windowSeconds: 60 });
@@ -75,7 +76,7 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
   "confidence": "high" | "medium" | "low"
 }`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
