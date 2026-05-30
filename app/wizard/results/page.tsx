@@ -585,9 +585,12 @@ export default function WizardResultsPage() {
     try {
       const body: Record<string, string> = {};
       if (user?.email) body.email = user.email;
+      const { data: { session: checkoutSession } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (checkoutSession?.access_token) headers["Authorization"] = `Bearer ${checkoutSession.access_token}`;
       const res = await fetch("/api/checkout-report", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
@@ -626,8 +629,8 @@ export default function WizardResultsPage() {
   if (matches.length === 0) return <SessionExpired />;
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches  = isPro ? matches.slice(0, 37) : matches.slice(0, 8);
-  const lockedCount     = 37 - visibleMatches.length;
+  const visibleMatches  = isPro ? matches : matches.slice(0, 8);
+  const lockedCount     = matches.length - visibleMatches.length;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
@@ -920,11 +923,11 @@ export default function WizardResultsPage() {
             <div>
               <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ The ranking</p>
               <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-                All <em style={{ fontStyle: "normal" }}>twenty-five</em>
+                All <em style={{ fontStyle: "normal" }}>{matches.length}</em>
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
-              {visibleMatches.length} of 37 visible
+              {visibleMatches.length} of {matches.length} visible
             </span>
           </div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
