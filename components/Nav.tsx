@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, Zap, LogIn, User, Menu, X } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useAuth } from "@/lib/AuthProvider";
 import CommandSearch from "@/components/CommandSearch";
 
 interface NavProps {
@@ -16,7 +16,7 @@ interface NavProps {
 export default function Nav({ countries = [], onCountrySelect }: NavProps) {
   const [searchOpen, setSearchOpen]         = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser]                     = useState<SupabaseUser | null>(null);
+  const { user, loading: authLoading }      = useAuth();
   const [isPro, setIsPro]                   = useState(false);
 
   const fetchProStatus = useCallback(async (userId: string) => {
@@ -26,31 +26,12 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) await fetchProStatus(session.user.id);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) await fetchProStatus(session.user.id);
-        else setIsPro(false);
-      }
-    );
-    const handleVisibility = async () => {
-      if (document.visibilityState === "visible") {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) await fetchProStatus(session.user.id);
-        else setIsPro(false);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      subscription.unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [fetchProStatus]);
+    if (user) {
+      fetchProStatus(user.id);
+    } else {
+      setIsPro(false);
+    }
+  }, [user, fetchProStatus]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
