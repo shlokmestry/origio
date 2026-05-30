@@ -535,11 +535,12 @@ function Visa({ data, passportContext }: {
           width: 220, flexShrink: 0, padding: "32px 28px",
           borderRight: `1px solid ${C.border}`,
           display: "flex", flexDirection: "column", justifyContent: "space-between",
+          overflow: "hidden",
         }}>
           <span style={{
-            fontFamily: HEAD, fontWeight: 800, fontSize: "clamp(44px, 5vw, 64px)",
-            lineHeight: 0.88, letterSpacing: "-0.04em", textTransform: "uppercase",
-            color: visaColor, display: "block",
+            fontFamily: HEAD, fontWeight: 800, fontSize: "clamp(28px, 3vw, 40px)",
+            lineHeight: 1.0, letterSpacing: "-0.03em", textTransform: "uppercase",
+            color: visaColor, display: "block", wordBreak: "break-word",
           }}>{getVisaLabel(data.visaDifficulty)}</span>
           <Pill color={visaColor} style={{ marginTop: 20, alignSelf: "flex-start" }}>Difficulty {data.visaDifficulty}/5</Pill>
         </div>
