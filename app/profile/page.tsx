@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import { getPassportStrength, resolveEffectivePassports } from '@/lib/wizard'
 import Nav from '@/components/Nav'
+import ComicButton from '@/components/ComicButton'
 import {
   LogOut, Trash2, Sparkles, Pencil,
   AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock, KeyRound
@@ -374,20 +375,12 @@ export default function ProfilePage() {
 
           {/* Action buttons */}
           <div className="flex gap-2.5 flex-wrap items-start">
-            <button onClick={openEdit}
-              className="inline-flex items-center gap-1.5 transition-all"
-              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
-              <Pencil className="w-3.5 h-3.5" /> Edit Profile
-            </button>
-            <button onClick={signOut}
-              className="inline-flex items-center gap-1.5 transition-all"
-              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '10px 18px', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
-              <LogOut className="w-3.5 h-3.5" /> Sign Out
-            </button>
+            <ComicButton onClick={openEdit}>
+              <Pencil style={{ width: 13, height: 13 }} /> Edit Profile
+            </ComicButton>
+            <ComicButton onClick={signOut}>
+              <LogOut style={{ width: 13, height: 13 }} /> Sign Out
+            </ComicButton>
           </div>
         </div>
 
@@ -405,11 +398,9 @@ export default function ProfilePage() {
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 37 countries · €4.99 one-time</p>
               </div>
             </div>
-            <a href="/pro"
-              className="inline-flex items-center gap-2 transition-all"
-              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 0, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              <Sparkles className="w-3.5 h-3.5" /> Get Pro
-            </a>
+            <ComicButton as="link" href="/pro" variant="accent">
+              <Sparkles style={{ width: 13, height: 13 }} /> Get Pro
+            </ComicButton>
           </div>
         )}
 
@@ -712,14 +703,10 @@ export default function ProfilePage() {
                   <Check className="w-3.5 h-3.5" /> Check your email
                 </span>
               ) : (
-                <button onClick={handleSetPassword} disabled={setPasswordLoading}
-                  className="inline-flex items-center gap-1.5 transition-all disabled:opacity-50"
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
-                  <KeyRound className="w-3 h-3" />
+                <ComicButton onClick={handleSetPassword} disabled={setPasswordLoading} style={{ opacity: setPasswordLoading ? 0.5 : 1, pointerEvents: setPasswordLoading ? 'none' : 'auto' }}>
+                  <KeyRound style={{ width: 11, height: 11 }} />
                   {setPasswordLoading ? 'Sending...' : 'Set a password'}
-                </button>
+                </ComicButton>
               )}
             </div>
           )}
@@ -729,28 +716,16 @@ export default function ProfilePage() {
             <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{user.email}</span>
             <div className="flex gap-2.5 flex-wrap">
               {!isGoogleUser && (
-                <a href="/auth/forgot-password"
-                  className="inline-flex items-center gap-1.5 transition-all"
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
-                  <Lock className="w-3 h-3" /> Reset password
-                </a>
+                <ComicButton as="link" href="/auth/forgot-password">
+                  <Lock style={{ width: 11, height: 11 }} /> Reset password
+                </ComicButton>
               )}
-              <button onClick={signOut}
-                className="inline-flex items-center gap-1.5 transition-all"
-                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
-                <LogOut className="w-3 h-3" /> Sign out
-              </button>
-              <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
-                className="inline-flex items-center gap-1.5 transition-all"
-                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#f87171', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.6)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.3)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <Trash2 className="w-3 h-3" /> Delete account
-              </button>
+              <ComicButton onClick={signOut}>
+                <LogOut style={{ width: 11, height: 11 }} /> Sign out
+              </ComicButton>
+              <ComicButton variant="destructive" onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}>
+                <Trash2 style={{ width: 11, height: 11 }} /> Delete account
+              </ComicButton>
             </div>
           </div>
         </div>
@@ -902,14 +877,12 @@ export default function ProfilePage() {
             {saveError && <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginTop: 12 }}>{saveError}</p>}
 
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setEditing(false)} disabled={saving}
-                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
+              <ComicButton onClick={() => setEditing(false)} disabled={saving} style={{ flex: 1, opacity: saving ? 0.5 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
                 Cancel
-              </button>
-              <button onClick={saveEdit} disabled={saving}
-                style={{ flex: 1, padding: 13, background: '#fff', color: '#0a0a0a', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+              </ComicButton>
+              <ComicButton variant="accent" onClick={saveEdit} disabled={saving} style={{ flex: 1, opacity: saving ? 0.6 : 1, pointerEvents: saving ? 'none' : 'auto' }}>
                 {saving ? 'Saving...' : 'Save changes'}
-              </button>
+              </ComicButton>
             </div>
           </div>
         </div>
@@ -952,16 +925,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }} disabled={deleteLoading}
-                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
+              <ComicButton onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }} disabled={deleteLoading} style={{ flex: 1, opacity: deleteLoading ? 0.5 : 1, pointerEvents: deleteLoading ? 'none' : 'auto' }}>
                 Cancel
-              </button>
-              <button onClick={deleteAccount} disabled={deleteLoading || deleteConfirmText !== 'DELETE'}
-                style={{ flex: 1, padding: 13, background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', borderRadius: 10, fontSize: 14, fontWeight: 600, color: '#f87171', cursor: 'pointer', opacity: (deleteLoading || deleteConfirmText !== 'DELETE') ? 0.4 : 1, transition: 'border-color 0.15s, background 0.15s' }}
-                onMouseEnter={e => { if (deleteConfirmText === 'DELETE') { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.7)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.07)' } }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.4)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              </ComicButton>
+              <ComicButton variant="destructive" onClick={deleteAccount} disabled={deleteLoading || deleteConfirmText !== 'DELETE'} style={{ flex: 1, opacity: (deleteLoading || deleteConfirmText !== 'DELETE') ? 0.4 : 1, pointerEvents: (deleteLoading || deleteConfirmText !== 'DELETE') ? 'none' : 'auto' }}>
                 {deleteLoading ? 'Deleting...' : 'Yes, delete account'}
-              </button>
+              </ComicButton>
             </div>
           </div>
         </div>

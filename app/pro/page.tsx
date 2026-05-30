@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+import ComicButton from '@/components/ComicButton'
 
 const FEATURES = [
   {
@@ -245,12 +246,14 @@ export default function ProPage() {
 
           {/* CTA */}
           <div style={{ padding: '24px 36px' }}>
-            <button className="pro-cta-btn" onClick={handleUpgrade} disabled={loading}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
+            <ComicButton
+              variant="accent"
+              onClick={handleUpgrade}
+              disabled={loading}
+              style={{ width: '100%', opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto' }}
+            >
               {loading ? 'Redirecting…' : 'Get Origio Pro'}
-            </button>
+            </ComicButton>
             {error && <p style={{ fontSize: 12, color: '#ef4444', marginTop: 10, textAlign: 'center' }}>{error}</p>}
           </div>
 

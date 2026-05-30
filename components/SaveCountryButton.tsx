@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import ComicButton from '@/components/ComicButton'
 
 export default function SaveCountryButton({ countrySlug }: { countrySlug: string }) {
   const [saved, setSaved] = useState(false)
@@ -51,17 +52,14 @@ export default function SaveCountryButton({ countrySlug }: { countrySlug: string
   }
 
   return (
-    <button
+    <ComicButton
+      variant={saved ? 'destructive' : 'default'}
       onClick={toggle}
       disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm font-medium
-        ${saved
-          ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
-          : 'border-border hover:border-border-hover text-text-muted hover:text-text-primary'
-        }`}
+      style={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}
     >
-      <Heart className={`w-4 h-4 ${saved ? 'fill-rose-400 text-rose-400' : ''}`} />
+      <Heart style={{ width: 14, height: 14, fill: saved ? 'currentColor' : 'none' }} />
       {saved ? 'Saved' : 'Save Country'}
-    </button>
+    </ComicButton>
   )
 }

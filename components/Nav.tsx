@@ -7,6 +7,7 @@ import { GlobeCountry } from "@/types";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import CommandSearch from "@/components/CommandSearch";
+import ComicButton from "@/components/ComicButton";
 
 interface NavProps {
   countries?: GlobeCountry[];
@@ -368,15 +369,15 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
 
         {/* CTA */}
         {user ? (
-          <a href="/profile" className={`nav-cta${isPro ? " pro-user" : ""}`}>
+          <ComicButton as="link" href="/profile" variant={isPro ? "accent" : "default"}>
             <User size={13} />
             {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
             {isPro && <span style={{ fontSize: 9, letterSpacing: "0.12em" }}>PRO</span>}
-          </a>
+          </ComicButton>
         ) : (
-          <a href="/signin" className="nav-cta">
+          <ComicButton as="link" href="/signin">
             Sign In
-          </a>
+          </ComicButton>
         )}
       </nav>
 
@@ -440,22 +441,16 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
 
         <div className="mobile-menu-footer">
           {user ? (
-            <a href="/profile"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: isPro ? "transparent" : "#fff", borderRadius: 100, color: isPro ? "#4de6cc" : "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14, border: isPro ? "1.5px solid rgba(77,230,204,0.4)" : "none" }}
-            >
+            <ComicButton as="link" href="/profile" variant={isPro ? "accent" : "default"} style={{ width: "100%" }} onClick={() => setMobileMenuOpen(false)}>
               <User size={15} />
               {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
               {isPro && <span style={{ fontSize: 10, letterSpacing: "0.12em", marginLeft: 4 }}>PRO</span>}
-            </a>
+            </ComicButton>
           ) : (
-            <a href="/signin"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: "#fff", borderRadius: 100, color: "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14 }}
-            >
+            <ComicButton as="link" href="/signin" style={{ width: "100%" }} onClick={() => setMobileMenuOpen(false)}>
               <LogIn size={15} />
               Sign In
-            </a>
+            </ComicButton>
           )}
         </div>
       </div>

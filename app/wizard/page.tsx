@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
+import ComicButton from "@/components/ComicButton";
 import { JOB_ROLES } from "@/types";
 import { WizardAnswers, scoreCountriesForWizard, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
@@ -974,15 +975,17 @@ export default function WizardPage() {
 
           {/* Nav */}
           <div className="wiz-nav-btns" style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#3a3a3a"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = LINE; }}>
+            <ComicButton onClick={handleBack}>
               <ArrowLeft size={14} /> Back
-            </button>
-            <button onClick={handleNext} disabled={!canProceed() || loading}
-              style={{ padding: "14px 28px", borderRadius: 999, background: canProceed() && !loading ? MINT : "#1a1a1a", color: canProceed() && !loading ? BG : DIM, border: "none", cursor: canProceed() && !loading ? "pointer" : "not-allowed", fontFamily: MONO, fontSize: 12, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", boxShadow: canProceed() && !loading ? "0 4px 20px rgba(0,255,213,0.18)" : "none" }}>
+            </ComicButton>
+            <ComicButton
+              variant="accent"
+              onClick={handleNext}
+              disabled={!canProceed() || loading}
+              style={{ opacity: (!canProceed() || loading) ? 0.4 : 1, pointerEvents: (!canProceed() || loading) ? 'none' : 'auto' }}
+            >
               {loading ? "Finding matches..." : isLastStep ? <><Sparkles size={14} /> Find my country</> : <>Next <ArrowRight size={14} /></>}
-            </button>
+            </ComicButton>
           </div>
           {submitError && (
             <p style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: "#ef4444", textAlign: "center" }}>

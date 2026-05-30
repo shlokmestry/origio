@@ -18,6 +18,7 @@ import SaveCountryButton from "@/components/SaveCountryButton";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import ComicButton from "@/components/ComicButton";
 import {
   WizardAnswers, getPassportStrength,
   resolveEffectivePassports,
@@ -203,21 +204,14 @@ function Hero({ country, data, currencySymbol, moveScoreColor, isPro, onGetRepor
           <p style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em", color: C.muted, margin: 0 }}>{country.continent}</p>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <SaveCountryButton countrySlug={country.slug} />
-            <button
+            <ComicButton
               onClick={onGetReport}
               disabled={generatingPDF}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 7,
-                fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
-                padding: "7px 14px", cursor: generatingPDF ? "wait" : "pointer", background: "transparent",
-                border: `2px solid ${C.border}`, color: C.muted, transition: "color 120ms, border-color 120ms",
-              }}
-              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
-              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+              style={{ opacity: generatingPDF ? 0.6 : 1, pointerEvents: generatingPDF ? 'none' : 'auto' }}
             >
               {generatingPDF ? <Loader2 size={11} className="animate-spin" /> : null}
               {generatingPDF ? "Generating…" : "Get Report →"}
-            </button>
+            </ComicButton>
           </div>
         </div>
 
