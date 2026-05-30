@@ -7,12 +7,10 @@ import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import AuroraBackground from "@/components/AuroraBackground";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
-import { ArrowLeft } from "lucide-react";
 
-// ─── Slow country cycle → settles on "Belong" ─────────────────────────────
+// ─── Word cycle → settles on "Belong" ────────────────────────────────────────
 const CYCLE_WORDS = ["Portugal", "Germany", "Japan", "Canada", "Singapore"];
 
 function FlickerWord() {
@@ -51,8 +49,7 @@ function FlickerWord() {
     <span style={{
       opacity:    visible ? 1 : 0,
       transition: done ? "opacity 0.9s ease, color 0.6s ease" : "opacity 0.35s ease",
-      fontStyle: "normal",
-      color:      done ? "#00ffd5" : "rgba(255,255,255,0.75)",
+      color:      done ? "#00ffd5" : "rgba(255,255,255,0.82)",
       display:    "inline",
     }}>
       {word}
@@ -60,45 +57,7 @@ function FlickerWord() {
   );
 }
 
-// ─── Full-width stretched headline ─────────────────────────────────────────
-function StretchHeadline() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    function fit() {
-      if (!el) return;
-      el.style.fontSize = "100px";
-      const containerW = el.parentElement?.offsetWidth ?? window.innerWidth;
-      const scale = (containerW * 0.96) / el.scrollWidth;
-      el.style.fontSize = `${Math.floor(100 * scale)}px`;
-    }
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
-
-  return (
-    <div ref={ref} style={{
-      fontFamily:      "Cabinet Grotesk, sans-serif",
-      fontWeight:      800,
-      lineHeight:      1.0,
-      letterSpacing:   "-0.02em",
-      color:           "#ffffff",
-      whiteSpace:      "nowrap",
-      textAlign:       "center",
-      width:           "100%",
-      transform:       "scaleY(1.15)",
-      transformOrigin: "center center",
-      userSelect:      "none",
-    }}>
-      Find Where You <FlickerWord />
-    </div>
-  );
-}
-
-// ─── useInView helper ──────────────────────────────────────────────────────
+// ─── useInView helper ─────────────────────────────────────────────────────────
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -115,250 +74,143 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
-// ─── Explore split section (country + cities merged) ────────────────────────
-function ExploreSplitSection() {
-  const { ref, inView } = useInView(0.12);
+// ─── Cities teaser section ────────────────────────────────────────────────────
+function CitiesSection() {
+  const { ref, inView } = useInView(0.1);
 
   return (
     <section
       ref={ref}
-      aria-label="Find your country and city"
+      aria-label="Explore cities"
       style={{
-        background:      "#0f0f0f",
-        backgroundImage: "radial-gradient(circle, rgba(240,240,232,0.035) 1px, transparent 1px)",
-        backgroundSize:  "28px 28px",
-        borderTop:       "1px solid #1a1a1a",
-        position:        "relative",
-        overflow:        "hidden",
+        background:    "#0a0a0a",
+        padding:       "clamp(80px, 12vh, 128px) clamp(24px, 6vw, 80px)",
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        borderTop:     "1px solid #1a1a1a",
       }}
     >
-      {/* Vignette: kills dot grid at edges */}
+      {/* NEW badge */}
       <div style={{
-        position:       "absolute",
-        inset:          0,
-        background:     "radial-gradient(ellipse 90% 80% at center, transparent 30%, #0f0f0f 82%)",
-        pointerEvents:  "none",
-        zIndex:         1,
-      }} />
+        display:       "inline-flex",
+        alignItems:    "center",
+        gap:           6,
+        background:    "#0f0f0f",
+        border:        "1px solid #2a2a2a",
+        padding:       "5px 12px",
+        marginBottom:  "clamp(32px, 5vh, 52px)",
+        opacity:       inView ? 1 : 0,
+        transition:    "opacity 0.4s ease",
+      }}>
+        <span style={{
+          width:        6,
+          height:       6,
+          borderRadius: "50%",
+          background:   "#00ffd5",
+          flexShrink:   0,
+          display:      "block",
+        }} />
+        <span style={{
+          fontFamily:    "Satoshi, sans-serif",
+          fontSize:      11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase" as const,
+          color:         "#00ffd5",
+        }}>
+          Just added
+        </span>
+      </div>
 
-      <style>{`
-        .xp-grid {
-          display: grid;
-          grid-template-columns: 1fr 1px 1fr;
-          max-width: 1080px;
-          margin: 0 auto;
-          padding: clamp(80px,12vh,140px) clamp(32px,6vw,96px);
-          position: relative;
-          z-index: 2;
-        }
-        .xp-col-l { padding-right: clamp(32px,5vw,72px); }
-        .xp-col-r { padding-left: clamp(32px,5vw,72px); }
-        @media (max-width: 700px) {
-          .xp-grid { grid-template-columns: 1fr; padding: 64px 28px; }
-          .xp-divider { width: 100% !important; height: 1px !important; margin: 44px 0; transform: none !important; }
-          .xp-col-l { padding-right: 0; }
-          .xp-col-r { padding-left: 0; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .xp-col-l, .xp-col-r, .xp-divider { transition: none !important; transform: none !important; opacity: 1 !important; }
-        }
-      `}</style>
-
-      <div className="xp-grid">
-
-        {/* ── LEFT: Find My Country ── */}
-        <div
-          className="xp-col-l"
+      {/* Photo — centered with border */}
+      <div style={{
+        position:  "relative",
+        width:     "100%",
+        maxWidth:  860,
+        marginBottom: "clamp(40px, 6vh, 64px)",
+        opacity:   inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.7s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) 80ms",
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/cities-hero.jpg"
+          alt="Person standing in a city at night"
           style={{
-            display:        "flex",
-            flexDirection:  "column",
-            justifyContent: "center",
-            opacity:        inView ? 1 : 0,
-            transform:      inView ? "translateX(0)" : "translateX(-22px)",
-            transition:     "opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1)",
-          }}
-        >
-          <div style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(80px, 13vw, 130px)",
-            lineHeight:    1,
-            letterSpacing: "-0.04em",
-            color:         "#f0f0e8",
-            opacity:       0.045,
-            userSelect:    "none",
-            pointerEvents: "none",
-            marginBottom:  "-0.15em",
-          }}>
-            25
-          </div>
-
-          <h2 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(22px, 2.8vw, 34px)",
-            letterSpacing: "-0.02em",
-            lineHeight:    1.1,
-            color:         "#f0f0e8",
-            marginBottom:  12,
-            textWrap:      "balance" as const,
-          }}>
-            Find My Country
-          </h2>
-
-          <p style={{
-            fontFamily:  "Satoshi, sans-serif",
-            fontSize:    "clamp(13px, 1.4vw, 15px)",
-            color:       "rgba(240,240,232,0.4)",
-            lineHeight:  1.7,
-            marginBottom: 32,
-            maxWidth:    320,
-          }}>
-            Salary after tax, visa routes, cost of living — scored across 25 countries for your role and passport.
-          </p>
-
-          <Link
-            href="/wizard"
-            style={{
-              display:        "inline-flex",
-              alignSelf:      "flex-start",
-              alignItems:     "center",
-              gap:            8,
-              background:     "#f0f0e8",
-              color:          "#0a0a0a",
-              fontFamily:     "Satoshi, sans-serif",
-              fontSize:       13,
-              fontWeight:     700,
-              padding:        "13px 28px",
-              border:         "none",
-              letterSpacing:  "0.05em",
-              textDecoration: "none",
-              textTransform:  "uppercase" as const,
-              boxShadow:      "3px 3px 0 rgba(240,240,232,0.22)",
-              cursor:         "pointer",
-              transition:     "box-shadow 0.12s ease",
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = "1px 1px 0 rgba(240,240,232,0.22)"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "3px 3px 0 rgba(240,240,232,0.22)"}
-          >
-            Start the wizard
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-              <path d="M2 6h8M6 2l4 4-4 4" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        </div>
-
-        {/* ── DIVIDER ── */}
-        <div
-          className="xp-divider"
-          style={{
-            background:      "#2a2a2a",
-            alignSelf:       "stretch",
-            transformOrigin: "center center",
-            transform:       inView ? "scaleY(1)" : "scaleY(0)",
-            transition:      "transform 0.65s cubic-bezier(0.16,1,0.3,1) 110ms",
+            width:      "100%",
+            height:     "clamp(340px, 48vw, 540px)",
+            objectFit:  "cover",
+            objectPosition: "center",
+            display:    "block",
+            border:     "3px solid rgba(240,240,232,0.18)",
+            boxShadow:  "6px 6px 0 rgba(240,240,232,0.06)",
           }}
         />
 
-        {/* ── RIGHT: Explore Cities ── */}
-        <div
-          className="xp-col-r"
-          style={{
-            display:        "flex",
-            flexDirection:  "column",
-            justifyContent: "center",
-            opacity:        inView ? 1 : 0,
-            transform:      inView ? "translateX(0)" : "translateX(22px)",
-            transition:     "opacity 0.55s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.55s cubic-bezier(0.16,1,0.3,1) 80ms",
-          }}
-        >
-          <div style={{
+        {/* Text overlay at bottom of photo */}
+        <div style={{
+          position:   "absolute",
+          bottom:     0,
+          left:       0,
+          right:      0,
+          padding:    "clamp(24px, 4vw, 48px)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
+        }}>
+          <p style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
             fontWeight:    800,
-            fontSize:      "clamp(80px, 13vw, 130px)",
-            lineHeight:    1,
-            letterSpacing: "-0.04em",
-            color:         "#00ffd5",
-            opacity:       0.06,
-            userSelect:    "none",
-            pointerEvents: "none",
-            marginBottom:  "-0.15em",
-          }}>
-            50+
-          </div>
-
-          <h2 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(22px, 2.8vw, 34px)",
-            letterSpacing: "-0.02em",
-            lineHeight:    1.1,
+            fontSize:      "clamp(28px, 4.5vw, 58px)",
+            letterSpacing: "-0.03em",
+            lineHeight:    1.05,
             color:         "#f0f0e8",
-            marginBottom:  12,
+            margin:        0,
             textWrap:      "balance" as const,
           }}>
-            Explore Cities
-          </h2>
-
-          <p style={{
-            fontFamily:  "Satoshi, sans-serif",
-            fontSize:    "clamp(13px, 1.4vw, 15px)",
-            color:       "rgba(240,240,232,0.4)",
-            lineHeight:  1.7,
-            marginBottom: 32,
-            maxWidth:    320,
-          }}>
-            Compare 50+ cities across your matched countries. Rent, internet speed and liveability — side by side.
+            Explore{" "}
+            <Link
+              href="/cities"
+              style={{
+                color:          "inherit",
+                textDecoration: "underline",
+                textDecorationColor: "rgba(240,240,232,0.5)",
+                textUnderlineOffset: "4px",
+                textDecorationThickness: "2px",
+                transition:     "text-decoration-color 0.15s ease",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "#00ffd5"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "rgba(240,240,232,0.5)"}
+            >
+              Cities
+            </Link>
           </p>
-
-          <Link
-            href="/cities"
-            style={{
-              display:        "inline-flex",
-              alignSelf:      "flex-start",
-              alignItems:     "center",
-              gap:            8,
-              background:     "transparent",
-              color:          "#00ffd5",
-              fontFamily:     "Satoshi, sans-serif",
-              fontSize:       13,
-              fontWeight:     700,
-              padding:        "11px 26px",
-              border:         "2px solid #00ffd5",
-              letterSpacing:  "0.05em",
-              textDecoration: "none",
-              textTransform:  "uppercase" as const,
-              boxShadow:      "3px 3px 0 #00ffd5",
-              cursor:         "pointer",
-              transition:     "box-shadow 0.12s ease, background 0.12s ease",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background = "rgba(0,255,213,0.07)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "1px 1px 0 #00ffd5";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-              (e.currentTarget as HTMLElement).style.boxShadow = "3px 3px 0 #00ffd5";
-            }}
-          >
-            Explore cities
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-              <path d="M2 6h8M6 2l4 4-4 4" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
         </div>
       </div>
+
+      {/* Sub-line */}
+      <p style={{
+        fontFamily:  "Satoshi, sans-serif",
+        fontSize:    "clamp(13px, 1.5vw, 16px)",
+        color:       "rgba(240,240,232,0.38)",
+        lineHeight:  1.65,
+        maxWidth:    480,
+        textAlign:   "center",
+        margin:      0,
+        opacity:     inView ? 1 : 0,
+        transition:  "opacity 0.5s ease 200ms",
+      }}>
+        50+ cities across your matched countries. Rent, internet, liveability — side by side.
+      </p>
     </section>
   );
 }
 
-// ─── Score Methodology section ────────────────────────────────────────────
+// ─── Score Methodology section ────────────────────────────────────────────────
 const SCORE_FACTORS = [
-  { label: "Salary after tax",  weight: 30, example: "€3,100/mo in Portugal",    color: "#00ffd5" },
-  { label: "Cost of living",    weight: 25, example: "€1,400/mo all-in in Lisbon", color: "#a78bfa" },
-  { label: "Visa accessibility", weight: 20, example: "EU passport: score 9/10",  color: "#60a5fa" },
-  { label: "Quality of life",   weight: 15, example: "Netherlands: 84/100",       color: "#34d399" },
-  { label: "Safety index",      weight: 10, example: "Japan: 97/100",             color: "#f472b6" },
+  { label: "Salary after tax",   weight: 30, example: "€3,100/mo in Portugal",     color: "#00ffd5" },
+  { label: "Cost of living",     weight: 25, example: "€1,400/mo all-in in Lisbon", color: "#a78bfa" },
+  { label: "Visa accessibility", weight: 20, example: "EU passport: score 9/10",    color: "#60a5fa" },
+  { label: "Quality of life",    weight: 15, example: "Netherlands: 84/100",        color: "#34d399" },
+  { label: "Safety index",       weight: 10, example: "Japan: 97/100",              color: "#f472b6" },
 ] as const;
 
 function ScoreMethodologySection() {
@@ -369,23 +221,21 @@ function ScoreMethodologySection() {
       ref={ref}
       aria-label="How scoring works"
       style={{
-        background:  "#0a0a0a",
-        borderTop:   "1px solid #1a1a1a",
-        padding:     "clamp(72px, 10vh, 112px) 24px",
+        background: "#0a0a0a",
+        borderTop:  "1px solid #1a1a1a",
+        padding:    "clamp(72px, 10vh, 112px) 24px",
       }}
     >
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
-
-        {/* Header row */}
         <div style={{
-          display:       "flex",
-          alignItems:    "baseline",
+          display:        "flex",
+          alignItems:     "baseline",
           justifyContent: "space-between",
-          flexWrap:      "wrap",
-          gap:           12,
-          marginBottom:  "clamp(36px, 5vh, 56px)",
-          opacity:       inView ? 1 : 0,
-          transition:    "opacity 0.5s ease",
+          flexWrap:       "wrap",
+          gap:            12,
+          marginBottom:   "clamp(36px, 5vh, 56px)",
+          opacity:        inView ? 1 : 0,
+          transition:     "opacity 0.5s ease",
         }}>
           <h2 style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
@@ -395,7 +245,6 @@ function ScoreMethodologySection() {
             lineHeight:    1.1,
             color:         "#f0f0e8",
             margin:        0,
-            textWrap:      "balance",
           }}>
             The algorithm
           </h2>
@@ -417,7 +266,6 @@ function ScoreMethodologySection() {
           </Link>
         </div>
 
-        {/* Factor rows */}
         <div style={{ display: "flex", flexDirection: "column" }}>
           {SCORE_FACTORS.map((f, i) => (
             <div
@@ -434,14 +282,8 @@ function ScoreMethodologySection() {
                 transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 90}ms, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 90}ms`,
               }}
             >
-              {/* Left: label + bar + example */}
               <div>
-                <div style={{
-                  display:       "flex",
-                  alignItems:    "center",
-                  gap:           12,
-                  marginBottom:  8,
-                }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                   <span style={{
                     fontFamily: "Cabinet Grotesk, sans-serif",
                     fontWeight: 700,
@@ -452,83 +294,71 @@ function ScoreMethodologySection() {
                     {f.label}
                   </span>
                   <span style={{
-                    fontFamily:  "Satoshi, sans-serif",
-                    fontSize:    11,
-                    color:       "rgba(240,240,232,0.28)",
+                    fontFamily:    "Satoshi, sans-serif",
+                    fontSize:      11,
+                    color:         "rgba(240,240,232,0.28)",
                     letterSpacing: "0.02em",
                   }}>
                     {f.example}
                   </span>
                 </div>
-
-                {/* Animated bar */}
-                <div style={{
-                  height:     4,
-                  background: "#1a1a1a",
-                  position:   "relative",
-                  overflow:   "hidden",
-                }}>
+                <div style={{ height: 4, background: "#1a1a1a", position: "relative", overflow: "hidden" }}>
                   <div style={{
-                    position:         "absolute",
-                    inset:            0,
-                    background:       f.color,
-                    transformOrigin:  "left center",
-                    transform:        inView ? `scaleX(${f.weight / 100})` : "scaleX(0)",
-                    transition:       `transform 0.8s cubic-bezier(0.16,1,0.3,1) ${200 + i * 90}ms`,
-                    opacity:          0.75,
+                    position:        "absolute",
+                    inset:           0,
+                    background:      f.color,
+                    transformOrigin: "left center",
+                    transform:       inView ? `scaleX(${f.weight / 100})` : "scaleX(0)",
+                    transition:      `transform 0.8s cubic-bezier(0.16,1,0.3,1) ${200 + i * 90}ms`,
+                    opacity:         0.75,
                   }} />
                 </div>
               </div>
-
-              {/* Right: weight */}
               <span style={{
-                fontFamily:  "Cabinet Grotesk, sans-serif",
-                fontWeight:  700,
-                fontSize:    "clamp(18px, 2.5vw, 26px)",
-                color:       f.color,
+                fontFamily:    "Cabinet Grotesk, sans-serif",
+                fontWeight:    700,
+                fontSize:      "clamp(18px, 2.5vw, 26px)",
+                color:         f.color,
                 letterSpacing: "-0.01em",
-                lineHeight:  1,
-                opacity:     0.9,
-                flexShrink:  0,
+                lineHeight:    1,
+                opacity:       0.9,
+                flexShrink:    0,
               }}>
                 {f.weight}%
               </span>
             </div>
           ))}
-
-          {/* Last border */}
           <div style={{ borderTop: "1px solid #1a1a1a" }} />
         </div>
 
-        {/* Footnote */}
         <p style={{
-          fontFamily:  "Satoshi, sans-serif",
-          fontSize:    12,
-          color:       "rgba(240,240,232,0.2)",
-          marginTop:   "clamp(20px, 3vh, 28px)",
-          lineHeight:  1.6,
-          opacity:     inView ? 1 : 0,
-          transition:  "opacity 0.5s ease 600ms",
+          fontFamily: "Satoshi, sans-serif",
+          fontSize:   12,
+          color:      "rgba(240,240,232,0.2)",
+          marginTop:  "clamp(20px, 3vh, 28px)",
+          lineHeight: 1.6,
+          opacity:    inView ? 1 : 0,
+          transition: "opacity 0.5s ease 600ms",
         }}>
-          Weights adjust based on your priorities from the wizard. A &quot;visa-first&quot; answer shifts Visa Accessibility to 35%.
+          Weights adjust based on your wizard answers. A &quot;visa-first&quot; answer shifts Visa Accessibility to 35%.
         </p>
       </div>
     </section>
   );
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const router  = useRouter();
   const heroRef = useRef<HTMLElement>(null);
 
-  const [selectedSlug, setSelectedSlug]       = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<CountryWithData | null>(null);
-  const [showHero, setShowHero]               = useState(true);
-  const [allCountries, setAllCountries]       = useState<CountryWithData[]>([]);
-  const [selectedRole, setSelectedRole]       = useState<JobRole>("softwareEngineer");
+  const [selectedSlug, setSelectedSlug]         = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry]   = useState<CountryWithData | null>(null);
+  const [showHero, setShowHero]                 = useState(true);
+  const [allCountries, setAllCountries]         = useState<CountryWithData[]>([]);
+  const [selectedRole, setSelectedRole]         = useState<JobRole>("softwareEngineer");
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
-  const [savedSlugs, setSavedSlugs]           = useState<string[]>([]);
+  const [savedSlugs, setSavedSlugs]             = useState<string[]>([]);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -610,9 +440,7 @@ export default function Home() {
           <CountryPanel country={selectedCountry} onClose={handleClosePanel} selectedRole={selectedRole} onRoleChange={setSelectedRole} />
         </div>
       </div>
-      {!showHero && !selectedSlug && (
-        <></>
-      )}
+      {!showHero && !selectedSlug && <></>}
     </>
   );
 
@@ -620,53 +448,91 @@ export default function Home() {
     <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-      {/* ── SECTION 1: HERO ── */}
+      {/* ── SECTION 1: HERO (photo background) ── */}
       <section
         ref={heroRef}
         style={{
-          position:       "relative",
-          minHeight:      "100vh",
-          background:     "#0a0a0a",
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
+          position:   "relative",
+          minHeight:  "100vh",
+          overflow:   "hidden",
+          display:    "flex",
+          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "center",
-          padding:        "clamp(80px,12vh,140px) 0 clamp(60px,8vh,100px)",
         }}
       >
-        <AuroraBackground />
+        {/* Background photo */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero-city.jpg"
+          alt=""
+          aria-hidden
+          style={{
+            position:   "absolute",
+            inset:      0,
+            width:      "100%",
+            height:     "100%",
+            objectFit:  "cover",
+            objectPosition: "center 30%",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        />
 
+        {/* Dark overlay */}
+        <div style={{
+          position:   "absolute",
+          inset:      0,
+          background: "rgba(8,8,8,0.62)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Bottom fade to match globe section */}
+        <div style={{
+          position:   "absolute",
+          bottom:     0,
+          left:       0,
+          right:      0,
+          height:     "30%",
+          background: "linear-gradient(to bottom, transparent, #0a0a0a)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Content */}
         <div style={{
           position:      "relative",
           zIndex:        5,
           display:       "flex",
           flexDirection: "column",
           alignItems:    "center",
+          textAlign:     "center",
+          padding:       "clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 8vh, 100px)",
           width:         "100%",
-          padding:       "0 16px",
+          maxWidth:      720,
         }}>
-          <div style={{
-            width:         "100%",
-            overflow:      "visible",
-            paddingBottom: "0.18em",
-            marginBottom:  "clamp(28px,4vh,52px)",
+          <h1 style={{
+            fontFamily:    "Cabinet Grotesk, sans-serif",
+            fontWeight:    800,
+            fontSize:      "clamp(42px, 7vw, 88px)",
+            lineHeight:    1.0,
+            letterSpacing: "-0.03em",
+            color:         "#ffffff",
+            marginBottom:  "clamp(20px, 3vh, 32px)",
+            textWrap:      "balance" as const,
           }}>
-            <StretchHeadline />
-          </div>
+            Find Where You <FlickerWord />
+          </h1>
 
           <p style={{
-            fontFamily:   "Satoshi, sans-serif",
-            fontSize:     "clamp(14px, 1.5vw, 18px)",
-            color:        "rgba(255,255,255,0.42)",
-            fontWeight:   400,
-            lineHeight:   1.65,
-            textAlign:    "center",
-            maxWidth:     460,
-            marginBottom: "clamp(32px,4vh,48px)",
-            padding:      "0 8px",
+            fontFamily:  "Satoshi, sans-serif",
+            fontSize:    "clamp(15px, 1.6vw, 18px)",
+            color:       "rgba(255,255,255,0.52)",
+            fontWeight:  400,
+            lineHeight:  1.65,
+            maxWidth:    440,
+            marginBottom: "clamp(36px, 5vh, 56px)",
           }}>
-            Salaries, visas, cost of living and quality of life
-            personalised to your job and passport.
+            Salaries, visas, cost of living and quality of life — personalised to your job and passport.
           </p>
 
           <button
@@ -675,20 +541,27 @@ export default function Home() {
               display:       "inline-flex",
               alignItems:    "center",
               justifyContent: "center",
-              background:    "#ffffff",
+              gap:           8,
+              background:    "#f0f0e8",
               color:         "#0a0a0a",
               fontFamily:    "Satoshi, sans-serif",
-              fontSize:      "clamp(13px,1.4vw,15px)",
+              fontSize:      "clamp(13px, 1.4vw, 15px)",
               fontWeight:    700,
-              padding:       "clamp(12px,1.5vh,16px) clamp(36px,5vw,60px)",
+              padding:       "clamp(13px, 1.6vh, 17px) clamp(36px, 5vw, 60px)",
               border:        "none",
               cursor:        "pointer",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              boxShadow:     "3px 3px 0 rgba(255,255,255,0.35)",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase" as const,
+              boxShadow:     "3px 3px 0 rgba(240,240,232,0.2)",
+              transition:    "box-shadow 0.12s ease",
             }}
+            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "1px 1px 0 rgba(240,240,232,0.2)"}
+            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "3px 3px 0 rgba(240,240,232,0.2)"}
           >
             Find My Country
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+              <path d="M2 6.5h9M7 2.5l4 4-4 4" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
         </div>
       </section>
@@ -705,8 +578,6 @@ export default function Home() {
         }}
         aria-label="Interactive globe"
       >
-        <AuroraBackground />
-
         <p style={{
           position:      "absolute",
           top:           16,
@@ -732,8 +603,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SECTION 3: EXPLORE (countries + cities) ── */}
-      <ExploreSplitSection />
+      {/* ── SECTION 3: CITIES TEASER ── */}
+      <CitiesSection />
 
       {/* ── SECTION 4: SCORE METHODOLOGY ── */}
       <ScoreMethodologySection />
