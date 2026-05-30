@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import ComicButton from '@/components/ComicButton'
 
 function passwordStrength(pw: string): { pct: number; label: string; color: string } {
   if (pw.length === 0) return { pct: 0,   label: '',                color: '#e5e5e5' }
@@ -363,9 +362,9 @@ export default function SignInClient() {
             {error   && <p style={{ fontSize: 13, color: '#ef4444', fontWeight: 500, fontFamily: "'Satoshi', sans-serif", margin: '2px 0' }}>{error}</p>}
             {success && <p style={{ fontSize: 13, color: '#22c55e', fontWeight: 500, fontFamily: "'Satoshi', sans-serif", margin: '2px 0' }}>{success}</p>}
 
-            <ComicButton type="submit" disabled={submitDisabled} style={{ width: '100%', marginTop: 4, opacity: submitDisabled ? 0.4 : 1, pointerEvents: submitDisabled ? 'none' : 'auto' }}>
+            <button type="submit" className="auth-btn-primary" disabled={submitDisabled} style={{ marginTop: 4 }}>
               {loading ? 'Please wait…' : tab === 'signin' ? 'Sign in' : 'Create account'}
-            </ComicButton>
+            </button>
           </form>
 
           <p style={{ fontSize: 11, color: '#bbb', marginTop: 20, lineHeight: 1.6, fontFamily: "'Satoshi', sans-serif", textAlign: 'center' }}>

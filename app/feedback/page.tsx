@@ -5,7 +5,6 @@ import { useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import ComicButton from "@/components/ComicButton";
 
 const MAX_CHARS = 300;
 
@@ -65,7 +64,10 @@ export default function FeedbackPage() {
                 We'll email <span style={{ color: '#fff', fontWeight: 600 }}>{email}</span> when it's live.
               </p>
             )}
-            <ComicButton as="link" href="/">Back to Origio →</ComicButton>
+            <Link href="/"
+              style={{ display: 'inline-flex', alignItems: 'center', background: '#fff', color: '#0a0a0a', borderRadius: 100, padding: '12px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 20px rgba(255,255,255,0.12)' }}>
+              Back to Origio →
+            </Link>
           </div>
 
         ) : (
@@ -141,13 +143,23 @@ export default function FeedbackPage() {
 
               {/* Submit */}
               <div style={{ padding: 24 }}>
-                <ComicButton
+                <button
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  style={{ width: '100%', opacity: !canSubmit ? 0.4 : 1, pointerEvents: !canSubmit ? 'none' : 'auto' }}
+                  style={{
+                    width: '100%', padding: '14px 24px',
+                    background: canSubmit ? '#fff' : 'rgba(255,255,255,0.08)',
+                    color: canSubmit ? '#0a0a0a' : S.dimmer,
+                    border: 'none', borderRadius: 100,
+                    fontSize: 14, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                    transition: 'background 0.15s, color 0.15s',
+                    boxShadow: canSubmit ? '0 2px 20px rgba(255,255,255,0.12)' : 'none',
+                  }}
+                  onMouseEnter={e => { if (canSubmit) (e.currentTarget as HTMLElement).style.background = '#ececec'; }}
+                  onMouseLeave={e => { if (canSubmit) (e.currentTarget as HTMLElement).style.background = '#fff'; }}
                 >
                   {status === "sending" ? "Sending..." : "Send feedback"}
-                </ComicButton>
+                </button>
 
                 {status === "error" && (
                   <p style={{ fontSize: 12, color: 'rgba(255,130,130,0.8)', fontWeight: 600, textAlign: 'center', marginTop: 12 }}>

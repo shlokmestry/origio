@@ -12,7 +12,6 @@ import { CountryWithData, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-import ComicButton from "@/components/ComicButton";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF = "'Cabinet Grotesk', sans-serif";
@@ -320,9 +319,16 @@ function SessionExpired() {
           We couldn't find your results — this usually happens after a page refresh or opening from a new tab. Retake the quiz to see your matches again (takes 2 minutes).
         </p>
       </div>
-      <ComicButton variant="accent" onClick={() => router.push("/wizard")}>
+      <button
+        onClick={() => router.push("/wizard")}
+        style={{
+          fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+          padding: "13px 28px", background: MINT, color: BG, border: "none",
+          borderRadius: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
+          boxShadow: "0 4px 20px rgba(0,255,213,0.25)",
+        }}>
         Retake quiz →
-      </ComicButton>
+      </button>
     </div>
   );
 }
@@ -1017,9 +1023,16 @@ export default function WizardResultsPage() {
                     Salary calc · Visa checklist · 3-country compare
                   </p>
                 </div>
-                <ComicButton as="link" href="/pro" variant="accent">
+                <Link href="/pro" style={{
+                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+                  padding: "11px 24px", background: MINT, color: BG, textDecoration: "none",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s", flexShrink: 0,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
                   Unlock all 37 — €4.99 <ArrowRight size={13} />
-                </ComicButton>
+                </Link>
               </div>
               {/* Download report option */}
               <div style={{ padding: "12px 10px", borderBottom: `1px solid #0d0d0d` }}>

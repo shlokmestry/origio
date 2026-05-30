@@ -10,7 +10,6 @@ import Nav from "@/components/Nav";
 import Link from "next/link";
 import { getVisaLabel } from "@/lib/utils";
 import { getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
-import ComicButton from "@/components/ComicButton";
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -528,10 +527,14 @@ export default function ComparePageClient() {
                   <p className="text-[11px] text-white/35 font-medium">
                     Add a third country with Pro.
                   </p>
-                  <ComicButton as="link" href="/pro" variant="accent">
-                    <Star style={{ width: 13, height: 13 }} />
+                  <Link
+                    href="/pro"
+                    className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
+                    style={{ borderRadius: 100 }}
+                  >
+                    <Star className="w-3.5 h-3.5" fill="currentColor" />
                     Unlock Pro
-                  </ComicButton>
+                  </Link>
                 </>
               ) : (
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">
@@ -685,10 +688,14 @@ export default function ComparePageClient() {
                   Pro unlocks a third column, full visa checklists, cost-of-living breakdowns, and salary percentile data.
                 </p>
               </div>
-              <ComicButton as="link" href="/pro" variant="accent">
-                <Star style={{ width: 13, height: 13 }} />
+              <Link
+                href="/pro"
+                className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2.5 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
+                style={{ borderRadius: 100 }}
+              >
+                <Star className="w-3.5 h-3.5" fill="currentColor" />
                 Get Pro · €4.99
-              </ComicButton>
+              </Link>
             </div>
           )}
 

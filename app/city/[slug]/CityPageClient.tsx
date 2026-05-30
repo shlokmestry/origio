@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import type { CityFull, CityDataRow } from "./page";
-import ComicButton from "@/components/ComicButton";
 
 interface Props {
   city: CityFull;
@@ -1359,23 +1358,28 @@ export default function CityPageClient({ city }: Props) {
         <section className="cta">
           <p className="cta-label">→ What next</p>
           <div className="cta-actions">
-            <ComicButton as="link" href={`/cities/compare?cities=${city.slug},${city.slug === "berlin" ? "lisbon" : "berlin"}`} variant="accent">
+            <Link
+              href={`/cities/compare?cities=${city.slug},${city.slug === "berlin" ? "lisbon" : "berlin"}`}
+              className="cta-btn"
+            >
               Compare {city.name} to another city →
-            </ComicButton>
-            <ComicButton as="link" href="/cities">
+            </Link>
+            <Link href="/cities" className="cta-btn-ghost">
               Browse all cities
-            </ComicButton>
-            <ComicButton
+            </Link>
+            <button
+              type="button"
+              className="cta-btn-ghost"
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href)
                   .then(() => { setCopied('ok'); setTimeout(() => setCopied('idle'), 1800); })
                   .catch(() => { setCopied('err'); setTimeout(() => setCopied('idle'), 2200); });
               }}
             >
-              {copied === 'ok' ? '✓ Link copied'
-               : copied === 'err' ? 'Copy failed — try again'
+              {copied === 'ok' ? <span className="cta-copied">✓ Link copied</span>
+               : copied === 'err' ? <span className="cta-copied" style={{ color: 'var(--c-dim)' }}>Copy failed — try again</span>
                : "Share this dispatch"}
-            </ComicButton>
+            </button>
           </div>
         </section>
 
