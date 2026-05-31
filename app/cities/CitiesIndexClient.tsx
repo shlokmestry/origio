@@ -7,6 +7,8 @@ import { City } from '@/types'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+import { FlagIcon } from '@/components/FlagIcon'
+import { slugToIso } from '@/lib/flagCodes'
 
 export type CityItem = City
 
@@ -371,7 +373,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                         <span className={styles.outl}>{outl}</span>
                       </h3>
                       <p className={styles.ccSub}>
-                        <span className={styles.flag}>{c.flagEmoji}</span>
+                        {slugToIso(c.countrySlug) ? <FlagIcon code={slugToIso(c.countrySlug)!} size="sm" className={styles.flag} /> : <span className={styles.flag}>{c.flagEmoji}</span>}
                         {c.countryName}<span className={styles.sep}>·</span>{c.slug.slice(0,3).toUpperCase()}
                       </p>
                       {c.tagline && <p className={styles.ccTagline}>{c.tagline}</p>}

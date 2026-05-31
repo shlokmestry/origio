@@ -6,6 +6,8 @@ import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { CountryMatch } from "@/lib/wizard";
 import { useRouter } from "next/navigation";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 interface WizardMatchesPanelProps {
   matches: CountryMatch[];

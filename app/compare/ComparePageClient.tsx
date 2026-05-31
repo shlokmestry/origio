@@ -714,7 +714,7 @@ export default function ComparePageClient() {
                 className="text-[11px] font-bold uppercase tracking-widest hover:opacity-60 transition-opacity"
                 style={{ color: col }}
               >
-                {c.flagEmoji} Full {c.name} report →
+{slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" /> : <span>{c.flagEmoji}</span>} Full {c.name} report →
               </Link>
             ))}
           </div>
