@@ -246,11 +246,12 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
             height: 48px;
             padding-left: 14px;
             padding-right: 6px;
+            justify-content: space-between;
           }
           .nav-links-inner { display: none !important; }
           .nav-search-desktop { display: none !important; }
           .nav-cta { height: 36px; padding: 0 14px; font-size: 12px; }
-          .nav-mobile-btn { display: flex; }
+          .nav-mobile-btn { display: flex; margin-left: auto; }
           .ph-badge { display: none; }
         }
 
