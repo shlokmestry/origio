@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
-import { Mail, AlertCircle, Lightbulb, Database, MessageSquare, Instagram } from 'lucide-react'
+import { Mail, AlertCircle, Lightbulb, Database, MessageSquare } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Contact — Origio',
@@ -105,7 +105,11 @@ export default function ContactPage() {
           className="group flex items-center gap-5 bg-[#111] border border-[#2a2a2a] px-7 py-6 hover:border-[#00ffd5]/40 transition-colors"
           style={{ textDecoration: 'none', boxShadow: '3px 3px 0px #1a1a1a' }}>
           <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-[#2a2a2a] bg-[#00ffd5]/[0.06] group-hover:bg-[#00ffd5]/[0.1] transition-colors">
-            <Instagram className="w-5 h-5 text-[#00ffd5]" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ffd5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="0.5" fill="#00ffd5"/>
+            </svg>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f0f0e8]/40 mb-1">Instagram</p>
