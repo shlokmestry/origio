@@ -481,11 +481,35 @@ export default function WizardPage() {
             if (answers.secondPassport !== undefined) {
               await supabase.from("profiles").update({ second_passport_slug: answers.secondPassport || null }).eq("id", session.user.id);
             }
+            // Save full ranking server-side so Pro gate is enforced there
+            try {
+              const allTopCountries = matches.map(m => ({
+                slug: m.country.slug, name: m.country.name,
+                flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
+              }));
+              await supabase.from("wizard_results").insert({
+                user_id: session.user.id,
+                top_countries: allTopCountries,
+                answers,
+                created_at: new Date().toISOString(),
+              });
+              // Fire results email — no await
+              fetch("/api/send-results", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ email: session.user.email, top3: allTopCountries.slice(0, 3) }),
+              }).catch(() => {});
+            } catch { /* silent — save is best-effort */ }
           }
           else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
         } catch { /* silent — run tracking is non-critical */ }
       }
-      sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
+      // Only top 8 in sessionStorage — full ranking is server-gated for Pro users
+      sessionStorage.setItem("wizardMatches", JSON.stringify(matches.slice(0, 8)));
+      sessionStorage.setItem("wizardMatchCount", String(matches.length));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       sessionStorage.setItem("wizardCountries", JSON.stringify(countries));
       router.push("/wizard/results");

@@ -444,6 +444,7 @@ function getCountryRoleLabel(m: CountryMatch, jobRoleDef: typeof JOB_ROLES[0] | 
 export default function WizardResultsPage() {
   const router = useRouter();
   const [matches, setMatches]         = useState<CountryMatch[]>([]);
+  const [totalMatchCount, setTotalMatchCount] = useState<number>(0);
   const [answers, setAnswers]         = useState<Partial<WizardAnswers>>({});
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
@@ -471,6 +472,8 @@ export default function WizardResultsPage() {
       if (raw) {
         try {
           setMatches(JSON.parse(raw));
+          const countRaw = sessionStorage.getItem("wizardMatchCount");
+          if (countRaw) setTotalMatchCount(parseInt(countRaw, 10));
           if (answersRaw) setAnswers(JSON.parse(answersRaw));
           try {
             const countriesRaw = sessionStorage.getItem("wizardCountries");
@@ -525,49 +528,32 @@ export default function WizardResultsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
-  // Auto-save whenever user becomes available (including post-OAuth redirect)
-  // Guard: only save once per page load by tracking whether we've already saved
-  const hasSavedRef = React.useRef(false);
+  // Pro unlock: fetch full ranking from server and reconstruct CountryMatch[]
+  const hasProFetchedRef = React.useRef(false);
   useEffect(() => {
-    if (!isLoading && matches.length > 0 && user && !hasSavedRef.current) {
-      hasSavedRef.current = true;
-      const save = async () => {
-        try {
-          // Check for a recent save (within 5 minutes) to avoid duplicates on fast reloads
-          const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-          const { data: existing } = await supabase
-            .from("wizard_results")
-            .select("id")
-            .eq("user_id", user.id)
-            .gte("created_at", fiveMinAgo)
-            .limit(1)
-            .maybeSingle();
-          if (existing) return; // already saved this session
-          const topCountries = matches.slice(0, 25).map(m => ({
-            slug: m.country.slug, name: m.country.name,
-            flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
-          }));
-          await supabase.from("wizard_results").insert({ user_id: user.id, top_countries: topCountries, answers, created_at: new Date().toISOString() });
-          // Fire email — no await, don't block UI
-          supabase.auth.getSession().then(({ data: { session: s } }) => {
-            if (!s?.access_token) return
-            fetch('/api/send-results', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${s.access_token}`,
-              },
-              body: JSON.stringify({
-                email: user.email,
-                top3: topCountries.slice(0, 3),
-              }),
-            }).catch(() => {})
-          })
-        } catch (err) { console.error("Failed to save:", err); }
-      };
-      save();
-    }
-  }, [isLoading, matches, user, answers]);
+    if (!isPro || !user || isLoading || hasProFetchedRef.current) return;
+    if (matches.length > 8 || allCountries.length === 0) return; // already have full list or no country data
+    hasProFetchedRef.current = true;
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!s?.access_token) return;
+      fetch("/api/get-results", {
+        headers: { "Authorization": `Bearer ${s.access_token}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data?.matches?.length) return;
+          const full = (data.matches as { slug: string; name: string; flagEmoji: string; matchPercent: number; reasons: string[] }[])
+            .map(item => {
+              const country = allCountries.find(c => c.slug === item.slug);
+              if (!country) return null;
+              return { country, matchScore: item.matchPercent, matchPercent: item.matchPercent, reasons: item.reasons };
+            })
+            .filter((m): m is NonNullable<typeof m> => m !== null);
+          if (full.length > matches.length) setMatches(full);
+        })
+        .catch(() => {});
+    });
+  }, [isPro, user, isLoading, matches.length, allCountries]);
 
   const handleViewOnGlobe = () => {
     sessionStorage.setItem("highlightedCountries", JSON.stringify(matches.slice(0, 3).map(m => m.country.slug)));
@@ -625,7 +611,8 @@ export default function WizardResultsPage() {
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
   const visibleMatches  = isPro ? matches : matches.slice(0, 8);
-  const lockedCount     = matches.length - visibleMatches.length;
+  const effectiveTotal  = isPro ? matches.length : (totalMatchCount || matches.length);
+  const lockedCount     = effectiveTotal - visibleMatches.length;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
@@ -918,11 +905,11 @@ export default function WizardResultsPage() {
             <div>
               <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: DIM, marginBottom: 10 }}>◆ The ranking</p>
               <h2 style={{ fontFamily: SERIF, fontSize: "clamp(32px,5vw,52px)", fontWeight: 400, letterSpacing: "-0.01em", margin: 0, color: FG }}>
-                All <em style={{ fontStyle: "normal" }}>{matches.length}</em>
+                All <em style={{ fontStyle: "normal" }}>{effectiveTotal}</em>
               </h2>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
-              {visibleMatches.length} of {matches.length} visible
+              {visibleMatches.length} of {effectiveTotal} visible
             </span>
           </div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
