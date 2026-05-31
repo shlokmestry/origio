@@ -723,130 +723,111 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
     setGeneratingPDF(true);
     try {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const W = 210; // A4 width mm
+      const W = 210;
       const margin = 20;
       const col = W - margin * 2;
-      let y = 0;
+      let y = margin;
 
-      const accent = [0, 255, 213] as [number, number, number];
-      const dark   = [10, 10, 10]  as [number, number, number];
-      const muted  = [120, 120, 110] as [number, number, number];
-      const white  = [240, 240, 232] as [number, number, number];
+      const black  = [10, 10, 10]   as [number, number, number];
+      const gray   = [100, 100, 100] as [number, number, number];
+      const lgray  = [200, 200, 200] as [number, number, number];
+      const accent = [0, 180, 150]   as [number, number, number];
 
-      // ── Background ──────────────────────────────────────────────
-      doc.setFillColor(...dark);
-      doc.rect(0, 0, W, 297, "F");
+      function divider() {
+        doc.setDrawColor(...lgray);
+        doc.setLineWidth(0.25);
+        doc.line(margin, y, W - margin, y);
+        y += 6;
+      }
 
-      // ── Header bar ──────────────────────────────────────────────
-      doc.setFillColor(18, 18, 18);
-      doc.rect(0, 0, W, 48, "F");
-      doc.setDrawColor(...accent);
-      doc.setLineWidth(0.4);
-      doc.line(0, 48, W, 48);
+      function sectionLabel(text: string) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(...accent);
+        doc.text(text.toUpperCase(), margin, y);
+        y += 5;
+      }
 
-      // Origio wordmark
+      // ── Header ────────────────────────────────────────────────────────
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.setTextColor(...muted);
-      doc.text("ORIGIO", margin, 14);
+      doc.setTextColor(...gray);
+      doc.text("ORIGIO RELOCATION REPORT", margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...gray);
+      doc.text(new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), W - margin, y, { align: "right" });
+      y += 5;
 
-      // Flag + Country name
       doc.setFont("helvetica", "bold");
       doc.setFontSize(28);
-      doc.setTextColor(...white);
-      doc.text(`${country.flagEmoji}  ${country.name.toUpperCase()}`, margin, 36);
+      doc.setTextColor(...black);
+      doc.text(country.name.toUpperCase(), margin, y + 10);
 
-      // Continent
-      doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(...muted);
-      doc.text(country.continent?.toUpperCase() ?? "", W - margin, 14, { align: "right" });
-
-      // Move score
-      const scoreColor = data.moveScore >= 8 ? [0, 220, 120] : data.moveScore >= 6 ? [0, 255, 213] : data.moveScore >= 4 ? [255, 180, 0] : [255, 80, 80];
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(26);
-      doc.setTextColor(...(scoreColor as [number,number,number]));
-      doc.text(String(data.moveScore), W - margin, 36, { align: "right" });
       doc.setFontSize(9);
-      doc.setTextColor(...muted);
-      doc.text("MOVE SCORE / 10", W - margin, 42, { align: "right" });
+      doc.setTextColor(...gray);
+      doc.text(country.continent ?? "", margin, y + 16);
 
-      y = 58;
-
-      // ── Score breakdown ──────────────────────────────────────────
+      // Move score — top right
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...accent);
-      doc.text("SCORE BREAKDOWN", margin, y);
-      y += 6;
+      doc.setFontSize(32);
+      doc.setTextColor(...black);
+      doc.text(String(data.moveScore), W - margin, y + 10, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...gray);
+      doc.text("MOVE SCORE / 10", W - margin, y + 16, { align: "right" });
 
-      const scores = scoreBreakdown.map(s => ({
-        label: s.label,
-        value: Math.round(s.value * 10) / 10,
-      }));
-      const scoreW = col / scores.length;
+      y += 22;
+      divider();
+
+      // ── Score breakdown ───────────────────────────────────────────────
+      sectionLabel("Score Breakdown");
+      const scores = scoreBreakdown.map(s => ({ label: s.label, value: Math.round(s.value * 10) / 10 }));
+      const sW = col / scores.length;
       scores.forEach((s, i) => {
-        const x = margin + i * scoreW;
-        const c = s.value >= 8 ? ([0,220,120] as [number,number,number])
-                : s.value >= 6 ? ([0,255,213] as [number,number,number])
-                : s.value >= 4 ? ([255,180,0] as [number,number,number])
-                :                ([255,80,80] as [number,number,number]);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.setTextColor(...c);
-        doc.text(String(s.value), x + scoreW / 2, y + 8, { align: "center" });
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.5);
-        doc.setTextColor(...muted);
-        doc.text(s.label.toUpperCase(), x + scoreW / 2, y + 13, { align: "center" });
-      });
-      y += 20;
-
-      // Divider
-      doc.setDrawColor(40, 40, 40);
-      doc.setLineWidth(0.3);
-      doc.line(margin, y, W - margin, y);
-      y += 8;
-
-      // ── Key stats row ─────────────────────────────────────────────
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...accent);
-      doc.text("KEY STATS", margin, y);
-      y += 6;
-
-      const totalMonthly = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut + data.costUtilitiesMonthly;
-      const stats = [
-        { label: "Income Tax",       value: `${data.incomeTaxRateMid}%` },
-        { label: "Social Security",  value: `${data.socialSecurityRate}%` },
-        { label: "Est. Monthly Cost",value: `${currencySymbol}${totalMonthly.toLocaleString()}` },
-        { label: "Visa Difficulty",  value: `${data.visaDifficulty}/5` },
-      ];
-      const statW = col / stats.length;
-      stats.forEach((s, i) => {
-        const x = margin + i * statW;
+        const x = margin + i * sW;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.setTextColor(...white);
-        doc.text(s.value, x + statW / 2, y + 7, { align: "center" });
+        doc.setTextColor(...black);
+        doc.text(String(s.value), x + sW / 2, y + 6, { align: "center" });
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6.5);
-        doc.setTextColor(...muted);
-        doc.text(s.label.toUpperCase(), x + statW / 2, y + 12, { align: "center" });
+        doc.setTextColor(...gray);
+        doc.text(s.label, x + sW / 2, y + 11, { align: "center" });
       });
-      y += 22;
+      y += 17;
+      divider();
 
-      // Divider
-      doc.setDrawColor(40, 40, 40);
-      doc.line(margin, y, W - margin, y);
-      y += 8;
+      // ── Key stats ─────────────────────────────────────────────────────
+      sectionLabel("Key Stats");
+      const totalMonthly = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut + data.costUtilitiesMonthly;
+      const stats = [
+        { label: "Income Tax", value: `${data.incomeTaxRateMid}%` },
+        { label: "Social Security", value: `${data.socialSecurityRate}%` },
+        { label: "Est. Monthly Cost", value: `${currencySymbol}${totalMonthly.toLocaleString()}` },
+        { label: "Visa Difficulty", value: `${data.visaDifficulty} / 5` },
+      ];
+      const stW = col / stats.length;
+      stats.forEach((s, i) => {
+        const x = margin + i * stW;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.setTextColor(...black);
+        doc.text(s.value, x + stW / 2, y + 6, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...gray);
+        doc.text(s.label, x + stW / 2, y + 11, { align: "center" });
+      });
+      y += 17;
+      divider();
 
-      // ── Two-column: Salaries + Cost of Living ──────────────────────
+      // ── Two columns: Salaries + Cost of Living ─────────────────────────
       const halfCol = (col - 8) / 2;
       const col2x = margin + halfCol + 8;
 
-      // Salaries header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       doc.setTextColor(...accent);
@@ -855,149 +836,132 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
       y += 5;
 
       const salaryRows = [
-        { role: "Software Eng.",  key: "salarySoftwareEngineer" },
-        { role: "Doctor",         key: "salaryDoctor" },
-        { role: "Nurse",          key: "salaryNurse" },
-        { role: "Data Scientist", key: "salaryDataScientist" },
-        { role: "Product Mgr.",   key: "salaryProductManager" },
-        { role: "DevOps",         key: "salaryDevOps" },
-        { role: "Cybersecurity",  key: "salaryCybersecurity" },
-        { role: "UX Designer",    key: "salaryUXDesigner" },
-        { role: "Fin. Analyst",   key: "salaryFinancialAnalyst" },
-        { role: "Lawyer",         key: "salaryLawyer" },
-        { role: "Architect",      key: "salaryArchitect" },
-        { role: "HR Manager",     key: "salaryHRManager" },
+        { role: "Software Engineer", key: "salarySoftwareEngineer" },
+        { role: "Doctor",            key: "salaryDoctor" },
+        { role: "Nurse",             key: "salaryNurse" },
+        { role: "Data Scientist",    key: "salaryDataScientist" },
+        { role: "Product Manager",   key: "salaryProductManager" },
+        { role: "DevOps",            key: "salaryDevOps" },
+        { role: "Cybersecurity",     key: "salaryCybersecurity" },
+        { role: "UX Designer",       key: "salaryUXDesigner" },
+        { role: "Financial Analyst", key: "salaryFinancialAnalyst" },
+        { role: "Lawyer",            key: "salaryLawyer" },
+        { role: "Architect",         key: "salaryArchitect" },
+        { role: "HR Manager",        key: "salaryHRManager" },
+        { role: "Marketing Manager", key: "salaryMarketingManager" },
+        { role: "Teacher",           key: "salaryTeacher" },
       ].map(s => ({ ...s, salary: (data as any)[s.key] as number }))
        .filter(s => s.salary > 0)
        .sort((a, b) => b.salary - a.salary);
 
       const costRows = [
         { label: "Rent — city centre", value: data.costRentCityCentre },
-        { label: "Rent — outside",     value: data.costRentOutside },
-        { label: "Groceries",          value: data.costGroceriesMonthly },
-        { label: "Transport",          value: data.costTransportMonthly },
-        { label: "Dining out",         value: data.costEatingOut },
-        { label: "Utilities",          value: data.costUtilitiesMonthly },
+        { label: "Rent — outside centre", value: data.costRentOutside },
+        { label: "Groceries / month",  value: data.costGroceriesMonthly },
+        { label: "Transport / month",  value: data.costTransportMonthly },
+        { label: "Dining out / meal",  value: data.costEatingOut },
+        { label: "Utilities / month",  value: data.costUtilitiesMonthly },
+        { label: "Total est. monthly", value: totalMonthly },
       ];
 
-      const rowH = 6.5;
+      const rowH = 6;
       const startY = y;
 
       salaryRows.forEach((s, i) => {
         const ry = startY + i * rowH;
-        if (i % 2 === 0) {
-          doc.setFillColor(18, 18, 18);
-          doc.rect(margin, ry - 1, halfCol, rowH, "F");
-        }
+        doc.setDrawColor(...lgray);
+        doc.setLineWidth(0.15);
+        if (i > 0) doc.line(margin, ry - 0.5, margin + halfCol, ry - 0.5);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7);
-        doc.setTextColor(...white);
-        doc.text(s.role, margin + 2, ry + 3.5);
+        doc.setTextColor(...black);
+        doc.text(s.role, margin + 1, ry + 3.5);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(...accent);
+        doc.setTextColor(...black);
         doc.text(`${currencySymbol}${s.salary.toLocaleString()}`, margin + halfCol - 1, ry + 3.5, { align: "right" });
       });
 
       costRows.forEach((c, i) => {
         const ry = startY + i * rowH;
-        if (i % 2 === 0) {
-          doc.setFillColor(18, 18, 18);
-          doc.rect(col2x, ry - 1, halfCol, rowH, "F");
-        }
-        doc.setFont("helvetica", "normal");
+        doc.setDrawColor(...lgray);
+        doc.setLineWidth(0.15);
+        if (i > 0) doc.line(col2x, ry - 0.5, col2x + halfCol, ry - 0.5);
+        const isTotalRow = c.label.startsWith("Total");
+        doc.setFont("helvetica", isTotalRow ? "bold" : "normal");
         doc.setFontSize(7);
-        doc.setTextColor(...white);
-        doc.text(c.label, col2x + 2, ry + 3.5);
+        doc.setTextColor(...black);
+        doc.text(c.label, col2x + 1, ry + 3.5);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(...accent);
         doc.text(`${currencySymbol}${c.value.toLocaleString()}`, col2x + halfCol - 1, ry + 3.5, { align: "right" });
       });
 
       y = startY + Math.max(salaryRows.length, costRows.length) * rowH + 6;
+      divider();
 
-      // Divider
-      doc.setDrawColor(40, 40, 40);
-      doc.line(margin, y, W - margin, y);
-      y += 8;
-
-      // ── Quality scores ──────────────────────────────────────────────
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...accent);
-      doc.text("QUALITY SCORES", margin, y);
-      y += 6;
-
+      // ── Quality scores ─────────────────────────────────────────────────
+      sectionLabel("Quality Scores");
       const qualScores = [
         { label: "Quality of Life", value: data.scoreQualityOfLife },
         { label: "Healthcare",      value: data.scoreHealthcare },
         { label: "Safety",          value: data.scoreSafety },
         { label: "Internet Speed",  value: data.scoreInternetSpeed },
       ];
-      const qW = col / qualScores.length;
       qualScores.forEach((q, i) => {
-        const x = margin + i * qW;
-        const barW = (q.value / 10) * (qW - 4);
-        doc.setFillColor(30, 30, 30);
-        doc.rect(x, y + 4, qW - 4, 3, "F");
-        doc.setFillColor(...accent);
-        doc.rect(x, y + 4, barW, 3, "F");
+        const x = margin + i * (col / 4);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.setTextColor(...white);
-        doc.text(`${q.value}`, x, y + 2);
+        doc.setFontSize(13);
+        doc.setTextColor(...black);
+        doc.text(String(q.value), x, y + 6);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(6);
-        doc.setTextColor(...muted);
-        doc.text(q.label.toUpperCase(), x, y + 12);
+        doc.setFontSize(6.5);
+        doc.setTextColor(...gray);
+        doc.text(q.label, x, y + 11);
       });
-      y += 18;
+      y += 17;
+      divider();
 
-      // Divider
-      doc.setDrawColor(40, 40, 40);
-      doc.line(margin, y, W - margin, y);
-      y += 8;
-
-      // ── Visa info ────────────────────────────────────────────────────
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...accent);
-      doc.text("VISA & TAX", margin, y);
-      y += 6;
-
-      const visaItems = [
-        { label: "Visa Difficulty",       value: `${data.visaDifficulty}/5` },
-        { label: "Income Tax (mid)",      value: `${data.incomeTaxRateMid}%` },
-        { label: "Social Security",       value: `${data.socialSecurityRate}%` },
-        { label: "Language",              value: country.language ?? "—" },
-        { label: "Currency",              value: country.currency ?? "—" },
+      // ── Visa & Tax ─────────────────────────────────────────────────────
+      sectionLabel("Visa & Tax");
+      const infoItems = [
+        { label: "Visa Difficulty", value: `${data.visaDifficulty} / 5` },
+        { label: "Income Tax (mid)", value: `${data.incomeTaxRateMid}%` },
+        { label: "Social Security", value: `${data.socialSecurityRate}%` },
+        { label: "Currency", value: country.currency ?? "—" },
+        { label: "Language", value: country.language ?? "—" },
       ];
-      const viW = col / 4;
-      visaItems.forEach((v, i) => {
-        const x = margin + (i % 4) * viW;
-        const ry = y + Math.floor(i / 4) * 12;
+      infoItems.forEach((item, i) => {
+        const x = margin + i * (col / infoItems.length);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.setTextColor(...white);
-        doc.text(v.value, x, ry + 4);
+        doc.setFontSize(10);
+        doc.setTextColor(...black);
+        doc.text(item.value, x, y + 5);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(6);
-        doc.setTextColor(...muted);
-        doc.text(v.label.toUpperCase(), x, ry + 9);
+        doc.setFontSize(6.5);
+        doc.setTextColor(...gray);
+        doc.text(item.label, x, y + 10);
       });
-      y += Math.ceil(visaItems.length / 4) * 12 + 4;
+      y += 16;
 
-      // ── Footer ────────────────────────────────────────────────────────
-      doc.setDrawColor(...accent);
-      doc.setLineWidth(0.4);
-      doc.line(0, 284, W, 284);
-      doc.setFillColor(18, 18, 18);
-      doc.rect(0, 284, W, 13, "F");
+      if (data.visaNotes) {
+        divider();
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(7);
+        doc.setTextColor(...gray);
+        const lines = doc.splitTextToSize(`Visa notes: ${data.visaNotes}`, col) as string[];
+        doc.text(lines, margin, y);
+        y += lines.length * 4;
+      }
+
+      // ── Footer ─────────────────────────────────────────────────────────
+      doc.setDrawColor(...lgray);
+      doc.setLineWidth(0.25);
+      doc.line(margin, 284, W - margin, 284);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
-      doc.setTextColor(...muted);
-      doc.text("findorigio.com", margin, 291);
-      doc.text(`Data verified · ${data.lastVerified ?? "2024"}`, W / 2, 291, { align: "center" });
-      doc.text(`Generated ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`, W - margin, 291, { align: "right" });
+      doc.setTextColor(...gray);
+      doc.text("findorigio.com", margin, 290);
+      doc.text(`Data verified · ${data.lastVerified ?? "2025"}`, W / 2, 290, { align: "center" });
+      doc.text("For personal use only. Not financial advice.", W - margin, 290, { align: "right" });
 
       doc.save(`${country.name.toLowerCase().replace(/\s+/g, "-")}-origio-report.pdf`);
     } finally {
