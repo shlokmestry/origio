@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Globe2, Mail, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Mail, CheckCircle, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
@@ -32,9 +32,9 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Globe2 className="w-7 h-7 text-accent" />
-          <span className="font-heading text-2xl font-extrabold text-text-primary">Origio</span>
+        <div className="flex items-center justify-center mb-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/origiologo2.png" alt="Origio" style={{ height: 20, width: 'auto' }} />
         </div>
 
         <div className="glass-panel rounded-2xl p-7 border border-border">

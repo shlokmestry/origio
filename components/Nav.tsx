@@ -93,27 +93,15 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         .nav-logo {
           display: flex;
           align-items: center;
-          gap: 8px;
           text-decoration: none;
           margin-right: 8px;
           flex-shrink: 0;
         }
-        .nav-logo-icon {
-          width: 22px;
-          height: 22px;
-          background: #fff;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .nav-logo-icon svg {
+        .nav-logo-img {
+          height: 18px;
+          width: auto;
           display: block;
         }
-        .nav-logo-text {
-          font-family: 'Cabinet Grotesk', sans-serif;
-          font-size: 15px;
           font-weight: 800;
           letter-spacing: -0.02em;
           color: #fff;
@@ -300,13 +288,8 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
       <nav className="nav-pill" role="navigation" aria-label="Main navigation">
         {/* Logo */}
         <Link href="/" className="nav-logo">
-          <span className="nav-logo-icon">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-              <circle cx="6" cy="6" r="3" fill="#fff"/>
-            </svg>
-          </span>
-          <span className="nav-logo-text">Origio</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/origiologo1.png" alt="Origio" className="nav-logo-img" />
         </Link>
 
         {/* Desktop links */}
@@ -353,13 +336,8 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
       <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="Mobile navigation">
         <div className="mobile-menu-header">
           <Link href="/" className="nav-logo" onClick={() => setMobileMenuOpen(false)}>
-            <span className="nav-logo-icon">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-                <circle cx="6" cy="6" r="3" fill="#fff"/>
-              </svg>
-            </span>
-            <span className="nav-logo-text">Origio</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/origiologo1.png" alt="Origio" className="nav-logo-img" />
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}

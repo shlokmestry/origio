@@ -188,14 +188,9 @@ export default function SignInClient() {
         {/* Content over photo */}
         <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', padding: '36px 40px' }}>
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-                <circle cx="6" cy="6" r="3" fill="#fff"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 15, color: '#fff', letterSpacing: '-0.02em' }}>Origio</span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/origiologo1.png" alt="Origio" style={{ height: 18, width: 'auto', display: 'block' }} />
           </Link>
 
           {/* Bottom copy */}

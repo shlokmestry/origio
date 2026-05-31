@@ -18,9 +18,9 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
 
           {/* Header */}
           <div className="mb-8 text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-4 h-4 bg-[#00ffd5] border-2 border-[#f0f0e8]" />
-              <span className="font-heading text-lg font-extrabold uppercase tracking-tight text-[#f0f0e8]">Origio</span>
+            <div className="flex items-center justify-center mb-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/origiologo1.png" alt="Origio" style={{ height: 20, width: 'auto' }} />
             </div>
             <div className="border-2 border-[#2a2a2a] p-6 mb-6" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
               <div className="w-10 h-10 border-2 border-[#00ffd5] flex items-center justify-center mx-auto mb-4">

@@ -41,9 +41,9 @@ export default function Footer() {
 
           {/* Brand col */}
           <div>
-            <Link href="/" className="flex items-center gap-2 mb-5 hover:opacity-80 transition-opacity">
-              <div className="w-3 h-3 bg-[#00c4a0] border-2 border-[#1a1a1a] flex-shrink-0" />
-              <span className="font-heading text-[15px] font-extrabold tracking-tight text-[#1a1a1a] uppercase">Origio</span>
+            <Link href="/" className="flex items-center mb-5 hover:opacity-80 transition-opacity">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/origiologo2.png" alt="Origio" style={{ height: 18, width: "auto", display: "block" }} />
             </Link>
             <p className="text-[11px] text-[#888] leading-relaxed max-w-[180px] font-body">
               37 countries ranked for your job and passport.

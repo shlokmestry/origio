@@ -1,14 +1,7 @@
-import Image from "next/image";
-
-export default function Logo({ size = 28 }: { size?: number }) {
+export default function Logo({ size = 28, variant = "dark" }: { size?: number; variant?: "dark" | "light" }) {
+  const src = variant === "light" ? "/origiologo2.png" : "/origiologo1.png";
   return (
-    <Image
-      src="/origio_logo_dark_final.png"
-      alt="Origio"
-      width={size * 4}
-      height={size}
-      style={{ height: size, width: "auto", display: "block" }}
-      priority
-    />
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="Origio" style={{ height: size, width: "auto", display: "block" }} />
   );
 }

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Globe2, Lock, Loader2, CheckCircle } from "lucide-react";
+import { Lock, Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -50,9 +50,9 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="glass-panel rounded-2xl p-8">
-         <Link href="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
-  <Globe2 className="w-6 h-6 text-accent" />
-  <span className="font-heading text-xl font-extrabold">Origio</span>
+         <Link href="/" className="flex items-center mb-8 hover:opacity-80 transition-opacity">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/origiologo2.png" alt="Origio" style={{ height: 20, width: 'auto' }} />
 </Link>
 
           {done ? (
