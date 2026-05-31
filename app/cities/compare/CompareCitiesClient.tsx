@@ -6,6 +6,23 @@ import { useSearchParams } from 'next/navigation'
 import styles from './compare.module.css'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+import { FlagIcon } from '@/components/FlagIcon'
+
+// City slug → ISO 3166-1 alpha-2 country code
+const CITY_TO_ISO: Record<string, string> = {
+  lisbon: 'pt', porto: 'pt', funchal: 'pt',
+  london: 'gb', manchester: 'gb', edinburgh: 'gb',
+  dublin: 'ie', cork: 'ie',
+  amsterdam: 'nl', rotterdam: 'nl', eindhoven: 'nl',
+  berlin: 'de', munich: 'de', hamburg: 'de',
+  barcelona: 'es', madrid: 'es', valencia: 'es',
+  'new-york': 'us', 'san-francisco': 'us', austin: 'us',
+  toronto: 'ca', vancouver: 'ca', montreal: 'ca',
+  singapore: 'sg',
+  tokyo: 'jp', osaka: 'jp', kyoto: 'jp',
+  sydney: 'au', melbourne: 'au', brisbane: 'au',
+  dubai: 'ae', 'abu-dhabi': 'ae',
+}
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -314,7 +331,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         <div className={styles.rrL}>
           <span className={styles.rrRank}>№{rank + 1}</span>
           <div className={styles.rrId}>
-            <span className={styles.rrFlag}>{c.flag}</span>
+            {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.rrFlag} /> : <span className={styles.rrFlag}>{c.flag}</span>}
             <span className={styles.rrName}>{c.name}</span>
             <span className={styles.rrMeta}>{c.country} · {c.code}</span>
           </div>
@@ -480,7 +497,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                   disabled={atMax || minReached}
                   onClick={() => toggleCity(c.slug)}
                 >
-                  <span className={styles.chFlag}>{c.flag}</span>
+                  {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
                   {c.name}
                 </button>
               )

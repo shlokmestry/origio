@@ -11,6 +11,8 @@ import { JOB_ROLES, CountryWithData } from "@/types";
 import { getVisaLabel, getVisaColor, getScoreBreakdown } from "@/lib/utils";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -429,7 +431,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         <div style={{ paddingBottom: 56, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Flag + match badge */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
-            <span style={{ fontSize: 64, lineHeight: 1 }}>{country.flagEmoji}</span>
+            {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="xl" /> : <span style={{ fontSize: 64, lineHeight: 1 }}>{country.flagEmoji}</span>}
             {match && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(255,255,255,0.06)', border: `1px solid ${S.borderMd}`, borderRadius: 12, padding: '10px 18px' }}>
                 <span style={{ fontFamily: S.serif, fontSize: 32, color: '#fff', lineHeight: 1 }}>{match.percent}%</span>
@@ -912,7 +914,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = S.borderMd; (e.currentTarget as HTMLElement).style.background = '#101014'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = S.border; (e.currentTarget as HTMLElement).style.background = S.card; }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <span style={{ fontSize: 36 }}>{m.country.flagEmoji}</span>
+                  {slugToIso(m.country.slug) ? <FlagIcon code={slugToIso(m.country.slug)!} size="md" /> : <span style={{ fontSize: 36 }}>{m.country.flagEmoji}</span>}
                   <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: S.dimmer }}>#{i + 2}</span>
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: S.dim, marginBottom: 4 }}>
@@ -951,7 +953,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: S.dimmer, minWidth: 24 }}>{String(i + 4).padStart(2, "0")}</span>
-                    <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>
+                    {slugToIso(m.country.slug) ? <FlagIcon code={slugToIso(m.country.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>}
                     <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.8)', flex: 1 }}>{m.country.name}</span>
                     <div style={{ width: 100, height: 2, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
                       <div style={{ width: `${m.matchPercent}%`, height: '100%', background: 'rgba(255,255,255,0.4)', borderRadius: 2 }} />
