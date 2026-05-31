@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
-import { fetchWithTimeout } from "@/lib/utils";
+import { sanitizeForPrompt } from "@/lib/utils";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
   if (limited) return limited;
-
-  // Secondary daily cap — each call triggers a Claude Haiku generation.
-  // 2 per IP per day prevents runaway cost from automation.
-  const dailyCap = await rateLimit(req, { name: "subscribe-daily", maxRequests: 2, windowSeconds: 86400 });
-  if (dailyCap) return dailyCap;
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -26,20 +21,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const {
-    email,
-    source,
-    topCountry,
-    topCountryFlag,
-    matchPercent,
-    jobRole,
-    grossSalary,
-    netMonthly,
-    taxRate,
-    rentCost,
-    visaLabel,
-    currency,
-  } = await req.json();
+  const raw = await req.json();
+  const email          = typeof raw.email === "string" ? raw.email : "";
+  const source         = sanitizeForPrompt(raw.source, 40);
+  const topCountry     = sanitizeForPrompt(raw.topCountry, 60);
+  const topCountryFlag = sanitizeForPrompt(raw.topCountryFlag, 10);
+  const matchPercent   = Number(raw.matchPercent) || 0;
+  const jobRole        = sanitizeForPrompt(raw.jobRole, 50);
+  const grossSalary    = Number(raw.grossSalary) || 0;
+  const netMonthly     = Number(raw.netMonthly) || 0;
+  const taxRate        = Number(raw.taxRate) || 0;
+  const rentCost       = Number(raw.rentCost) || 0;
+  const visaLabel      = sanitizeForPrompt(raw.visaLabel, 30);
+  const currency       = sanitizeForPrompt(raw.currency, 10);
 
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
@@ -72,7 +66,7 @@ Tone: Direct, data-first, human. No marketing speak. No bullet points. No hyphen
   let emailBody = "";
 
   try {
-    const aiRes = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": process.env.ANTHROPIC_API_KEY!,
@@ -106,7 +100,7 @@ Origio`;
 
   // 2. Send via Resend
   try {
-    await fetchWithTimeout("https://api.resend.com/emails", {
+    await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
@@ -125,7 +119,7 @@ Origio`;
 
   // 3. Add to Loops for future campaigns
   try {
-    await fetchWithTimeout("https://app.loops.so/api/v1/contacts/create", {
+    await fetch("https://app.loops.so/api/v1/contacts/create", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.LOOPS_API_KEY}`,

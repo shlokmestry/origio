@@ -1,5 +1,15 @@
 import { CountryData, ScoreBreakdown } from "@/types";
 
+/** Strip characters that could be used for prompt injection, then truncate. */
+export function sanitizeForPrompt(value: unknown, maxLen = 100): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[<>{}[\]\\`]/g, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim()
+    .slice(0, maxLen);
+}
+
 export function normalise(value: number, min: number, max: number): number {
   return Math.min(10, Math.max(0, ((value - min) / (max - min)) * 10));
 }

@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
-import { fetchWithTimeout } from "@/lib/utils";
+import { sanitizeForPrompt } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "generate-headline", maxRequests: 10, windowSeconds: 60 });
@@ -25,14 +25,24 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const body = await request.json();
     const {
-      countryName, countrySlug, currency, grossSalary, takeHomeMonthly,
-      disposable, disposableUSD, taxRate, ssRate, rentMonthly, moveReason,
-      jobRole, passport, safetyScore, qualityOfLife, internetSpeed,
-      visaDifficulty, isEU, isEnglish, priorities, matchPercent,
-      rentBudget, cityVibe, languages, dealBreakers,
+      countryName: _cn, countrySlug, currency: _cur, grossSalary, takeHomeMonthly,
+      disposable, disposableUSD, taxRate, ssRate, rentMonthly, moveReason: _mr,
+      jobRole: _jr, passport: _pp, safetyScore, qualityOfLife, internetSpeed,
+      visaDifficulty, isEU, isEnglish, priorities: _pri, matchPercent,
+      rentBudget: _rb, cityVibe: _cv, languages: _lang, dealBreakers: _db,
     } = body;
+    const countryName  = sanitizeForPrompt(_cn, 60);
+    const currency     = sanitizeForPrompt(_cur, 10);
+    const moveReason   = sanitizeForPrompt(_mr, 30);
+    const jobRole      = sanitizeForPrompt(_jr, 50);
+    const passport     = sanitizeForPrompt(_pp, 50);
+    const rentBudget   = sanitizeForPrompt(_rb, 20);
+    const cityVibe     = sanitizeForPrompt(_cv, 30);
+    const priorities   = Array.isArray(_pri) ? _pri.slice(0, 6).map((p: unknown) => sanitizeForPrompt(p, 30)) : [];
+    const languages    = Array.isArray(_lang) ? _lang.slice(0, 5).map((l: unknown) => sanitizeForPrompt(l, 30)) : [];
+    const dealBreakers = Array.isArray(_db) ? _db.slice(0, 6).map((d: unknown) => sanitizeForPrompt(d, 30)) : [];
 
-    const cs = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", SGD: "S$", AED: "AED ", CHF: "CHF ", NOK: "kr ", NZD: "NZ$", INR: "₹", MYR: "RM ", JPY: "¥" }[currency as string] ?? "€";
+    const cs = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", SGD: "S$", AED: "AED ", CHF: "CHF ", NOK: "kr ", NZD: "NZ$", INR: "₹", MYR: "RM ", JPY: "¥" }[currency] ?? "€";
 
     const isTight = Number(disposableUSD) < 500;
     const isNegative = Number(disposable) < 0;
@@ -104,7 +114,7 @@ RULES:
 
 Output ONLY the two sentences. No labels, no quotes, nothing else.`;
 
-    const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

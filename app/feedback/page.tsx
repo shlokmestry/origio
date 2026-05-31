@@ -22,6 +22,7 @@ const S = {
 export default function FeedbackPage() {
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [trap, setTrap] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   const charsLeft = MAX_CHARS - message.length;
@@ -34,7 +35,7 @@ export default function FeedbackPage() {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message.trim(), email: email.trim() }),
+        body: JSON.stringify({ message: message.trim(), email: email.trim(), _trap: trap }),
       });
       if (res.ok) setStatus("done");
       else setStatus("error");
@@ -139,6 +140,11 @@ export default function FeedbackPage() {
                 <p style={{ fontSize: 12, color: S.dimmer, marginTop: 8, lineHeight: 1.5 }}>
                   We'll notify you when your requested feature goes live. No marketing, ever.
                 </p>
+              </div>
+
+              {/* Honeypot — hidden from real users, bots fill it */}
+              <div style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }} aria-hidden="true">
+                <input tabIndex={-1} autoComplete="off" value={trap} onChange={e => setTrap(e.target.value)} />
               </div>
 
               {/* Submit */}

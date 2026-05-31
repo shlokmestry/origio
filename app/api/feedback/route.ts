@@ -17,7 +17,12 @@ export async function POST(request: Request): Promise<Response> {
   if (limited) return limited;
 
   try {
-    const { email, message } = await request.json();
+    const { email, message, _trap } = await request.json();
+
+    // Honeypot — bots fill hidden fields, humans don't
+    if (_trap) {
+      return NextResponse.json({ success: true }); // silent reject
+    }
 
     if (!message || message.trim().length < 5) {
       return NextResponse.json({ error: "Message too short" }, { status: 400 });
