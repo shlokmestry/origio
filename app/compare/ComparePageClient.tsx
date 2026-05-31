@@ -169,8 +169,8 @@ function MetricRow({
     <div className="grid border-b border-white/[0.04] last:border-b-0" style={{ gridTemplateColumns: gridCols }}>
       {/* label */}
       <div
-        className="border-r border-white/[0.05] flex items-center px-5"
-        style={{ minHeight: 80 }}
+        className="cmp-metric-label border-r border-white/[0.05] flex items-center px-5"
+        style={{ minHeight: 80, width: LABEL_W }}
       >
         <span className="text-[11px] font-medium text-white/40 leading-snug">{label}</span>
       </div>
@@ -390,10 +390,16 @@ export default function ComparePageClient() {
         @media (max-width: 700px) {
           .cmp-selectors-grid { grid-template-columns: 1fr 1fr !important; }
           .cmp-table-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-          .cmp-table-inner { min-width: 580px; }
+          .cmp-table-inner { min-width: 480px; }
+          .cmp-col-header { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .cmp-col-header::-webkit-scrollbar { display: none; }
+          .cmp-col-header-inner { min-width: 480px; }
           .cmp-visa-grid   { grid-template-columns: 1fr !important; }
           .cmp-page-header { padding: 100px 20px 24px !important; }
           .cmp-table-wrap  { padding: 20px 16px 40px !important; }
+          .cmp-header-label { width: 100px !important; min-width: 100px !important; }
+          .cmp-metric-label { width: 100px !important; min-width: 100px !important; max-width: 100px !important; font-size: 9px !important; }
+          .cmp-section-label { padding-left: 100px !important; }
         }
         @media (max-width: 480px) {
           .cmp-selectors-grid { grid-template-columns: 1fr !important; }
@@ -551,9 +557,9 @@ export default function ComparePageClient() {
       {/* ── STICKY COL HEADERS ── */}
       {countryA && countryB && (
         <div className="sticky top-0 z-20 border-b border-white/[0.1] bg-[#050508]">
-          <div className="max-w-[1100px] mx-auto px-8">
-            <div style={{ display: "grid", gridTemplateColumns: TABLE_GRID }}>
-              <div style={{ minHeight: 72 }} />
+          <div className="max-w-[1100px] mx-auto px-4 md:px-8 cmp-col-header">
+            <div className="cmp-col-header-inner" style={{ display: "grid", gridTemplateColumns: TABLE_GRID }}>
+              <div className="cmp-header-label" style={{ minHeight: 72, width: LABEL_W }} />
 
               {/* Country A header */}
               <div className="border-l border-white/[0.05] px-6 py-4">

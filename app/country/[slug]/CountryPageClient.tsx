@@ -198,7 +198,7 @@ function Hero({ country, data, currencySymbol, moveScoreColor, isPro, onGetRepor
         {/* Top row: continent label + actions */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <p style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em", color: C.muted, margin: 0 }}>{country.continent}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="cp-hero-actions">
             <SaveCountryButton countrySlug={country.slug} />
             <button
               onClick={onGetReport}
@@ -278,7 +278,7 @@ function ScoreRack({ scoreBreakdown }: { scoreBreakdown: ReturnType<typeof getSc
   return (
     <section>
       <Label style={{ marginBottom: 28 }}>Score breakdown</Label>
-      <div style={{ display: "flex", overflowX: "auto", gap: 0 }}>
+      <div className="cp-score-rack">
         {scoreBreakdown.map((item, i) => {
           const color = getScoreColor(item.value);
           const Icon = SCORE_ICON[item.label] ?? TrendingUp;
@@ -321,7 +321,7 @@ function KeyStats({ data, currencySymbol, totalMonthlyCost, hasHighTaxFlag }: {
     { label: "Visa Difficulty", value: `${data.visaDifficulty}/5`, color: getVisaColor(data.visaDifficulty) },
   ];
   return (
-    <section style={{ display: "flex", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+    <section className="cp-key-stats">
       {stats.map((s, i) => (
         <div key={s.label} style={{
           flex: 1, padding: "28px 36px",
@@ -395,7 +395,7 @@ function SalaryTable({ data, currencySymbol, userRoleKey }: {
               <span style={{ fontFamily: BODY, fontSize: 9, fontWeight: 700, color: C.muted, width: 20, flexShrink: 0, letterSpacing: "0.04em" }}>
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: isUser ? C.accent : C.muted, width: 136, flexShrink: 0 }}>
+              <span className="cp-salary-role" style={{ color: isUser ? C.accent : C.muted }}>
                 {s.role}
               </span>
               <div style={{ flex: 1, height: 1, background: C.border, position: "relative", minWidth: 60 }}>
@@ -435,7 +435,7 @@ function CostOfLiving({ data, currencySymbol, totalMonthlyCost, rentWarning, use
   return (
     <section>
       <Label style={{ marginBottom: 28 }}>Cost of living</Label>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr min(320px, 40%)", gap: 64, alignItems: "start" }}>
+      <div className="cp-cost-grid">
         {/* Ledger */}
         <div>
           {items.map(item => (
@@ -454,7 +454,7 @@ function CostOfLiving({ data, currencySymbol, totalMonthlyCost, rentWarning, use
         </div>
 
         {/* Big number */}
-        <div>
+        <div className="cp-cost-big">
           <p style={{ fontFamily: BODY, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.16em", color: C.muted, margin: "0 0 14px" }}>Monthly total · city centre</p>
           <p style={{ fontFamily: HEAD, fontSize: "clamp(44px, 6vw, 60px)", fontWeight: 800, color: totalColor, margin: 0, lineHeight: 0.9, letterSpacing: "-0.04em" }}>
             {currencySymbol}{totalMonthlyCost.toLocaleString()}
@@ -487,12 +487,11 @@ function QualityScores({ data }: { data: CountryWithData["data"] }) {
   return (
     <section>
       <Label style={{ marginBottom: 28 }}>Quality scores</Label>
-      <div style={{ display: "flex" }}>
+      <div className="cp-quality-row">
         {items.map((item, i) => {
           const color = getScoreColor(item.value);
           return (
             <div key={item.label} style={{
-              flex: 1,
               padding: `0 ${i === items.length - 1 ? "0" : "28px"} 0 ${i === 0 ? "0" : "28px"}`,
               borderLeft: i === 0 ? "none" : `1px solid ${C.border}`,
               display: "flex", flexDirection: "column",
@@ -522,15 +521,11 @@ function Visa({ data, passportContext }: {
   return (
     <section>
       <Label style={{ marginBottom: 18 }}>Visa & immigration</Label>
-      <div style={{
-        display: "flex", border: `2px solid ${C.border}`,
+      <div className="cp-visa-box" style={{
         boxShadow: `4px 4px 0 ${visaColor}`, background: C.surface,
-        flexWrap: "wrap",
       }}>
         {/* Left: big difficulty label */}
-        <div style={{
-          width: 220, flexShrink: 0, padding: "32px 28px",
-          borderRight: `1px solid ${C.border}`,
+        <div className="cp-visa-left" style={{
           display: "flex", flexDirection: "column", justifyContent: "space-between",
           overflow: "hidden",
         }}>
@@ -543,7 +538,7 @@ function Visa({ data, passportContext }: {
         </div>
 
         {/* Right: details */}
-        <div style={{ flex: 1, minWidth: 240, padding: "32px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="cp-visa-right" style={{ flex: 1, minWidth: 240, padding: "32px 36px", display: "flex", flexDirection: "column", gap: 16 }}>
           {passportContext && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <Pill color={C.accent} style={{ borderColor: "rgba(0,255,213,0.4)" }}>Tier {passportContext.tier} passport</Pill>
@@ -971,6 +966,34 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
 
   return (
     <div ref={reportRef} style={{ minHeight: "100vh", background: C.bg, color: C.primary, display: "flex", flexDirection: "column" }}>
+      <style>{`
+        .cp-score-rack { display: flex; overflow-x: auto; gap: 0; -webkit-overflow-scrolling: touch; }
+        .cp-score-rack::-webkit-scrollbar { display: none; }
+        .cp-key-stats { display: flex; border-top: 1px solid ${C.border}; border-bottom: 1px solid ${C.border}; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .cp-key-stats::-webkit-scrollbar { display: none; }
+        .cp-quality-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+        .cp-cost-grid { display: grid; grid-template-columns: 1fr min(320px, 40%); gap: 64px; align-items: start; }
+        .cp-visa-box { display: flex; border: 2px solid ${C.border}; flex-wrap: wrap; }
+        .cp-visa-left { width: 220px; flex-shrink: 0; padding: 32px 28px; border-right: 1px solid ${C.border}; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+        .cp-hero-actions { display: flex; align-items: center; gap: 10; }
+        .cp-salary-role { font-family: ${BODY}; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; width: 136px; flex-shrink: 0; }
+        @media (max-width: 640px) {
+          .cp-quality-row { grid-template-columns: repeat(2, 1fr); }
+          .cp-quality-row > div { border-left: none !important; border-bottom: 1px solid ${C.border}; padding: 20px 0 !important; }
+          .cp-quality-row > div:nth-child(odd) { padding-right: 24px !important; }
+          .cp-quality-row > div:nth-child(even) { padding-left: 24px !important; border-left: 1px solid ${C.border} !important; }
+          .cp-quality-row > div:nth-last-child(-n+2) { border-bottom: none; }
+          .cp-cost-grid { grid-template-columns: 1fr; gap: 28px; }
+          .cp-cost-big { display: none; }
+          .cp-visa-box { flex-direction: column; }
+          .cp-visa-left { width: 100% !important; border-right: none !important; border-bottom: 1px solid ${C.border}; padding: 24px 20px !important; }
+          .cp-visa-right { padding: 24px 20px !important; }
+          .cp-hero-actions { flex-wrap: wrap; gap: 8px; }
+          .cp-salary-role { width: 100px; }
+          .cp-key-stats > div { min-width: 100px; flex-shrink: 0; }
+          .cp-score-rack > div { min-width: 100px !important; flex-shrink: 0; }
+        }
+      `}</style>
       <Nav countries={otherCountries.map((c): GlobeCountry => ({
         slug: c.slug, name: c.name, flagEmoji: c.flagEmoji,
         lat: c.lat, lng: c.lng, moveScore: c.data.moveScore,

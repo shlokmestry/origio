@@ -1283,7 +1283,7 @@ export default function SalaryCalculator() {
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <main className="flex-1" style={{ paddingTop: NAV_H + 24, paddingBottom: 80, paddingLeft: 24, paddingRight: 24 }}>
+      <main className="flex-1" style={{ paddingTop: NAV_H + 24, paddingBottom: 80, paddingLeft: "clamp(12px,3vw,24px)", paddingRight: "clamp(12px,3vw,24px)" }}>
         <div
           style={{
             maxWidth: 1440, margin: "0 auto",
@@ -1665,6 +1665,28 @@ export default function SalaryCalculator() {
             padding-bottom: 4px;
           }
           .country-list::-webkit-scrollbar { height: 4px; }
+        }
+        @media (max-width: 640px) {
+          .salary-app-shell {
+            padding: 0 !important;
+            gap: 16px !important;
+          }
+          .salary-app-shell > aside {
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+          }
+          .salary-controls-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .salary-breakdown-cols {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .salary-chart-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
         }
       `}</style>
 
