@@ -50,9 +50,8 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="glass-panel rounded-2xl p-8">
-         <Link href="/" className="flex items-center mb-8 hover:opacity-80 transition-opacity">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/origiologo2.png" alt="Origio" style={{ height: 20, width: 'auto' }} />
+         <Link href="/" className="flex items-center mb-8 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none', fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', color: '#f0f0e8', lineHeight: 1 }}>
+          Origio
 </Link>
 
           {done ? (

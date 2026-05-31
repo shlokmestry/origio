@@ -41,9 +41,8 @@ export default function Footer() {
 
           {/* Brand col */}
           <div>
-            <Link href="/" className="flex items-center mb-5 hover:opacity-80 transition-opacity">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/origiologo2.png" alt="Origio" style={{ height: 18, width: "auto", display: "block" }} />
+            <Link href="/" className="mb-5 hover:opacity-70 transition-opacity inline-block" style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', color: '#1a1a1a', lineHeight: 1, textDecoration: 'none' }}>
+              Origio
             </Link>
             <p className="text-[11px] text-[#888] leading-relaxed max-w-[180px] font-body">
               37 countries ranked for your job and passport.

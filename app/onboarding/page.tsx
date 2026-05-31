@@ -207,8 +207,7 @@ export default function OnboardingPage() {
       {/* ── Header bar ── */}
       <div style={{ borderBottom: `1px solid ${C.border}`, padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/origiologo1.png" alt="Origio" style={{ height: 18, width: 'auto', display: 'block' }} />
+          <span style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', color: C.primary, lineHeight: 1 }}>Origio</span>
         </div>
 
         {/* Step indicator */}

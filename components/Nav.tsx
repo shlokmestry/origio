@@ -97,14 +97,13 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           margin-right: 8px;
           flex-shrink: 0;
         }
-        .nav-logo-img {
-          height: 18px;
-          width: auto;
-          display: block;
-        }
+        .nav-logo-text {
+          font-family: 'Cabinet Grotesk', sans-serif;
           font-weight: 800;
-          letter-spacing: -0.02em;
+          font-size: 17px;
+          letter-spacing: -0.03em;
           color: #fff;
+          line-height: 1;
         }
 
         /* ── Desktop links wrapper ──────────────────────── */
@@ -288,8 +287,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
       <nav className="nav-pill" role="navigation" aria-label="Main navigation">
         {/* Logo */}
         <Link href="/" className="nav-logo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/origiologo1.png" alt="Origio" className="nav-logo-img" />
+          <span className="nav-logo-text">Origio</span>
         </Link>
 
         {/* Desktop links */}
@@ -337,7 +335,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         <div className="mobile-menu-header">
           <Link href="/" className="nav-logo" onClick={() => setMobileMenuOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/origiologo1.png" alt="Origio" className="nav-logo-img" />
+            <span className="nav-logo-text">Origio</span>
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}

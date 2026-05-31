@@ -188,9 +188,8 @@ export default function SignInClient() {
         {/* Content over photo */}
         <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', padding: '36px 40px' }}>
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/origiologo1.png" alt="Origio" style={{ height: 18, width: 'auto', display: 'block' }} />
+          <Link href="/" style={{ textDecoration: 'none', fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: '-0.03em', color: '#fff', lineHeight: 1 }}>
+            Origio
           </Link>
 
           {/* Bottom copy */}

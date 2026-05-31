@@ -1,7 +1,8 @@
 export default function Logo({ size = 28, variant = "dark" }: { size?: number; variant?: "dark" | "light" }) {
-  const src = variant === "light" ? "/origiologo2.png" : "/origiologo1.png";
+  const color = variant === "light" ? "#1a1a1a" : "#ffffff";
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="Origio" style={{ height: size, width: "auto", display: "block" }} />
+    <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: size, letterSpacing: '-0.03em', color, lineHeight: 1 }}>
+      Origio
+    </span>
   );
 }

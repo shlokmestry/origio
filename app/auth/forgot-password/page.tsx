@@ -33,8 +33,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex items-center justify-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/origiologo2.png" alt="Origio" style={{ height: 20, width: 'auto' }} />
+          <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', color: '#f0f0e8', lineHeight: 1 }}>Origio</span>
         </div>
 
         <div className="glass-panel rounded-2xl p-7 border border-border">
