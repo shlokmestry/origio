@@ -9,6 +9,8 @@ import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { getScoreColor, getScoreBreakdown, getVisaLabel } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { JobRoleIcon } from "@/components/JobRoleIcon";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 interface CountryPanelProps {
   country: CountryWithData | null;
@@ -146,7 +148,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
             borderBottom: "1px solid #2a2a2a",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <span style={{ fontSize: "2rem", lineHeight: 1 }}>{country.flagEmoji}</span>
+              {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="md" /> : <span style={{ fontSize: "2rem", lineHeight: 1 }}>{country.flagEmoji}</span>}
               <div>
                 <h2 style={{
                   margin: 0,

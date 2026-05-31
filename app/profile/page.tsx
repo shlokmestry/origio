@@ -11,6 +11,8 @@ import {
   LogOut, Trash2, Sparkles, Pencil,
   AlertTriangle, Briefcase, Zap, ArrowRight, Search, Check, X, Lock, KeyRound
 } from 'lucide-react'
+import { FlagIcon } from '@/components/FlagIcon'
+import { slugToIso } from '@/lib/flagCodes'
 
 type SavedCountry = {
   id: string
@@ -354,10 +356,10 @@ export default function ProfilePage() {
                 {passportData && (
                   <>
                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'inline-block' }} />
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
-                      {passportData.flag} {passportData.name}
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {slugToIso(profile!.passport_slug!) ? <FlagIcon code={slugToIso(profile!.passport_slug!)!} size="sm" /> : <span>{passportData.flag}</span>} {passportData.name}
                       {secondPassportData && (
-                        <span style={{ marginLeft: 6 }}>· {secondPassportData.flag} {secondPassportData.name}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>· {slugToIso(profile!.second_passport_slug!) ? <FlagIcon code={slugToIso(profile!.second_passport_slug!)!} size="sm" /> : <span>{secondPassportData.flag}</span>} {secondPassportData.name}</span>
                       )}
                     </span>
                   </>
@@ -405,10 +407,8 @@ export default function ProfilePage() {
                 <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 37 countries · €4.99 one-time</p>
               </div>
             </div>
-            <a href="/pro"
-              className="inline-flex items-center gap-2 transition-all"
-              style={{ background: '#fff', color: '#0a0a0a', border: '1px solid #fff', borderRadius: 0, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              <Sparkles className="w-3.5 h-3.5" /> Get Pro
+            <a href="/pro" style={{ fontSize: 13, fontWeight: 700, color: '#00ffd5', textDecoration: 'underline', textUnderlineOffset: 3, whiteSpace: 'nowrap' }}>
+              Get Pro
             </a>
           </div>
         )}
@@ -428,7 +428,7 @@ export default function ProfilePage() {
               <div style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* Primary */}
                 <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                  <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.passport_slug]?.flag}</span>
+                  {slugToIso(profile.passport_slug) ? <FlagIcon code={slugToIso(profile.passport_slug)!} size="sm" /> : <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.passport_slug]?.flag}</span>}
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.passport_slug]?.name}</p>
                     <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Primary passport</p>
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                 {/* Second passport or add prompt */}
                 {profile.second_passport_slug ? (
                   <div className="flex items-center gap-3" style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                    <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.flag}</span>
+                    {slugToIso(profile.second_passport_slug!) ? <FlagIcon code={slugToIso(profile.second_passport_slug!)!} size="sm" /> : <span style={{ fontSize: 22 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.flag}</span>}
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{PASSPORT_FLAGS[profile.second_passport_slug]?.name}</p>
                       <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Second passport</p>
@@ -521,7 +521,7 @@ export default function ProfilePage() {
                 {topMatch && (
                   <div className="flex items-center justify-between" style={{ padding: '22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="flex items-center gap-4">
-                      <span style={{ fontSize: 40, lineHeight: 1 }}>{topMatch.flagEmoji}</span>
+                      {slugToIso(topMatch.slug) ? <FlagIcon code={slugToIso(topMatch.slug)!} size="lg" /> : <span style={{ fontSize: 40, lineHeight: 1 }}>{topMatch.flagEmoji}</span>}
                       <div>
                         <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 2 }}>
                           {topMatch.name}
@@ -550,7 +550,7 @@ export default function ProfilePage() {
                       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', width: 28, flexShrink: 0 }}>
                         {MATCH_LABELS[i + 1] ?? `${i + 2}th`}
                       </span>
-                      <span style={{ fontSize: 20 }}>{c.flagEmoji}</span>
+                      {slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{c.flagEmoji}</span>}
                       <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', flex: 1 }}>{c.name}</span>
                       {/* Progress bar */}
                       <div style={{ flex: '0 0 80px', height: 2, background: 'rgba(255,255,255,0.07)', borderRadius: 2 }}>
@@ -636,7 +636,7 @@ export default function ProfilePage() {
                       style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                      <span style={{ fontSize: 20, flexShrink: 0 }}>{countryData?.flag ?? '🌍'}</span>
+                      {slugToIso(s.country_slug) ? <FlagIcon code={slugToIso(s.country_slug)!} size="sm" /> : <span style={{ fontSize: 20, flexShrink: 0 }}>{countryData?.flag ?? '🌍'}</span>}
                       <a href={`/country/${s.country_slug}`}
                         style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', textDecoration: 'none', flex: 1 }}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
@@ -800,8 +800,8 @@ export default function ProfilePage() {
                 {editPassport && (
                   <div className="flex items-center justify-between mb-2"
                     style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>
-                      {PASSPORT_FLAGS[editPassport]?.flag} {PASSPORT_FLAGS[editPassport]?.name}
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {slugToIso(editPassport) ? <FlagIcon code={slugToIso(editPassport)!} size="sm" /> : <span>{PASSPORT_FLAGS[editPassport]?.flag}</span>} {PASSPORT_FLAGS[editPassport]?.name}
                     </span>
                     <button onClick={() => setEditPassport(null)}
                       style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -829,7 +829,7 @@ export default function ProfilePage() {
                         cursor: 'pointer',
                         width: '100%',
                       }}>
-                      <span>{p.flag}</span>
+                      {slugToIso(p.slug) ? <FlagIcon code={slugToIso(p.slug)!} size="sm" /> : <span>{p.flag}</span>}
                       <span style={{ flex: 1, fontWeight: 500 }}>{p.name}</span>
                       {editPassport === p.slug && <Check className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
                     </button>
@@ -862,7 +862,7 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between mb-2"
                         style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10 }}>
                         <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>
-                          {PASSPORT_FLAGS[editSecondPassport]?.flag} {PASSPORT_FLAGS[editSecondPassport]?.name}
+                          {slugToIso(editSecondPassport) ? <FlagIcon code={slugToIso(editSecondPassport)!} size="sm" /> : <span>{PASSPORT_FLAGS[editSecondPassport]?.flag}</span>} {PASSPORT_FLAGS[editSecondPassport]?.name}
                         </span>
                         <button onClick={() => setEditSecondPassport(null)}
                           style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -881,7 +881,7 @@ export default function ProfilePage() {
                         <button key={p.slug} onClick={() => { setEditSecondPassport(p.slug); setSecondPassportSearch('') }}
                           className="w-full flex items-center gap-2.5 text-left"
                           style={{ padding: '10px 14px', fontSize: 13, background: editSecondPassport === p.slug ? 'rgba(255,255,255,0.07)' : 'transparent', color: editSecondPassport === p.slug ? '#fff' : 'rgba(255,255,255,0.6)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', width: '100%' }}>
-                          <span>{p.flag}</span>
+                          {slugToIso(p.slug) ? <FlagIcon code={slugToIso(p.slug)!} size="sm" /> : <span>{p.flag}</span>}
                           <span style={{ flex: 1, fontWeight: 500 }}>{p.name}</span>
                           {editSecondPassport === p.slug && <Check className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
                         </button>

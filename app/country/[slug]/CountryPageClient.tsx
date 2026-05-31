@@ -8,7 +8,7 @@ import {
   TrendingUp, Wifi, ExternalLink, Loader2,
   type LucideIcon,
 } from "lucide-react";
-import generatePDF, { Margin } from "react-to-pdf";
+import { jsPDF } from "jspdf";
 import { CountryWithData, GlobeCountry, JOB_ROLES } from "@/types";
 import {
   getScoreColor, getScoreBreakdown, getVisaLabel,
@@ -22,6 +22,8 @@ import {
   WizardAnswers, getPassportStrength,
   resolveEffectivePassports,
 } from "@/lib/wizard";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -67,11 +69,6 @@ const SCORE_ICON: Record<string, LucideIcon> = {
   "Tax Efficiency": Receipt,
 };
 
-const TESTIMONIALS = [
-  { quote: "Origio's visa checklist saved me 3 weeks of research. Moved to Portugal in 2024.", name: "L.H.", role: "Software Engineer" },
-  { quote: "Finally a tool that shows real take-home, not just headline salary. Changed my whole decision.", name: "M.K.", role: "Product Manager" },
-  { quote: "Compared 6 countries in an afternoon. Ended up in Singapore — best decision I made.", name: "A.R.", role: "Marketing Director" },
-];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 function Label({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -226,7 +223,7 @@ function Hero({ country, data, currencySymbol, moveScoreColor, isPro, onGetRepor
           {/* Left: flag + name + pills */}
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "nowrap" }}>
-              <span style={{ fontSize: 80, lineHeight: 1, flexShrink: 0 }}>{country.flagEmoji}</span>
+              {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="xl" /> : <span style={{ fontSize: 80, lineHeight: 1, flexShrink: 0 }}>{country.flagEmoji}</span>}
               <h1 style={{
                 fontFamily: HEAD, fontWeight: 800, fontSize: "clamp(64px, 8.5vw, 104px)",
                 lineHeight: 0.86, letterSpacing: "-0.04em", textTransform: "uppercase",
@@ -608,35 +605,6 @@ function Visa({ data, passportContext }: {
   );
 }
 
-// ── Testimonials ──────────────────────────────────────────────────────────────
-function Testimonials() {
-  return (
-    <section>
-      <Label style={{ marginBottom: 28 }}>From people who moved</Label>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {TESTIMONIALS.map((t, i) => (
-          <div key={i} style={{
-            flex: "1 1 240px",
-            paddingLeft: i === 0 ? 0 : 32, paddingRight: i < TESTIMONIALS.length - 1 ? 32 : 0,
-            borderLeft: i === 0 ? "none" : `1px solid ${C.border}`,
-          }}>
-            <span style={{
-              fontFamily: HEAD, fontSize: 56, fontWeight: 800, color: C.accent,
-              lineHeight: 0.8, display: "block", marginBottom: 16, opacity: 0.7,
-            }}>"</span>
-            <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, lineHeight: 1.7, color: C.muted, margin: "0 0 20px" }}>
-              {t.quote}
-            </p>
-            <p style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.primary, margin: 0 }}>
-              {t.name} <span style={{ color: C.muted }}>· {t.role}</span>
-            </p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 // ── Explore more ──────────────────────────────────────────────────────────────
 function ExploreMore({ countries }: { countries: CountryWithData[] }) {
   const shown = countries.slice(0, 6);
@@ -654,7 +622,7 @@ function ExploreMore({ countries }: { countries: CountryWithData[] }) {
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.elevated}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.surface}
             >
-              <span style={{ fontSize: 40, display: "block", marginBottom: 14, lineHeight: 1 }}>{c.flagEmoji}</span>
+              <div style={{ marginBottom: 14 }}>{slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="md" /> : <span style={{ fontSize: 40, lineHeight: 1 }}>{c.flagEmoji}</span>}</div>
               <p style={{ fontFamily: HEAD, fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "-0.02em", color: C.primary, margin: "0 0 6px", lineHeight: 1 }}>{c.name}</p>
               <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: getScoreColor(c.data.moveScore), margin: 0 }}>{c.data.moveScore}/10</p>
             </div>
@@ -678,7 +646,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const scoreBreakdown = getScoreBreakdown(data);
   const moveScoreColor = getScoreColor(data.moveScore);
   const currencySymbol = getCurrencySymbol(country.currency);
-  const reportRef = useRef<HTMLDivElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null); // kept for layout ref
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isPro, setIsPro] = useState(false);
 
@@ -754,10 +722,284 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
   const handleGetReport = async () => {
     setGeneratingPDF(true);
     try {
-      await generatePDF(reportRef, {
-        filename: country.name.toLowerCase().replace(/\s+/g, "-") + "-origio-report.pdf",
-        page: { margin: Margin.MEDIUM },
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const W = 210; // A4 width mm
+      const margin = 20;
+      const col = W - margin * 2;
+      let y = 0;
+
+      const accent = [0, 255, 213] as [number, number, number];
+      const dark   = [10, 10, 10]  as [number, number, number];
+      const muted  = [120, 120, 110] as [number, number, number];
+      const white  = [240, 240, 232] as [number, number, number];
+
+      // ── Background ──────────────────────────────────────────────
+      doc.setFillColor(...dark);
+      doc.rect(0, 0, W, 297, "F");
+
+      // ── Header bar ──────────────────────────────────────────────
+      doc.setFillColor(18, 18, 18);
+      doc.rect(0, 0, W, 48, "F");
+      doc.setDrawColor(...accent);
+      doc.setLineWidth(0.4);
+      doc.line(0, 48, W, 48);
+
+      // Origio wordmark
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...muted);
+      doc.text("ORIGIO", margin, 14);
+
+      // Flag + Country name
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(28);
+      doc.setTextColor(...white);
+      doc.text(`${country.flagEmoji}  ${country.name.toUpperCase()}`, margin, 36);
+
+      // Continent
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...muted);
+      doc.text(country.continent?.toUpperCase() ?? "", W - margin, 14, { align: "right" });
+
+      // Move score
+      const scoreColor = data.moveScore >= 8 ? [0, 220, 120] : data.moveScore >= 6 ? [0, 255, 213] : data.moveScore >= 4 ? [255, 180, 0] : [255, 80, 80];
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(26);
+      doc.setTextColor(...(scoreColor as [number,number,number]));
+      doc.text(String(data.moveScore), W - margin, 36, { align: "right" });
+      doc.setFontSize(9);
+      doc.setTextColor(...muted);
+      doc.text("MOVE SCORE / 10", W - margin, 42, { align: "right" });
+
+      y = 58;
+
+      // ── Score breakdown ──────────────────────────────────────────
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...accent);
+      doc.text("SCORE BREAKDOWN", margin, y);
+      y += 6;
+
+      const scores = scoreBreakdown.map(s => ({
+        label: s.label,
+        value: Math.round(s.value * 10) / 10,
+      }));
+      const scoreW = col / scores.length;
+      scores.forEach((s, i) => {
+        const x = margin + i * scoreW;
+        const c = s.value >= 8 ? ([0,220,120] as [number,number,number])
+                : s.value >= 6 ? ([0,255,213] as [number,number,number])
+                : s.value >= 4 ? ([255,180,0] as [number,number,number])
+                :                ([255,80,80] as [number,number,number]);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(...c);
+        doc.text(String(s.value), x + scoreW / 2, y + 8, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...muted);
+        doc.text(s.label.toUpperCase(), x + scoreW / 2, y + 13, { align: "center" });
       });
+      y += 20;
+
+      // Divider
+      doc.setDrawColor(40, 40, 40);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, W - margin, y);
+      y += 8;
+
+      // ── Key stats row ─────────────────────────────────────────────
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...accent);
+      doc.text("KEY STATS", margin, y);
+      y += 6;
+
+      const totalMonthly = data.costRentCityCentre + data.costGroceriesMonthly + data.costTransportMonthly + data.costEatingOut + data.costUtilitiesMonthly;
+      const stats = [
+        { label: "Income Tax",       value: `${data.incomeTaxRateMid}%` },
+        { label: "Social Security",  value: `${data.socialSecurityRate}%` },
+        { label: "Est. Monthly Cost",value: `${currencySymbol}${totalMonthly.toLocaleString()}` },
+        { label: "Visa Difficulty",  value: `${data.visaDifficulty}/5` },
+      ];
+      const statW = col / stats.length;
+      stats.forEach((s, i) => {
+        const x = margin + i * statW;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(...white);
+        doc.text(s.value, x + statW / 2, y + 7, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...muted);
+        doc.text(s.label.toUpperCase(), x + statW / 2, y + 12, { align: "center" });
+      });
+      y += 22;
+
+      // Divider
+      doc.setDrawColor(40, 40, 40);
+      doc.line(margin, y, W - margin, y);
+      y += 8;
+
+      // ── Two-column: Salaries + Cost of Living ──────────────────────
+      const halfCol = (col - 8) / 2;
+      const col2x = margin + halfCol + 8;
+
+      // Salaries header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...accent);
+      doc.text("AVERAGE SALARIES (ANNUAL)", margin, y);
+      doc.text("COST OF LIVING (MONTHLY)", col2x, y);
+      y += 5;
+
+      const salaryRows = [
+        { role: "Software Eng.",  key: "salarySoftwareEngineer" },
+        { role: "Doctor",         key: "salaryDoctor" },
+        { role: "Nurse",          key: "salaryNurse" },
+        { role: "Data Scientist", key: "salaryDataScientist" },
+        { role: "Product Mgr.",   key: "salaryProductManager" },
+        { role: "DevOps",         key: "salaryDevOps" },
+        { role: "Cybersecurity",  key: "salaryCybersecurity" },
+        { role: "UX Designer",    key: "salaryUXDesigner" },
+        { role: "Fin. Analyst",   key: "salaryFinancialAnalyst" },
+        { role: "Lawyer",         key: "salaryLawyer" },
+        { role: "Architect",      key: "salaryArchitect" },
+        { role: "HR Manager",     key: "salaryHRManager" },
+      ].map(s => ({ ...s, salary: (data as any)[s.key] as number }))
+       .filter(s => s.salary > 0)
+       .sort((a, b) => b.salary - a.salary);
+
+      const costRows = [
+        { label: "Rent — city centre", value: data.costRentCityCentre },
+        { label: "Rent — outside",     value: data.costRentOutside },
+        { label: "Groceries",          value: data.costGroceriesMonthly },
+        { label: "Transport",          value: data.costTransportMonthly },
+        { label: "Dining out",         value: data.costEatingOut },
+        { label: "Utilities",          value: data.costUtilitiesMonthly },
+      ];
+
+      const rowH = 6.5;
+      const startY = y;
+
+      salaryRows.forEach((s, i) => {
+        const ry = startY + i * rowH;
+        if (i % 2 === 0) {
+          doc.setFillColor(18, 18, 18);
+          doc.rect(margin, ry - 1, halfCol, rowH, "F");
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...white);
+        doc.text(s.role, margin + 2, ry + 3.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...accent);
+        doc.text(`${currencySymbol}${s.salary.toLocaleString()}`, margin + halfCol - 1, ry + 3.5, { align: "right" });
+      });
+
+      costRows.forEach((c, i) => {
+        const ry = startY + i * rowH;
+        if (i % 2 === 0) {
+          doc.setFillColor(18, 18, 18);
+          doc.rect(col2x, ry - 1, halfCol, rowH, "F");
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...white);
+        doc.text(c.label, col2x + 2, ry + 3.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...accent);
+        doc.text(`${currencySymbol}${c.value.toLocaleString()}`, col2x + halfCol - 1, ry + 3.5, { align: "right" });
+      });
+
+      y = startY + Math.max(salaryRows.length, costRows.length) * rowH + 6;
+
+      // Divider
+      doc.setDrawColor(40, 40, 40);
+      doc.line(margin, y, W - margin, y);
+      y += 8;
+
+      // ── Quality scores ──────────────────────────────────────────────
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...accent);
+      doc.text("QUALITY SCORES", margin, y);
+      y += 6;
+
+      const qualScores = [
+        { label: "Quality of Life", value: data.scoreQualityOfLife },
+        { label: "Healthcare",      value: data.scoreHealthcare },
+        { label: "Safety",          value: data.scoreSafety },
+        { label: "Internet Speed",  value: data.scoreInternetSpeed },
+      ];
+      const qW = col / qualScores.length;
+      qualScores.forEach((q, i) => {
+        const x = margin + i * qW;
+        const barW = (q.value / 10) * (qW - 4);
+        doc.setFillColor(30, 30, 30);
+        doc.rect(x, y + 4, qW - 4, 3, "F");
+        doc.setFillColor(...accent);
+        doc.rect(x, y + 4, barW, 3, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...white);
+        doc.text(`${q.value}`, x, y + 2);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.setTextColor(...muted);
+        doc.text(q.label.toUpperCase(), x, y + 12);
+      });
+      y += 18;
+
+      // Divider
+      doc.setDrawColor(40, 40, 40);
+      doc.line(margin, y, W - margin, y);
+      y += 8;
+
+      // ── Visa info ────────────────────────────────────────────────────
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...accent);
+      doc.text("VISA & TAX", margin, y);
+      y += 6;
+
+      const visaItems = [
+        { label: "Visa Difficulty",       value: `${data.visaDifficulty}/5` },
+        { label: "Income Tax (mid)",      value: `${data.incomeTaxRateMid}%` },
+        { label: "Social Security",       value: `${data.socialSecurityRate}%` },
+        { label: "Language",              value: country.language ?? "—" },
+        { label: "Currency",              value: country.currency ?? "—" },
+      ];
+      const viW = col / 4;
+      visaItems.forEach((v, i) => {
+        const x = margin + (i % 4) * viW;
+        const ry = y + Math.floor(i / 4) * 12;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...white);
+        doc.text(v.value, x, ry + 4);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.setTextColor(...muted);
+        doc.text(v.label.toUpperCase(), x, ry + 9);
+      });
+      y += Math.ceil(visaItems.length / 4) * 12 + 4;
+
+      // ── Footer ────────────────────────────────────────────────────────
+      doc.setDrawColor(...accent);
+      doc.setLineWidth(0.4);
+      doc.line(0, 284, W, 284);
+      doc.setFillColor(18, 18, 18);
+      doc.rect(0, 284, W, 13, "F");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...muted);
+      doc.text("findorigio.com", margin, 291);
+      doc.text(`Data verified · ${data.lastVerified ?? "2024"}`, W / 2, 291, { align: "center" });
+      doc.text(`Generated ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`, W - margin, 291, { align: "right" });
+
+      doc.save(`${country.name.toLowerCase().replace(/\s+/g, "-")}-origio-report.pdf`);
     } finally {
       setGeneratingPDF(false);
     }
@@ -775,7 +1017,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
         incomeTaxRateMid: c.data.incomeTaxRateMid,
       }))} />
 
-      <main style={{ maxWidth: 1152, margin: "0 auto", width: "100%", padding: "56px 40px", boxSizing: "border-box" }}>
+      <main style={{ maxWidth: 1152, margin: "0 auto", width: "100%", padding: "clamp(96px,10vh,120px) clamp(20px,4vw,40px) 56px", boxSizing: "border-box" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 72 }}>
           <PersonalisationBanner
             matchPercent={matchPercent}
@@ -805,27 +1047,11 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           <CostOfLiving data={data} currencySymbol={currencySymbol} totalMonthlyCost={totalMonthlyCost} rentWarning={rentWarning} userSalary={userSalary} />
           <QualityScores data={data} />
           <Visa data={data} passportContext={passportContext} />
-          <Testimonials />
           <ExploreMore countries={otherCountries} />
         </div>
       </main>
 
-      <footer style={{ borderTop: `2px solid ${C.border}`, marginTop: 40 }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "24px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 22, height: 22, background: "#fff", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-                <circle cx="6" cy="6" r="3" fill="#fff"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 800, textTransform: "uppercase", letterSpacing: "-0.02em", color: C.primary }}>Origio</span>
-          </div>
-          <p style={{ fontFamily: BODY, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: C.muted, margin: 0 }}>
-            Data last verified · {data.lastVerified}
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
