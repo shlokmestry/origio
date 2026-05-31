@@ -14,6 +14,8 @@ import {
 
 import { GlobeCountry } from "@/types";
 import { getScoreColor } from "@/lib/utils";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 interface CommandSearchProps {
   countries: GlobeCountry[];
@@ -543,9 +545,7 @@ function ResultRow({
         textAlign: "left",
       }}
     >
-      <span style={{ fontSize: 20 }}>
-        {country.flagEmoji}
-      </span>
+      {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{country.flagEmoji}</span>}
 
       <div style={{ flex: 1 }}>
         <p

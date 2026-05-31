@@ -13,6 +13,8 @@ import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import type { User } from "@supabase/supabase-js";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF = "'Cabinet Grotesk', sans-serif";
@@ -723,7 +725,7 @@ export default function WizardResultsPage() {
               </div>
             )}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 16 }}>
-              <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>
+              {slugToIso(top.country.slug) ? <FlagIcon code={slugToIso(top.country.slug)!} size="xl" /> : <span style={{ fontSize: 64, lineHeight: 1, flexShrink: 0 }}>{top.country.flagEmoji}</span>}
               <h1 style={{ fontFamily: SERIF, fontSize: "clamp(48px,7vw,84px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.92, margin: 0, color: FG }}>
                 {top.country.name}
               </h1>
@@ -830,7 +832,7 @@ export default function WizardResultsPage() {
             <div style={{ background: BG, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                 <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>01</span>
-                <span style={{ fontSize: 40 }}>{matches[0].country.flagEmoji}</span>
+                {slugToIso(matches[0].country.slug) ? <FlagIcon code={slugToIso(matches[0].country.slug)!} size="md" /> : <span style={{ fontSize: 40 }}>{matches[0].country.flagEmoji}</span>}
                 <div>
                   <div style={{ fontFamily: SERIF, fontSize: 28, color: FG, marginBottom: 4 }}>{matches[0].country.name}</div>
                   {(() => { const driver = passportDrivingVisa(matches[0].country.slug); return driver ? (
@@ -859,7 +861,7 @@ export default function WizardResultsPage() {
                       <span style={{ fontFamily: MONO, fontSize: 10, color: DIM }}>{String(i + 2).padStart(2, "0")}</span>
                       <span style={{ fontFamily: SERIF, fontSize: 18, color: matchPercentColor(m.matchPercent) }}>{m.matchPercent}%</span>
                     </div>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>{m.country.flagEmoji}</div>
+                    <div style={{ marginBottom: 8 }}>{slugToIso(m.country.slug) ? <FlagIcon code={slugToIso(m.country.slug)!} size="md" /> : <span style={{ fontSize: 28 }}>{m.country.flagEmoji}</span>}</div>
                     <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 6 }}>{m.country.name}</div>
                     {(() => { const driver = passportDrivingVisa(m.country.slug); return driver ? (
                       <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT, marginBottom: 6, opacity: 0.8 }}>✦ visa via {driver} passport</div>
@@ -891,7 +893,7 @@ export default function WizardResultsPage() {
           {(() => {
             const topReasons = top.reasons.slice(0, 2);
             const reasonsText = topReasons.length > 0 ? topReasons.join(" and ") : "your stated priorities";
-            const strongestText = `${top.country.flagEmoji} ${top.country.name} leads because it scores highest on ${reasonsText}.`;
+            const strongestText = `${top.country.name} leads because it scores highest on ${reasonsText}.`;
             const topScores = computeScoreBreakdown(top.country, answers, jobRoleDef);
             const bottomMetric = Object.values(topScores).sort((a, b) => a.value - b.value)[0];
             const tradeoffText = `The trade-off: ${bottomMetric.label} is lower than your other matches. ${bottomMetric.desc}.`;
@@ -943,7 +945,7 @@ export default function WizardResultsPage() {
                     <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, textAlign: "right", color: isTop3 ? RANK_COLORS[i] : "#2a2a2a" }}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>
+                    {slugToIso(m.country.slug) ? <FlagIcon code={slugToIso(m.country.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>}
                     <div>
                       <div style={{ fontFamily: SERIF, fontSize: 15, color: FG, marginBottom: 2 }}>{m.country.name}</div>
                       {(() => {
