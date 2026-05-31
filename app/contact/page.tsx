@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
-import { Mail, AlertCircle, Lightbulb, Database, MessageSquare } from 'lucide-react'
+import { Mail, AlertCircle, Lightbulb, Database, MessageSquare, Instagram } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Contact — Origio',
@@ -77,6 +77,9 @@ export default function ContactPage() {
       {/* ── CONTENT ── */}
       <div className="max-w-[900px] mx-auto px-8 py-14 flex-1 w-full">
 
+        {/* Contact cards */}
+        <div className="flex flex-col gap-4 mb-10">
+
         {/* Email card */}
         <a href="mailto:hello@findorigio.com"
           className="group flex items-center gap-5 bg-[#111] border border-[#2a2a2a] px-7 py-6 mb-10 hover:border-[#00ffd5]/40 transition-colors"
@@ -96,6 +99,28 @@ export default function ContactPage() {
             Write →
           </span>
         </a>
+
+        {/* Instagram card */}
+        <a href="https://instagram.com/findorigio" target="_blank" rel="noopener noreferrer"
+          className="group flex items-center gap-5 bg-[#111] border border-[#2a2a2a] px-7 py-6 hover:border-[#00ffd5]/40 transition-colors"
+          style={{ textDecoration: 'none', boxShadow: '3px 3px 0px #1a1a1a' }}>
+          <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-[#2a2a2a] bg-[#00ffd5]/[0.06] group-hover:bg-[#00ffd5]/[0.1] transition-colors">
+            <Instagram className="w-5 h-5 text-[#00ffd5]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f0f0e8]/40 mb-1">Instagram</p>
+            <p className="text-[20px] font-normal text-[#f0f0e8] group-hover:text-[#00ffd5] transition-colors"
+              style={{ fontFamily: SERIF }}>
+              @findorigio
+            </p>
+            <p className="text-[11px] font-medium text-[#f0f0e8]/30 mt-1">Follow for country data, tips & updates</p>
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-[#00ffd5]/0 group-hover:text-[#00ffd5] transition-colors flex-shrink-0">
+            Follow →
+          </span>
+        </a>
+
+        </div>{/* end contact cards */}
 
         {/* Topics */}
         <div className="mb-10">
