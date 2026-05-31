@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
-import { fetchWithTimeout } from "@/lib/utils";
+import { fetchWithTimeout, sanitizeForPrompt } from "@/lib/utils";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
@@ -26,20 +26,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const {
-    email,
-    source,
-    topCountry,
-    topCountryFlag,
-    matchPercent,
-    jobRole,
-    grossSalary,
-    netMonthly,
-    taxRate,
-    rentCost,
-    visaLabel,
-    currency,
-  } = await req.json();
+  const raw = await req.json();
+  const email          = typeof raw.email === "string" ? raw.email : "";
+  const source         = sanitizeForPrompt(raw.source, 40);
+  const topCountry     = sanitizeForPrompt(raw.topCountry, 60);
+  const topCountryFlag = sanitizeForPrompt(raw.topCountryFlag, 10);
+  const matchPercent   = Number(raw.matchPercent) || 0;
+  const jobRole        = sanitizeForPrompt(raw.jobRole, 50);
+  const grossSalary    = Number(raw.grossSalary) || 0;
+  const netMonthly     = Number(raw.netMonthly) || 0;
+  const taxRate        = Number(raw.taxRate) || 0;
+  const rentCost       = Number(raw.rentCost) || 0;
+  const visaLabel      = sanitizeForPrompt(raw.visaLabel, 30);
+  const currency       = sanitizeForPrompt(raw.currency, 10);
 
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 

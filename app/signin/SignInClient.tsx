@@ -17,7 +17,10 @@ function passwordStrength(pw: string): { pct: number; label: string; color: stri
 export default function SignInClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/profile'
+  const rawNext = searchParams.get('next') ?? '/profile'
+  const next = /^\/(?!\/)/.test(rawNext) && !rawNext.includes('@') && !rawNext.includes(':')
+    ? rawNext
+    : '/profile'
 
   const [tab, setTab]               = useState<'signin' | 'signup'>('signin')
   const [email, setEmail]           = useState('')

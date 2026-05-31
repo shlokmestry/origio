@@ -83,7 +83,7 @@ export async function POST(request: Request): Promise<Response> {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('Checkout error:', msg)
     return NextResponse.json(
-      { error: msg || 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     )
   }

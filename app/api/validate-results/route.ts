@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
-import { fetchWithTimeout } from "@/lib/utils";
+import { fetchWithTimeout, sanitizeForPrompt } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "validate-results", maxRequests: 10, windowSeconds: 60 });
@@ -26,26 +26,34 @@ export async function POST(request: Request): Promise<Response> {
     const { matches, answers } = await request.json();
 
     const top3 = matches.slice(0, 3).map((m: any) => ({
-      name: m.country.name,
-      matchPercent: m.matchPercent,
-      currency: m.country.currency,
-      rentPerMonth: m.country.data.costRentCityCentre,
-      incomeTax: m.country.data.incomeTaxRateMid,
-      visaDifficulty: m.country.data.visaDifficulty,
-      language: m.country.language,
-      reasons: m.reasons,
+      name: sanitizeForPrompt(m.country.name, 50),
+      matchPercent: Number(m.matchPercent) || 0,
+      currency: sanitizeForPrompt(m.country.currency, 10),
+      rentPerMonth: Number(m.country.data.costRentCityCentre) || 0,
+      incomeTax: Number(m.country.data.incomeTaxRateMid) || 0,
+      visaDifficulty: Number(m.country.data.visaDifficulty) || 0,
+      language: sanitizeForPrompt(m.country.language, 30),
+      reasons: Array.isArray(m.reasons) ? m.reasons.slice(0, 5).map((r: unknown) => sanitizeForPrompt(r, 60)) : [],
     }));
+
+    const passport     = sanitizeForPrompt(answers.passport, 50);
+    const moveReason   = sanitizeForPrompt(answers.moveReason, 30);
+    const jobRole      = sanitizeForPrompt(answers.jobRole, 50);
+    const rentBudget   = sanitizeForPrompt(answers.rentBudget, 20);
+    const priorities   = Array.isArray(answers.priorities) ? answers.priorities.slice(0, 6).map((p: unknown) => sanitizeForPrompt(p, 30)).join(", ") : "";
+    const languages    = Array.isArray(answers.languages)  ? answers.languages.slice(0, 5).map((l: unknown) => sanitizeForPrompt(l, 30)).join(", ") : "";
+    const dealBreakers = Array.isArray(answers.dealBreakers) ? answers.dealBreakers.slice(0, 6).map((d: unknown) => sanitizeForPrompt(d, 30)).join(", ") : "";
 
     const prompt = `You are a relocation data validator. A user completed a relocation quiz and got these top 3 country matches. Check if the results make logical sense given their answers.
 
 USER PROFILE:
-- Passport: ${answers.passport}
-- Reason for moving: ${answers.moveReason}
-- Job role: ${answers.jobRole}
-- Priorities: ${answers.priorities?.join(", ")}
-- Rent budget: ${answers.rentBudget} (under800 = under €800/mo, 800to1500 = €800-1500/mo, 1500to2500 = €1500-2500/mo, any = no limit)
-- Languages: ${answers.languages?.join(", ")}
-- Deal breakers: ${answers.dealBreakers?.join(", ")}
+- Passport: ${passport}
+- Reason for moving: ${moveReason}
+- Job role: ${jobRole}
+- Priorities: ${priorities}
+- Rent budget: ${rentBudget} (under800 = under €800/mo, 800to1500 = €800-1500/mo, 1500to2500 = €1500-2500/mo, any = no limit)
+- Languages: ${languages}
+- Deal breakers: ${dealBreakers}
 
 TOP 3 RESULTS:
 ${top3.map((m: any, i: number) => `
