@@ -284,9 +284,7 @@ export default function WizardPage() {
   useEffect(() => {
     async function checkGate() {
       try {
-        const anonSession = { data: { session: null }, error: null } as const;
-        const timeout = new Promise<typeof anonSession>(resolve => setTimeout(() => resolve(anonSession), 4000));
-        const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout]);
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
