@@ -5,11 +5,19 @@ import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
 import * as Sentry from "@sentry/nextjs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2026-03-25.dahlia',
 })
 
 export async function POST(request: Request): Promise<Response> {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: 'Stripe is not configured. Set STRIPE_SECRET_KEY in Vercel environment variables.' }, { status: 500 })
+  }
+
   // Rate limit: max 10 checkout initiations per minute
   const limited = await rateLimit(request, { name: 'checkout', maxRequests: 10, windowSeconds: 60 })
   if (limited) return limited
@@ -72,9 +80,10 @@ export async function POST(request: Request): Promise<Response> {
         type: 'session_creation_failed',
       },
     });
-    console.error('Checkout error:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Checkout error:', msg)
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: msg || 'Failed to create checkout session' },
       { status: 500 }
     )
   }

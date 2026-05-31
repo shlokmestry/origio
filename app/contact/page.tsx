@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
+import Nav from '@/components/Nav'
 import Link from 'next/link'
 import { Mail, AlertCircle, Lightbulb, Database, MessageSquare } from 'lucide-react'
 
@@ -28,36 +29,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f0f0e8] flex flex-col" style={{ fontFamily: SANS }}>
 
-      {/* ── Static nav — no function props ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(10,10,10,0.88)',
-        backdropFilter: 'blur(14px)',
-        borderBottom: '1px solid #1a1a1a',
-      }}>
-        <div style={{
-          maxWidth: 900, margin: '0 auto',
-          padding: '0 32px', height: 64,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <Link href="/" style={{
-            display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none',
-          }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00ffd5', display: 'inline-block' }} />
-            <span style={{ fontFamily: SERIF, fontSize: 20, color: '#f0f0e8', letterSpacing: '-0.02em' }}>
-              origio<span style={{ color: '#00ffd5' }}>.</span>
-            </span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            {['Calculator', 'Blog', 'About'].map(label => (
-              <Link key={label} href={`/${label.toLowerCase()}`} style={{
-                fontFamily: SANS, fontSize: 13, fontWeight: 500,
-                color: 'rgba(240,240,232,0.45)', textDecoration: 'none',
-              }}>{label}</Link>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       {/* ── PAGE HEADER ── */}
       <div className="border-b border-[#2a2a2a]">

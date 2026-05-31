@@ -2,6 +2,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
+import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'Terms of Service — Origio',
@@ -95,30 +96,7 @@ export default function TermsPage() {
   return (
     <main style={{ minHeight: '100vh', background: S.bg, color: S.text, fontFamily: S.sans }}>
 
-      {/* ── Static nav — no function props ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(10,10,10,0.88)',
-        backdropFilter: 'blur(14px)',
-        borderBottom: '1px solid #1a1a1a',
-      }}>
-        <div style={{
-          maxWidth: 760, margin: '0 auto',
-          padding: '0 32px', height: 64,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: S.accent, display: 'inline-block' }} />
-            <span style={{ fontFamily: S.serif, fontSize: 20, color: S.text, letterSpacing: '-0.02em' }}>
-              origio<span style={{ color: S.accent }}>.</span>
-            </span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <Link href="/contact" style={{ fontFamily: S.sans, fontSize: 13, fontWeight: 500, color: 'rgba(240,240,232,0.45)', textDecoration: 'none' }}>Contact</Link>
-            <Link href="/privacy" style={{ fontFamily: S.sans, fontSize: 13, fontWeight: 500, color: 'rgba(240,240,232,0.45)', textDecoration: 'none' }}>Privacy</Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(64px,8vw,96px) clamp(20px,4vw,40px) 80px' }}>
 
