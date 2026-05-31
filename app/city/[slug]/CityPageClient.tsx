@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { CityFull } from "./page";
 
 interface Props {
@@ -333,7 +334,7 @@ export default function CityPageClient({ city }: Props) {
 
       {/* NAV */}
       <nav>
-        <a href="/" className="nav-logo">ORIGIO</a>
+        <Link href="/" className="nav-logo">ORIGIO</Link>
         <div className="nav-center">
           <a href="/cities" style={{ textDecoration: "none", color: "var(--dimmer)" }}>CITIES</a>
           <span className="nav-crumb">·</span>

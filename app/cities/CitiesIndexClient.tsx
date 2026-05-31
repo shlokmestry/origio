@@ -307,11 +307,11 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
       `}</style>
 
       <nav>
-        <a href="/" className="nav-logo">ORIGIO</a>
+        <Link href="/" className="nav-logo">ORIGIO</Link>
         <span className="nav-center">Cities</span>
         <div className="nav-right">
           <a href="/wizard" className="nav-btn">Wizard</a>
-          <a href="/blog" className="nav-btn">Blog</a>
+          <Link href="/blog" className="nav-btn">Blog</Link>
         </div>
       </nav>
 
