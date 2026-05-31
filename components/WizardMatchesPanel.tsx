@@ -90,7 +90,7 @@ export default function WizardMatchesPanel({
               {/* Card header */}
               <div className="flex items-center justify-between px-4 py-3 border-b-2" style={{ borderColor: "#1a1a1a" }}>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{country.flagEmoji}</span>
+                  {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="sm" /> : <span className="text-2xl">{country.flagEmoji}</span>}
                   <div>
                     <p className="font-heading font-extrabold text-text-primary uppercase tracking-tight">{country.name}</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: rankColor }}>{RANK_LABELS[index]}</p>
