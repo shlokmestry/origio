@@ -10,6 +10,8 @@ import Nav from "@/components/Nav";
 import Link from "next/link";
 import { getVisaLabel } from "@/lib/utils";
 import { getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -250,7 +252,7 @@ function VisaCard({ country, color }: { country: CountryWithData; color: string 
   return (
     <div className="border border-white/[0.07] bg-[#0d0d10] p-6">
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-xl leading-none">{country.flagEmoji}</span>
+        {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="sm" /> : <span className="text-xl leading-none">{country.flagEmoji}</span>}
         <span className="text-[11px] font-black uppercase tracking-[0.1em]" style={{ color }}>
           {country.name}
         </span>
@@ -555,7 +557,7 @@ export default function ComparePageClient() {
 
               {/* Country A header */}
               <div className="border-l border-white/[0.05] px-6 py-4">
-                <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 6 }}>{countryA.flagEmoji}</div>
+                <div style={{ marginBottom: 6 }}>{slugToIso(countryA.slug) ? <FlagIcon code={slugToIso(countryA.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryA.flagEmoji}</span>}</div>
                 <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_A }}>
                   {countryA.name}
                 </div>
@@ -566,7 +568,7 @@ export default function ComparePageClient() {
 
               {/* Country B header */}
               <div className="border-l border-white/[0.05] px-6 py-4">
-                <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 6 }}>{countryB.flagEmoji}</div>
+                <div style={{ marginBottom: 6 }}>{slugToIso(countryB.slug) ? <FlagIcon code={slugToIso(countryB.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryB.flagEmoji}</span>}</div>
                 <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_B }}>
                   {countryB.name}
                 </div>
@@ -578,7 +580,7 @@ export default function ComparePageClient() {
               {/* Country C header */}
               {isPro && countryC ? (
                 <div className="border-l border-white/[0.05] px-6 py-4">
-                  <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 6 }}>{countryC.flagEmoji}</div>
+                  <div style={{ marginBottom: 6 }}>{slugToIso(countryC.slug) ? <FlagIcon code={slugToIso(countryC.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryC.flagEmoji}</span>}</div>
                   <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_C }}>
                     {countryC.name}
                   </div>
