@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-data": "tsx src/lib/data-updater.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@types/maplibre-gl": "^1.13.2",
+    "tsx": "^4.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
