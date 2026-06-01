@@ -58,7 +58,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Verify the session belongs to this user (security check)
   const sessionUserId = session.metadata?.user_id ?? session.client_reference_id
-  if (sessionUserId !== user.id) {
+  if (!sessionUserId || sessionUserId !== user.id) {
     console.error(`User mismatch: session=${sessionUserId}, requesting=${user.id}`)
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }

@@ -7,6 +7,7 @@ import { ArrowLeft, Download, CheckCircle } from "lucide-react";
 import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 const SERIF = "'Cabinet Grotesk', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
@@ -46,13 +47,21 @@ function ReportSuccessInner() {
   // Verify payment
   useEffect(() => {
     if (!sessionId) { setError("No session found."); return; }
-    fetch(`/api/verify-payment?session_id=${sessionId}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.paid) setVerified(true);
-        else setError("Payment not confirmed. Contact support.");
+    supabase.auth.getSession().then(({ data: { session: authSession } }) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authSession?.access_token) headers["Authorization"] = `Bearer ${authSession.access_token}`;
+      fetch("/api/verify-payment", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ sessionId }),
       })
-      .catch(() => setError("Could not verify payment."));
+        .then(r => r.json())
+        .then(d => {
+          if (d.paid) setVerified(true);
+          else setError("Payment not confirmed. Contact support.");
+        })
+        .catch(() => setError("Could not verify payment."));
+    });
   }, [sessionId]);
 
   // Load wizard results from sessionStorage
