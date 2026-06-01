@@ -216,19 +216,17 @@ export default function SuccessClient() {
     setPageStatus('error')
   }, [startError])
 
+  // Dev-only bypasses — run once on mount, no auth/Stripe needed
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return
+    if (sessionId === 'test_success') { goSuccess({ name: 'Portugal', flagEmoji: '🇵🇹', matchPercent: 83 }); return }
+    if (sessionId === 'test_error')   { goError('Payment not completed. No charge was made.'); return }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (!sessionId) { router.replace('/pro'); return }
-
-    // DEV ONLY — safe on prod (NODE_ENV is always 'production' on Vercel)
-    // DEV bypasses — skip auth and Stripe entirely
-    if (process.env.NODE_ENV === 'development' && sessionId === 'test_success') {
-      goSuccess({ name: 'Portugal', flagEmoji: '🇵🇹', matchPercent: 83 })
-      return
-    }
-    if (process.env.NODE_ENV === 'development' && sessionId === 'test_error') {
-      goError('Payment not completed. No charge was made.')
-      return
-    }
+    if (process.env.NODE_ENV === 'development' && (sessionId === 'test_success' || sessionId === 'test_error')) return
 
     if (!mounted) return
     let cancelled = false
