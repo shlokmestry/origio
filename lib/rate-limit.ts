@@ -119,23 +119,32 @@ export async function rateLimit(
   const identifier = getIdentifier(request)
 
   if (isUpstashConfigured) {
-    const limiter = getUpstashLimiter(name, maxRequests, windowSeconds)
-    const { success, reset } = await limiter.limit(identifier)
-    if (!success) {
-      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
-      return NextResponse.json(
-        { error: 'Too many requests. Please try again shortly.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(retryAfter),
-            'X-RateLimit-Limit': String(maxRequests),
-            'X-RateLimit-Remaining': '0',
-          },
+    try {
+      const limiter = getUpstashLimiter(name, maxRequests, windowSeconds)
+      const result = await Promise.race([
+        limiter.limit(identifier),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ])
+      // If Upstash timed out, fall through to in-memory
+      if (result !== null) {
+        const { success, reset } = result
+        if (!success) {
+          const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+          return NextResponse.json(
+            { error: 'Too many requests. Please try again shortly.' },
+            {
+              status: 429,
+              headers: {
+                'Retry-After': String(retryAfter),
+                'X-RateLimit-Limit': String(maxRequests),
+                'X-RateLimit-Remaining': '0',
+              },
+            }
+          )
         }
-      )
-    }
-    return null
+        return null
+      }
+    } catch { /* Upstash error — fall through to in-memory */ }
   }
 
   // Fallback to in-memory (best-effort — not reliable across serverless instances)
