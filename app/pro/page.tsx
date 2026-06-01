@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
@@ -75,11 +75,12 @@ const FAQS = [
   },
 ]
 
-export default function ProPage() {
+function ProPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(searchParams.get('cancelled') ? 'Payment cancelled — no charge was made. Try again when ready.' : '')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   useEffect(() => {
@@ -316,4 +317,8 @@ export default function ProPage() {
       <Footer />
     </>
   )
+}
+
+export default function ProPage() {
+  return <Suspense><ProPageInner /></Suspense>
 }
