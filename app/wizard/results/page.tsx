@@ -441,6 +441,8 @@ export default function WizardResultsPage() {
   const [isPro, setIsPro]             = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  const [shareId, setShareId]         = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Fetch pro status whenever user changes
   useEffect(() => {
@@ -454,6 +456,9 @@ export default function WizardResultsPage() {
     async function load() {
       const raw        = sessionStorage.getItem("wizardMatches");
       const answersRaw = sessionStorage.getItem("wizardAnswers");
+
+      const storedShareId = sessionStorage.getItem("wizardShareId");
+      if (storedShareId) setShareId(storedShareId);
 
       if (raw) {
         try {
@@ -475,11 +480,12 @@ export default function WizardResultsPage() {
           if (user) {
             const { data: result } = await supabase
               .from("wizard_results")
-              .select("answers, top_countries")
+              .select("id, answers, top_countries")
               .eq("user_id", user.id)
               .order("created_at", { ascending: false })
               .limit(1)
               .maybeSingle();
+            if (result?.id) setShareId(result.id);
 
             if (result?.top_countries && result.top_countries.length > 0) {
               if (result.answers) setAnswers(result.answers);
@@ -535,6 +541,20 @@ export default function WizardResultsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
+
+  const handleShare = async () => {
+    const url = shareId
+      ? `${window.location.origin}/results/${shareId}`
+      : window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // fallback for browsers without clipboard API
+      window.prompt("Copy your share link:", url);
+    }
+  };
 
   const handleViewOnGlobe = () => {
     sessionStorage.setItem("highlightedCountries", JSON.stringify(matches.slice(0, 3).map(m => m.country.slug)));
@@ -658,6 +678,32 @@ export default function WizardResultsPage() {
 
       {/* ── Save results banner — only for logged-out users ────────────────── */}
       {!user && <SaveResultsBanner />}
+
+      {/* ── Retake + Share bar ────────────────────────────────────────────── */}
+      <div style={{
+        maxWidth: 1100, margin: "0 auto", padding: "0 32px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingTop: user ? 20 : 12, paddingBottom: 4, flexWrap: "wrap", gap: 10,
+      }}>
+        <Link href="/wizard" style={{
+          fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
+          color: "#444", textDecoration: "none", display: "flex", alignItems: "center", gap: 5,
+          transition: "color .12s",
+        }}
+          onMouseEnter={e => (e.currentTarget.style.color = DIM)}
+          onMouseLeave={e => (e.currentTarget.style.color = "#444")}>
+          ↺ Retake with different answers
+        </Link>
+        <button onClick={handleShare} style={{
+          fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
+          color: shareCopied ? MINT : "#444", background: "none", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 5, transition: "color .12s", padding: 0,
+        }}
+          onMouseEnter={e => { if (!shareCopied) (e.currentTarget as HTMLElement).style.color = DIM; }}
+          onMouseLeave={e => { if (!shareCopied) (e.currentTarget as HTMLElement).style.color = "#444"; }}>
+          {shareCopied ? "✓ Link copied" : "↗ Share results"}
+        </button>
+      </div>
 
       <div className="res-outer" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 0", position: "relative", zIndex: 1 }}>
 

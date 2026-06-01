@@ -281,6 +281,50 @@ function ProPageInner() {
           </div>
         </div>
 
+        {/* Free vs Pro comparison table */}
+        <div style={{ maxWidth: 480, margin: '48px auto 0', padding: '0 16px' }}>
+          <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#f0f0e8', marginBottom: 4, letterSpacing: '-0.02em' }}>
+            Free vs Pro
+          </p>
+          <div style={{ border: '1px solid #1f1f1f', overflow: 'hidden' }}>
+            {/* Column headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px', background: '#0f0f0f', borderBottom: '1px solid #1f1f1f' }}>
+              <div style={{ padding: '10px 16px', fontFamily: "'Satoshi', sans-serif", fontSize: 11, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' as const }} />
+              <div style={{ padding: '10px 0', textAlign: 'center' as const, fontFamily: "'Satoshi', sans-serif", fontSize: 11, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>Free</div>
+              <div style={{ padding: '10px 0', textAlign: 'center' as const, fontFamily: "'Satoshi', sans-serif", fontSize: 11, color: '#00ffd5', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>Pro</div>
+            </div>
+            {[
+              { label: 'All 37 countries ranked',           free: true,  pro: true  },
+              { label: 'Top 3 personalised reports',        free: true,  pro: true  },
+              { label: 'Salary by job role (gross)',        free: true,  pro: true  },
+              { label: 'Visa difficulty rating',           free: true,  pro: true  },
+              { label: 'Take-home pay after tax',          free: false, pro: true  },
+              { label: 'Disposable income (salary − costs)', free: false, pro: true  },
+              { label: '3-country side-by-side compare',   free: false, pro: true  },
+              { label: 'Custom ranking weights',           free: false, pro: true  },
+              { label: 'Cost of living breakdown',         free: false, pro: true  },
+            ].map((row, i) => (
+              <div key={i} style={{
+                display: 'grid', gridTemplateColumns: '1fr 60px 60px',
+                borderBottom: i < 8 ? '1px solid #141414' : 'none',
+                background: i % 2 === 0 ? '#0a0a0a' : '#0c0c0c',
+              }}>
+                <div style={{ padding: '11px 16px', fontFamily: "'Satoshi', sans-serif", fontSize: 13, color: row.free ? '#f0f0e8' : '#555' }}>
+                  {row.label}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {row.free
+                    ? <span style={{ color: '#4ade80', fontSize: 14 }}>✓</span>
+                    : <span style={{ color: '#2a2a2a', fontSize: 14 }}>—</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: '#00ffd5', fontSize: 14 }}>✓</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* FAQ */}
         <div className="pro-faq" style={{ maxWidth: 480, margin: '48px auto 0', padding: '0 16px' }}>
           <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#f0f0e8', marginBottom: 4, letterSpacing: '-0.02em' }}>

@@ -487,12 +487,20 @@ export default function WizardPage() {
                 slug: m.country.slug, name: m.country.name,
                 flagEmoji: m.country.flagEmoji, matchPercent: m.matchPercent, reasons: m.reasons,
               }));
-              await supabase.from("wizard_results").insert({
-                user_id: session.user.id,
-                top_countries: allTopCountries,
-                answers,
-                created_at: new Date().toISOString(),
-              });
+              const { data: insertedResult } = await supabase
+                .from("wizard_results")
+                .insert({
+                  user_id: session.user.id,
+                  top_countries: allTopCountries,
+                  answers,
+                  is_public: true,
+                  created_at: new Date().toISOString(),
+                })
+                .select("id")
+                .single();
+              if (insertedResult?.id) {
+                sessionStorage.setItem("wizardShareId", insertedResult.id);
+              }
               // Fire results email — no await
               fetch("/api/send-results", {
                 method: "POST",
