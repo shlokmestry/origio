@@ -220,6 +220,7 @@ export default function SuccessClient() {
     if (!sessionId) { router.replace('/pro'); return }
 
     // DEV ONLY — safe on prod (NODE_ENV is always 'production' on Vercel)
+    // DEV bypasses — skip auth and Stripe entirely
     if (process.env.NODE_ENV === 'development' && sessionId === 'test_success') {
       goSuccess({ name: 'Portugal', flagEmoji: '🇵🇹', matchPercent: 83 })
       return
