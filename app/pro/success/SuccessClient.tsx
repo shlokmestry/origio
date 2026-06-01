@@ -316,29 +316,18 @@ export default function SuccessClient() {
           <div className="success-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 64, alignItems: 'start' }}>
 
             <div>
-              <div className="fu d2" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,255,213,0.08)', border: '1px solid rgba(0,255,213,0.18)', borderRadius: 100, padding: '6px 14px', marginBottom: 28 }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: MINT, animation: 'breathe 2.5s ease-in-out infinite' }} />
-                <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: MINT }}>Pro active</span>
-              </div>
-
-              <h1 className="fu d3" style={{ fontFamily: SERIF, fontSize: 'clamp(56px,8vw,88px)', fontWeight: 400, lineHeight: 0.90, letterSpacing: '-0.02em', color: '#fff', marginBottom: 24 }}>
+              <h1 className="fu d2" style={{ fontFamily: SERIF, fontSize: 'clamp(56px,8vw,88px)', fontWeight: 400, lineHeight: 0.90, letterSpacing: '-0.02em', color: '#fff', marginBottom: 24 }}>
                 Pro<br /><em>unlocked.</em>
               </h1>
 
-              <p className="fu d4" style={{ fontFamily: SANS, fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 36, maxWidth: 400 }}>
+              <p className="fu d3" style={{ fontFamily: SANS, fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 36, maxWidth: 400 }}>
                 No renewal. No expiry. Everything is yours, permanently.
                 Your Pro status is active.
               </p>
 
-              <div className="fu d5" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div className="fu d4" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                 <Link href="/wizard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: MINT, color: BG, fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', textDecoration: 'none' }}>
                   Run quiz — see all 37 <ArrowRight size={13} />
-                </Link>
-                <Link href="/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '14px 20px', border: '1px solid rgba(255,255,255,0.12)', fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>
-                  View profile <ArrowRight size={11} />
-                </Link>
-                <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', textDecoration: 'none' }}>
-                  Explore globe <ArrowRight size={11} />
                 </Link>
               </div>
             </div>
