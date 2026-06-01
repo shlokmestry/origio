@@ -15,25 +15,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Lifetime access',
-    desc: 'Pay once, use forever. No monthly subscription, no renewal, no surprise charges.',
-  },
-  {
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-      </svg>
-    ),
-    title: 'All 37 countries unlocked',
-    desc: 'Free users see 3 results. Pro unlocks every country scored against your profile.',
-  },
-  {
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-      </svg>
-    ),
-    title: 'Full personalised report',
-    desc: 'Salary breakdown, take-home pay, cost of living, visa checklist — tailored to you.',
+    desc: 'Pay once, use forever. No subscription, no renewal.',
   },
   {
     icon: (
@@ -41,29 +23,46 @@ const FEATURES = [
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     ),
-    title: 'Real salary data',
-    desc: 'Gross and net salaries for 30+ job roles across all countries. No guesswork.',
+    title: 'Take-home pay calculator',
+    desc: 'Enter your salary, see exact net monthly income and disposable pay after rent and food — for every country.',
   },
   {
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
       </svg>
     ),
-    title: 'Visa & tax intelligence',
-    desc: 'Nomad visas, income tax rates, territorial tax countries — all scored for your situation.',
+    title: '3-country comparison',
+    desc: 'Side-by-side: salaries, costs, taxes, visa difficulty — pick any 3 countries from your ranked list.',
+  },
+  {
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+      </svg>
+    ),
+    title: 'Custom ranking weights',
+    desc: 'Re-rank all 37 countries by your own formula. Salary 50%, rent 30%, visa 20% — your call.',
+  },
+  {
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+      </svg>
+    ),
+    title: 'Budget reality check',
+    desc: 'Enter your monthly budget — see which countries you can afford and how much margin you have left.',
   },
 ]
 
 const FAQS = [
   {
     q: 'Is this really a one-time payment?',
-    a: '€4.99 once. Pro forever. No subscription, no renewal, no surprise charges. Pay once and every feature is yours permanently.',
+    a: '€4.99 once. Pro forever. No subscription, no renewal, no surprise charges.',
   },
   {
-    q: 'Why €4.99 and not free?',
-    a: 'Keeping the data fresh, the scoring accurate, and the servers running costs money. €4.99 is the lowest we can go and still build something worth using.',
+    q: 'What does Pro actually give me?',
+    a: 'The tools you need to make a real decision: take-home pay after tax and rent, side-by-side country comparison, custom ranking weights, and a budget reality check. The free tier already shows you all 37 ranked countries — Pro helps you act on that information.',
   },
   {
     q: 'What countries are included?',
@@ -71,7 +70,7 @@ const FAQS = [
   },
   {
     q: 'Can I get a refund?',
-    a: 'If you complete your wizard and the results are genuinely useless for your situation, email us within 7 days. We\'ll sort it.',
+    a: 'If you pay and the tools are genuinely useless for your situation, email us within 7 days. We\'ll sort it.',
   },
 ]
 
@@ -211,7 +210,7 @@ function ProPageInner() {
             fontFamily: "'Satoshi', sans-serif",
             color: 'rgba(255,255,255,0.55)',
           }}>
-            <span style={{ color: '#4de6cc', fontWeight: 800 }}>FREE</span> for basic results, or…
+            <span style={{ color: '#4de6cc', fontWeight: 800 }}>FREE</span> — all 37 countries ranked. Pro unlocks the tools.
           </span>
         </div>
 

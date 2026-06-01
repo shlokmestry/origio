@@ -507,8 +507,7 @@ export default function WizardPage() {
           else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
         } catch { /* silent — run tracking is non-critical */ }
       }
-      // Only top 8 in sessionStorage — full ranking is server-gated for Pro users
-      sessionStorage.setItem("wizardMatches", JSON.stringify(matches.slice(0, 8)));
+      sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardMatchCount", String(matches.length));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
       sessionStorage.setItem("wizardCountries", JSON.stringify(countries));

@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import type { User } from "@supabase/supabase-js";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
+import { WeightingPanel } from "./WeightingPanel";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF = "'Cabinet Grotesk', sans-serif";
@@ -528,32 +529,6 @@ export default function WizardResultsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
-  // Pro unlock: fetch full ranking from server and reconstruct CountryMatch[]
-  const hasProFetchedRef = React.useRef(false);
-  useEffect(() => {
-    if (!isPro || !user || isLoading || hasProFetchedRef.current) return;
-    if (matches.length > 8 || allCountries.length === 0) return; // already have full list or no country data
-    hasProFetchedRef.current = true;
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!s?.access_token) return;
-      fetch("/api/get-results", {
-        headers: { "Authorization": `Bearer ${s.access_token}` },
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (!data?.matches?.length) return;
-          const full = (data.matches as { slug: string; name: string; flagEmoji: string; matchPercent: number; reasons: string[] }[])
-            .map(item => {
-              const country = allCountries.find(c => c.slug === item.slug);
-              if (!country) return null;
-              return { country, matchScore: item.matchPercent, matchPercent: item.matchPercent, reasons: item.reasons };
-            })
-            .filter((m): m is NonNullable<typeof m> => m !== null);
-          if (full.length > matches.length) setMatches(full);
-        })
-        .catch(() => {});
-    });
-  }, [isPro, user, isLoading, matches.length, allCountries]);
 
   const handleViewOnGlobe = () => {
     sessionStorage.setItem("highlightedCountries", JSON.stringify(matches.slice(0, 3).map(m => m.country.slug)));
@@ -610,9 +585,9 @@ export default function WizardResultsPage() {
   if (matches.length === 0) return <SessionExpired />;
 
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
-  const visibleMatches  = isPro ? matches : matches.slice(0, 8);
-  const effectiveTotal  = isPro ? matches.length : (totalMatchCount || matches.length);
-  const lockedCount     = effectiveTotal - visibleMatches.length;
+  const visibleMatches  = matches;
+  const effectiveTotal  = matches.length || (totalMatchCount || 0);
+  const lockedCount     = 0;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
@@ -899,6 +874,30 @@ export default function WizardResultsPage() {
           })()}
         </section>
 
+        {/* ── BUDGET TEASER ───────────────────────────────────────────────── */}
+        <section style={{ padding: "0 0 40px" }}>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
+            padding: "18px 24px", border: `1px solid #1a1a1a`,
+          }}>
+            <div>
+              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>
+                Budget check
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 14, color: FG, margin: 0 }}>
+                See which of these countries you can actually afford on your budget — with exact monthly margin.
+              </p>
+            </div>
+            <Link href="/budget-check" style={{
+              fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
+              color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
+              flexShrink: 0,
+            }}>
+              Check budget →
+            </Link>
+          </div>
+        </section>
+
         {/* ── FULL RANKING ────────────────────────────────────────────────── */}
         <section style={{ padding: "52px 0 80px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
@@ -965,68 +964,35 @@ export default function WizardResultsPage() {
               );
             })}
           </div>
-          {!isPro && lockedCount > 0 && (
-            <div>
-              {/* 3 locked rows inline */}
-              {[4, 5, 6].map((n) => (
-                <div key={n} style={{
-                  display: "grid", gridTemplateColumns: "36px 28px 1fr 140px 52px",
-                  alignItems: "center", gap: 14, padding: "14px 10px",
-                  borderBottom: `1px solid #0d0d0d`,
-                  opacity: 0.3, userSelect: "none", pointerEvents: "none",
-                }} className="res-row">
-                  <span style={{ fontFamily: MONO, fontSize: 11, textAlign: "right", color: "#2a2a2a" }}>{String(n).padStart(2, "0")}</span>
-                  <Lock size={12} style={{ color: "#2a2a2a" }} />
-                  <div>
-                    <div style={{ height: 8, width: 80 + n * 10, background: "#1a1a1a", marginBottom: 5 }} />
-                    <div style={{ height: 6, width: 50, background: "#111" }} />
-                  </div>
-                  <div style={{ height: 1, background: "#111", width: "100%" }} />
-                  <div style={{ height: 8, width: 28, background: "#1a1a1a" }} />
-                </div>
-              ))}
-              {/* Inline upgrade strip */}
-              <div style={{
-                borderTop: `1px solid ${MINT}`, borderBottom: `1px solid #1a1a1a`,
-                padding: "20px 10px",
-                display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
-              }}>
-                <div>
-                  <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>
-                    <Lock size={10} style={{ display: "inline", marginRight: 6 }} />{lockedCount} countries locked
-                  </p>
-                  <p style={{ fontFamily: SANS, fontSize: 14, color: FG, margin: 0 }}>
-                    Salary calc · Visa checklist · 3-country compare
-                  </p>
-                </div>
-                <Link href="/pro" style={{
-                  fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
-                  padding: "11px 24px", background: MINT, color: BG, textDecoration: "none",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s", flexShrink: 0,
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
-                  Unlock all 37 — €4.99 <ArrowRight size={13} />
-                </Link>
+          {!isPro && (
+            <div style={{
+              borderTop: `1px solid ${MINT}`, borderBottom: `1px solid #1a1a1a`,
+              padding: "20px 10px", marginTop: 8,
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+            }}>
+              <div>
+                <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>
+                  <Sparkles size={10} style={{ display: "inline", marginRight: 6 }} />Pro tools
+                </p>
+                <p style={{ fontFamily: SANS, fontSize: 14, color: FG, margin: 0 }}>
+                  Take-home pay · 3-country compare · custom ranking weights · budget check
+                </p>
               </div>
-              {/* Download report option */}
-              <div style={{ padding: "12px 10px", borderBottom: `1px solid #0d0d0d` }}>
-                <button onClick={handleReportCheckout} disabled={reportLoading} style={{
-                  fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                  color: "#444", background: "none", border: "none", cursor: reportLoading ? "default" : "pointer",
-                  display: "flex", alignItems: "center", gap: 6, padding: 0, transition: "color .12s",
-                }}
-                  onMouseEnter={e => { if (!reportLoading) (e.currentTarget as HTMLElement).style.color = DIM; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#444"; }}>
-                  ↓ {reportLoading ? "Redirecting…" : "Top 5 report only · €4.99"}
-                </button>
-              </div>
+              <Link href="/pro" style={{
+                fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+                padding: "11px 24px", background: MINT, color: BG, textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s", flexShrink: 0,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
+                Unlock Pro — €4.99 <ArrowRight size={13} />
+              </Link>
             </div>
           )}
-          {isPro && matches.length >= 3 && (
+          {matches.length >= 3 && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All 37 countries ranked for you</p>
+              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, margin: 0 }}>All {effectiveTotal} countries ranked for your profile</p>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <button onClick={handleReportCheckout} disabled={reportLoading} style={{
                   fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
@@ -1038,14 +1004,32 @@ export default function WizardResultsPage() {
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = DIM; (e.currentTarget as HTMLElement).style.borderColor = "#2a2a2a"; }}>
                   ↓ Download report
                 </button>
-                <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = MINT)}
-                  onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                  Compare top 3 <ArrowRight size={13} />
-                </Link>
+                {isPro ? (
+                  <Link href={compareHref} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = MINT)}
+                    onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+                    Compare top 3 <ArrowRight size={13} />
+                  </Link>
+                ) : (
+                  <Link href="/pro" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#333", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = DIM)}
+                    onMouseLeave={e => (e.currentTarget.style.color = "#333")}>
+                    <Lock size={11} /> Compare top 3
+                  </Link>
+                )}
               </div>
             </div>
           )}
+        </section>
+
+        {/* ── CUSTOM WEIGHTING ────────────────────────────────────────────── */}
+        <section style={{ padding: "0 0 52px" }}>
+          <WeightingPanel
+            originalMatches={matches}
+            allCountries={allCountries}
+            answers={answers}
+            isPro={isPro}
+          />
         </section>
 
         {/* ── FILTERED OUT ────────────────────────────────────────────────── */}
