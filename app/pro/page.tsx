@@ -93,15 +93,23 @@ function ProPageInner() {
 
   const handleUpgrade = async () => {
     setLoading(true); setError('')
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { setLoading(false); router.push('/signin?next=/pro'); return }
     try {
+      const sessionResult = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+      ])
+      const session = sessionResult.data.session
+      if (!session) { setLoading(false); router.push('/signin?next=/pro'); return }
+
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 10000)
+      const timeout = setTimeout(() => controller.abort(), 15000)
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: session.user.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
         signal: controller.signal,
       })
       clearTimeout(timeout)
@@ -110,7 +118,7 @@ function ProPageInner() {
       setError(data.error ?? `Checkout failed (${res.status}). Please try again.`)
       setLoading(false)
     } catch {
-      setError('Network error. Please try again.')
+      setError('Could not start checkout. Please refresh and try again.')
       setLoading(false)
     }
   }
