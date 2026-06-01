@@ -1,0 +1,170 @@
+[2026-06-01T09:20:38.616Z] === data-updater run started — 41 countries ===
+[2026-06-01T09:20:38.618Z] Processing argentina (ARG)...
+[2026-06-01T09:20:46.895Z]   safety_raw=36.93 → score_safety=3.69
+[2026-06-01T09:20:46.896Z]   rent: no valid data — keeping existing
+[2026-06-01T09:20:47.501Z]   ERROR processing argentina: Error: Country not found for slug "argentina": Cannot coerce the result to a single JSON object
+[2026-06-01T09:20:47.502Z] Processing australia (AUS)...
+[2026-06-01T09:20:51.564Z]   safety_raw=66.13 → score_safety=6.61
+[2026-06-01T09:20:51.565Z]   rent: no valid data — keeping existing
+[2026-06-01T09:20:51.825Z]   ✓ updated australia
+[2026-06-01T09:20:51.826Z] Processing austria (AUT)...
+[2026-06-01T09:20:58.542Z]   safety_raw=70.51 → score_safety=7.05
+[2026-06-01T09:20:58.544Z]   rent: no valid data — keeping existing
+[2026-06-01T09:20:59.051Z]   ✓ updated austria
+[2026-06-01T09:20:59.052Z] Processing belgium (BEL)...
+[2026-06-01T09:21:14.069Z]   safety_raw=44.19 → score_safety=4.42
+[2026-06-01T09:21:14.070Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:14.276Z]   ✓ updated belgium
+[2026-06-01T09:21:14.277Z] Processing brazil (BRA)...
+[2026-06-01T09:21:29.408Z]   safety: no valid data — keeping existing
+[2026-06-01T09:21:29.410Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:29.410Z]   – no new data for brazil, skipping DB write
+[2026-06-01T09:21:29.410Z] Processing canada (CAN)...
+[2026-06-01T09:21:40.954Z]   safety_raw=56.42 → score_safety=5.64
+[2026-06-01T09:21:40.955Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:41.235Z]   ✓ updated canada
+[2026-06-01T09:21:41.236Z] Processing chile (CHL)...
+[2026-06-01T09:21:47.924Z]   safety_raw=35.88 → score_safety=3.59
+[2026-06-01T09:21:47.925Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:48.012Z]   ERROR processing chile: Error: Country not found for slug "chile": Cannot coerce the result to a single JSON object
+[2026-06-01T09:21:48.013Z] Processing colombia (COL)...
+[2026-06-01T09:21:53.166Z]   safety: no valid data — keeping existing
+[2026-06-01T09:21:53.168Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:53.168Z]   – no new data for colombia, skipping DB write
+[2026-06-01T09:21:53.169Z] Processing costa-rica (CRI)...
+[2026-06-01T09:21:59.148Z]   safety: no valid data — keeping existing
+[2026-06-01T09:21:59.149Z]   rent: no valid data — keeping existing
+[2026-06-01T09:21:59.149Z]   – no new data for costa-rica, skipping DB write
+[2026-06-01T09:21:59.150Z] Processing croatia (HRV)...
+[2026-06-01T09:22:01.663Z]   safety_raw=78.4 → score_safety=7.84
+[2026-06-01T09:22:01.664Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:01.882Z]   ✓ updated croatia
+[2026-06-01T09:22:01.883Z] Processing czech-republic (CZE)...
+[2026-06-01T09:22:03.753Z]   safety_raw=75.28 → score_safety=7.53
+[2026-06-01T09:22:03.754Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:03.894Z]   ✓ updated czech-republic
+[2026-06-01T09:22:03.895Z] Processing denmark (DNK)...
+[2026-06-01T09:22:06.314Z]   safety_raw=74.07 → score_safety=7.41
+[2026-06-01T09:22:06.315Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:06.441Z]   ✓ updated denmark
+[2026-06-01T09:22:06.442Z] Processing finland (FIN)...
+[2026-06-01T09:22:09.607Z]   safety_raw=74.78 → score_safety=7.48
+[2026-06-01T09:22:09.608Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:09.680Z]   ✓ updated finland
+[2026-06-01T09:22:09.682Z] Processing france (FRA)...
+[2026-06-01T09:22:13.886Z]   safety_raw=42.08 → score_safety=4.21
+[2026-06-01T09:22:13.887Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:14.182Z]   ✓ updated france
+[2026-06-01T09:22:14.183Z] Processing georgia (GEO)...
+[2026-06-01T09:22:29.189Z]   safety_raw=73.98 → score_safety=7.4
+[2026-06-01T09:22:29.191Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:29.405Z]   ✓ updated georgia
+[2026-06-01T09:22:29.406Z] Processing germany (DEU)...
+[2026-06-01T09:22:31.213Z]   safety_raw=55.45 → score_safety=5.55
+[2026-06-01T09:22:31.215Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:31.288Z]   ✓ updated germany
+[2026-06-01T09:22:31.289Z] Processing greece (GRC)...
+[2026-06-01T09:22:33.010Z]   safety_raw=44.97 → score_safety=4.5
+[2026-06-01T09:22:33.011Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:33.100Z]   ✓ updated greece
+[2026-06-01T09:22:33.101Z] Processing india (IND)...
+[2026-06-01T09:22:35.111Z]   safety_raw=46.3 → score_safety=4.63
+[2026-06-01T09:22:35.112Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:35.179Z]   ✓ updated india
+[2026-06-01T09:22:35.180Z] Processing indonesia (IDN)...
+[2026-06-01T09:22:36.515Z]   safety_raw=47.26 → score_safety=4.73
+[2026-06-01T09:22:36.516Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:36.682Z]   ERROR processing indonesia: Error: Country not found for slug "indonesia": Cannot coerce the result to a single JSON object
+[2026-06-01T09:22:36.683Z] Processing ireland (IRL)...
+[2026-06-01T09:22:38.026Z]   safety_raw=45.88 → score_safety=4.59
+[2026-06-01T09:22:38.027Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:38.124Z]   ✓ updated ireland
+[2026-06-01T09:22:38.125Z] Processing italy (ITA)...
+[2026-06-01T09:22:53.133Z]   safety_raw=46.15 → score_safety=4.62
+[2026-06-01T09:22:53.134Z]   rent: no valid data — keeping existing
+[2026-06-01T09:22:53.312Z]   ✓ updated italy
+[2026-06-01T09:22:53.313Z] Processing japan (JPN)...
+[2026-06-01T09:23:08.356Z]   safety_raw=75.87 → score_safety=7.59
+[2026-06-01T09:23:08.358Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:09.042Z]   ✓ updated japan
+[2026-06-01T09:23:09.042Z] Processing malaysia (MYS)...
+[2026-06-01T09:23:24.087Z]   safety_raw=40.82 → score_safety=4.08
+[2026-06-01T09:23:24.088Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:24.249Z]   ✓ updated malaysia
+[2026-06-01T09:23:24.249Z] Processing mexico (MEX)...
+[2026-06-01T09:23:27.529Z]   safety_raw=33.54 → score_safety=3.35
+[2026-06-01T09:23:27.529Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:27.637Z]   ✓ updated mexico
+[2026-06-01T09:23:27.638Z] Processing netherlands (NLD)...
+[2026-06-01T09:23:29.157Z]   safety_raw=70.04 → score_safety=7
+[2026-06-01T09:23:29.158Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:29.268Z]   ✓ updated netherlands
+[2026-06-01T09:23:29.270Z] Processing new-zealand (NZL)...
+[2026-06-01T09:23:31.939Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:31.940Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:31.941Z]   – no new data for new-zealand, skipping DB write
+[2026-06-01T09:23:31.941Z] Processing norway (NOR)...
+[2026-06-01T09:23:33.661Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:33.663Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:33.663Z]   – no new data for norway, skipping DB write
+[2026-06-01T09:23:33.664Z] Processing panama (PAN)...
+[2026-06-01T09:23:35.280Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:35.280Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:35.280Z]   – no new data for panama, skipping DB write
+[2026-06-01T09:23:35.280Z] Processing philippines (PHL)...
+[2026-06-01T09:23:37.057Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:37.059Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:37.059Z]   – no new data for philippines, skipping DB write
+[2026-06-01T09:23:37.059Z] Processing poland (POL)...
+[2026-06-01T09:23:52.065Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:52.067Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:52.068Z]   – no new data for poland, skipping DB write
+[2026-06-01T09:23:52.068Z] Processing portugal (PRT)...
+[2026-06-01T09:23:59.358Z]   safety: no valid data — keeping existing
+[2026-06-01T09:23:59.360Z]   rent: no valid data — keeping existing
+[2026-06-01T09:23:59.360Z]   – no new data for portugal, skipping DB write
+[2026-06-01T09:23:59.360Z] Processing singapore (SGP)...
+[2026-06-01T09:24:06.624Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:06.625Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:06.625Z]   – no new data for singapore, skipping DB write
+[2026-06-01T09:24:06.625Z] Processing south-korea (KOR)...
+[2026-06-01T09:24:14.312Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:14.313Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:14.313Z]   – no new data for south-korea, skipping DB write
+[2026-06-01T09:24:14.313Z] Processing spain (ESP)...
+[2026-06-01T09:24:17.404Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:17.405Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:17.405Z]   – no new data for spain, skipping DB write
+[2026-06-01T09:24:17.406Z] Processing sweden (SWE)...
+[2026-06-01T09:24:19.121Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:19.122Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:19.122Z]   – no new data for sweden, skipping DB write
+[2026-06-01T09:24:19.122Z] Processing switzerland (CHE)...
+[2026-06-01T09:24:21.040Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:21.042Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:21.042Z]   – no new data for switzerland, skipping DB write
+[2026-06-01T09:24:21.042Z] Processing thailand (THA)...
+[2026-06-01T09:24:36.048Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:36.050Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:36.052Z]   – no new data for thailand, skipping DB write
+[2026-06-01T09:24:36.053Z] Processing uae (ARE)...
+[2026-06-01T09:24:37.029Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:37.030Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:37.031Z]   – no new data for uae, skipping DB write
+[2026-06-01T09:24:37.031Z] Processing united-kingdom (GBR)...
+[2026-06-01T09:24:38.358Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:38.359Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:38.359Z]   – no new data for united-kingdom, skipping DB write
+[2026-06-01T09:24:38.360Z] Processing united-states (USA)...
+[2026-06-01T09:24:41.660Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:41.661Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:41.662Z]   – no new data for united-states, skipping DB write
+[2026-06-01T09:24:41.662Z] Processing vietnam (VNM)...
+[2026-06-01T09:24:43.251Z]   safety: no valid data — keeping existing
+[2026-06-01T09:24:43.252Z]   rent: no valid data — keeping existing
+[2026-06-01T09:24:43.252Z]   – no new data for vietnam, skipping DB write
+[2026-06-01T09:24:43.252Z] === run complete in 244.6s — updated=19, skipped=79, errors=3 ===
+[2026-06-01T09:24:43.252Z] Errors:
+[2026-06-01T09:24:43.258Z]   ERROR processing argentina: Error: Country not found for slug "argentina": Cannot coerce the result to a single JSON object
+[2026-06-01T09:24:43.258Z]   ERROR processing chile: Error: Country not found for slug "chile": Cannot coerce the result to a single JSON object
+[2026-06-01T09:24:43.258Z]   ERROR processing indonesia: Error: Country not found for slug "indonesia": Cannot coerce the result to a single JSON object
