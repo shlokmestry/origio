@@ -29,13 +29,6 @@ const LINE  = "#1f1f1f";
 const PANEL = "#0f0f0f";
 
 // ── Constants ──────────────────────────────────────────────────────────────
-const LOADING_STEPS = [
-  "Crunching salary data...",
-  "Checking visa routes...",
-  "Weighing your priorities...",
-  "Ranking 37 countries...",
-  "Almost done...",
-];
 const RANK_COLORS = [MINT, "#facc15", "#a78bfa"];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -114,10 +107,7 @@ function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>, 
   const EUROPEAN_COUNTRIES = ["germany","netherlands","portugal","spain","ireland","france","italy","united-kingdom","sweden","switzerland","norway","austria","finland","belgium","denmark","poland"];
   const ENGLISH_SPEAKING   = ["ireland","united-kingdom","australia","new-zealand","canada","usa","singapore"];
   const HIGH_TAX_COUNTRIES = ["sweden","finland","germany","denmark","austria","ireland","united-kingdom","italy","netherlands","belgium","norway","australia","new-zealand","france","canada"];
-  const HIGH_COST_COUNTRIES= ["singapore","switzerland","norway","australia","new-zealand","ireland","united-kingdom","usa","canada","denmark"];
   const WARM_COUNTRIES     = ["uae","spain","portugal","singapore","australia","india","brazil","malaysia","thailand","vietnam","philippines","mexico","colombia","costa-rica","panama","greece"];
-  const NOMAD_VISA         = ["portugal","spain","germany","netherlands","uae","malaysia","new-zealand"];
-  const STRONG_HEALTHCARE  = ["germany","france","switzerland","austria","netherlands","sweden","norway","denmark","finland","belgium","australia","canada","new-zealand","singapore","japan","united-kingdom","ireland","portugal","spain","italy"];
 
   const current = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
 
@@ -128,11 +118,8 @@ function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>, 
     else if (dealBreakers.includes("europe") && !EUROPEAN_COUNTRIES.includes(c.slug)) reason = "not in Europe";
     else if (dealBreakers.includes("english") && !ENGLISH_SPEAKING.includes(c.slug)) reason = "not English-speaking";
     else if (dealBreakers.includes("lowtax") && HIGH_TAX_COUNTRIES.includes(c.slug)) reason = "high income tax";
-    else if (dealBreakers.includes("lowcost") && HIGH_COST_COUNTRIES.includes(c.slug)) reason = "high cost of living";
     else if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(c.slug)) reason = "cold climate";
     else if (dealBreakers.includes("lowcrime") && c.data.scoreCrimeRate < 7.5) reason = "crime rate too high";
-    else if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA.includes(c.slug)) reason = "no digital nomad visa";
-    else if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE.includes(c.slug)) reason = "weak public healthcare";
     if (reason) excluded.push({ name: c.name, reason });
   });
 
@@ -449,8 +436,6 @@ export default function WizardResultsPage() {
   const [answers, setAnswers]         = useState<Partial<WizardAnswers>>({});
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [loadingProgress, setLoadingProgress] = useState(0);
   const [revealed, setRevealed]       = useState(false);
   const { user, loading: authLoading }  = useAuth();
   const [isPro, setIsPro]             = useState(false);
@@ -498,9 +483,39 @@ export default function WizardResultsPage() {
 
             if (result?.top_countries && result.top_countries.length > 0) {
               if (result.answers) setAnswers(result.answers);
-              setSessionExpired(true);
-              setIsLoading(false);
-              return;
+              // Reconstruct matches from stored top_countries so results page renders
+              const countriesRaw = sessionStorage.getItem("wizardCountries");
+              let countries: CountryWithData[] = [];
+              try { if (countriesRaw) countries = JSON.parse(countriesRaw); } catch { /* ignore */ }
+              if (countries.length === 0) {
+                try {
+                  const r = await fetch("/api/countries");
+                  if (r.ok) countries = await r.json();
+                } catch { /* ignore */ }
+              }
+              if (countries.length > 0) {
+                const reconstructed = (result.top_countries as { slug: string; name: string; flagEmoji: string; matchPercent: number; reasons: string[] }[])
+                  .map(item => {
+                    const country = countries.find(c => c.slug === item.slug);
+                    if (!country) return null;
+                    return { country, matchScore: item.matchPercent, matchPercent: item.matchPercent, reasons: item.reasons ?? [] };
+                  })
+                  .filter((m): m is NonNullable<typeof m> => m !== null);
+                if (reconstructed.length > 0) {
+                  setMatches(reconstructed);
+                  setAllCountries(countries);
+                  setTotalMatchCount(reconstructed.length);
+                  // fall through to loading animation
+                } else {
+                  setSessionExpired(true);
+                  setIsLoading(false);
+                  return;
+                }
+              } else {
+                setSessionExpired(true);
+                setIsLoading(false);
+                return;
+              }
             }
           }
         } catch (err) {
@@ -512,17 +527,8 @@ export default function WizardResultsPage() {
         return;
       }
 
-      let progress = 0, stepIndex = 0;
-      const interval = setInterval(() => {
-        progress += 2;
-        setLoadingProgress(progress);
-        if (progress % 20 === 0 && stepIndex < LOADING_STEPS.length - 1) { stepIndex++; setLoadingStep(stepIndex); }
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => { setIsLoading(false); setTimeout(() => setRevealed(true), 100); }, 400);
-        }
-      }, 30);
-      return () => clearInterval(interval);
+      // Short genuine delay so the reveal animation has time to mount
+      setTimeout(() => { setIsLoading(false); setTimeout(() => setRevealed(true), 100); }, 350);
     }
 
     if (!authLoading) load();
@@ -568,15 +574,7 @@ export default function WizardResultsPage() {
             Finding your <em style={{ color: MINT, fontStyle: "normal" }}>country…</em>
           </h2>
         </div>
-        <div style={{ width: "100%", maxWidth: 320 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <p key={loadingStep} style={{ fontFamily: SANS, fontSize: 13, color: DIM, margin: 0 }}>{LOADING_STEPS[loadingStep]}</p>
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: MINT }}>{loadingProgress}%</span>
-          </div>
-          <div style={{ height: 1, background: LINE, width: "100%" }}>
-            <div style={{ height: "100%", background: MINT, width: `${loadingProgress}%`, transition: "width 0.1s linear", boxShadow: `0 0 8px ${MINT}` }} />
-          </div>
-        </div>
+        <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, margin: 0 }}>Preparing your results…</p>
       </div>
     );
   }
@@ -937,7 +935,7 @@ export default function WizardResultsPage() {
                       {(() => {
                         const label = getCountryRoleLabel(m, jobRoleDef, matches);
                         return label ? (
-                          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3a3a3a", marginTop: 2, display: "block" }}>
+                          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#555", marginTop: 2, display: "block" }}>
                             {label}
                           </span>
                         ) : null;
@@ -1055,6 +1053,34 @@ export default function WizardResultsPage() {
           </section>
         )}
       </div>
+
+      {/* ── SIGN-IN NUDGE (anon users only, below all content) ────────────── */}
+      {!user && (
+        <div style={{ borderTop: `1px solid #1a1a1a`, padding: "28px 32px", textAlign: "center" }}>
+          <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, marginBottom: 12 }}>
+            Sign in to save your results and come back anytime.
+          </p>
+          <button
+            onClick={async () => {
+              await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/wizard/results` },
+              });
+            }}
+            style={{
+              fontFamily: SANS, fontSize: 13, fontWeight: 600,
+              padding: "8px 18px", background: "transparent",
+              border: `1px solid #2a2a2a`, color: FG,
+              cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
+              transition: "border-color .15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = "#555")}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = "#2a2a2a")}
+          >
+            Sign in with Google →
+          </button>
+        </div>
+      )}
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <Footer />

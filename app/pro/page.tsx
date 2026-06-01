@@ -125,7 +125,7 @@ function ProPageInner() {
   return (
     <>
       <Nav />
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', paddingTop: 'clamp(72px,10vh,100px)', paddingBottom: 'clamp(48px,8vh,80px)', fontFamily: "'Satoshi', sans-serif", padding: 'clamp(72px,10vh,100px) clamp(16px,4vw,24px) clamp(48px,8vh,80px)' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: "'Satoshi', sans-serif", padding: 'clamp(72px,10vh,100px) clamp(16px,4vw,24px) clamp(48px,8vh,80px)' }}>
         <style>{`
           @keyframes cardPushUp {
             0%   { transform: translateY(60px); opacity: 0; }
@@ -134,10 +134,9 @@ function ProPageInner() {
             100% { transform: translateY(0px);   opacity: 1; }
           }
           .pro-card {
-            background: #fff;
-            border-radius: 4px;
-            border: 1px solid #e2e2dc;
-            box-shadow: 6px 6px 0 #4de6cc;
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            box-shadow: 6px 6px 0 #00ffd5;
             width: 100%;
             max-width: 480px;
             margin: 0 auto;
@@ -149,25 +148,25 @@ function ProPageInner() {
           .pro-cta-btn {
             width: 100%;
             padding: 16px;
-            background: #111;
-            color: #fff;
+            background: #00ffd5;
+            color: #0a0a0a;
             border: none;
-            border-radius: 4px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             font-family: 'Satoshi', sans-serif;
             cursor: pointer;
             transition: background 0.15s ease, transform 0.1s ease;
-            letter-spacing: -0.01em;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
           }
-          .pro-cta-btn:hover:not(:disabled) { background: #222; }
+          .pro-cta-btn:hover:not(:disabled) { background: #00e6c0; }
           .pro-cta-btn:active:not(:disabled) { transform: scale(0.99); }
-          .pro-cta-btn:disabled { background: #ccc; cursor: not-allowed; }
-          .faq-item { border-bottom: 1px solid #f0f0ec; }
+          .pro-cta-btn:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
+          .faq-item { border-bottom: 1px solid #1f1f1f; }
           .faq-item:last-child { border-bottom: none; }
           .faq-q {
             width: 100%;
@@ -178,7 +177,7 @@ function ProPageInner() {
             font-family: 'Cabinet Grotesk', sans-serif;
             font-size: 15px;
             font-weight: 700;
-            color: #111;
+            color: #f0f0e8;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -186,7 +185,7 @@ function ProPageInner() {
             gap: 12px;
             letter-spacing: -0.01em;
           }
-          .faq-q:hover { color: #333; }
+          .faq-q:hover { color: #00ffd5; }
           .pro-banner {
             animation: cardPushUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
           }
@@ -194,7 +193,7 @@ function ProPageInner() {
             animation: cardPushUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
           }
           @media (max-width: 600px) {
-            .pro-card { max-width: 100%; border-radius: 0; box-shadow: none; }
+            .pro-card { max-width: 100%; box-shadow: none; }
           }
         `}</style>
 
@@ -202,15 +201,14 @@ function ProPageInner() {
         <div className="pro-banner" style={{ textAlign: 'center', marginBottom: 24 }}>
           <span style={{
             display: 'inline-block',
-            border: '1.5px solid rgba(255,255,255,0.12)',
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: 4,
+            border: '1px solid rgba(0,255,213,0.2)',
+            background: 'rgba(0,255,213,0.04)',
             padding: '6px 16px',
             fontSize: 13,
             fontFamily: "'Satoshi', sans-serif",
-            color: 'rgba(255,255,255,0.55)',
+            color: 'rgba(240,240,232,0.55)',
           }}>
-            <span style={{ color: '#4de6cc', fontWeight: 800 }}>FREE</span> — all 37 countries ranked. Pro unlocks the tools.
+            <span style={{ color: '#00ffd5', fontWeight: 800 }}>FREE</span> — all 37 countries ranked. Pro unlocks the tools.
           </span>
         </div>
 
@@ -218,38 +216,31 @@ function ProPageInner() {
         <div className="pro-card">
 
           {/* Header */}
-          <div style={{ padding: '32px 36px 28px', borderBottom: '1px solid #f0f0ec', textAlign: 'center' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#aaa', marginBottom: 10, fontFamily: "'Satoshi', sans-serif" }}>
+          <div style={{ padding: '32px 36px 28px', borderBottom: '1px solid #1f1f1f', textAlign: 'center' }}>
+            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#888880', marginBottom: 10, fontFamily: "'Satoshi', sans-serif" }}>
               Origio Pro
             </p>
 
             {/* Price */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{
-                fontSize: 18,
-                color: '#bbb',
-                textDecoration: 'line-through',
-                fontFamily: "'Cabinet Grotesk', sans-serif",
-                fontWeight: 700,
-              }}>€14.99</span>
-              <span style={{
                 fontSize: 64,
                 fontWeight: 800,
                 fontFamily: "'Cabinet Grotesk', sans-serif",
-                color: '#111',
+                color: '#f0f0e8',
                 letterSpacing: '-0.04em',
                 lineHeight: 1,
               }}>€4.99</span>
               <span style={{
                 fontSize: 18,
-                color: '#888',
+                color: '#888880',
                 fontFamily: "'Satoshi', sans-serif",
                 fontWeight: 500,
                 alignSelf: 'flex-end',
                 paddingBottom: 6,
               }}>/forever</span>
             </div>
-            <p style={{ fontSize: 12, color: '#bbb', fontFamily: "'Satoshi', sans-serif" }}>+ local taxes · one-time payment</p>
+            <p style={{ fontSize: 12, color: '#555', fontFamily: "'Satoshi', sans-serif" }}>+ local taxes · one-time payment</p>
           </div>
 
           {/* CTA */}
@@ -271,19 +262,18 @@ function ProPageInner() {
                   flexShrink: 0,
                   width: 36,
                   height: 36,
-                  background: 'rgba(77,230,204,0.1)',
-                  borderRadius: '50%',
+                  background: 'rgba(0,255,213,0.07)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#4de6cc',
+                  color: '#00ffd5',
                 }}>
                   {f.icon}
                 </span>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 3, fontFamily: "'Cabinet Grotesk', sans-serif", letterSpacing: '-0.01em' }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#f0f0e8', marginBottom: 3, fontFamily: "'Cabinet Grotesk', sans-serif", letterSpacing: '-0.01em' }}>
                     {f.title}{' '}
-                    <span style={{ fontWeight: 500, color: '#666', fontFamily: "'Satoshi', sans-serif" }}>— {f.desc}</span>
+                    <span style={{ fontWeight: 500, color: '#888880', fontFamily: "'Satoshi', sans-serif" }}>— {f.desc}</span>
                   </p>
                 </div>
               </div>
@@ -293,21 +283,21 @@ function ProPageInner() {
 
         {/* FAQ */}
         <div className="pro-faq" style={{ maxWidth: 480, margin: '48px auto 0', padding: '0 16px' }}>
-          <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4, letterSpacing: '-0.02em' }}>
+          <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: '#f0f0e8', marginBottom: 4, letterSpacing: '-0.02em' }}>
             Questions
           </p>
-          <div style={{ background: '#fff', border: '1px solid #e2e2dc', borderRadius: 4, padding: '0 24px' }}>
+          <div style={{ background: '#0f0f0f', border: '1px solid #1f1f1f', padding: '0 24px' }}>
             {FAQS.map((faq, i) => (
               <div key={i} className="faq-item">
                 <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   <span>{faq.q}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                    style={{ flexShrink: 0, transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease', color: '#aaa' }}>
+                    style={{ flexShrink: 0, transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease', color: '#555' }}>
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
                 </button>
                 {openFaq === i && (
-                  <p style={{ fontSize: 14, color: '#666', lineHeight: 1.65, paddingBottom: 18, margin: 0, fontFamily: "'Satoshi', sans-serif" }}>
+                  <p style={{ fontSize: 14, color: '#888880', lineHeight: 1.65, paddingBottom: 18, margin: 0, fontFamily: "'Satoshi', sans-serif" }}>
                     {faq.a}
                   </p>
                 )}
