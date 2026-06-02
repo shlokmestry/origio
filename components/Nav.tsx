@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Zap, LogIn, User, Menu, X } from "lucide-react";
 import { GlobeCountry } from "@/types";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
 import CommandSearch from "@/components/CommandSearch";
 
@@ -16,22 +15,7 @@ interface NavProps {
 export default function Nav({ countries = [], onCountrySelect }: NavProps) {
   const [searchOpen, setSearchOpen]         = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, loading: authLoading }      = useAuth();
-  const [isPro, setIsPro]                   = useState(false);
-
-  const fetchProStatus = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles").select("is_pro").eq("id", userId).single();
-    setIsPro(data?.is_pro ?? false);
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchProStatus(user.id);
-    } else {
-      setIsPro(false);
-    }
-  }, [user, fetchProStatus]);
+  const { user, isPro } = useAuth();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
