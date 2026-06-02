@@ -109,7 +109,7 @@ function computeExcluded(matchSlugs: string[], answers: Partial<WizardAnswers>, 
   const HIGH_TAX_COUNTRIES = ["sweden","finland","germany","denmark","austria","ireland","united-kingdom","italy","netherlands","belgium","norway","australia","new-zealand","france","canada"];
   const WARM_COUNTRIES     = ["uae","spain","portugal","singapore","australia","india","brazil","malaysia","thailand","vietnam","philippines","mexico","colombia","costa-rica","panama","greece"];
 
-  const current = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
+  const current = answers.currentCountry?.toLowerCase().trim();
 
   allCountries.forEach(c => {
     if (matchSlugs.includes(c.slug)) return; // already in results
@@ -605,7 +605,6 @@ export default function WizardResultsPage() {
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
   const visibleMatches  = matches;
   const effectiveTotal  = matches.length || (totalMatchCount || 0);
-  const lockedCount     = 0;
   const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];

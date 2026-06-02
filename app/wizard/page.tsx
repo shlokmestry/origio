@@ -347,7 +347,6 @@ export default function WizardPage() {
   const getPrevStep = (cur: number) => {
     if (cur === 7 && isJobOffer) return 6;
     if (cur === 6 && isJobOffer) return 3;
-    if (cur === 2 && introPassport) return 0;
     return cur - 1;
   };
   // Job offer skips priorities (4) and vibe (5) — 7 effective steps
@@ -425,8 +424,6 @@ export default function WizardPage() {
   const handleSubmit = async () => {
     setLoading(true);
     setSubmitError(null);
-    // clear saved progress on submit so a back-nav starts fresh
-    try { sessionStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
     try {
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 10000);
@@ -515,6 +512,8 @@ export default function WizardPage() {
           else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
         } catch { /* silent — run tracking is non-critical */ }
       }
+      // Clear in-progress state now that we're successfully navigating away
+      try { sessionStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
       sessionStorage.setItem("wizardMatches", JSON.stringify(matches));
       sessionStorage.setItem("wizardMatchCount", String(matches.length));
       sessionStorage.setItem("wizardAnswers", JSON.stringify(answers));
@@ -644,7 +643,7 @@ export default function WizardPage() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 12, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 25 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 37 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>

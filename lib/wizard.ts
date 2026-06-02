@@ -193,15 +193,8 @@ export function scoreCountriesForWizard(
     if (dealBreakers.includes("europe")   && !EUROPEAN_COUNTRIES.includes(country.slug))       return false;
     if (dealBreakers.includes("english")  && !ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) return false;
     if (dealBreakers.includes("lowtax")   && HIGH_TAX_COUNTRIES.includes(country.slug))        return false;
-    if (dealBreakers.includes("nomadvisa") && !NOMAD_VISA_COUNTRIES.includes(country.slug))    return false;
-    if (dealBreakers.includes("healthcare") && !STRONG_HEALTHCARE_COUNTRIES.includes(country.slug)) return false;
     if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug))               return false;
     if (dealBreakers.includes("lowcrime") && country.data.scoreCrimeRate < 7.5)                return false;
-    if (dealBreakers.includes("lowcost")) {
-      const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
-      if (HIGH_COST_COUNTRIES.includes(country.slug)) return false;
-      if (rentUSD > 1200) return false;
-    }
     if (answers.rentBudget && answers.rentBudget !== "any") {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (rentUSD > maxRentUSD * 1.2) return false;
