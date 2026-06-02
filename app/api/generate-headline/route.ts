@@ -44,9 +44,10 @@ export async function POST(request: Request): Promise<Response> {
 
     const cs = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", SGD: "S$", AED: "AED ", CHF: "CHF ", NOK: "kr ", NZD: "NZ$", INR: "₹", MYR: "RM ", JPY: "¥" }[currency] ?? "€";
 
-    const isTight = Number(disposableUSD) < 500;
-    const isNegative = Number(disposable) < 0;
-    const isHighTax = Number(taxRate) > 38;
+    const safeNum = (v: unknown) => { const n = Number(v); return isFinite(n) ? n : 0; }
+    const isTight = safeNum(disposableUSD) < 500;
+    const isNegative = safeNum(disposable) < 0;
+    const isHighTax = safeNum(taxRate) > 38;
     const isZeroTax = countrySlug === "uae" || Number(taxRate) === 0;
     const isRetirement = moveReason === "retire";
     const isRemote = moveReason === "remote";
@@ -76,10 +77,10 @@ WHO THIS PERSON IS:
 - Wants warm weather: ${wantsWarm ? "yes" : "no"}
 
 FINANCIAL REALITY FOR THIS PERSON:
-- Gross salary: ${cs}${Number(grossSalary).toLocaleString()}/yr
-- Monthly take-home: ${cs}${Number(takeHomeMonthly).toLocaleString()}/mo
-- Monthly rent: ${cs}${Number(rentMonthly).toLocaleString()}/mo
-- Disposable after all costs: ${isNegative ? "NEGATIVE — " : ""}${cs}${Number(Math.abs(disposable)).toLocaleString()}/mo ${isNegative ? "shortfall" : "surplus"}
+- Gross salary: ${cs}${safeNum(grossSalary).toLocaleString()}/yr
+- Monthly take-home: ${cs}${safeNum(takeHomeMonthly).toLocaleString()}/mo
+- Monthly rent: ${cs}${safeNum(rentMonthly).toLocaleString()}/mo
+- Disposable after all costs: ${isNegative ? "NEGATIVE — " : ""}${cs}${safeNum(Math.abs(safeNum(disposable))).toLocaleString()}/mo ${isNegative ? "shortfall" : "surplus"}
 - Tax: ${taxRate}% income tax + ${ssRate}% social security
 - Zero tax country: ${isZeroTax ? "yes" : "no"}
 - High tax country: ${isHighTax ? "yes" : "no"}

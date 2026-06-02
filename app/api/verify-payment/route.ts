@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { rateLimit } from '@/lib/rate-limit'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: Request): Promise<Response> {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -38,8 +39,21 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const { sessionId } = await request.json()
-  if (!sessionId) {
+  if (!sessionId || typeof sessionId !== 'string') {
     return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 })
+  }
+
+  // Validate sessionId format before hitting Stripe API
+  if (!sessionId.startsWith('cs_')) {
+    return NextResponse.json({ error: 'Invalid sessionId format' }, { status: 400 })
+  }
+
+  // Idempotency: if already Pro, no need to re-process
+  const { data: existing } = await adminSupabase
+    .from('profiles').select('is_pro').eq('id', user.id).maybeSingle()
+  if (existing?.is_pro) {
+    console.log(`[verify-payment] User ${user.id} already Pro — skipping`)
+    return NextResponse.json({ paid: true, pro: true })
   }
 
   // Retrieve the Stripe checkout session
@@ -70,6 +84,9 @@ export async function POST(request: Request): Promise<Response> {
     .eq('id', user.id)
 
   if (updateError) {
+    Sentry.captureException(updateError, {
+      tags: { route: 'verify-payment', user_id: user.id, stripe_session: sessionId },
+    })
     console.error('Failed to update profile:', updateError)
     return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
   }

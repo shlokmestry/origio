@@ -54,6 +54,7 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
 };
 
 export function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {
+  if (!(slug in PASSPORT_STRENGTH)) console.warn(`[wizard] Unknown passport slug "${slug}" — defaulting to Tier 3`);
   return PASSPORT_STRENGTH[slug] ?? 3;
 }
 
@@ -211,7 +212,7 @@ export function scoreCountriesForWizard(
     if (dealBreakers.includes("english")  && !ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) return false;
     if (dealBreakers.includes("lowtax")   && HIGH_TAX_COUNTRIES.includes(country.slug))        return false;
     if (dealBreakers.includes("warm") && !WARM_COUNTRIES.includes(country.slug))               return false;
-    if (dealBreakers.includes("lowcrime") && country.data.scoreCrimeRate < 7.5)                return false;
+    if (dealBreakers.includes("lowcrime") && country.data.scoreSafety < 6.0)                   return false;
     if (answers.rentBudget && answers.rentBudget !== "any") {
       const rentUSD = toUSD(country.data.costRentCityCentre, country.currency);
       if (rentUSD > maxRentUSD * 1.2) return false;
@@ -269,7 +270,7 @@ export function scoreCountriesForWizard(
 
     // ── REMOTE scoring path ──────────────────────────────────────
     } else if (isRemote) {
-      let w = { tax: 0.25, affordability: 0.22, internet: 0.18, visa: 0.15, quality: 0.12, safety: 0.08 };
+      let w = { tax: 0.25, affordability: 0.22, internet: 0.18, visa: 0.15, quality: 0.10, safety: 0.08, healthcare: 0.02 };
       answers.priorities?.forEach((p, i) => {
         const b = (5 - i) * 0.04;
         if (p === "tax")                               w.tax           += b;
@@ -277,13 +278,13 @@ export function scoreCountriesForWizard(
         if (p === "quality")                           w.quality       += b;
         if (p === "safety")                            w.safety        += b;
         if (p === "visa")                              w.visa          += b;
-        if (p === "healthcare")                        w.quality       += b * 0.5;
+        if (p === "healthcare")                        w.healthcare    += b;
         if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
       });
       const wt = Object.values(w).reduce((a, b) => a + b, 0);
       Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
       score = taxScore * w.tax + affordScore * w.affordability + internetScore * w.internet +
-              visaScore * w.visa + qualityScore * w.quality + safetyScore * w.safety;
+              visaScore * w.visa + qualityScore * w.quality + safetyScore * w.safety + healthScore * w.healthcare;
       if (NOMAD_VISA_COUNTRIES.includes(country.slug))       { score += 0.8; reasons.push("Official digital nomad visa available"); }
       if (TERRITORIAL_TAX_COUNTRIES.includes(country.slug))  { score += 0.7; reasons.push("Territorial tax — remote income often exempt"); }
       if (internetScore >= 8.5) reasons.push("Excellent internet speeds");
@@ -381,8 +382,8 @@ export function scoreCountriesForWizard(
       const salaryScore = hasSalaryRole ? normalise(salaryUSD, 25000, 200000) : 0;
 
       let w = hasSalaryRole
-        ? { salary: 0.25, affordability: 0.20, quality: 0.18, safety: 0.12, visa: 0.15, tax: 0.10 }
-        : { salary: 0.00, affordability: 0.25, quality: 0.25, safety: 0.18, visa: 0.15, tax: 0.17 };
+        ? { salary: 0.25, affordability: 0.20, quality: 0.17, safety: 0.12, visa: 0.15, tax: 0.10, healthcare: 0.01 }
+        : { salary: 0.00, affordability: 0.25, quality: 0.24, safety: 0.18, visa: 0.15, tax: 0.17, healthcare: 0.01 };
       answers.priorities?.forEach((p, i) => {
         const b = (5 - i) * 0.04;
         if (p === "salary" && hasSalaryRole)           w.salary        += b;
@@ -391,13 +392,13 @@ export function scoreCountriesForWizard(
         if (p === "safety")                            w.safety        += b;
         if (p === "visa")                              w.visa          += b;
         if (p === "tax")                               w.tax           += b;
-        if (p === "healthcare")                        w.quality       += b * 0.5;
+        if (p === "healthcare")                        w.healthcare    += b;
         if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
       });
       const wt = Object.values(w).reduce((a, b) => a + b, 0);
       Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
       score = salaryScore * w.salary + affordScore * w.affordability + qualityScore * w.quality +
-              safetyScore * w.safety + visaScore * w.visa + taxScore * w.tax;
+              safetyScore * w.safety + visaScore * w.visa + taxScore * w.tax + healthScore * w.healthcare;
 
       if (hasSalaryRole && salaryScore >= 8.5) reasons.push(`Top-tier ${jobRoleDef!.label} pay`);
       else if (hasSalaryRole && salaryScore >= 7) reasons.push(`Competitive ${jobRoleDef!.label} salary`);

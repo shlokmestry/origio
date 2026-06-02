@@ -548,7 +548,6 @@ export default function WizardPage() {
                   top_countries: allTopCountries,
                   answers,
                   is_public: true,
-                  created_at: new Date().toISOString(),
                 })
                 .select("id")
                 .single();
@@ -563,7 +562,7 @@ export default function WizardPage() {
                   "Authorization": `Bearer ${session.access_token}`,
                 },
                 body: JSON.stringify({ email: session.user.email, top3: allTopCountries.slice(0, 3) }),
-              }).catch(() => {});
+              }).catch((e) => console.warn('[wizard] send-results email failed:', e));
             } catch { /* silent — save is best-effort */ }
           }
           else { const cur = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10); localStorage.setItem(ANON_STORAGE_KEY, String(cur + 1)); }
