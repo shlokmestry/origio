@@ -46,7 +46,8 @@ export async function POST(request: Request): Promise<Response> {
     const userId = session.metadata?.user_id ?? session.client_reference_id ?? null
     if (!userId) {
       // Return 200 so Stripe doesn't retry — log for manual recovery
-      Sentry.captureMessage('Orphaned payment: no user_id in metadata or client_reference_id', 'error', {
+      Sentry.captureMessage('Orphaned payment: no user_id in metadata or client_reference_id', {
+        level: 'error',
         extra: { stripeSessionId: session.id, customerEmail: session.customer_email },
       })
       console.error('Orphaned payment — no user_id:', session.id)
