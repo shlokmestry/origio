@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import type { User } from "@supabase/supabase-js";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
-import { WeightingPanel } from "./WeightingPanel";
+import { WeightingModal } from "./WeightingPanel";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF = "'Cabinet Grotesk', sans-serif";
@@ -442,6 +442,8 @@ export default function WizardResultsPage() {
   const [reportLoading, setReportLoading] = useState(false);
   const [shareId, setShareId]         = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [weightModalOpen, setWeightModalOpen] = useState(false);
+  const [reanalysing, setReanalysing] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -657,6 +659,39 @@ export default function WizardResultsPage() {
         }
       `}</style>
 
+      {/* ── Reanalysing overlay ────────────────────────────────────────── */}
+      {reanalysing && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 2000, background: BG,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20,
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT }}>◆ Reanalysing</span>
+          <div style={{ width: 200, height: 1, background: "#1a1a1a", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: "-40%", width: "40%", height: "100%", background: MINT, animation: "slide 1s linear infinite" }} />
+          </div>
+          <style>{`@keyframes slide { from { left: -40% } to { left: 100% } }`}</style>
+          <span style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Rebuilding ranking with your weights…</span>
+        </div>
+      )}
+
+      {/* ── Custom weights modal ────────────────────────────────────────── */}
+      <WeightingModal
+        open={weightModalOpen}
+        onClose={() => setWeightModalOpen(false)}
+        onReanalyse={(newMatches) => {
+          setWeightModalOpen(false);
+          setReanalysing(true);
+          setTimeout(() => {
+            setMatches(newMatches);
+            setReanalysing(false);
+          }, 1200);
+        }}
+        originalMatches={matches}
+        allCountries={allCountries}
+        answers={answers}
+        isPro={isPro}
+      />
+
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <Nav countries={[]} onCountrySelect={() => {}} />
 
@@ -787,6 +822,20 @@ export default function WizardResultsPage() {
           </div>
           <div style={{ position: "sticky", top: 80 }}>
             <TakeHomeCard match={top} jobRoleDef={jobRoleDef} isPro={isPro} moveReason={answers.moveReason} />
+            <button
+              onClick={() => setWeightModalOpen(true)}
+              style={{
+                marginTop: 16, width: "100%", background: "none", border: "none", cursor: "pointer",
+                fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: "#444", textDecoration: "none", padding: "10px 0", textAlign: "center" as const,
+                transition: "color .12s", display: "block",
+                borderTop: `1px solid #1a1a1a`,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = DIM)}
+              onMouseLeave={e => (e.currentTarget.style.color = "#444")}
+            >
+              Not happy with the ranking? Customise weights →
+            </button>
           </div>
         </section>
 
@@ -920,8 +969,6 @@ export default function WizardResultsPage() {
               {visibleMatches.length} of {effectiveTotal} visible
             </span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 32, alignItems: "start" }}>
-          <div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
             {visibleMatches.map((m, i) => {
               const mcs    = getCurrencySymbol(m.country.currency);
@@ -1031,16 +1078,6 @@ export default function WizardResultsPage() {
               </div>
             </div>
           )}
-          </div>{/* end left col */}
-          <div style={{ position: "sticky", top: 72 }}>
-            <WeightingPanel
-              originalMatches={matches}
-              allCountries={allCountries}
-              answers={answers}
-              isPro={isPro}
-            />
-          </div>
-          </div>{/* end grid */}
         </section>
 
         {/* ── FILTERED OUT ────────────────────────────────────────────────── */}

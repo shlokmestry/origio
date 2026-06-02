@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
+import React, { useState, useCallback, useEffect } from "react";
+import { ArrowRight, X } from "lucide-react";
 import Link from "next/link";
-import { CountryMatch, WizardAnswers, scoreCountriesForWizard } from "@/lib/wizard";
+import { CountryMatch, WizardAnswers } from "@/lib/wizard";
 import { CountryWithData, JOB_ROLES } from "@/types";
-import { FlagIcon } from "@/components/FlagIcon";
-import { slugToIso } from "@/lib/flagCodes";
 
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
-const SERIF = "'Cabinet Grotesk', sans-serif";
 const BG    = "#0e0d0c";
 const FG    = "#f0f0e8";
 const MINT  = "#00ffd5";
@@ -40,9 +37,7 @@ function normalizeWeights(w: Record<WeightKey, number>): Record<WeightKey, numbe
   return result;
 }
 
-// Applies custom weights directly to scoring metrics — bypasses the full wizard algorithm
-// to keep it snappy and predictable for the user
-function applyCustomWeights(
+export function applyCustomWeights(
   countries: CountryWithData[],
   answers: Partial<WizardAnswers>,
   weights: Record<WeightKey, number>,
@@ -57,7 +52,6 @@ function applyCustomWeights(
   function norm(v: number, min: number, max: number) { return Math.max(0, Math.min(10, ((v - min) / (max - min)) * 10)); }
   function toUSD(amount: number, currency: string) { return amount * (TO_USD[currency] ?? 1); }
 
-  // Only re-rank countries that made it into the original results (already passed hard filters)
   const slugSet = new Set(originalMatches.map(m => m.country.slug));
   const eligible = countries.filter(c => slugSet.has(c.slug));
 
@@ -74,29 +68,24 @@ function applyCustomWeights(
     const d = country.data;
     const rentUSD = toUSD(d.costRentCityCentre, country.currency);
     const orig = originalMatches.find(m => m.country.slug === country.slug);
-
     let salaryUSD = 0;
     if (answers.jobRole) {
       const roleDef = JOB_ROLES.find(r => r.key === answers.jobRole);
       if (roleDef) salaryUSD = toUSD(d[roleDef.salaryKey as keyof typeof d] as number, country.currency);
     }
-
-    const salaryScore  = norm(salaryUSD, 25000, 200000);
-    const affordScore  = 10 - norm(rentUSD, 300, 4000);
-    const taxScore     = 10 - norm(d.incomeTaxRateMid, 0, 55);
-    const safetyScore  = d.scoreSafety;
-    const qualScore    = d.scoreQualityOfLife;
-    const visaScore    = Math.max(0, Math.min(10, 10 - d.visaDifficulty * 2));
-
+    const salaryScore = norm(salaryUSD, 25000, 200000);
+    const affordScore = 10 - norm(rentUSD, 300, 4000);
+    const taxScore    = 10 - norm(d.incomeTaxRateMid, 0, 55);
+    const safetyScore = d.scoreSafety;
+    const qualScore   = d.scoreQualityOfLife;
+    const visaScore   = Math.max(0, Math.min(10, 10 - d.visaDifficulty * 2));
     const score = salaryScore * w.salary + affordScore * w.affordability +
                   taxScore * w.tax + safetyScore * w.safety +
                   qualScore * w.quality + visaScore * w.visa;
-
     return { country, matchScore: score, matchPercent: 0, reasons: orig?.reasons ?? [] };
   });
 
   results.sort((a, b) => b.matchScore - a.matchScore);
-
   const top = results[0]?.matchScore ?? 10;
   const bot = results[results.length - 1]?.matchScore ?? 0;
   const span = Math.max(top - bot, 0.1);
@@ -104,158 +93,149 @@ function applyCustomWeights(
     const rel = (r.matchScore - bot) / span;
     r.matchPercent = Math.min(95, Math.max(20, Math.round(30 + rel * 65)));
   });
-
   return results;
 }
 
-export function WeightingPanel({
+export function WeightingModal({
+  open,
+  onClose,
+  onReanalyse,
   originalMatches,
   allCountries,
   answers,
   isPro,
 }: {
+  open: boolean;
+  onClose: () => void;
+  onReanalyse: (newMatches: CountryMatch[]) => void;
   originalMatches: CountryMatch[];
   allCountries: CountryWithData[];
   answers: Partial<WizardAnswers>;
   isPro: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   const [weights, setWeights] = useState<Record<WeightKey, number>>(DEFAULT_WEIGHTS);
-  const [reranked, setReranked] = useState<CountryMatch[] | null>(null);
-  const [computing, setComputing] = useState(false);
-
   const normalized = normalizeWeights(weights);
-  const totalPct = Object.values(normalized).reduce((a, b) => a + b, 0);
 
-  const handleSlider = useCallback((key: WeightKey, val: number) => {
-    setWeights((prev: Record<WeightKey, number>) => ({ ...prev, [key]: val }));
-    setReranked(null);
-  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
   const handleApply = useCallback(() => {
     if (!allCountries.length) return;
-    setComputing(true);
-    setTimeout(() => {
-      const result = applyCustomWeights(allCountries, answers, normalized, originalMatches);
-      setReranked(result);
-      setComputing(false);
-    }, 80);
-  }, [allCountries, answers, normalized, originalMatches]);
+    const result = applyCustomWeights(allCountries, answers, normalized, originalMatches);
+    onReanalyse(result);
+  }, [allCountries, answers, normalized, originalMatches, onReanalyse]);
+
+  if (!open) return null;
 
   if (!isPro) {
     return (
-      <div style={{ border: `1px solid #1a1a1a`, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 4 }}>Custom ranking weights</p>
-          <p style={{ fontFamily: SANS, fontSize: 14, color: "#444", margin: 0 }}>Re-rank all countries by your own formula — salary 50%, rent 30%, visa 20%.</p>
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center",
+      }} onClick={onClose}>
+        <div style={{
+          background: "#111", border: `1px solid #2a2a2a`, padding: "40px 36px",
+          maxWidth: 440, width: "90%", boxShadow: "6px 6px 0 #000",
+        }} onClick={e => e.stopPropagation()}>
+          <button onClick={onClose} style={{ position: "absolute" as const, top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: DIM }}>
+            <X size={16} />
+          </button>
+          <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>Custom ranking weights</p>
+          <p style={{ fontFamily: SANS, fontSize: 15, color: FG, marginBottom: 20 }}>Re-rank all countries by your own formula. Pro feature.</p>
+          <Link href="/pro" style={{
+            fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
+            padding: "12px 24px", background: MINT, color: BG, textDecoration: "none",
+            display: "inline-flex", alignItems: "center", gap: 8,
+            boxShadow: "3px 3px 0 #00aa90",
+          }}>
+            Unlock Pro →
+          </Link>
         </div>
-        <Link href="/pro" style={{
-          fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-          color: MINT, textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
-        }}>
-          Unlock with Pro →
-        </Link>
       </div>
     );
   }
 
   return (
-    <div style={{ border: `1px solid #1a1a1a` }}>
-      <button
-        onClick={() => setOpen((o: boolean) => !o)}
-        style={{
-          width: "100%", background: "none", border: "none", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "18px 24px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px",
+    }} onClick={onClose}>
+      <div style={{
+        background: "#0f0f0f", border: `1px solid #2a2a2a`,
+        width: "100%", maxWidth: 520,
+        boxShadow: "6px 6px 0 #000",
+        position: "relative",
+      }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: `1px solid ${LINE}` }}>
           <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM }}>Custom ranking weights</span>
-          {reranked && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: MINT, padding: "2px 6px", border: `1px solid rgba(0,255,213,0.3)` }}>Active</span>}
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: DIM, display: "flex", alignItems: "center" }}>
+            <X size={15} />
+          </button>
         </div>
-        {open ? <ChevronUp size={14} color={DIM} /> : <ChevronDown size={14} color={DIM} />}
-      </button>
 
-      {open && (
-        <div style={{ padding: "0 24px 24px", borderTop: `1px solid ${LINE}` }}>
-          <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, lineHeight: 1.6, margin: "16px 0 20px" }}>
-            Drag the sliders to weight what matters to you. Hit Apply to re-rank.
+        {/* Sliders */}
+        <div style={{ padding: "24px 24px 20px" }}>
+          <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, margin: "0 0 20px", lineHeight: 1.5 }}>
+            Drag to weight what matters. Hit Reanalyse to rebuild the ranking.
           </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {(Object.keys(weights) as WeightKey[]).map(key => (
               <div key={key}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
                   <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>{WEIGHT_LABELS[key]}</span>
                   <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT }}>{normalized[key]}%</span>
                 </div>
                 <input
                   type="range" min={0} max={100} value={weights[key]}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSlider(key, Number(e.target.value))}
-                  style={{ width: "100%", accentColor: MINT, cursor: "pointer" }}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setWeights(prev => ({ ...prev, [key]: Number(e.target.value) }))
+                  }
+                  style={{ width: "100%", accentColor: MINT, cursor: "pointer", height: 2 }}
                 />
               </div>
             ))}
           </div>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: "#333", letterSpacing: "0.12em" }}>
-              Total: {totalPct}% {totalPct !== 100 && <span style={{ color: "#666" }}>(auto-normalised)</span>}
-            </span>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <button
-                onClick={() => { setWeights(DEFAULT_WEIGHTS); setReranked(null); }}
-                style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#444", background: "none", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}
-              >
-                Reset
-              </button>
-              <button
-                onClick={handleApply}
-                disabled={computing}
-                style={{
-                  fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
-                  padding: "10px 20px", background: MINT, color: BG, border: "none", cursor: computing ? "default" : "pointer",
-                  display: "flex", alignItems: "center", gap: 6, opacity: computing ? 0.7 : 1,
-                  boxShadow: "2px 2px 0 #00aa90",
-                }}
-              >
-                {computing ? "Computing…" : "Apply weights"} {!computing && <ArrowRight size={12} />}
-              </button>
-            </div>
-          </div>
-
-          {reranked && reranked.length > 0 && (
-            <div style={{ marginTop: 24, borderTop: `1px solid ${LINE}`, paddingTop: 20 }}>
-              <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 14 }}>
-                ◆ Re-ranked by your weights
-              </p>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {reranked.slice(0, 10).map((m: CountryMatch, i: number) => (
-                  <div key={m.country.slug} style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
-                    borderBottom: `1px solid #0f0f0f`,
-                  }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: i < 3 ? MINT : "#2a2a2a", width: 24, textAlign: "right", flexShrink: 0 }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {slugToIso(m.country.slug)
-                      ? <FlagIcon code={slugToIso(m.country.slug)!} size="sm" />
-                      : <span style={{ fontSize: 18 }}>{m.country.flagEmoji}</span>
-                    }
-                    <span style={{ fontFamily: SERIF, fontSize: 14, color: FG, flex: 1 }}>{m.country.name}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 12, color: i === 0 ? MINT : DIM }}>{m.matchPercent}%</span>
-                  </div>
-                ))}
-              </div>
-              {reranked.length > 10 && (
-                <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", marginTop: 10, letterSpacing: "0.12em" }}>
-                  +{reranked.length - 10} more countries ranked
-                </p>
-              )}
-            </div>
-          )}
         </div>
-      )}
+
+        {/* Footer */}
+        <div style={{ borderTop: `1px solid ${LINE}`, padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button
+            onClick={() => setWeights(DEFAULT_WEIGHTS)}
+            style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#444", background: "none", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleApply}
+            style={{
+              fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+              padding: "12px 28px", background: MINT, color: BG, border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 8,
+              boxShadow: "3px 3px 0 #00aa90", transition: "transform .1s, box-shadow .1s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}
+          >
+            Reanalyse <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
     </div>
   );
+}
+
+// Legacy export kept for any remaining imports
+export function WeightingPanel(props: {
+  originalMatches: CountryMatch[];
+  allCountries: CountryWithData[];
+  answers: Partial<WizardAnswers>;
+  isPro: boolean;
+}) {
+  return null;
 }
