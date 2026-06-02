@@ -8,6 +8,7 @@ export interface WizardAnswers {
   moveReason: string;
   workType?: string; // 'employee' | 'freelancer' | 'company'
   jobRole: string;
+  studyField?: string;
   priorities: string[];
   cityVibe: string;
   rentBudget: string;
@@ -141,6 +142,18 @@ const HIGH_TAX_COUNTRIES = [
 ];
 
 const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica"];
+const NATURE_COUNTRIES = [
+  "new-zealand", "norway", "switzerland", "canada", "australia", "austria",
+  "sweden", "finland", "new zealand", "costa-rica", "colombia",
+];
+const CULTURE_COUNTRIES = [
+  "france", "italy", "japan", "spain", "germany", "portugal", "greece",
+  "netherlands", "united-kingdom", "austria", "czech-republic",
+];
+const STARTUP_COUNTRIES = [
+  "usa", "united-kingdom", "singapore", "germany", "netherlands", "ireland",
+  "sweden", "canada", "australia", "estonia", "israel",
+];
 const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama"];
 const NOMAD_VISA_COUNTRIES       = [
   "portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand",
@@ -183,8 +196,10 @@ export function scoreCountriesForWizard(
 
   const dealBreakers = answers.dealBreakers ?? [];
   const currentCountrySlug = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
-  const isRetired = answers.moveReason === "retire";
-  const isRemote  = answers.moveReason === "remote";
+  const isRetired   = answers.moveReason === "retire";
+  const isRemote    = answers.moveReason === "remote";
+  const isLifestyle = answers.moveReason === "lifestyle";
+  const isStudy     = answers.moveReason === "study";
   const maxRentUSD = RENT_BUDGET_USD[answers.rentBudget ?? "any"] ?? 9999;
 
   // ── HARD EXCLUSIONS ─────────────────────────────────────────────
@@ -236,6 +251,7 @@ export function scoreCountriesForWizard(
         if (p === "safety")     w.safety     += b;
         if (p === "quality")    w.quality    += b;
         if (p === "visa")       w.visa       += b;
+        if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
       });
       const wt = Object.values(w).reduce((a, b) => a + b, 0);
       Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
@@ -259,6 +275,8 @@ export function scoreCountriesForWizard(
         if (p === "quality")                           w.quality       += b;
         if (p === "safety")                            w.safety        += b;
         if (p === "visa")                              w.visa          += b;
+        if (p === "healthcare")                        w.quality       += b * 0.5;
+        if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
       });
       const wt = Object.values(w).reduce((a, b) => a + b, 0);
       Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
@@ -279,37 +297,109 @@ export function scoreCountriesForWizard(
         if (["estonia", "georgia", "portugal", "uae", "singapore"].includes(country.slug)) { score += 0.5; reasons.push("Strong company formation + low corporate tax"); }
       }
 
-    // ── STANDARD scoring path ────────────────────────────────────
-    } else {
-      const jobRoleDef  = JOB_ROLES.find((r) => r.key === answers.jobRole);
-      const salaryKey   = jobRoleDef?.salaryKey ?? "salarySoftwareEngineer";
-      const salaryUSD   = toUSD(data[salaryKey] as number, country.currency);
-      const salaryScore = normalise(salaryUSD, 25000, 200000);
+    // ── LIFESTYLE scoring path ───────────────────────────────────
+    } else if (isLifestyle) {
+      let w = { quality: 0.30, safety: 0.22, affordability: 0.18, healthcare: 0.15, visa: 0.10, tax: 0.05 };
+      answers.priorities?.forEach((p, i) => {
+        const b = (5 - i) * 0.05;
+        if (p === "quality")                       w.quality       += b;
+        if (p === "safety")                        w.safety        += b;
+        if (p === "cost" || p === "affordability") w.affordability += b;
+        if (p === "healthcare")                    w.healthcare    += b;
+        if (p === "visa")                          w.visa          += b;
+        if (p === "tax")                           w.tax           += b;
+        if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
+      });
+      const wt = Object.values(w).reduce((a, b) => a + b, 0);
+      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
+      score = qualityScore * w.quality + safetyScore * w.safety + affordScore * w.affordability +
+              healthScore * w.healthcare + visaScore * w.visa + taxScore * w.tax;
+      if (WARM_COUNTRIES.includes(country.slug))              { score += 0.4; reasons.push("Warm climate"); }
+      if (COASTAL_COUNTRIES.includes(country.slug))           { score += 0.3; reasons.push("Coastal lifestyle"); }
+      if (qualityScore >= 8.5)  reasons.push("Exceptional quality of life");
+      if (safetyScore >= 9)     reasons.push("One of the safest countries");
+      if (healthScore >= 8.5)   reasons.push("Excellent public healthcare");
+      if (rentUSD < 1200)       reasons.push("Affordable cost of living");
 
-      let w = { salary: 0.25, affordability: 0.20, quality: 0.18, safety: 0.12, visa: 0.15, tax: 0.10 };
+    // ── STUDY scoring path ───────────────────────────────────────
+    } else if (isStudy) {
+      const studyField = answers.studyField;
+      let w = { quality: 0.25, affordability: 0.25, visa: 0.20, safety: 0.15, healthcare: 0.10, internet: 0.05 };
       answers.priorities?.forEach((p, i) => {
         const b = (5 - i) * 0.04;
-        if (p === "salary")                            w.salary        += b;
+        if (p === "cost" || p === "affordability") w.affordability += b;
+        if (p === "quality")                       w.quality       += b;
+        if (p === "safety")                        w.safety        += b;
+        if (p === "visa")                          w.visa          += b;
+        if (p === "healthcare")                    w.healthcare    += b;
+        if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
+      });
+      const wt = Object.values(w).reduce((a, b) => a + b, 0);
+      Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
+      score = qualityScore * w.quality + affordScore * w.affordability + visaScore * w.visa +
+              safetyScore * w.safety + healthScore * w.healthcare + internetScore * w.internet;
+      // Free/low-cost tuition bonus
+      if (["germany", "norway", "finland", "sweden", "denmark", "austria"].includes(country.slug)) {
+        score += 0.8; reasons.push("Free or near-free university tuition");
+      } else if (["netherlands", "france", "portugal", "spain", "italy"].includes(country.slug)) {
+        score += 0.4; reasons.push("Low-cost EU university education");
+      }
+      // English-medium instruction bonus
+      if (ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) {
+        score += 0.4; reasons.push("English-medium instruction");
+      }
+      // Study field bonuses
+      if (studyField) {
+        const fieldBonuses: Record<string, string[]> = {
+          tech:        ["usa", "united-kingdom", "canada", "germany", "netherlands", "singapore", "australia"],
+          medicine:    ["germany", "netherlands", "australia", "canada", "ireland", "sweden", "norway"],
+          business:    ["united-kingdom", "usa", "singapore", "netherlands", "ireland", "switzerland"],
+          law:         ["united-kingdom", "usa", "australia", "canada", "netherlands"],
+          engineering: ["germany", "sweden", "netherlands", "switzerland", "usa", "canada"],
+          arts:        ["united-kingdom", "france", "italy", "germany", "netherlands"],
+          science:     ["germany", "sweden", "switzerland", "netherlands", "usa", "australia"],
+          social:      ["netherlands", "united-kingdom", "sweden", "norway", "canada"],
+          hospitality: ["switzerland", "australia", "new-zealand", "spain", "france"],
+          architecture:["italy", "netherlands", "germany", "spain", "united-kingdom"],
+        };
+        if (fieldBonuses[studyField]?.includes(country.slug)) {
+          score += 0.5; reasons.push(`Strong ${studyField} programmes`);
+        }
+      }
+      if (safetyScore >= 9) reasons.push("Safe country for students");
+      if (affordScore >= 7) reasons.push("Affordable for students");
+
+    // ── STANDARD / CAREER scoring path ──────────────────────────
+    } else {
+      const jobRoleDef = JOB_ROLES.find((r) => r.key === answers.jobRole);
+      // Only use salary if a role was actually selected
+      const hasSalaryRole = !!jobRoleDef;
+      const salaryKey  = jobRoleDef?.salaryKey ?? "salarySoftwareEngineer";
+      const salaryUSD  = hasSalaryRole ? toUSD(data[salaryKey] as number, country.currency) : 0;
+      const salaryScore = hasSalaryRole ? normalise(salaryUSD, 25000, 200000) : 0;
+
+      let w = hasSalaryRole
+        ? { salary: 0.25, affordability: 0.20, quality: 0.18, safety: 0.12, visa: 0.15, tax: 0.10 }
+        : { salary: 0.00, affordability: 0.25, quality: 0.25, safety: 0.18, visa: 0.15, tax: 0.17 };
+      answers.priorities?.forEach((p, i) => {
+        const b = (5 - i) * 0.04;
+        if (p === "salary" && hasSalaryRole)           w.salary        += b;
         if (p === "cost" || p === "affordability")     w.affordability += b;
-        if (p === "quality" || p === "worklife")       w.quality       += b;
+        if (p === "quality")                           w.quality       += b;
         if (p === "safety")                            w.safety        += b;
         if (p === "visa")                              w.visa          += b;
         if (p === "tax")                               w.tax           += b;
         if (p === "healthcare")                        w.quality       += b * 0.5;
+        if (p === "english" && ENGLISH_SPEAKING_COUNTRIES.includes(country.slug)) score += b * 0.5;
       });
       const wt = Object.values(w).reduce((a, b) => a + b, 0);
       Object.keys(w).forEach((k) => { w[k as keyof typeof w] /= wt; });
       score = salaryScore * w.salary + affordScore * w.affordability + qualityScore * w.quality +
               safetyScore * w.safety + visaScore * w.visa + taxScore * w.tax;
 
-      if (salaryScore >= 8.5) reasons.push(`Top-tier ${jobRoleDef?.label ?? "salary"} pay`);
-      else if (salaryScore >= 7) reasons.push(`Competitive ${jobRoleDef?.label ?? "salary"} salary`);
+      if (hasSalaryRole && salaryScore >= 8.5) reasons.push(`Top-tier ${jobRoleDef!.label} pay`);
+      else if (hasSalaryRole && salaryScore >= 7) reasons.push(`Competitive ${jobRoleDef!.label} salary`);
       if (taxScore >= 8) reasons.push("Very tax efficient");
-      if (answers.moveReason === "study" &&
-        ["germany", "netherlands", "sweden", "norway", "finland", "denmark"].includes(country.slug)) {
-        score += 0.4; reasons.push("Free or low-cost university education");
-      }
-      if (answers.moveReason === "job" && data.visaDifficulty <= 2) score += 0.3;
 
       // ── PROFESSION-SPECIFIC BONUSES ──────────────────────────
       const role = answers.jobRole;
@@ -436,6 +526,19 @@ export function scoreCountriesForWizard(
       score += 0.3;
       if (!reasons.some((r) => r.toLowerCase().includes("healthcare"))) reasons.push("Strong public healthcare system");
     }
+    if (answers.priorities?.includes("internet") && internetScore >= 7.5) {
+      score += 0.3;
+      if (!reasons.some((r) => r.toLowerCase().includes("internet"))) reasons.push("Fast internet speeds");
+    }
+    if (answers.priorities?.includes("nature") && NATURE_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Stunning nature and outdoor lifestyle");
+    }
+    if (answers.priorities?.includes("culture") && CULTURE_COUNTRIES.includes(country.slug)) {
+      score += 0.35; reasons.push("Rich culture, arts and heritage");
+    }
+    if (answers.priorities?.includes("startup") && STARTUP_COUNTRIES.includes(country.slug)) {
+      score += 0.4; reasons.push("Thriving startup and tech ecosystem");
+    }
     if (answers.rentBudget && answers.rentBudget !== "any") {
       const rentUSD2 = toUSD(data.costRentCityCentre, country.currency);
       if (rentUSD2 <= maxRentUSD && !reasons.some((r) => r.toLowerCase().includes("afford") || r.toLowerCase().includes("cost") || r.toLowerCase().includes("budget"))) {
@@ -460,6 +563,10 @@ export function scoreCountriesForWizard(
     Object.entries(languageMap).forEach(([lang, { slug, reason }]) => {
       if (answers.languages?.includes(lang) && country.slug === slug) { score += 0.4; reasons.push(reason); }
     });
+    // Mandarin bonus for China too
+    if (answers.languages?.includes("mandarin") && country.slug === "china") {
+      score += 0.5; reasons.push("Mandarin is the primary language in China");
+    }
     if (answers.languages?.includes("french") && country.slug === "canada") {
       score += 0.3; reasons.push("French is a bonus in Canada");
     }

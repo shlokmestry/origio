@@ -73,33 +73,40 @@ const NO_DUAL_CITIZENSHIP: Record<string, string> = {
   'south korea': 'South Korea generally does not permit dual citizenship for adults.',
 };
 
-function getRentBudgets(passport: string) {
+const CURRENCY_OPTIONS = [
+  { code: "EUR", symbol: "€",  label: "EUR" },
+  { code: "USD", symbol: "$",  label: "USD" },
+  { code: "GBP", symbol: "£",  label: "GBP" },
+  { code: "AUD", symbol: "A$", label: "AUD" },
+  { code: "CAD", symbol: "C$", label: "CAD" },
+  { code: "INR", symbol: "₹",  label: "INR" },
+];
+
+// USD thresholds: 800, 1500, 2500
+const CURRENCY_AMOUNTS: Record<string, { low: number; mid: number; high: number }> = {
+  EUR: { low: 800,    mid: 1500,   high: 2500 },
+  USD: { low: 800,    mid: 1500,   high: 2500 },
+  GBP: { low: 650,    mid: 1200,   high: 2000 },
+  AUD: { low: 1200,   mid: 2300,   high: 3800 },
+  CAD: { low: 1100,   mid: 2100,   high: 3400 },
+  INR: { low: 65000,  mid: 125000, high: 200000 },
+};
+
+function getRentBudgets(passport: string, overrideCurrency?: string | null) {
   const p = passport.toLowerCase();
-  if (p === "india") return {
-    note: "Shown in Indian Rupees — typical rent abroad converted to INR",
-    options: [
-      { key: "under800",   label: "Under ₹65,000/mo",          sub: "Budget-conscious" },
-      { key: "800to1500",  label: "₹65,000 – ₹1,25,000/mo",   sub: "Comfortable" },
-      { key: "1500to2500", label: "₹1,25,000 – ₹2,00,000/mo", sub: "Flexible" },
-      { key: "any",        label: "Money isn't a concern",      sub: "No limit" },
-    ],
-  };
-  if (p === "usa") return {
-    note: "Shown in US Dollars",
-    options: [
-      { key: "under800",   label: "Under $800/mo",        sub: "Budget-conscious" },
-      { key: "800to1500",  label: "$800 – $1,500/mo",     sub: "Comfortable" },
-      { key: "1500to2500", label: "$1,500 – $2,500/mo",   sub: "Flexible" },
-      { key: "any",        label: "Money isn't a concern", sub: "No limit" },
-    ],
-  };
+  const defaultCur = p === "india" ? "INR" : p === "usa" ? "USD" : "EUR";
+  const cur = overrideCurrency ?? defaultCur;
+  const sym = CURRENCY_OPTIONS.find(c => c.code === cur)?.symbol ?? "€";
+  const amt = CURRENCY_AMOUNTS[cur] ?? CURRENCY_AMOUNTS.EUR;
+  const fmt = (n: number) => cur === "INR" ? `₹${n.toLocaleString("en-IN")}` : `${sym}${n.toLocaleString()}`;
   return {
-    note: "Shown in Euros — average city-centre rent abroad",
+    currency: cur,
+    note: `Shown in ${cur} — average city-centre rent abroad`,
     options: [
-      { key: "under800",   label: "Under €800/mo",        sub: "Budget-conscious" },
-      { key: "800to1500",  label: "€800 – €1,500/mo",     sub: "Comfortable" },
-      { key: "1500to2500", label: "€1,500 – €2,500/mo",   sub: "Flexible" },
-      { key: "any",        label: "Money isn't a concern", sub: "No limit" },
+      { key: "under800",   label: `Under ${fmt(amt.low)}/mo`,                  sub: "Budget-conscious" },
+      { key: "800to1500",  label: `${fmt(amt.low)} – ${fmt(amt.mid)}/mo`,       sub: "Comfortable" },
+      { key: "1500to2500", label: `${fmt(amt.mid)} – ${fmt(amt.high)}/mo`,      sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern",                       sub: "No limit" },
     ],
   };
 }
@@ -111,18 +118,27 @@ const LANGUAGES = [
   { key: "german",     label: "German" },
   { key: "portuguese", label: "Portuguese" },
   { key: "arabic",     label: "Arabic" },
-  { key: "mandarin",   label: "Mandarin" },
+  { key: "mandarin",   label: "Mandarin / Chinese" },
   { key: "hindi",      label: "Hindi" },
   { key: "italian",    label: "Italian" },
   { key: "dutch",      label: "Dutch" },
   { key: "swedish",    label: "Swedish" },
   { key: "norwegian",  label: "Norwegian" },
   { key: "japanese",   label: "Japanese" },
-  { key: "korean",     label: "Korean" },
-  { key: "tagalog",    label: "Tagalog" },
-  { key: "turkish",    label: "Turkish" },
-  { key: "polish",     label: "Polish" },
   { key: "none",       label: "English only" },
+];
+
+const STUDY_FIELDS = [
+  { key: "tech",         label: "Computer Science / Tech" },
+  { key: "medicine",     label: "Medicine / Healthcare" },
+  { key: "business",     label: "Business / Finance" },
+  { key: "law",          label: "Law" },
+  { key: "engineering",  label: "Engineering" },
+  { key: "arts",         label: "Arts & Design" },
+  { key: "science",      label: "Natural Sciences" },
+  { key: "social",       label: "Social Sciences" },
+  { key: "hospitality",  label: "Hospitality / Tourism" },
+  { key: "architecture", label: "Architecture" },
 ];
 
 const DEAL_BREAKERS = [
@@ -247,6 +263,7 @@ export default function WizardPage() {
   // step 1: current location
   const [currentCountrySearch, setCurrentCountrySearch] = useState('');
 
+  const [rentCurrency, setRentCurrency] = useState<string | null>(null);
   const [gateChecked, setGateChecked] = useState(false);
   const [gateType, setGateType]       = useState<"anon" | "free" | null>(null);
   const [runsUsed, setRunsUsed]       = useState(0);
@@ -337,30 +354,18 @@ export default function WizardPage() {
     checkGate();
   }, []);
 
-  const isJobOffer = answers.moveReason === "job";
   // Step 8 (passport) is always skipped — passport is collected in step 0.
-  // Normal flow:    0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 9 (8 effective steps)
-  // Job offer flow: 0 → 1 → 2 → 3 → 6 → 7 → 9       (6 effective steps, skips 4/5 too)
+  // Flow: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 9 (8 effective steps)
   const getNextStep = (cur: number) => {
-    if (cur === 3 && isJobOffer) return 6;
     if (cur === 7) return 9; // skip step 8 (passport) for everyone
     return cur + 1;
   };
   const getPrevStep = (cur: number) => {
     if (cur === 9) return 7; // skip step 8 (passport) for everyone
-    if (cur === 6 && isJobOffer) return 3;
     return cur - 1;
   };
-  // Normal: 8 effective steps (1-7 + 9). Job offer: 6 (skips 4, 5 too).
-  const getEffectiveTotalSteps = () => isJobOffer ? 6 : 8;
-  const getEffectiveStep = () => {
-    if (!isJobOffer) return step === 9 ? 8 : step;
-    if (step <= 3) return step;
-    if (step === 6) return 4;
-    if (step === 7) return 5;
-    if (step === 9) return 6;
-    return step;
-  };
+  const getEffectiveTotalSteps = () => 8;
+  const getEffectiveStep = () => step === 9 ? 8 : step;
   const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
   const isLastStep = step === TOTAL_STEPS;
   const maxRuns    = isPro ? Infinity : isSignedIn ? FREE_MAX_RUNS : ANON_MAX_RUNS;
@@ -398,7 +403,7 @@ export default function WizardPage() {
       if (answers.moveReason === "remote" || answers.moveReason === "career") return !!answers.workType;
       return true;
     }
-    // jobRole optional for retire/lifestyle/study
+    // jobRole optional for retire/lifestyle; studyField optional for study
     if (step === 3) {
       const roleOptional = ["retire", "lifestyle", "study"].includes(answers.moveReason ?? "");
       return roleOptional ? true : !!answers.jobRole;
@@ -530,7 +535,7 @@ export default function WizardPage() {
     }
   };
 
-  const { note: rentNote, options: rentOptions } = getRentBudgets(answers.passport ?? "");
+  const { note: rentNote, options: rentOptions, currency: activeCurrency } = getRentBudgets(answers.passport ?? "", rentCurrency);
   const effectiveStep = getEffectiveStep();
   const totalSteps    = getEffectiveTotalSteps();
   const stepPad       = (n: number) => String(n).padStart(2, "0");
@@ -630,7 +635,7 @@ export default function WizardPage() {
               const num     = i + 1;
               const isCur   = num === effectiveStep;
               const done    = num < effectiveStep;
-              const skipped = num === 8 || (isJobOffer && (num === 4 || num === 5));
+              const skipped = num === 8;
               return (
                 <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
                   <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -809,7 +814,6 @@ export default function WizardPage() {
               <StepSub>This shapes which factors matter most. A job offer skips a few questions.</StepSub>
               <div style={{ display: "grid", gap: 10 }}>
                 {[
-                  { key: "job",       label: "I have a job offer",          sub: "Moving for a specific role" },
                   { key: "career",    label: "Better career opportunities", sub: "Higher salary, growth, tech hubs" },
                   { key: "remote",    label: "I work remotely / run a business", sub: "Location flexibility, tax optimisation, nomad visa" },
                   { key: "retire",    label: "Retirement / FIRE",           sub: "Low cost, healthcare, passive income" },
@@ -843,12 +847,26 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Step 3: Role */}
-          {step === 3 && (
+          {/* Step 3: Role / Study Field */}
+          {step === 3 && answers.moveReason === "study" && (
+            <>
+              <EyebrowLabel>Step 03 · Field</EyebrowLabel>
+              <StepHeading>What are you <Mint>studying?</Mint></StepHeading>
+              <StepSub>Optional — helps us rank countries with the strongest programmes in your field.</StepSub>
+              <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+                {STUDY_FIELDS.map(f => (
+                  <OptionCard key={f.key} selected={answers.studyField === f.key} onClick={() => setAnswers({ ...answers, studyField: f.key })}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: FG }}>{f.label}</div>
+                  </OptionCard>
+                ))}
+              </div>
+            </>
+          )}
+          {step === 3 && answers.moveReason !== "study" && (
             <>
               <EyebrowLabel>Step 03 · Role</EyebrowLabel>
               <StepHeading>What's your <Mint>job?</Mint></StepHeading>
-              {["retire","lifestyle","study"].includes(answers.moveReason ?? "") ? (
+              {["retire","lifestyle"].includes(answers.moveReason ?? "") ? (
                 <StepSub>Optional — pick your role to see salary comparisons, or skip to continue.</StepSub>
               ) : (
                 <StepSub>Used to show realistic salary expectations per country.</StepSub>
@@ -880,6 +898,10 @@ export default function WizardPage() {
                   { key: "tax",           label: "Low taxes" },
                   { key: "healthcare",    label: "Good healthcare" },
                   { key: "english",       label: "English-speaking" },
+                  { key: "internet",      label: "Fast internet" },
+                  { key: "nature",        label: "Nature & outdoors" },
+                  { key: "culture",       label: "Rich culture & arts" },
+                  { key: "startup",       label: "Startup / tech scene" },
                 ].map(opt => {
                   const idx = answers.priorities?.indexOf(opt.key) ?? -1;
                   const selected = idx !== -1;
@@ -913,7 +935,6 @@ export default function WizardPage() {
                   { key: "big-city", label: "Big city",        sub: "London, NYC, Singapore energy" },
                   { key: "mid-city", label: "Mid-size city",   sub: "Liveable, less hectic" },
                   { key: "coastal",  label: "Coastal / beach", sub: "Warm, relaxed, outdoor lifestyle" },
-                  { key: "anywhere", label: "Anywhere works",  sub: "I'm flexible" },
                 ].map(opt => (
                   <OptionCard key={opt.key} selected={answers.cityVibe === opt.key} onClick={() => setAnswers({ ...answers, cityVibe: opt.key })}>
                     <div style={{ fontWeight: 600, fontSize: 15, color: FG, marginBottom: 2 }}>{opt.label}</div>
@@ -928,7 +949,18 @@ export default function WizardPage() {
           {step === 6 && (
             <>
               <EyebrowLabel>Step 06 · Budget</EyebrowLabel>
-              <StepHeading>Rent <Mint>budget?</Mint></StepHeading>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 4 }}>
+                <StepHeading>Rent <Mint>budget?</Mint></StepHeading>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0, marginTop: 4 }}>
+                  {CURRENCY_OPTIONS.map(c => (
+                    <button key={c.code} type="button"
+                      onClick={() => { setRentCurrency(c.code); setAnswers({ ...answers, rentBudget: undefined as unknown as string }); }}
+                      style={{ padding: "5px 10px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", border: `1px solid ${activeCurrency === c.code ? MINT : LINE}`, background: activeCurrency === c.code ? "rgba(0,255,213,0.08)" : "transparent", color: activeCurrency === c.code ? MINT : DIM, cursor: "pointer", transition: "all 0.12s" }}>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <StepSub>{rentNote}</StepSub>
               <div style={{ display: "grid", gap: 10 }}>
                 {rentOptions.map(opt => (
