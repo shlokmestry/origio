@@ -920,6 +920,8 @@ export default function WizardResultsPage() {
               {visibleMatches.length} of {effectiveTotal} visible
             </span>
           </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 32, alignItems: "start" }}>
+          <div>
           <div style={{ borderTop: `1px solid ${LINE}` }}>
             {visibleMatches.map((m, i) => {
               const mcs    = getCurrencySymbol(m.country.currency);
@@ -1029,16 +1031,16 @@ export default function WizardResultsPage() {
               </div>
             </div>
           )}
-        </section>
-
-        {/* ── CUSTOM WEIGHTING ────────────────────────────────────────────── */}
-        <section style={{ padding: "0 0 52px" }}>
-          <WeightingPanel
-            originalMatches={matches}
-            allCountries={allCountries}
-            answers={answers}
-            isPro={isPro}
-          />
+          </div>{/* end left col */}
+          <div style={{ position: "sticky", top: 72 }}>
+            <WeightingPanel
+              originalMatches={matches}
+              allCountries={allCountries}
+              answers={answers}
+              isPro={isPro}
+            />
+          </div>
+          </div>{/* end grid */}
         </section>
 
         {/* ── FILTERED OUT ────────────────────────────────────────────────── */}
