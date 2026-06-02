@@ -140,7 +140,7 @@ function ScoreBar({ label, value, desc }: { label: string; value: number; desc: 
       <div style={{ height: 2, background: "#111", width: "100%" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: color, transition: "width 0.7s ease" }} />
       </div>
-      <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", marginTop: 2 }}>{desc}</p>
+      <p style={{ fontFamily: MONO, fontSize: 9, color: "#666", marginTop: 2 }}>{desc}</p>
     </div>
   );
 }
@@ -157,10 +157,10 @@ function WhyToggle({ match, answers, jobRoleDef, rank }: {
       <button onClick={e => { e.preventDefault(); setOpen(!open); }} style={{
         background: "none", border: "none", cursor: "pointer",
         fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-        color: "#444", display: "flex", alignItems: "center", gap: 4, transition: "color 0.15s",
+        color: "#666", display: "flex", alignItems: "center", gap: 4, transition: "color 0.15s",
       }}
         onMouseEnter={e => (e.currentTarget.style.color = DIM)}
-        onMouseLeave={e => (e.currentTarget.style.color = "#444")}>
+        onMouseLeave={e => (e.currentTarget.style.color = "#666")}>
         Why this match? {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
       </button>
       {open && (
@@ -207,7 +207,7 @@ function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
           </div>
         </div>
         <div style={{ padding: "10px 18px", borderTop: `1px solid ${LINE}` }}>
-          <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontFamily: MONO, fontSize: 9, color: "#666", lineHeight: 1.6, margin: 0 }}>
             * Single person estimate. Actual costs vary by city and lifestyle.
           </p>
         </div>
@@ -233,7 +233,7 @@ function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>
           Estimated take-home · {jobRoleDef.label} · {match.country.name}
         </span>
-        <span style={{ fontFamily: MONO, fontSize: 10, color: "#444", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        <span style={{ fontFamily: MONO, fontSize: 10, color: "#666", letterSpacing: "0.12em", textTransform: "uppercase" }}>
           Take-home · {match.country.data.incomeTaxRateMid}%
         </span>
       </div>
@@ -288,7 +288,7 @@ function TakeHomeCard({ match, jobRoleDef, isPro, moveReason }: {
         </div>
       </div>
       <div style={{ padding: "10px 18px", borderTop: `1px solid ${LINE}` }}>
-        <p style={{ fontFamily: MONO, fontSize: 9, color: "#333", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontFamily: MONO, fontSize: 9, color: "#666", lineHeight: 1.6, margin: 0 }}>
           * Estimate based on mid-bracket income tax rate. Social security, local taxes, and deductions vary. Verify with official sources before relocating.
         </p>
       </div>
@@ -396,11 +396,11 @@ function SaveResultsBanner() {
           aria-label="Dismiss"
           style={{
             background: "none", border: "none", cursor: "pointer",
-            color: "#333", padding: "8px", display: "flex", alignItems: "center",
+            color: "#666", padding: "8px", display: "flex", alignItems: "center",
             transition: "color 0.15s", flexShrink: 0,
           }}
           onMouseEnter={e => (e.currentTarget.style.color = DIM)}
-          onMouseLeave={e => (e.currentTarget.style.color = "#333")}
+          onMouseLeave={e => (e.currentTarget.style.color = "#666")}
         >
           <X size={14} />
         </button>
@@ -640,6 +640,40 @@ export default function WizardResultsPage() {
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
 
   return (
+    <>
+      {/* ── Reanalysing overlay — outside animated div so opacity doesn't affect it ── */}
+      {reanalysing && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 2000, background: BG,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20,
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT }}>◆ Reanalysing</span>
+          <div style={{ width: 200, height: 1, background: "#2a2a2a", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: "-40%", width: "40%", height: "100%", background: MINT, animation: "slide 1s linear infinite" }} />
+          </div>
+          <style>{`@keyframes slide { from { left: -40% } to { left: 100% } }`}</style>
+          <span style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Rebuilding ranking with your weights…</span>
+        </div>
+      )}
+
+      {/* ── Custom weights modal — outside animated div ─────────────────── */}
+      <WeightingModal
+        open={weightModalOpen}
+        onClose={() => setWeightModalOpen(false)}
+        onReanalyse={(newMatches) => {
+          setWeightModalOpen(false);
+          setReanalysing(true);
+          setTimeout(() => {
+            setMatches(newMatches);
+            setReanalysing(false);
+          }, 1200);
+        }}
+        originalMatches={matches}
+        allCountries={allCountries}
+        answers={answers}
+        isPro={isPro}
+      />
+
     <div style={{
       minHeight: "100vh", background: BG, color: FG, fontFamily: SANS, paddingTop: 52,
       opacity: revealed ? 1 : 0,
@@ -659,39 +693,6 @@ export default function WizardResultsPage() {
         }
       `}</style>
 
-      {/* ── Reanalysing overlay ────────────────────────────────────────── */}
-      {reanalysing && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 2000, background: BG,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20,
-        }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT }}>◆ Reanalysing</span>
-          <div style={{ width: 200, height: 1, background: "#1a1a1a", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: "-40%", width: "40%", height: "100%", background: MINT, animation: "slide 1s linear infinite" }} />
-          </div>
-          <style>{`@keyframes slide { from { left: -40% } to { left: 100% } }`}</style>
-          <span style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Rebuilding ranking with your weights…</span>
-        </div>
-      )}
-
-      {/* ── Custom weights modal ────────────────────────────────────────── */}
-      <WeightingModal
-        open={weightModalOpen}
-        onClose={() => setWeightModalOpen(false)}
-        onReanalyse={(newMatches) => {
-          setWeightModalOpen(false);
-          setReanalysing(true);
-          setTimeout(() => {
-            setMatches(newMatches);
-            setReanalysing(false);
-          }, 1200);
-        }}
-        originalMatches={matches}
-        allCountries={allCountries}
-        answers={answers}
-        isPro={isPro}
-      />
-
       {/* ── Nav ───────────────────────────────────────────────────────────── */}
       <Nav countries={[]} onCountrySelect={() => {}} />
 
@@ -706,11 +707,11 @@ export default function WizardResultsPage() {
       }}>
         <Link href="/wizard" style={{
           fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
-          color: "#444", textDecoration: "none", display: "flex", alignItems: "center", gap: 5,
+          color: "#666", textDecoration: "none", display: "flex", alignItems: "center", gap: 5,
           transition: "color .12s",
         }}
           onMouseEnter={e => (e.currentTarget.style.color = DIM)}
-          onMouseLeave={e => (e.currentTarget.style.color = "#444")}>
+          onMouseLeave={e => (e.currentTarget.style.color = "#666")}>
           ↺ Retake with different answers
         </Link>
         <button onClick={handleShare} style={{
@@ -719,7 +720,7 @@ export default function WizardResultsPage() {
           display: "flex", alignItems: "center", gap: 5, transition: "color .12s", padding: 0,
         }}
           onMouseEnter={e => { if (!shareCopied) (e.currentTarget as HTMLElement).style.color = DIM; }}
-          onMouseLeave={e => { if (!shareCopied) (e.currentTarget as HTMLElement).style.color = "#444"; }}>
+          onMouseLeave={e => { if (!shareCopied) (e.currentTarget as HTMLElement).style.color = "#666"; }}>
           {shareCopied ? "✓ Link copied" : "↗ Share results"}
         </button>
       </div>
@@ -796,7 +797,7 @@ export default function WizardResultsPage() {
             )}
             {(answers.priorities ?? []).length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#333" }}>Weighted by:</span>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#666" }}>Weighted by:</span>
                 {(answers.priorities ?? []).slice(0, 4).map((p, i) => (
                   <span key={p} style={{
                     fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
@@ -827,12 +828,12 @@ export default function WizardResultsPage() {
               style={{
                 marginTop: 16, width: "100%", background: "none", border: "none", cursor: "pointer",
                 fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                color: "#444", textDecoration: "none", padding: "10px 0", textAlign: "center" as const,
+                color: DIM, textDecoration: "none", padding: "10px 0", textAlign: "center" as const,
                 transition: "color .12s", display: "block",
-                borderTop: `1px solid #1a1a1a`,
+                borderTop: `1px solid #2a2a2a`,
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = DIM)}
-              onMouseLeave={e => (e.currentTarget.style.color = "#444")}
+              onMouseEnter={e => (e.currentTarget.style.color = FG)}
+              onMouseLeave={e => (e.currentTarget.style.color = DIM)}
             >
               Not happy with the ranking? Customise weights →
             </button>
@@ -986,7 +987,7 @@ export default function WizardResultsPage() {
                     className="res-row"
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, textAlign: "right", color: isTop3 ? RANK_COLORS[i] : "#2a2a2a" }}>
+                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, textAlign: "right", color: isTop3 ? RANK_COLORS[i] : "#444" }}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     {slugToIso(m.country.slug) ? <FlagIcon code={slugToIso(m.country.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{m.country.flagEmoji}</span>}
@@ -1001,7 +1002,7 @@ export default function WizardResultsPage() {
                         ) : null;
                       })()}
                       {salary && (
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: "#333", letterSpacing: "0.08em" }}>
+                        <div style={{ fontFamily: MONO, fontSize: 10, color: "#777", letterSpacing: "0.08em" }}>
                           {mcs}{salary.toLocaleString()}/yr · {getVisaLabel(m.country.data.visaDifficulty)} visa · {mcs}{m.country.data.costRentCityCentre.toLocaleString()}/mo
                         </div>
                       )}
@@ -1069,9 +1070,9 @@ export default function WizardResultsPage() {
                     Compare top 3 <ArrowRight size={13} />
                   </Link>
                 ) : (
-                  <Link href="/pro" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#333", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                  <Link href="/pro" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "#555", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
                     onMouseEnter={e => (e.currentTarget.style.color = DIM)}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#333")}>
+                    onMouseLeave={e => (e.currentTarget.style.color = "#666")}>
                     <Lock size={11} /> Compare top 3
                   </Link>
                 )}
@@ -1135,5 +1136,6 @@ export default function WizardResultsPage() {
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <Footer />
     </div>
+    </>
   );
 }
