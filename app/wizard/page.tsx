@@ -352,12 +352,7 @@ export default function WizardPage() {
   useEffect(() => {
     async function checkGate() {
       try {
-        const timeout = new Promise<null>(res => setTimeout(() => res(null), 5000));
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession().then(r => r.data.session),
-          timeout,
-        ]);
-        const session = sessionResult;
+        const session = (await supabase.auth.getSession()).data.session;
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);
@@ -380,10 +375,12 @@ export default function WizardPage() {
           setGateChecked(true); return;
         }
         setIsSignedIn(true);
-        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count, passport_slug, second_passport_slug").eq("id", session.user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("is_pro, quiz_runs_count, passport_slug, second_passport_slug").eq("id", session.user.id).maybeSingle();
         const pro  = profile?.is_pro ?? false;
         const runs = profile?.quiz_runs_count ?? 0;
         setIsPro(pro); setRunsUsed(runs);
+        // Clear stale anon counter so signed-in users never hit the anon gate
+        try { localStorage.removeItem(ANON_STORAGE_KEY); } catch { /* ignore */ }
         if (!pro && runs >= FREE_MAX_RUNS) setGateType("free");
         // restore progress, fall back to profile passport
         try {
