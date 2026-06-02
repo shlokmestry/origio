@@ -41,9 +41,7 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
   "sweden": 1, "austria": 1, "denmark": 1, "netherlands": 1, "norway": 1,
   "switzerland": 1, "portugal": 1, "ireland": 1, "belgium": 1,
   "new-zealand": 1, "australia": 1, "japan": 1, "singapore": 1,
-  "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1,
-  // space-variant aliases (wizard PASSPORTS array uses .toLowerCase())
-  "new zealand": 1, "united kingdom": 1, "usa": 1, "south korea": 1,
+  "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1, "usa": 1,
   // Tier 2
   "poland": 2, "romania": 2, "malaysia": 2, "brazil": 2, "uae": 2,
   "mexico": 2, "chile": 2, "argentina": 2,
@@ -69,7 +67,7 @@ export const PASSPORT_TIER_LABEL: Record<1 | 2 | 3 | 4, string> = {
 // Countries that do not allow dual citizenship
 export const NO_DUAL_CITIZENSHIP_SLUGS = new Set([
   "india", "china", "japan", "singapore", "uae",
-  "indonesia", "malaysia", "south-korea", "south korea",
+  "indonesia", "malaysia", "south-korea",
 ]);
 
 // If a no-dual passport is paired with another, the user has renounced the no-dual one.
@@ -195,8 +193,11 @@ export function scoreCountriesForWizard(
   answers: WizardAnswers
 ): CountryMatch[] {
 
+  const slugify = (s: string) => s.toLowerCase().trim().replace(/\s+/g, "-");
   const dealBreakers = answers.dealBreakers ?? [];
-  const currentCountrySlug = (answers.currentCountry ?? answers.passport)?.toLowerCase().trim();
+  const currentCountrySlug = answers.currentCountry
+    ? slugify(answers.currentCountry)
+    : slugify(answers.passport ?? "");
   const isRetired   = answers.moveReason === "retire";
   const isRemote    = answers.moveReason === "remote";
   const isLifestyle = answers.moveReason === "lifestyle";
@@ -219,8 +220,8 @@ export function scoreCountriesForWizard(
   });
 
   // ── Passport resolution (drop renounced no-dual passport) ───────
-  const rawPrimary   = (answers.passport ?? "").toLowerCase();
-  const rawSecondary = (answers.secondPassport ?? "").toLowerCase() || undefined;
+  const rawPrimary   = slugify(answers.passport ?? "");
+  const rawSecondary = answers.secondPassport ? slugify(answers.secondPassport) : undefined;
   const { primary: primarySlug, secondary: secondarySlug } = resolveEffectivePassports(rawPrimary, rawSecondary);
   const strength = effectiveStrength(primarySlug, secondarySlug);
   const hasDual  = !!secondarySlug;

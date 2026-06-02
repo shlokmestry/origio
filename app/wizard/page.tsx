@@ -941,7 +941,8 @@ export default function WizardPage() {
               <StepSub>Pick at least 3, in order of importance. The first one you tap carries the highest weight.</StepSub>
               <div className="wiz-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
                 {[
-                  { key: "salary",        label: "High salary" },
+                  // salary only relevant for career workers
+                  ...( ["career"].includes(answers.moveReason ?? "") ? [{ key: "salary", label: "High salary" }] : []),
                   { key: "affordability", label: "Low cost of living" },
                   { key: "quality",       label: "Quality of life" },
                   { key: "safety",        label: "Safety & low crime" },
@@ -949,10 +950,12 @@ export default function WizardPage() {
                   { key: "tax",           label: "Low taxes" },
                   { key: "healthcare",    label: "Good healthcare" },
                   { key: "english",       label: "English-speaking" },
-                  { key: "internet",      label: "Fast internet" },
+                  // internet only relevant for remote / career
+                  ...( ["career","remote"].includes(answers.moveReason ?? "") ? [{ key: "internet", label: "Fast internet" }] : []),
                   { key: "nature",        label: "Nature & outdoors" },
                   { key: "culture",       label: "Rich culture & arts" },
-                  { key: "startup",       label: "Startup / tech scene" },
+                  // startup only for career/remote
+                  ...( ["career","remote"].includes(answers.moveReason ?? "") ? [{ key: "startup", label: "Startup / tech scene" }] : []),
                 ].map(opt => {
                   const idx = answers.priorities?.indexOf(opt.key) ?? -1;
                   const selected = idx !== -1;
