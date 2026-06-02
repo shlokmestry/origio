@@ -176,8 +176,7 @@ export const TO_USD: Record<string, number> = {
   // 2025/2026 additions
   MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
   CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
-  ZAR: 0.055, NGN: 0.00065, KES: 0.0077, PHP: 0.018, CNY: 0.14,
-  RON: 0.22,  NZD: 0.61,   SGD: 0.74,   AED: 0.27,
+  ZAR: 0.055, NGN: 0.00065, KES: 0.0077, PHP: 0.018, CNY: 0.14, RON: 0.22,
 };
 
 function toUSD(amount: number, currency: string): number {
