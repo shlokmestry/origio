@@ -21,7 +21,7 @@ const BG     = "#0a0a0a";
 const FG     = "#f0f0e8";
 const MINT   = "#00ffd5";
 const DIM    = "#888880";
-const LINE   = "#1f1f1f";
+const LINE   = "#2a2a2a";
 const PANEL  = "#0f0f0f";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -240,7 +240,7 @@ function OptionCard({ selected, onClick, children, badge }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14,
-        padding: "15px 18px", borderRadius: 12,
+        padding: "15px 18px", borderRadius: 0,
         border: `1px solid ${selected ? MINT : hovered ? "#333" : LINE}`,
         background: selected ? "rgba(0,255,213,0.05)" : PANEL,
         color: FG, cursor: "pointer", transition: "all 0.15s",
@@ -275,10 +275,10 @@ function SearchableSelect({ value, onChange, options, placeholder }: {
         onFocus={() => { setShowList(true); if (value) setSearch(''); }}
         onBlur={() => setTimeout(() => setShowList(false), 150)}
         onChange={e => { setSearch(e.target.value); onChange(''); setShowList(true); }}
-        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${value ? MINT : LINE}`, borderRadius: 10, color: value ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" as const }}
+        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${value ? MINT : LINE}`, borderRadius: 0, color: value ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" as const }}
       />
       {showList && filtered.length > 0 && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 220, overflowY: "auto" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 0, zIndex: 10, maxHeight: 220, overflowY: "auto" }}>
           {filtered.map(opt => {
             const slug = opt.toLowerCase();
             return (
@@ -624,6 +624,9 @@ export default function WizardPage() {
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.35} }
         select option { background:#0f0f0f; color:#f0f0e8; }
+        button:focus-visible { outline: 2px solid #00ffd5; outline-offset: 2px; }
+        input:focus-visible { outline: 2px solid #00ffd5; outline-offset: 1px; }
+        select:focus-visible { outline: 2px solid #00ffd5; outline-offset: 1px; }
         @media(max-width:860px){
           .wiz-layout  { grid-template-columns: 1fr !important; }
           .wiz-sidebar { display: none !important; }
@@ -696,7 +699,7 @@ export default function WizardPage() {
             })}
           </ul>
 
-          <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 12, background: PANEL }}>
+          <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 0, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
               We score 37 countries against your role, passport and priorities. Takes ~90 seconds.
@@ -742,10 +745,10 @@ export default function WizardPage() {
                         onFocus={() => { setShowIntroPassportList(true); if (introPassport) setIntroPassportSearch(''); }}
                         onBlur={() => setTimeout(() => setShowIntroPassportList(false), 150)}
                         onChange={e => { setIntroPassportSearch(e.target.value); setIntroPassport(''); setShowIntroPassportList(true); }}
-                        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introPassport ? MINT : LINE}`, borderRadius: 10, color: introPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                        style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introPassport ? MINT : LINE}`, borderRadius: 0, color: introPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
                       />
                       {showIntroPassportList && (
-                        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 0, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
                           {introPassportOptions.map(slug => {
                             const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
                             return (
@@ -774,10 +777,10 @@ export default function WizardPage() {
                           onFocus={() => { setShowIntroSecondList(true); if (introSecondPassport) setIntroSecondPassportSearch(''); }}
                           onBlur={() => setTimeout(() => setShowIntroSecondList(false), 150)}
                           onChange={e => { setIntroSecondPassportSearch(e.target.value); setIntroSecondPassport(''); setShowIntroSecondList(true); }}
-                          style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introSecondPassport ? MINT : LINE}`, borderRadius: 10, color: introSecondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
+                          style={{ width: "100%", padding: "14px 18px", background: PANEL, border: `1px solid ${introSecondPassport ? MINT : LINE}`, borderRadius: 0, color: introSecondPassport ? FG : DIM, fontSize: 14, outline: "none", fontFamily: SANS, boxSizing: "border-box" }}
                         />
                         {showIntroSecondList && (
-                          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 10, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111", border: `1px solid ${LINE}`, borderRadius: 0, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
                             {introSecondOptions.map(slug => {
                               const label = PASSPORTS.find(p => p.toLowerCase() === slug) ?? slug;
                               return (
@@ -795,7 +798,7 @@ export default function WizardPage() {
 
                   {/* "Other" passport warning */}
                   {introPassport === "other" && (
-                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 0 }}>
                       <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ Unrecognised passport</p>
                       <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6, margin: 0 }}>We'll treat your passport as Tier 3 access (100–139 visa-free countries). Results may be less accurate — if your country is listed above, select it instead.</p>
                     </div>
@@ -809,10 +812,10 @@ export default function WizardPage() {
                     const best = p2 ? Math.min(p1, p2) as 1|2|3|4 : p1;
                     const upgraded = p2 && best < p1;
                     return (
-                      <div style={{ padding: "12px 16px", background: "rgba(0,255,213,0.04)", border: `1px solid rgba(0,255,213,0.15)`, borderRadius: 10 }}>
+                      <div style={{ padding: "12px 16px", background: "rgba(0,255,213,0.04)", border: `1px solid rgba(0,255,213,0.15)`, borderRadius: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: upgraded ? 6 : 0 }}>
                           <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: MINT }}>Passport strength</span>
-                          <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT, background: "rgba(0,255,213,0.1)", padding: "2px 8px", borderRadius: 4 }}>TIER {best}</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: MINT, background: "rgba(0,255,213,0.1)", padding: "2px 8px", borderRadius: 0 }}>TIER {best}</span>
                         </div>
                         <p style={{ fontSize: 12, color: DIM, lineHeight: 1.5, margin: 0 }}>{PASSPORT_TIER_LABEL[best]}</p>
                         {upgraded && <p style={{ fontSize: 11, color: MINT, marginTop: 4, margin: 0 }}>↑ Up from Tier {p1} with your second passport</p>}
@@ -822,7 +825,7 @@ export default function WizardPage() {
 
                   {/* Dual citizenship conflict warning */}
                   {introDualConflict && (
-                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 10 }}>
+                    <div style={{ padding: "12px 16px", background: "rgba(255,200,50,0.05)", border: "1px solid rgba(255,200,50,0.2)", borderRadius: 0 }}>
                       <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,50,0.8)", marginBottom: 4 }}>⚠ No dual citizenship</p>
                       <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6 }}>{introDualConflict}</p>
                     </div>
@@ -845,7 +848,7 @@ export default function WizardPage() {
                 placeholder="Search country..."
               />
               {answers.currentCountry && answers.currentCountry !== answers.passport?.toLowerCase() && answers.passport && (
-                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 8 }}>
+                <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", border: `1px solid ${LINE}`, borderRadius: 0 }}>
                   <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: DIM }}>Passport:</span>
                   <span style={{ fontSize: 13, color: MINT }}>{PASSPORTS.find(p => p.toLowerCase() === answers.passport) ?? answers.passport}</span>
                 </div>
@@ -1041,7 +1044,7 @@ export default function WizardPage() {
                         const withoutNone = cur.filter(x => x !== "none");
                         setAnswers({ ...answers, languages: selected ? withoutNone.filter(x => x !== l.key) : [...withoutNone, l.key] });
                       }}
-                      style={{ padding: "10px 16px", borderRadius: 999, border: `1px solid ${selected ? MINT : LINE}`, background: selected ? "rgba(0,255,213,0.08)" : PANEL, color: selected ? MINT : FG, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
+                      style={{ padding: "10px 16px", borderRadius: 0, border: `1px solid ${selected ? MINT : LINE}`, background: selected ? "rgba(0,255,213,0.08)" : PANEL, color: selected ? MINT : FG, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 6 }}>
                       {selected && <Check size={12} strokeWidth={3} />}
                       {l.label}
                     </button>
@@ -1058,7 +1061,7 @@ export default function WizardPage() {
               <StepHeading>Your <Mint>passport?</Mint></StepHeading>
               <StepSub>Your passport affects which countries are easiest to move to — visas, taxes, and treaties all hinge on it.</StepSub>
               <select value={answers.passport ?? ""} onChange={e => setAnswers({ ...answers, passport: e.target.value })}
-                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
+                style={{ width: "100%", padding: "16px 18px", background: PANEL, border: `1px solid ${LINE}`, borderRadius: 0, color: answers.passport ? FG : DIM, fontSize: 15, outline: "none", fontFamily: SANS, cursor: "pointer", transition: "border-color 0.15s" }}
                 onFocus={e => (e.currentTarget.style.borderColor = MINT)}
                 onBlur={e  => (e.currentTarget.style.borderColor = LINE)}>
                 <option value="" disabled>Select your passport country</option>
@@ -1094,13 +1097,13 @@ export default function WizardPage() {
 
           {/* Nav */}
           <div className="wiz-nav-btns" style={{ marginTop: 44, paddingTop: 24, borderTop: `1px solid ${LINE}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 999, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
+            <button onClick={handleBack} style={{ padding: "12px 22px", borderRadius: 0, background: "transparent", border: `1px solid ${LINE}`, color: DIM, cursor: "pointer", fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#3a3a3a"; }}
               onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = LINE; }}>
               <ArrowLeft size={14} /> Back
             </button>
             <button onClick={handleNext} disabled={!canProceed() || loading}
-              style={{ padding: "14px 28px", borderRadius: 999, background: canProceed() && !loading ? MINT : "#1a1a1a", color: canProceed() && !loading ? BG : DIM, border: "none", cursor: canProceed() && !loading ? "pointer" : "not-allowed", fontFamily: MONO, fontSize: 12, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", boxShadow: canProceed() && !loading ? "0 4px 20px rgba(0,255,213,0.18)" : "none" }}>
+              style={{ padding: "14px 28px", borderRadius: 0, background: canProceed() && !loading ? MINT : "#1a1a1a", color: canProceed() && !loading ? BG : DIM, border: "none", cursor: canProceed() && !loading ? "pointer" : "not-allowed", fontFamily: MONO, fontSize: 12, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s", boxShadow: canProceed() && !loading ? "0 4px 20px rgba(0,255,213,0.18)" : "none" }}>
               {loading ? "Finding matches..." : isLastStep ? <><Sparkles size={14} /> Find my country</> : <>Next <ArrowRight size={14} /></>}
             </button>
           </div>

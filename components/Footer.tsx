@@ -87,7 +87,7 @@ export default function Footer() {
               userSelect: "none",
             }}
           >
-            Origio
+            ORIGIO
           </p>
         </div>
       </div>

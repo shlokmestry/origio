@@ -127,6 +127,7 @@ function ProPageInner() {
       <Nav />
       <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: "'Satoshi', sans-serif", padding: 'clamp(72px,10vh,100px) clamp(16px,4vw,24px) clamp(48px,8vh,80px)' }}>
         <style>{`
+          @keyframes spin { to { transform: rotate(360deg) } }
           @keyframes cardPushUp {
             0%   { transform: translateY(60px); opacity: 0; }
             60%  { transform: translateY(-8px);  opacity: 1; }
@@ -249,7 +250,12 @@ function ProPageInner() {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              {loading ? 'Redirecting…' : 'Get Origio Pro'}
+              {loading ? (
+                <>
+                  <span style={{ width: 14, height: 14, border: '2px solid rgba(10,10,10,0.3)', borderTopColor: '#0a0a0a', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                  Redirecting…
+                </>
+              ) : 'Get Origio Pro'}
             </button>
             {error && <p style={{ fontSize: 12, color: '#ef4444', marginTop: 10, textAlign: 'center' }}>{error}</p>}
           </div>

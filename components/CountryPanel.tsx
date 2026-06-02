@@ -159,6 +159,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
                   textTransform: "uppercase",
                   letterSpacing: "-0.02em",
                   lineHeight: 1,
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
                 }}>
                   {country.name}
                 </h2>
@@ -266,6 +268,8 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
                     {/* Trigger */}
                     <button
                       type="button"
+                      aria-expanded={roleDropOpen}
+                      aria-label="Select job role"
                       onClick={() => setRoleDropOpen(o => !o)}
                       style={{
                         width: "100%", display: "flex", alignItems: "center", gap: 8,

@@ -42,7 +42,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
             <Link
               href="/signin"
               className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-[#00ffd5] text-[#0a0a0a] text-sm font-extrabold uppercase tracking-wide border-2 border-[#00ffd5] hover:bg-transparent hover:text-[#00ffd5] transition-colors"
-              style={{ boxShadow: "3px 3px 0 #00aa90" }}
+              style={{ boxShadow: "3px 3px 0 #00ffd5" }}
             >
               <UserPlus className="w-4 h-4" />
               Create free account
@@ -114,7 +114,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
           <Link
             href="/pro"
             className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-[#00ffd5] text-[#0a0a0a] text-sm font-extrabold uppercase tracking-wide border-2 border-[#00ffd5] hover:bg-transparent hover:text-[#00ffd5] transition-colors"
-            style={{ boxShadow: "3px 3px 0 #00aa90" }}
+            style={{ boxShadow: "3px 3px 0 #00ffd5" }}
           >
             <Sparkles className="w-4 h-4" />
             Upgrade to Pro — €4.99 once

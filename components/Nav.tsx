@@ -65,7 +65,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           height: 52px;
           background: rgba(14, 14, 14, 0.92);
           border: 1px solid rgba(255,255,255,0.10);
-          border-radius: 100px;
+          border-radius: 0;
           padding: 6px 6px 6px 20px;
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
@@ -105,7 +105,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           color: rgba(255,255,255,0.52);
           text-decoration: none;
           padding: 7px 14px;
-          border-radius: 100px;
+          border-radius: 0;
           transition: color 0.18s ease, background 0.18s ease;
           letter-spacing: -0.01em;
         }
@@ -134,7 +134,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           font-weight: 500;
           color: rgba(255,255,255,0.38);
           padding: 7px 14px;
-          border-radius: 100px;
+          border-radius: 0;
           border: none;
           background: transparent;
           cursor: pointer;
@@ -150,7 +150,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           color: rgba(255,255,255,0.22);
           background: rgba(255,255,255,0.07);
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 4px;
+          border-radius: 0;
           padding: 1px 5px;
         }
 
@@ -161,7 +161,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           gap: 6px;
           height: 40px;
           padding: 0 18px;
-          border-radius: 100px;
+          border-radius: 0;
           background: #fff;
           color: #0a0a0a;
           font-family: 'Satoshi', sans-serif;
@@ -357,7 +357,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           {user ? (
             <a href="/profile"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: isPro ? "transparent" : "#fff", borderRadius: 100, color: isPro ? "#4de6cc" : "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14, border: isPro ? "1.5px solid rgba(77,230,204,0.4)" : "none" }}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: isPro ? "transparent" : "#fff", borderRadius: 0, color: isPro ? "#4de6cc" : "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14, border: isPro ? "1.5px solid rgba(77,230,204,0.4)" : "none" }}
             >
               <User size={15} />
               {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0]}
@@ -366,7 +366,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           ) : (
             <a href="/signin"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: "#fff", borderRadius: 100, color: "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14 }}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: "#fff", borderRadius: 0, color: "#0a0a0a", textDecoration: "none", fontWeight: 700, fontSize: 14 }}
             >
               <LogIn size={15} />
               Sign In

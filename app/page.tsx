@@ -371,7 +371,6 @@ export default function Home() {
             letterSpacing: "-0.03em",
             color:         "#ffffff",
             marginBottom:  "clamp(20px, 3vh, 32px)",
-            whiteSpace:    "nowrap",
           }}>
             Find Where You <FlickerWord />
           </h1>
