@@ -207,69 +207,70 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
   const cs = sym(country.currency);
   const scoreBreakdown = getScoreBreakdown(data);
 
-  const { user, loading: authLoading } = useAuth();
-  const [answers, setAnswers] = useState<Partial<WizardAnswers> | null>(null);
-  const [match, setMatch] = useState<{ percent: number; reasons: string[] } | null>(null);
-  const [otherMatches, setOtherMatches] = useState<CountryMatch[]>([]);
-  const [isPro, setIsPro] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
+  const { user, loading: authLoading, isPro } = useAuth();
+  // Seed answers immediately from sessionStorage so the page renders without waiting for Supabase
+  const [answers, setAnswers] = useState<Partial<WizardAnswers> | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { const r = sessionStorage.getItem("wizardAnswers"); return r ? JSON.parse(r) : null; } catch { return null; }
+  });
+  const [match, setMatch] = useState<{ percent: number; reasons: string[] } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const r = sessionStorage.getItem("wizardMatches");
+      if (!r) return null;
+      const all: CountryMatch[] = JSON.parse(r);
+      const m = all.find((x) => x.country.slug === country.slug);
+      return m ? { percent: m.matchPercent, reasons: m.reasons } : null;
+    } catch { return null; }
+  });
+  const [otherMatches, setOtherMatches] = useState<CountryMatch[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const r = sessionStorage.getItem("wizardMatches");
+      if (!r) return [];
+      const all: CountryMatch[] = JSON.parse(r);
+      return all.filter((x) => x.country.slug !== country.slug).slice(0, 22);
+    } catch { return []; }
+  });
+  const [dataLoading, setDataLoading] = useState(!answers); // skip loading if sessionStorage had data
   const [headline, setHeadline] = useState<string | null>(null);
   const [headlineLoading, setHeadlineLoading] = useState(false);
   const [customSalary, setCustomSalary] = useState<string>("");
   const [useCustom, setUseCustom] = useState(false);
-  // Interactive checklist state
   const [checked, setChecked] = useState<Record<number, boolean>>({});
 
-  // Wait for auth to resolve before loading data
+  // Derived loading flag — must be before any useEffect that uses it
+  const loading = authLoading || dataLoading;
+
+  // Once auth resolves, enrich from Supabase in the background (non-blocking)
   useEffect(() => {
-    if (authLoading) return;
-    async function load() {
-      let ans: Partial<WizardAnswers> | null = null;
-      const rawA = sessionStorage.getItem("wizardAnswers");
-      if (rawA) ans = JSON.parse(rawA);
-
-      const rawM = sessionStorage.getItem("wizardMatches");
-      if (rawM) {
-        const all: CountryMatch[] = JSON.parse(rawM);
-        const m = all.find((x) => x.country.slug === country.slug);
-        if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons });
-        setOtherMatches(all.filter((x) => x.country.slug !== country.slug).slice(0, 22));
-      }
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles").select("is_pro").eq("id", user.id).single();
-        if (profile?.is_pro) setIsPro(true);
-
+    if (authLoading || !user) { setDataLoading(false); return; }
+    async function enrich() {
+      try {
         const { data: result } = await supabase
           .from("wizard_results")
           .select("answers, top_countries")
-          .eq("user_id", user.id)
+          .eq("user_id", user!.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
           .maybeSingle();
-
-        if (result?.answers) ans = result.answers;
+        if (result?.answers) setAnswers(result.answers as Partial<WizardAnswers>);
         if (result?.top_countries) {
           const m = (result.top_countries as any[]).find((c: any) => c.slug === country.slug);
           if (m) setMatch({ percent: m.matchPercent, reasons: m.reasons ?? [] });
           const others = (result.top_countries as any[])
-            .filter((c: any) => c.slug !== country.slug)
-            .slice(0, 22)
+            .filter((c: any) => c.slug !== country.slug).slice(0, 22)
             .map((c: any) => {
               const full = allCountries.find((x) => x.slug === c.slug);
               return full ? { country: full, matchPercent: c.matchPercent, matchScore: 0, reasons: c.reasons ?? [] } : null;
-            })
-            .filter(Boolean) as CountryMatch[];
+            }).filter(Boolean) as CountryMatch[];
           if (others.length) setOtherMatches(others);
         }
-      }
-
-      setAnswers(ans);
+      } catch { /* non-critical */ }
       setDataLoading(false);
     }
-    load();
+    enrich();
   }, [authLoading, user, country.slug, allCountries]);
-
-  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     if (!loading && !answers) {
@@ -315,15 +316,19 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     return () => { controller.abort(); clearTimeout(timeout); };
   }, [loading, answers, country, data, match]);
 
-  if (loading || !answers) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: S.bg }}>
-      <div style={{ width: 120, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: '60%', height: '100%', background: 'rgba(255,255,255,0.5)', animation: 'pulse 1.5s infinite' }} />
+  if (loading && !answers) return (
+    <div style={{ background: S.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes shimmer{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}`}</style>
+      <div style={{ width: 40, height: 40, border: '2px solid rgba(255,255,255,0.1)', borderTop: '2px solid rgba(0,255,213,0.7)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ fontFamily: S.serif, fontSize: 18, color: 'rgba(255,255,255,0.5)', letterSpacing: '-0.01em', animation: 'shimmer 1.5s ease infinite' }}>
+        Loading your report…
       </div>
     </div>
   );
 
   // ── derived data ──────────────────────────────────────────────────────────
+
+  if (!answers) return null; // redirect to /wizard is already pending
 
   const userRole = JOB_ROLES.find((r) => r.key === answers.jobRole) ?? JOB_ROLES[0];
   const roleAvgSalary = data[userRole.salaryKey] as number;

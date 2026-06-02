@@ -437,20 +437,11 @@ export default function WizardResultsPage() {
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [revealed, setRevealed]       = useState(false);
-  const { user, loading: authLoading }  = useAuth();
-  const [isPro, setIsPro]             = useState(false);
+  const { user, loading: authLoading, isPro } = useAuth();
   const [sessionExpired, setSessionExpired] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [shareId, setShareId]         = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
-
-  // Fetch pro status whenever user changes
-  useEffect(() => {
-    if (!user) { setIsPro(false); return; }
-    supabase.from("profiles").select("is_pro").eq("id", user.id).single().then(({ data }) => {
-      setIsPro(data?.is_pro ?? false);
-    });
-  }, [user]);
 
   useEffect(() => {
     async function load() {
@@ -476,6 +467,7 @@ export default function WizardResultsPage() {
           return;
         }
       } else {
+        let reconstructedFromDB = false;
         try {
           if (user) {
             const { data: result } = await supabase
@@ -489,7 +481,6 @@ export default function WizardResultsPage() {
 
             if (result?.top_countries && result.top_countries.length > 0) {
               if (result.answers) setAnswers(result.answers);
-              // Reconstruct matches from stored top_countries so results page renders
               const countriesRaw = sessionStorage.getItem("wizardCountries");
               let countries: CountryWithData[] = [];
               try { if (countriesRaw) countries = JSON.parse(countriesRaw); } catch { /* ignore */ }
@@ -511,16 +502,8 @@ export default function WizardResultsPage() {
                   setMatches(reconstructed);
                   setAllCountries(countries);
                   setTotalMatchCount(reconstructed.length);
-                  // fall through to loading animation
-                } else {
-                  setSessionExpired(true);
-                  setIsLoading(false);
-                  return;
+                  reconstructedFromDB = true;
                 }
-              } else {
-                setSessionExpired(true);
-                setIsLoading(false);
-                return;
               }
             }
           }
@@ -528,9 +511,11 @@ export default function WizardResultsPage() {
           console.error("Supabase fallback failed:", err);
         }
 
-        setSessionExpired(true);
-        setIsLoading(false);
-        return;
+        if (!reconstructedFromDB) {
+          setSessionExpired(true);
+          setIsLoading(false);
+          return;
+        }
       }
 
       // Short genuine delay so the reveal animation has time to mount
