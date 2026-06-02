@@ -152,7 +152,7 @@ export default function ProfilePage() {
           setEditSecondPassport(p.second_passport_slug)
           setShowSecondPassportEdit(!!p.second_passport_slug)
         }
-        if (p && !p.onboarded) { router.push('/onboarding'); return }
+        if (p && !p.onboarded) { setLoading(false); router.push('/onboarding'); return }
       } catch { setLoadError(true) }
       setLoading(false)
     }

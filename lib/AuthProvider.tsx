@@ -13,43 +13,64 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 
 async function fetchIsPro(userId: string): Promise<boolean> {
   try {
-    const { data } = await supabase
-      .from('profiles').select('is_pro').eq('id', userId).single()
+    // maybeSingle() — no error thrown on 0 rows, unlike single()
+    const { data, error } = await supabase
+      .from('profiles').select('is_pro').eq('id', userId).maybeSingle()
+    if (error) {
+      console.error('[AuthProvider] fetchIsPro error:', error.message)
+      return false
+    }
     return data?.is_pro ?? false
-  } catch {
+  } catch (e) {
+    console.error('[AuthProvider] fetchIsPro threw:', e)
     return false
   }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser]     = useState<User | null>(null)
+  const [user, setUser]       = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isPro, setIsPro]   = useState(false)
+  const [isPro, setIsPro]     = useState(false)
 
   useEffect(() => {
-    // Eagerly resolve the current session and pro status together
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const pro = await fetchIsPro(session.user.id)
-        setIsPro(pro)
-      }
-      setLoading(false)
-    })
+    let cancelled = false
 
-    // Keep in sync on auth state changes (sign-in, sign-out, token refresh)
+    // Safety net: never leave loading=true for more than 6 seconds
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) setLoading(false)
+    }, 6000)
+
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        if (cancelled) return
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          const pro = await fetchIsPro(session.user.id)
+          if (!cancelled) setIsPro(pro)
+        }
+        if (!cancelled) setLoading(false)
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+      if (cancelled) return
       setUser(session?.user ?? null)
       if (session?.user) {
         const pro = await fetchIsPro(session.user.id)
-        setIsPro(pro)
+        if (!cancelled) setIsPro(pro)
       } else {
-        setIsPro(false)
+        if (!cancelled) setIsPro(false)
       }
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      clearTimeout(safetyTimer)
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (
