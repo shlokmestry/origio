@@ -34,7 +34,7 @@ const TOTAL_STEPS      = 9;
 
 const STEP_LABELS = [
   "Location", "Reason", "Role", "Priorities",
-  "Vibe", "Budget", "Languages", "Passport", "Deal breakers",
+  "Vibe", "Budget", "Languages", "Deal breakers",
 ];
 
 const PROGRESS_KEY = "wizardProgress";
@@ -73,40 +73,81 @@ const NO_DUAL_CITIZENSHIP: Record<string, string> = {
   'south korea': 'South Korea generally does not permit dual citizenship for adults.',
 };
 
-const CURRENCY_OPTIONS = [
-  { code: "EUR", symbol: "€",  label: "EUR" },
-  { code: "USD", symbol: "$",  label: "USD" },
-  { code: "GBP", symbol: "£",  label: "GBP" },
-  { code: "AUD", symbol: "A$", label: "AUD" },
-  { code: "CAD", symbol: "C$", label: "CAD" },
-  { code: "INR", symbol: "₹",  label: "INR" },
-];
-
-// USD thresholds: 800, 1500, 2500
-const CURRENCY_AMOUNTS: Record<string, { low: number; mid: number; high: number }> = {
-  EUR: { low: 800,    mid: 1500,   high: 2500 },
-  USD: { low: 800,    mid: 1500,   high: 2500 },
-  GBP: { low: 650,    mid: 1200,   high: 2000 },
-  AUD: { low: 1200,   mid: 2300,   high: 3800 },
-  CAD: { low: 1100,   mid: 2100,   high: 3400 },
-  INR: { low: 65000,  mid: 125000, high: 200000 },
+// All currencies for the 37 countries we score
+const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey?: string; big?: boolean }> = {
+  EUR: { symbol: "€",    label: "Euro — Europe (EUR)" },
+  USD: { symbol: "$",    label: "US Dollar (USD)",          passportKey: "usa" },
+  GBP: { symbol: "£",    label: "British Pound (GBP)",      passportKey: "united kingdom" },
+  AUD: { symbol: "A$",   label: "Australian Dollar (AUD)",  passportKey: "australia" },
+  NZD: { symbol: "NZ$",  label: "NZ Dollar (NZD)",          passportKey: "new zealand" },
+  CAD: { symbol: "C$",   label: "Canadian Dollar (CAD)",    passportKey: "canada" },
+  CHF: { symbol: "CHF ", label: "Swiss Franc (CHF)",        passportKey: "switzerland" },
+  SGD: { symbol: "S$",   label: "Singapore Dollar (SGD)",   passportKey: "singapore" },
+  JPY: { symbol: "¥",    label: "Japanese Yen (JPY)",       passportKey: "japan",        big: true },
+  KRW: { symbol: "₩",    label: "South Korean Won (KRW)",   passportKey: "south korea",  big: true },
+  AED: { symbol: "AED ", label: "UAE Dirham (AED)",         passportKey: "uae" },
+  SEK: { symbol: "kr",   label: "Swedish Krona (SEK)",      passportKey: "sweden" },
+  NOK: { symbol: "kr",   label: "Norwegian Krone (NOK)",    passportKey: "norway" },
+  DKK: { symbol: "kr",   label: "Danish Krone (DKK)" },
+  INR: { symbol: "₹",    label: "Indian Rupee (INR)",       passportKey: "india",        big: true },
+  CNY: { symbol: "¥",    label: "Chinese Yuan (CNY)",       passportKey: "china" },
+  BRL: { symbol: "R$",   label: "Brazilian Real (BRL)",     passportKey: "brazil" },
+  MXN: { symbol: "MX$",  label: "Mexican Peso (MXN)" },
+  ZAR: { symbol: "R",    label: "South African Rand (ZAR)", passportKey: "south africa" },
+  NGN: { symbol: "₦",    label: "Nigerian Naira (NGN)",     passportKey: "nigeria",      big: true },
+  KES: { symbol: "KSh",  label: "Kenyan Shilling (KES)",    passportKey: "kenya",        big: true },
+  PHP: { symbol: "₱",    label: "Philippine Peso (PHP)",    passportKey: "philippines",  big: true },
+  PLN: { symbol: "zł",   label: "Polish Zloty (PLN)" },
+  RON: { symbol: "lei",  label: "Romanian Leu (RON)" },
+  MYR: { symbol: "RM",   label: "Malaysian Ringgit (MYR)",  passportKey: "malaysia" },
+  THB: { symbol: "฿",    label: "Thai Baht (THB)",                                       big: true },
+  VND: { symbol: "₫",    label: "Vietnamese Dong (VND)",                                 big: true },
+  COP: { symbol: "Col$", label: "Colombian Peso (COP)",                                  big: true },
+  CRC: { symbol: "₡",    label: "Costa Rican Colón (CRC)",                               big: true },
+  GEL: { symbol: "₾",    label: "Georgian Lari (GEL)" },
+  CZK: { symbol: "Kč",   label: "Czech Koruna (CZK)",                                    big: true },
 };
 
-function getRentBudgets(passport: string, overrideCurrency?: string | null) {
+// TO_USD rates (for converting $800/$1500/$2500 thresholds to local currency display)
+const DISPLAY_TO_USD: Record<string, number> = {
+  USD: 1, EUR: 1.08, GBP: 1.27, AUD: 0.65, NZD: 0.61, CAD: 0.74,
+  CHF: 1.13, SGD: 0.74, AED: 0.27, NOK: 0.093, SEK: 0.096, DKK: 0.145,
+  JPY: 0.0067, INR: 0.012, CNY: 0.14, BRL: 0.20, MYR: 0.22, ZAR: 0.055,
+  MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
+  CZK: 0.044, GEL: 0.37, VND: 0.000039, CRC: 0.0019, PLN: 0.25,
+  NGN: 0.00065, KES: 0.0077, PHP: 0.018, RON: 0.22, NZD2: 0.61,
+};
+
+function fmtAmount(usd: number, cur: string): string {
+  const rate = DISPLAY_TO_USD[cur] ?? 1;
+  const n = Math.round(usd / rate);
+  const meta = CURRENCY_META[cur];
+  const sym = meta?.symbol ?? cur;
+  if (meta?.big) {
+    if (n >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000)     return `${sym}${(n / 1_000).toFixed(0)}K`;
+  }
+  return `${sym}${n.toLocaleString()}`;
+}
+
+function defaultCurrencyForPassport(passport: string): string {
   const p = passport.toLowerCase();
-  const defaultCur = p === "india" ? "INR" : p === "usa" ? "USD" : "EUR";
-  const cur = overrideCurrency ?? defaultCur;
-  const sym = CURRENCY_OPTIONS.find(c => c.code === cur)?.symbol ?? "€";
-  const amt = CURRENCY_AMOUNTS[cur] ?? CURRENCY_AMOUNTS.EUR;
-  const fmt = (n: number) => cur === "INR" ? `₹${n.toLocaleString("en-IN")}` : `${sym}${n.toLocaleString()}`;
+  for (const [code, meta] of Object.entries(CURRENCY_META)) {
+    if (meta.passportKey === p) return code;
+  }
+  return "EUR";
+}
+
+function getRentBudgets(passport: string, overrideCurrency?: string | null) {
+  const cur = overrideCurrency ?? defaultCurrencyForPassport(passport);
   return {
     currency: cur,
-    note: `Shown in ${cur} — average city-centre rent abroad`,
+    note: `Shown in ${cur} — approximate city-centre rent abroad`,
     options: [
-      { key: "under800",   label: `Under ${fmt(amt.low)}/mo`,                  sub: "Budget-conscious" },
-      { key: "800to1500",  label: `${fmt(amt.low)} – ${fmt(amt.mid)}/mo`,       sub: "Comfortable" },
-      { key: "1500to2500", label: `${fmt(amt.mid)} – ${fmt(amt.high)}/mo`,      sub: "Flexible" },
-      { key: "any",        label: "Money isn't a concern",                       sub: "No limit" },
+      { key: "under800",   label: `Under ${fmtAmount(800, cur)}/mo`,                            sub: "Budget-conscious" },
+      { key: "800to1500",  label: `${fmtAmount(800, cur)} – ${fmtAmount(1500, cur)}/mo`,         sub: "Comfortable" },
+      { key: "1500to2500", label: `${fmtAmount(1500, cur)} – ${fmtAmount(2500, cur)}/mo`,        sub: "Flexible" },
+      { key: "any",        label: "Money isn't a concern",                                        sub: "No limit" },
     ],
   };
 }
@@ -124,7 +165,17 @@ const LANGUAGES = [
   { key: "dutch",      label: "Dutch" },
   { key: "swedish",    label: "Swedish" },
   { key: "norwegian",  label: "Norwegian" },
+  { key: "danish",     label: "Danish" },
+  { key: "finnish",    label: "Finnish" },
   { key: "japanese",   label: "Japanese" },
+  { key: "korean",     label: "Korean" },
+  { key: "thai",       label: "Thai" },
+  { key: "vietnamese", label: "Vietnamese" },
+  { key: "malay",      label: "Malay" },
+  { key: "polish",     label: "Polish" },
+  { key: "romanian",   label: "Romanian" },
+  { key: "czech",      label: "Czech" },
+  { key: "georgian",   label: "Georgian" },
   { key: "none",       label: "English only" },
 ];
 
@@ -635,7 +686,7 @@ export default function WizardPage() {
               const num     = i + 1;
               const isCur   = num === effectiveStep;
               const done    = num < effectiveStep;
-              const skipped = num === 8;
+              const skipped = false;
               return (
                 <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
                   <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -951,14 +1002,15 @@ export default function WizardPage() {
               <EyebrowLabel>Step 06 · Budget</EyebrowLabel>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 4 }}>
                 <StepHeading>Rent <Mint>budget?</Mint></StepHeading>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0, marginTop: 4 }}>
-                  {CURRENCY_OPTIONS.map(c => (
-                    <button key={c.code} type="button"
-                      onClick={() => { setRentCurrency(c.code); setAnswers({ ...answers, rentBudget: undefined as unknown as string }); }}
-                      style={{ padding: "5px 10px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", border: `1px solid ${activeCurrency === c.code ? MINT : LINE}`, background: activeCurrency === c.code ? "rgba(0,255,213,0.08)" : "transparent", color: activeCurrency === c.code ? MINT : DIM, cursor: "pointer", transition: "all 0.12s" }}>
-                      {c.label}
-                    </button>
-                  ))}
+                <div style={{ flexShrink: 0, marginTop: 6 }}>
+                  <select
+                    value={activeCurrency}
+                    onChange={e => { setRentCurrency(e.target.value); setAnswers({ ...answers, rentBudget: undefined as unknown as string }); }}
+                    style={{ padding: "7px 12px", fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", border: `1px solid ${MINT}`, background: "#0f0f0f", color: MINT, cursor: "pointer", outline: "none", appearance: "none", WebkitAppearance: "none", minWidth: 200 }}>
+                    {Object.entries(CURRENCY_META).map(([code, meta]) => (
+                      <option key={code} value={code}>{meta.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <StepSub>{rentNote}</StepSub>

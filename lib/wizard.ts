@@ -176,6 +176,8 @@ export const TO_USD: Record<string, number> = {
   // 2025/2026 additions
   MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
   CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
+  ZAR: 0.055, NGN: 0.00065, KES: 0.0077, PHP: 0.018, CNY: 0.14,
+  RON: 0.22,  NZD: 0.61,   SGD: 0.74,   AED: 0.27,
 };
 
 function toUSD(amount: number, currency: string): number {
@@ -559,6 +561,16 @@ export function scoreCountriesForWizard(
       japanese:   { slug: "japan",       reason: "Your Japanese gives you a huge advantage" },
       hindi:      { slug: "india",       reason: "Your Hindi is a major advantage" },
       mandarin:   { slug: "singapore",   reason: "Mandarin is widely spoken in Singapore" },
+      korean:     { slug: "south-korea", reason: "Your Korean is a huge advantage in South Korea" },
+      thai:       { slug: "thailand",    reason: "Your Thai gives you a massive local advantage" },
+      vietnamese: { slug: "vietnam",     reason: "Your Vietnamese gives you a huge advantage" },
+      malay:      { slug: "malaysia",    reason: "Your Malay is a big advantage in Malaysia" },
+      polish:     { slug: "poland",      reason: "Your Polish gives you a big advantage in Poland" },
+      romanian:   { slug: "romania",     reason: "Your Romanian gives you a big advantage in Romania" },
+      czech:      { slug: "czech-republic", reason: "Your Czech gives you a big advantage" },
+      danish:     { slug: "denmark",     reason: "Your Danish gives you a big advantage in Denmark" },
+      finnish:    { slug: "finland",     reason: "Your Finnish gives you a big advantage in Finland" },
+      georgian:   { slug: "georgia",     reason: "Your Georgian gives you a big advantage in Georgia" },
     };
     Object.entries(languageMap).forEach(([lang, { slug, reason }]) => {
       if (answers.languages?.includes(lang) && country.slug === slug) { score += 0.4; reasons.push(reason); }
