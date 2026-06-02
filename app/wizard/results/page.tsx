@@ -639,7 +639,7 @@ export default function WizardResultsPage() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: BG, color: FG, fontFamily: SANS,
+      minHeight: "100vh", background: BG, color: FG, fontFamily: SANS, paddingTop: 52,
       opacity: revealed ? 1 : 0,
       transform: revealed ? "translateY(0)" : "translateY(16px)",
       transition: "opacity 0.5s ease, transform 0.5s ease",
@@ -782,25 +782,6 @@ export default function WizardResultsPage() {
                 onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
                 View full report <ArrowRight size={14} />
-              </Link>
-              <button onClick={handleViewOnGlobe} style={{
-                fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
-                background: "none", border: "none", color: DIM, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 6, padding: 0,
-                borderBottom: `1px solid #2a2a2a`, paddingBottom: 2, transition: "color .1s, border-color .1s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.color = FG; e.currentTarget.style.borderColor = "#555"; }}
-                onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = "#2a2a2a"; }}>
-                <Globe size={12} /> See on globe
-              </button>
-              <Link href="/salary-calculator" style={{
-                fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
-                color: DIM, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
-                borderBottom: '1px solid #2a2a2a', paddingBottom: 1, transition: 'color .12s',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.color = FG)}
-                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
-                Calculate exact take-home →
               </Link>
             </div>
           </div>
