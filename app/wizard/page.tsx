@@ -338,23 +338,27 @@ export default function WizardPage() {
   }, []);
 
   const isJobOffer = answers.moveReason === "job";
-  // Job offer flow: 0 → 1 → 2 → 3 → 6 → 7 → 8 → 9 (skips priorities/vibe, keeps rent/languages/dealbreakers)
+  // Step 8 (passport) is always skipped — passport is collected in step 0.
+  // Normal flow:    0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 9 (8 effective steps)
+  // Job offer flow: 0 → 1 → 2 → 3 → 6 → 7 → 9       (6 effective steps, skips 4/5 too)
   const getNextStep = (cur: number) => {
     if (cur === 3 && isJobOffer) return 6;
-    if (cur === 6 && isJobOffer) return 7; // skip vibe — but we go to budget (step 6 IS budget now)
+    if (cur === 7) return 9; // skip step 8 (passport) for everyone
     return cur + 1;
   };
   const getPrevStep = (cur: number) => {
-    if (cur === 7 && isJobOffer) return 6;
+    if (cur === 9) return 7; // skip step 8 (passport) for everyone
     if (cur === 6 && isJobOffer) return 3;
     return cur - 1;
   };
-  // Job offer skips priorities (4) and vibe (5) — 7 effective steps
-  const getEffectiveTotalSteps = () => isJobOffer ? 7 : TOTAL_STEPS;
+  // Normal: 8 effective steps (1-7 + 9). Job offer: 6 (skips 4, 5 too).
+  const getEffectiveTotalSteps = () => isJobOffer ? 6 : 8;
   const getEffectiveStep = () => {
-    if (!isJobOffer) return step;
+    if (!isJobOffer) return step === 9 ? 8 : step;
     if (step <= 3) return step;
-    if (step >= 6) return step - 2;
+    if (step === 6) return 4;
+    if (step === 7) return 5;
+    if (step === 9) return 6;
     return step;
   };
   const progress   = step === 0 ? 0 : (getEffectiveStep() / getEffectiveTotalSteps()) * 100;
@@ -626,7 +630,7 @@ export default function WizardPage() {
               const num     = i + 1;
               const isCur   = num === effectiveStep;
               const done    = num < effectiveStep;
-              const skipped = isJobOffer && (num === 4 || num === 5);
+              const skipped = num === 8 || (isJobOffer && (num === 4 || num === 5));
               return (
                 <li key={label} style={{ display: "flex", alignItems: "center", gap: 12, opacity: skipped ? 0.2 : isCur || done ? 1 : 0.45 }}>
                   <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, background: done ? MINT : "transparent", border: `1px solid ${isCur ? MINT : done ? MINT : LINE}`, color: done ? BG : isCur ? MINT : DIM, fontFamily: MONO, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
