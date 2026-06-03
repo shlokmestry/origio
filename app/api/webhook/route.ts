@@ -11,11 +11,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
 })
 
+// Service role key is required here — Stripe webhooks have no user JWT.
+// Operations are scoped to the specific userId extracted from verified session metadata.
 const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { autoRefreshToken: false, persistSession: false } }
 )
+
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  throw new Error('STRIPE_WEBHOOK_SECRET is not configured')
+}
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
@@ -86,7 +92,7 @@ export async function POST(request: Request): Promise<Response> {
         }
       }
 
-      console.log(`✅ User ${userId} upgraded to Pro`)
+      console.log(`✅ User …${userId.slice(-6)} upgraded to Pro`)
     } catch (err) {
       Sentry.captureException(err, {
         tags: { route: 'webhook', type: 'checkout_processing_error', user_id: userId },

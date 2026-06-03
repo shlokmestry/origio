@@ -8,6 +8,11 @@ export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "validate-results", maxRequests: 10, windowSeconds: 60 });
   if (limited) return limited;
 
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return NextResponse.json({ error: "Unsupported Media Type" }, { status: 415 });
+  }
+
   const authHeader = request.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -84,8 +89,11 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
   "confidence": "high" | "medium" | "low"
 }`;
 
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10_000)
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         "x-api-key": process.env.ANTHROPIC_API_KEY!,
@@ -96,7 +104,7 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
         max_tokens: 500,
         messages: [{ role: "user", content: prompt }],
       }),
-    });
+    }).finally(() => clearTimeout(timeout));
 
     const data = await res.json();
 

@@ -65,7 +65,8 @@ export default function RootLayout({
         {/* Vercel Analytics */}
         <Analytics />
 
-        {/* Google Analytics GA4 */}
+        {/* Google Analytics GA4 — SRI hash not supported: GTM bundles are dynamic and Google
+            doesn't publish hashes. Mitigated by CSP script-src allowlist. */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-FE07VSDBZ2"
           strategy="afterInteractive"

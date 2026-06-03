@@ -2,6 +2,9 @@
 // Fallback: client calls this after checkout success.
 // Verifies the Stripe session server-side and grants pro directly.
 // This makes pro work even if the webhook is misconfigured.
+//
+// Service role key is required here: we need to update profiles regardless of RLS.
+// Operations are always scoped to user.id from the verified JWT — never cross-user.
 
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
@@ -10,6 +13,12 @@ import { rateLimit } from '@/lib/rate-limit'
 import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: Request): Promise<Response> {
+  // Validate Content-Type
+  const contentType = request.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+  }
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2026-03-25.dahlia',
   })
@@ -45,14 +54,13 @@ export async function POST(request: Request): Promise<Response> {
 
   // Validate sessionId format before hitting Stripe API
   if (!sessionId.startsWith('cs_')) {
-    return NextResponse.json({ error: 'Invalid sessionId format' }, { status: 400 })
+    return NextResponse.json({ error: 'Bad request' }, { status: 400 })
   }
 
   // Idempotency: if already Pro, no need to re-process
   const { data: existing } = await adminSupabase
     .from('profiles').select('is_pro').eq('id', user.id).maybeSingle()
   if (existing?.is_pro) {
-    console.log(`[verify-payment] User ${user.id} already Pro — skipping`)
     return NextResponse.json({ paid: true, pro: true })
   }
 
@@ -62,7 +70,7 @@ export async function POST(request: Request): Promise<Response> {
     session = await stripe.checkout.sessions.retrieve(sessionId)
   } catch (err) {
     console.error('Failed to retrieve Stripe session:', err)
-    return NextResponse.json({ error: 'Invalid session' }, { status: 400 })
+    return NextResponse.json({ error: 'Bad request' }, { status: 400 })
   }
 
   // Verify payment succeeded
@@ -73,7 +81,10 @@ export async function POST(request: Request): Promise<Response> {
   // Verify the session belongs to this user (security check)
   const sessionUserId = session.metadata?.user_id ?? session.client_reference_id
   if (!sessionUserId || sessionUserId !== user.id) {
-    console.error(`User mismatch: session=${sessionUserId}, requesting=${user.id}`)
+    Sentry.captureMessage('verify-payment: user/session mismatch', {
+      level: 'error',
+      extra: { sessionUserId, requestingUser: user.id },
+    })
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -91,6 +102,6 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
   }
 
-  console.log(`✅ Pro granted via verify-payment for user ${user.id}`)
+  console.log(`✅ Pro granted via verify-payment for user …${user.id.slice(-6)}`)
   return NextResponse.json({ paid: true, pro: true })
 }

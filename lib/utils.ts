@@ -1,11 +1,16 @@
 import { CountryData, ScoreBreakdown } from "@/types";
 
+/** RFC 5322-compatible email format check (good enough for server-side validation). */
+export function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) && value.length <= 254
+}
+
 /** Strip characters that could be used for prompt injection, then truncate. */
 export function sanitizeForPrompt(value: unknown, maxLen = 100): string {
   if (typeof value !== "string") return "";
   return value
     .replace(/[<>{}[\]\\`]/g, "")
-    .replace(/\n{2,}/g, "\n")
+    .replace(/[\r\n]+/g, " ")
     .trim()
     .slice(0, maxLen);
 }

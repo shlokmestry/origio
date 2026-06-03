@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rate-limit'
+import { isValidEmail } from '@/lib/utils'
+
+const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
 
 export async function POST(request: Request): Promise<Response> {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,15 +14,24 @@ export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: 'checkout-report', maxRequests: 5, windowSeconds: 60 })
   if (limited) return limited
 
-  const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
+  // Validate Content-Type
+  const contentType = request.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+  }
+
+  // Reject requests from unknown origins
   const requestOrigin = request.headers.get('origin') ?? ''
-  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0]
+  if (!ALLOWED_ORIGINS.includes(requestOrigin)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  const origin = requestOrigin
 
   let customerEmail: string | undefined
   let userId: string | undefined
   try {
     const body = await request.json()
-    if (typeof body.email === 'string' && body.email.includes('@')) customerEmail = body.email
+    if (typeof body.email === 'string' && isValidEmail(body.email)) customerEmail = body.email
 
     const authHeader = request.headers.get('Authorization')
     if (authHeader?.startsWith('Bearer ')) {

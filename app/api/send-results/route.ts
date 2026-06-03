@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
+import { isValidEmail } from '@/lib/utils'
 
 export async function POST(request: Request) {
   const limited = await rateLimit(request, { name: 'send-results', maxRequests: 3, windowSeconds: 60 })
   if (limited) return limited
+
+  const contentType = request.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return NextResponse.json({ ok: false }, { status: 415 })
+  }
 
   // Require auth — prevents sending emails to arbitrary addresses
   const authHeader = request.headers.get('Authorization')
@@ -25,7 +31,7 @@ export async function POST(request: Request) {
   try {
     const { email, top3 } = await request.json()
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
+    if (!email || typeof email !== 'string' || !isValidEmail(email)) {
       return NextResponse.json({ ok: false }, { status: 400 })
     }
     // Only allow sending to the authenticated user's own email

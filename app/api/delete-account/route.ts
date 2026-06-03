@@ -1,12 +1,18 @@
 // app/api/delete-account/route.ts
+// Service role key is required: deletes across multiple tables + auth.admin.deleteUser.
+// Deletion is always scoped to user.id from the verified JWT — never cross-user.
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { getResend } from '@/lib/resend'
 import AccountDeleted from '@/emails/AccountDeleted'
 import { createElement } from 'react'
 import { rateLimit } from '@/lib/rate-limit'
+import * as Sentry from '@sentry/nextjs'
+
+const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL ?? 'noreply@findorigio.com'
 
 export async function DELETE(request: Request): Promise<Response> {
+  // Service role scoped to verified user.id only
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -30,6 +36,8 @@ export async function DELETE(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  Sentry.addBreadcrumb({ category: 'account', message: 'Account deletion initiated', level: 'info' })
+
   // Delete all user data then auth user — do this FIRST before the email
   await Promise.all([
     adminClient.from('saved_countries').delete().eq('user_id', user.id),
@@ -39,14 +47,15 @@ export async function DELETE(request: Request): Promise<Response> {
 
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    Sentry.captureException(deleteError, { tags: { route: 'delete-account' } })
+    return NextResponse.json({ error: 'Deletion failed' }, { status: 500 })
   }
 
   // Send deletion confirmation AFTER successful deletion (best-effort — don't block on failure)
   const userName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'there'
   try {
     await getResend().emails.send({
-      from: 'Origio <noreply@findorigio.com>',
+      from: `Origio <${NOREPLY_EMAIL}>`,
       to: user.email!,
       subject: 'Your Origio account has been deleted',
       react: createElement(AccountDeleted, { name: userName }),
