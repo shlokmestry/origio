@@ -161,7 +161,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           gap: 6px;
           height: 40px;
           padding: 0 18px;
-          border-radius: 0;
+          border-radius: 100px;
           background: #fff;
           color: #0a0a0a;
           font-family: 'Satoshi', sans-serif;
