@@ -65,7 +65,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           height: 52px;
           background: rgba(14, 14, 14, 0.92);
           border: 1px solid rgba(255,255,255,0.10);
-          border-radius: 0;
+          border-radius: 100px;
           padding: 6px 6px 6px 20px;
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
