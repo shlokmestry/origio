@@ -118,6 +118,10 @@ export default function ProfilePage() {
     if (authLoading) return
     if (!user) { setLoading(false); setLoadError(true); return }
 
+    // Reset error state in case a previous render saw user=null transiently
+    setLoadError(false)
+    setLoading(true)
+
     const userId = user.id
     const initialName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? ''
     setDisplayName(initialName)

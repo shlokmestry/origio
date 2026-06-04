@@ -34,31 +34,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
-    // Safety net: never leave loading=true for more than 5 seconds
-    const safetyTimer = setTimeout(() => {
-      if (!cancelled) setLoading(false)
-    }, 5000)
-
-    // Use onAuthStateChange only — avoids the race with getSession() double-firing.
-    // INITIAL_SESSION fires immediately with the current session (or null if signed out).
-    // We set loading=false right away (before isPro fetch) so pages don't wait on DB.
-    // isPro updates asynchronously — a brief stale value is acceptable for the nav pill.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Step 1: getSession() reads from local cookies immediately — no network needed.
+    // This unblocks the UI as fast as possible.
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return
       const currentUser = session?.user ?? null
       setUser(currentUser)
-
-      // Unblock the UI immediately — don't make pages wait for the isPro DB round-trip
-      if (!cancelled) setLoading(false)
-      clearTimeout(safetyTimer)
-
+      setLoading(false)
       if (currentUser) {
-        const pro = await fetchIsPro(currentUser.id)
-        if (!cancelled) setIsPro(pro)
+        fetchIsPro(currentUser.id).then(pro => { if (!cancelled) setIsPro(pro) })
+      }
+    }).catch(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    // Step 2: onAuthStateChange handles subsequent changes (sign-in, sign-out,
+    // token refresh). Skip INITIAL_SESSION — already handled by getSession() above.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled || event === 'INITIAL_SESSION') return
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      if (currentUser) {
+        fetchIsPro(currentUser.id).then(pro => { if (!cancelled) setIsPro(pro) })
       } else {
-        if (!cancelled) setIsPro(false)
+        setIsPro(false)
       }
     })
+
+    // Safety net: 5s max before we unblock regardless
+    const safetyTimer = setTimeout(() => { if (!cancelled) setLoading(false) }, 5000)
 
     return () => {
       cancelled = true
