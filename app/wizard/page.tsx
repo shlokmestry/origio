@@ -352,7 +352,13 @@ export default function WizardPage() {
   useEffect(() => {
     async function checkGate() {
       try {
-        const session = (await supabase.auth.getSession()).data.session;
+        // Retry once after 800ms if session is null on first try —
+        // createBrowserClient can return null before it has read the session cookie.
+        let session = (await supabase.auth.getSession()).data.session;
+        if (!session) {
+          await new Promise(r => setTimeout(r, 800));
+          session = (await supabase.auth.getSession()).data.session;
+        }
         if (!session?.user) {
           const stored = parseInt(localStorage.getItem(ANON_STORAGE_KEY) ?? "0", 10);
           setRunsUsed(stored); setIsSignedIn(false);

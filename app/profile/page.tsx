@@ -124,9 +124,8 @@ export default function ProfilePage() {
     setEditName(initialName)
 
     async function loadData() {
-      await new Promise(r => setTimeout(r, 300))
       try {
-        const [savesRes, wizardRes, profileRes] = await Promise.all([
+        const dataPromise = Promise.all([
           supabase.from('saved_countries')
             .select('id, country_slug, created_at')
             .eq('user_id', userId)
@@ -141,6 +140,10 @@ export default function ProfilePage() {
             .eq('id', userId)
             .maybeSingle(),
         ])
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10_000)
+        )
+        const [savesRes, wizardRes, profileRes] = await Promise.race([dataPromise, timeoutPromise])
         if (savesRes.error) console.error('saved_countries error:', savesRes.error)
         setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
         setWizardResults((wizardRes.data as WizardResult[]) ?? null)

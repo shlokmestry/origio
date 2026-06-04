@@ -13,7 +13,6 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 
 async function fetchIsPro(userId: string): Promise<boolean> {
   try {
-    // maybeSingle() — no error thrown on 0 rows, unlike single()
     const { data, error } = await supabase
       .from('profiles').select('is_pro').eq('id', userId).maybeSingle()
     if (error) {
@@ -35,35 +34,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
-    // Safety net: never leave loading=true for more than 6 seconds
+    // Safety net: never leave loading=true for more than 5 seconds
     const safetyTimer = setTimeout(() => {
       if (!cancelled) setLoading(false)
-    }, 6000)
+    }, 5000)
 
-    supabase.auth.getSession()
-      .then(async ({ data: { session } }) => {
-        if (cancelled) return
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          const pro = await fetchIsPro(session.user.id)
-          if (!cancelled) setIsPro(pro)
-        }
-        if (!cancelled) setLoading(false)
-      })
-      .catch(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+    // Use onAuthStateChange only — avoids the race with getSession() double-firing.
+    // INITIAL_SESSION fires immediately with the current session (or null if signed out).
+    // We set loading=false right away (before isPro fetch) so pages don't wait on DB.
+    // isPro updates asynchronously — a brief stale value is acceptable for the nav pill.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const pro = await fetchIsPro(session.user.id)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+
+      // Unblock the UI immediately — don't make pages wait for the isPro DB round-trip
+      if (!cancelled) setLoading(false)
+      clearTimeout(safetyTimer)
+
+      if (currentUser) {
+        const pro = await fetchIsPro(currentUser.id)
         if (!cancelled) setIsPro(pro)
       } else {
         if (!cancelled) setIsPro(false)
       }
-      if (!cancelled) setLoading(false)
     })
 
     return () => {
