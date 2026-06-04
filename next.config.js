@@ -53,7 +53,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://*.sentry.io",
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://cdn.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
-              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com https://images.unsplash.com https://images.pexels.com https://pixabay.com https://cdn.pixabay.com",
+              "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com https://images.unsplash.com https://images.pexels.com https://pixabay.com https://cdn.pixabay.com",
               "font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com https://fonts.gstatic.com",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://vitals.vercel-insights.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://api.anthropic.com https://api.unsplash.com https://api.pexels.com https://pixabay.com https://*.sentry.io",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
