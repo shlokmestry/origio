@@ -11,9 +11,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({ user: null, loading: true, isPro: false })
 
-async function fetchIsPro(userId: string): Promise<boolean> {
+async function fetchIsPro(userId: string, accessToken: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { createClient } = await import('@supabase/supabase-js')
+    const client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+    )
+    const { data, error } = await client
       .from('profiles').select('is_pro').eq('id', userId).maybeSingle()
     if (error) {
       console.error('[AuthProvider] fetchIsPro error:', error.message)
@@ -41,8 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null
       setUser(currentUser)
       setLoading(false)
-      if (currentUser) {
-        fetchIsPro(currentUser.id).then(pro => { if (!cancelled) setIsPro(pro) })
+      if (currentUser && session?.access_token) {
+        fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
       }
     }).catch(() => {
       if (!cancelled) setLoading(false)
@@ -54,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (cancelled || event === 'INITIAL_SESSION') return
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      if (currentUser) {
-        fetchIsPro(currentUser.id).then(pro => { if (!cancelled) setIsPro(pro) })
+      if (currentUser && session?.access_token) {
+        fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
       } else {
         setIsPro(false)
       }
