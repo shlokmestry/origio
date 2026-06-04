@@ -20,12 +20,13 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
   }
 
-  // Reject requests from unknown origins
-  const requestOrigin = request.headers.get('origin') ?? ''
-  if (!ALLOWED_ORIGINS.includes(requestOrigin)) {
+  // Browsers omit Origin on same-origin requests — treat absence as trusted.
+  // Only reject when Origin is explicitly set to an unknown value.
+  const requestOrigin = request.headers.get('origin')
+  if (requestOrigin && !ALLOWED_ORIGINS.includes(requestOrigin)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
-  const origin = requestOrigin
+  const origin = requestOrigin ?? ALLOWED_ORIGINS[0]
 
   let customerEmail: string | undefined
   let userId: string | undefined

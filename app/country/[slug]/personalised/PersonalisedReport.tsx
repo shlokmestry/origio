@@ -293,9 +293,12 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
     setHeadlineLoading(true);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
     fetch("/api/generate-headline", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       signal: controller.signal,
       body: JSON.stringify({
         countryName: country.name, countrySlug: country.slug, currency: country.currency,
@@ -313,6 +316,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
       .then((d) => { if (d.headline) setHeadline(d.headline); })
       .catch(() => {})
       .finally(() => { clearTimeout(timeout); setHeadlineLoading(false); });
+    }).catch(() => { clearTimeout(timeout); setHeadlineLoading(false); });
     return () => { controller.abort(); clearTimeout(timeout); };
   }, [loading, answers, country, data, match]);
 
