@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
+import * as Sentry from '@sentry/nextjs'
 
 interface AuthContextType {
   user: User | null
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser)
       setLoading(false)
       if (currentUser && session?.access_token) {
+        Sentry.setUser({ id: currentUser.id, email: currentUser.email })
         fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
       }
     }).catch(() => {
@@ -61,8 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null
       setUser(currentUser)
       if (currentUser && session?.access_token) {
+        Sentry.setUser({ id: currentUser.id, email: currentUser.email })
         fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
       } else {
+        Sentry.setUser(null)
         setIsPro(false)
       }
     })

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { mapRowToCountry } from '@/lib/mappers'
 import { rateLimit } from '@/lib/rate-limit'
+import * as Sentry from '@sentry/nextjs'
 
 // Country data changes at most daily — allow CDN/edge caching for 1hr,
 // stale-while-revalidate for another hour so DB is never hammered.
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     .order('name')
 
   if (countriesError) {
+    Sentry.captureException(countriesError, { tags: { route: 'countries', query: 'countries' } })
     console.error('Error fetching countries:', countriesError)
     return NextResponse.json({ error: countriesError.message }, { status: 500 })
   }
@@ -32,6 +34,7 @@ export async function GET(request: Request) {
     .select('*')
 
   if (dataError) {
+    Sentry.captureException(dataError, { tags: { route: 'countries', query: 'country_data' } })
     console.error('Error fetching country_data:', dataError)
     return NextResponse.json({ error: dataError.message }, { status: 500 })
   }

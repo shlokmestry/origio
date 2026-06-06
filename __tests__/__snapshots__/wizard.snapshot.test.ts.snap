@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`scoreCountriesForWizard snapshot > matchScores are stable to 2dp — update deliberately if weights change 1`] = `
+[
+  {
+    "score": 7.44,
+    "slug": "singapore",
+  },
+  {
+    "score": 7.4,
+    "slug": "uae",
+  },
+  {
+    "score": 6.41,
+    "slug": "germany",
+  },
+  {
+    "score": 5.38,
+    "slug": "portugal",
+  },
+  {
+    "score": 5.2,
+    "slug": "vietnam",
+  },
+]
+`;
+
+exports[`scoreCountriesForWizard snapshot > ranking order is stable — update deliberately if weights change 1`] = `
+[
+  "singapore",
+  "uae",
+  "germany",
+  "portugal",
+  "vietnam",
+]
+`;
+
+exports[`scoreCountriesForWizard snapshot > remote path ranking is stable 1`] = `
+[
+  "uae",
+  "portugal",
+  "vietnam",
+  "singapore",
+  "germany",
+]
+`;
+
+exports[`scoreCountriesForWizard snapshot > retire path ranking is stable 1`] = `
+[
+  "uae",
+  "portugal",
+  "vietnam",
+  "singapore",
+  "germany",
+]
+`;

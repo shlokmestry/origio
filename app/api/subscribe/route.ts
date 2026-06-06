@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeForPrompt } from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const limited = await rateLimit(req, { name: "subscribe", maxRequests: 5, windowSeconds: 60 });
@@ -114,6 +115,7 @@ Origio`;
       }),
     });
   } catch (err) {
+    Sentry.captureException(err, { tags: { route: 'subscribe', step: 'resend' } })
     console.error("Resend error:", err);
   }
 
@@ -136,6 +138,7 @@ Origio`;
       }),
     });
   } catch (err) {
+    Sentry.captureException(err, { tags: { route: 'subscribe', step: 'loops' } })
     console.error("Loops error:", err);
   }
 

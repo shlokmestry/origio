@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeForPrompt } from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(request: Request): Promise<Response> {
   const limited = await rateLimit(request, { name: "validate-results", maxRequests: 10, windowSeconds: 60 });
@@ -126,6 +127,7 @@ Respond ONLY with valid JSON, no markdown, no explanation outside the JSON:
     }
 
   } catch (err) {
+    Sentry.captureException(err, { tags: { route: 'validate-results' } })
     console.error("Validation error:", err);
     return NextResponse.json({ valid: true, issues: [], flaggedCountries: [], confidence: "low" });
   }

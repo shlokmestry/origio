@@ -3,6 +3,7 @@ import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { isValidEmail } from '@/lib/utils'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: Request) {
   const limited = await rateLimit(request, { name: 'send-results', maxRequests: 3, windowSeconds: 60 })
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
     })
     return NextResponse.json({ ok: true })
   } catch (err) {
+    Sentry.captureException(err, { tags: { route: 'send-results' } })
     console.error('[send-results]', err)
     return NextResponse.json({ ok: false })
   }
