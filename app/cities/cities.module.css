@@ -72,19 +72,10 @@
 
 /* ── HERO FRAME ── */
 .heroFrame {
-  border: 1px solid #2a2a28;
-  padding: 14px;
-  margin-bottom: 56px;
+  margin-bottom: 48px;
   position: relative;
-}
-.heroInner {
-  border: 1px solid #2a2a2a;
-  aspect-ratio: 21 / 7;
-  min-height: 340px;
-  position: relative;
-  overflow: hidden;
-  display: flex; flex-direction: column;
-  background: var(--c-cream);
+  display: flex;
+  align-items: center;
 }
 
 .frameMeta {
@@ -114,15 +105,12 @@
 
 .heroType {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-size: clamp(32px, 12vw, 180px);
+  font-size: clamp(80px, 18vw, 220px);
   line-height: 0.88;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   white-space: nowrap;
   display: flex; align-items: baseline;
-  position: absolute;
-  left: 28px; top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
+  padding: 0 0 8px;
 }
 .typeSolid { color: #f0f0e8; }
 .typeOutline {

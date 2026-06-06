@@ -223,40 +223,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
         {/* HERO */}
         <section className={`${styles.heroFrame} ${styles.fu} ${styles.d1}`}>
-          <div className={styles.heroInner}>
-            <span className={`${styles.frameMeta} ${styles.frameMetaTl}`}>ORG-ATL · 2026.Q1 · Vol. 01</span>
-            <span className={`${styles.frameMeta} ${styles.frameMetaBl}`}>SCALE 1 : 12 · MONO · SERIF</span>
-            <span className={`${styles.frameMeta} ${styles.frameMetaBr}`}>PRINTED IN DARK MODE</span>
-            <div className={styles.heroType}>
-              <span className={styles.typeSolid}>Citi</span>
-              <span className={styles.typeOutline}>es</span>
-            </div>
-            <p className={styles.heroSub}>The Atlas ~ <span className={styles.grey}>find your city.</span></p>
-
-            <div className={styles.ledgerPanel}>
-              <div className={styles.ledgerHead}>
-                <div className={styles.ledgerLbl}>
-                  Origio Atlas
-                  <span className={styles.it}>Twenty-four cities</span>
-                </div>
-                <div className={styles.ledgerCount}>{liveCities.length}<span className={styles.denom}>/ {TOTAL_CITIES}</span></div>
-              </div>
-              <div className={styles.ledgerRows}>
-                {liveCities.map((c, i) => (
-                  <div key={c.id} className={styles.ledgerRow}>
-                    <span className={styles.lrN}>N°{String(i+1).padStart(2,'0')}</span>
-                    <span className={styles.lrCode}>{c.slug.slice(0,3).toUpperCase()}</span>
-                    <span className={styles.lrName}>{c.name}</span>
-                    <span className={styles.lrStat}>{formatRent(c.data?.costRentCityCentre, c.currency)}</span>
-                    <span className={`${styles.lrStatusDot} ${styles.live}`} />
-                  </div>
-                ))}
-              </div>
-              <div className={styles.ledgerFoot}>
-                <span>More cities every 90 days</span>
-                <span>↓ Scroll to explore</span>
-              </div>
-            </div>
+          <div className={styles.heroType}>
+            <span className={styles.typeSolid}>Citi</span>
+            <span className={styles.typeOutline}>es</span>
           </div>
         </section>
 
