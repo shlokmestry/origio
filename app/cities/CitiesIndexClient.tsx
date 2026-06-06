@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import styles from './cities.module.css'
 import { City } from '@/types'
-import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
@@ -21,12 +20,14 @@ type InternetQuality = 'excellent' | 'good' | 'ok'
 type EnglishLevel = 'very-high' | 'high' | 'moderate'
 type SafetyLevel = 'very-safe' | 'safe' | 'moderate'
 type CityStatus = 'live' | 'soon'
+type Region = 'europe' | 'asia' | 'americas' | 'middleeast'
 
 interface CityExtra {
   climateBand: ClimateBand
   climate: string
   vibes: Vibe[]
-  rentEur: number        // normalized EUR-equivalent for budget filter
+  rentEur: number
+  region: Region
   visa?: VisaType
   internet?: InternetQuality
   english?: EnglishLevel
@@ -38,52 +39,51 @@ interface CityExtra {
 // GBP×1.18  USD×0.92  CAD×0.68  SGD×0.68  JPY×0.0064  AUD×0.59  AED×0.25
 const CITY_EXTRAS: Record<string, CityExtra> = {
   // ── Live cities ────────────────────────────────────────────────────────────
-  lisbon:         { climateBand:'warm',      climate:'Mediterranean',         vibes:['remote','culture','beach','budget'],         rentEur:1200,  visa:'nomad',     internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
-  london:         { climateBand:'temperate', climate:'Oceanic',               vibes:['remote','culture','nightlife'],              rentEur:2600,  visa:'sponsor',   internet:'excellent', english:'very-high', safety:'safe',      status:'live' },
-  dublin:         { climateBand:'cool',      climate:'Oceanic',               vibes:['remote','culture','nightlife'],              rentEur:2200,  visa:'sponsor',   internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
-  amsterdam:      { climateBand:'temperate', climate:'Oceanic',               vibes:['remote','culture','nightlife'],              rentEur:1950,  visa:'visa-free', internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  berlin:         { climateBand:'temperate', climate:'Continental',           vibes:['remote','nightlife','culture','budget'],     rentEur:1350,  visa:'nomad',     internet:'good',      english:'high',      safety:'safe',      status:'live' },
-  barcelona:      { climateBand:'warm',      climate:'Mediterranean',         vibes:['remote','beach','nightlife'],                rentEur:1450,  visa:'nomad',     internet:'good',      english:'moderate',  safety:'safe',      status:'live' },
-  'new-york':     { climateBand:'temperate', climate:'Continental',           vibes:['remote','culture','nightlife'],              rentEur:3500,  visa:'sponsor',   internet:'excellent', english:'very-high', safety:'moderate',  status:'live' },
-  toronto:        { climateBand:'cool',      climate:'Continental',           vibes:['family','culture','remote'],                 rentEur:1630,  visa:'income',    internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  singapore:      { climateBand:'warm',      climate:'Tropical',              vibes:['remote','family','culture'],                 rentEur:2580,  visa:'sponsor',   internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  tokyo:          { climateBand:'temperate', climate:'Humid Subtropical',     vibes:['culture','remote','nightlife','budget'],     rentEur:900,   visa:'investor',  internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
-  sydney:         { climateBand:'warm',      climate:'Oceanic',               vibes:['beach','family','remote'],                   rentEur:1530,  visa:'sponsor',   internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
-  dubai:          { climateBand:'warm',      climate:'Desert',                vibes:['remote','beach','nightlife'],                rentEur:2200,  visa:'investor',  internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
-  // ── New live cities — May 2026 ────────────────────────────────────────────
-  bangkok:        { climateBand:'warm',      climate:'Tropical',              vibes:['remote','nightlife','culture','budget'],     rentEur:580,   visa:'income',    internet:'excellent', english:'high',      safety:'moderate',  status:'live' },
-  'mexico-city':  { climateBand:'temperate', climate:'High-altitude Subtropical', vibes:['remote','culture','nightlife','budget'], rentEur:1050,  visa:'income',    internet:'excellent', english:'moderate',  safety:'moderate',  status:'live' },
-  bali:           { climateBand:'warm',      climate:'Tropical',              vibes:['remote','beach','culture','budget'],         rentEur:880,   visa:'nomad',     internet:'good',      english:'high',      safety:'very-safe', status:'live' },
-  medellin:       { climateBand:'warm',      climate:'Subtropical Highland',  vibes:['remote','budget','culture','nightlife'],     rentEur:680,   visa:'nomad',     internet:'excellent', english:'moderate',  safety:'moderate',  status:'live' },
-  'chiang-mai':   { climateBand:'warm',      climate:'Subtropical',           vibes:['remote','budget','culture'],                 rentEur:310,   visa:'income',    internet:'good',      english:'moderate',  safety:'very-safe', status:'live' },
-  'kuala-lumpur': { climateBand:'warm',      climate:'Tropical',              vibes:['remote','family','culture','budget'],        rentEur:590,   visa:'nomad',     internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  'cape-town':    { climateBand:'warm',      climate:'Mediterranean',         vibes:['remote','beach','culture'],                  rentEur:840,   visa:'nomad',     internet:'good',      english:'very-high', safety:'moderate',  status:'live' },
-  malaga:         { climateBand:'warm',      climate:'Mediterranean',         vibes:['remote','beach','culture'],                  rentEur:1000,  visa:'nomad',     internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
-  tbilisi:        { climateBand:'temperate', climate:'Continental',           vibes:['remote','culture','budget'],                 rentEur:630,   visa:'visa-free', internet:'good',      english:'moderate',  safety:'safe',      status:'live' },
-  'buenos-aires': { climateBand:'temperate', climate:'Humid Subtropical',     vibes:['remote','culture','nightlife','budget'],     rentEur:490,   visa:'nomad',     internet:'good',      english:'moderate',  safety:'moderate',  status:'live' },
-  tallinn:        { climateBand:'cool',      climate:'Continental',           vibes:['remote','culture','family'],                 rentEur:840,   visa:'nomad',     internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
-  'da-nang':      { climateBand:'warm',      climate:'Tropical Monsoon',      vibes:['remote','beach','budget'],                   rentEur:390,   visa:'visa-free', internet:'good',      english:'moderate',  safety:'very-safe', status:'live' },
+  lisbon:         { climateBand:'warm',      climate:'Mediterranean',             vibes:['remote','culture','beach','budget'],         rentEur:1200,  region:'europe',     visa:'nomad',     internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
+  london:         { climateBand:'temperate', climate:'Oceanic',                   vibes:['remote','culture','nightlife'],              rentEur:2600,  region:'europe',     visa:'sponsor',   internet:'excellent', english:'very-high', safety:'safe',      status:'live' },
+  dublin:         { climateBand:'cool',      climate:'Oceanic',                   vibes:['remote','culture','nightlife'],              rentEur:2200,  region:'europe',     visa:'sponsor',   internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
+  amsterdam:      { climateBand:'temperate', climate:'Oceanic',                   vibes:['remote','culture','nightlife'],              rentEur:1950,  region:'europe',     visa:'visa-free', internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
+  berlin:         { climateBand:'temperate', climate:'Continental',               vibes:['remote','nightlife','culture','budget'],     rentEur:1350,  region:'europe',     visa:'nomad',     internet:'good',      english:'high',      safety:'safe',      status:'live' },
+  barcelona:      { climateBand:'warm',      climate:'Mediterranean',             vibes:['remote','beach','nightlife'],                rentEur:1450,  region:'europe',     visa:'nomad',     internet:'good',      english:'moderate',  safety:'safe',      status:'live' },
+  malaga:         { climateBand:'warm',      climate:'Mediterranean',             vibes:['remote','beach','culture'],                  rentEur:1000,  region:'europe',     visa:'nomad',     internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
+  tbilisi:        { climateBand:'temperate', climate:'Continental',               vibes:['remote','culture','budget'],                 rentEur:630,   region:'europe',     visa:'visa-free', internet:'good',      english:'moderate',  safety:'safe',      status:'live' },
+  tallinn:        { climateBand:'cool',      climate:'Continental',               vibes:['remote','culture','family'],                 rentEur:840,   region:'europe',     visa:'nomad',     internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
+  'new-york':     { climateBand:'temperate', climate:'Continental',               vibes:['remote','culture','nightlife'],              rentEur:3500,  region:'americas',   visa:'sponsor',   internet:'excellent', english:'very-high', safety:'moderate',  status:'live' },
+  toronto:        { climateBand:'cool',      climate:'Continental',               vibes:['family','culture','remote'],                 rentEur:1630,  region:'americas',   visa:'income',    internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
+  medellin:       { climateBand:'warm',      climate:'Subtropical Highland',      vibes:['remote','budget','culture','nightlife'],     rentEur:680,   region:'americas',   visa:'nomad',     internet:'excellent', english:'moderate',  safety:'moderate',  status:'live' },
+  'mexico-city':  { climateBand:'temperate', climate:'High-altitude Subtropical', vibes:['remote','culture','nightlife','budget'],     rentEur:1050,  region:'americas',   visa:'income',    internet:'excellent', english:'moderate',  safety:'moderate',  status:'live' },
+  'buenos-aires': { climateBand:'temperate', climate:'Humid Subtropical',         vibes:['remote','culture','nightlife','budget'],     rentEur:490,   region:'americas',   visa:'nomad',     internet:'good',      english:'moderate',  safety:'moderate',  status:'live' },
+  singapore:      { climateBand:'warm',      climate:'Tropical',                  vibes:['remote','family','culture'],                 rentEur:2580,  region:'asia',       visa:'sponsor',   internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
+  tokyo:          { climateBand:'temperate', climate:'Humid Subtropical',         vibes:['culture','remote','nightlife','budget'],     rentEur:900,   region:'asia',       visa:'investor',  internet:'excellent', english:'moderate',  safety:'very-safe', status:'live' },
+  sydney:         { climateBand:'warm',      climate:'Oceanic',                   vibes:['beach','family','remote'],                   rentEur:1530,  region:'asia',       visa:'sponsor',   internet:'good',      english:'very-high', safety:'very-safe', status:'live' },
+  bangkok:        { climateBand:'warm',      climate:'Tropical',                  vibes:['remote','nightlife','culture','budget'],     rentEur:580,   region:'asia',       visa:'income',    internet:'excellent', english:'high',      safety:'moderate',  status:'live' },
+  bali:           { climateBand:'warm',      climate:'Tropical',                  vibes:['remote','beach','culture','budget'],         rentEur:880,   region:'asia',       visa:'nomad',     internet:'good',      english:'high',      safety:'very-safe', status:'live' },
+  'chiang-mai':   { climateBand:'warm',      climate:'Subtropical',               vibes:['remote','budget','culture'],                 rentEur:310,   region:'asia',       visa:'income',    internet:'good',      english:'moderate',  safety:'very-safe', status:'live' },
+  'kuala-lumpur': { climateBand:'warm',      climate:'Tropical',                  vibes:['remote','family','culture','budget'],        rentEur:590,   region:'asia',       visa:'nomad',     internet:'excellent', english:'very-high', safety:'very-safe', status:'live' },
+  'da-nang':      { climateBand:'warm',      climate:'Tropical Monsoon',          vibes:['remote','beach','budget'],                   rentEur:390,   region:'asia',       visa:'visa-free', internet:'good',      english:'moderate',  safety:'very-safe', status:'live' },
+  dubai:          { climateBand:'warm',      climate:'Desert',                    vibes:['remote','beach','nightlife'],                rentEur:2200,  region:'middleeast', visa:'investor',  internet:'excellent', english:'high',      safety:'very-safe', status:'live' },
+  'cape-town':    { climateBand:'warm',      climate:'Mediterranean',             vibes:['remote','beach','culture'],                  rentEur:840,   region:'middleeast', visa:'nomad',     internet:'good',      english:'very-high', safety:'moderate',  status:'live' },
   // ── Coming soon ───────────────────────────────────────────────────────────
-  porto:          { climateBand:'temperate', climate:'Atlantic temperate',    vibes:['budget','culture','remote'],                 rentEur:950,   status:'soon' },
-  funchal:        { climateBand:'warm',      climate:'Subtropical',           vibes:['remote','beach','culture'],                  rentEur:1100,  status:'soon' },
-  manchester:     { climateBand:'cool',      climate:'Oceanic',               vibes:['budget','nightlife','remote'],               rentEur:1350,  status:'soon' },
-  edinburgh:      { climateBand:'cool',      climate:'Oceanic',               vibes:['culture','family','remote'],                 rentEur:1530,  status:'soon' },
-  cork:           { climateBand:'cool',      climate:'Oceanic',               vibes:['family','budget','remote'],                  rentEur:1450,  status:'soon' },
-  rotterdam:      { climateBand:'temperate', climate:'Oceanic',               vibes:['culture','remote','budget'],                 rentEur:1530,  status:'soon' },
-  eindhoven:      { climateBand:'temperate', climate:'Oceanic',               vibes:['remote','family','budget'],                  rentEur:1430,  status:'soon' },
-  munich:         { climateBand:'temperate', climate:'Continental',           vibes:['family','culture','remote'],                 rentEur:1840,  status:'soon' },
-  hamburg:        { climateBand:'cool',      climate:'Oceanic',               vibes:['culture','remote','family'],                 rentEur:1320,  status:'soon' },
-  madrid:         { climateBand:'warm',      climate:'Continental',           vibes:['nightlife','culture','remote'],              rentEur:1530,  status:'soon' },
-  valencia:       { climateBand:'warm',      climate:'Mediterranean',         vibes:['beach','remote','budget'],                   rentEur:1120,  status:'soon' },
-  'san-francisco':{ climateBand:'temperate', climate:'Mediterranean',         vibes:['remote','culture'],                          rentEur:3040,  status:'soon' },
-  austin:         { climateBand:'warm',      climate:'Subtropical',           vibes:['remote','nightlife','budget'],               rentEur:1748,  status:'soon' },
-  vancouver:      { climateBand:'temperate', climate:'Oceanic',               vibes:['family','beach','remote'],                   rentEur:1748,  status:'soon' },
-  montreal:       { climateBand:'cool',      climate:'Continental',           vibes:['culture','nightlife','budget'],              rentEur:1142,  status:'soon' },
-  osaka:          { climateBand:'temperate', climate:'Humid Subtropical',     vibes:['culture','budget','nightlife'],              rentEur:470,   status:'soon' },
-  kyoto:          { climateBand:'temperate', climate:'Humid Subtropical',     vibes:['culture','family','budget'],                 rentEur:403,   status:'soon' },
-  melbourne:      { climateBand:'temperate', climate:'Oceanic',               vibes:['culture','nightlife','remote'],              rentEur:1412,  status:'soon' },
-  brisbane:       { climateBand:'warm',      climate:'Subtropical',           vibes:['beach','family','remote'],                   rentEur:1294,  status:'soon' },
-  'abu-dhabi':    { climateBand:'warm',      climate:'Desert',                vibes:['family','culture'],                          rentEur:515,   status:'soon' },
+  porto:          { climateBand:'temperate', climate:'Atlantic temperate',        vibes:['budget','culture','remote'],                 rentEur:950,   region:'europe',     status:'soon' },
+  funchal:        { climateBand:'warm',      climate:'Subtropical',               vibes:['remote','beach','culture'],                  rentEur:1100,  region:'europe',     status:'soon' },
+  manchester:     { climateBand:'cool',      climate:'Oceanic',                   vibes:['budget','nightlife','remote'],               rentEur:1350,  region:'europe',     status:'soon' },
+  edinburgh:      { climateBand:'cool',      climate:'Oceanic',                   vibes:['culture','family','remote'],                 rentEur:1530,  region:'europe',     status:'soon' },
+  cork:           { climateBand:'cool',      climate:'Oceanic',                   vibes:['family','budget','remote'],                  rentEur:1450,  region:'europe',     status:'soon' },
+  rotterdam:      { climateBand:'temperate', climate:'Oceanic',                   vibes:['culture','remote','budget'],                 rentEur:1530,  region:'europe',     status:'soon' },
+  eindhoven:      { climateBand:'temperate', climate:'Oceanic',                   vibes:['remote','family','budget'],                  rentEur:1430,  region:'europe',     status:'soon' },
+  munich:         { climateBand:'temperate', climate:'Continental',               vibes:['family','culture','remote'],                 rentEur:1840,  region:'europe',     status:'soon' },
+  hamburg:        { climateBand:'cool',      climate:'Oceanic',                   vibes:['culture','remote','family'],                 rentEur:1320,  region:'europe',     status:'soon' },
+  madrid:         { climateBand:'warm',      climate:'Continental',               vibes:['nightlife','culture','remote'],              rentEur:1530,  region:'europe',     status:'soon' },
+  valencia:       { climateBand:'warm',      climate:'Mediterranean',             vibes:['beach','remote','budget'],                   rentEur:1120,  region:'europe',     status:'soon' },
+  'san-francisco':{ climateBand:'temperate', climate:'Mediterranean',             vibes:['remote','culture'],                          rentEur:3040,  region:'americas',   status:'soon' },
+  austin:         { climateBand:'warm',      climate:'Subtropical',               vibes:['remote','nightlife','budget'],               rentEur:1748,  region:'americas',   status:'soon' },
+  vancouver:      { climateBand:'temperate', climate:'Oceanic',                   vibes:['family','beach','remote'],                   rentEur:1748,  region:'americas',   status:'soon' },
+  montreal:       { climateBand:'cool',      climate:'Continental',               vibes:['culture','nightlife','budget'],              rentEur:1142,  region:'americas',   status:'soon' },
+  osaka:          { climateBand:'temperate', climate:'Humid Subtropical',         vibes:['culture','budget','nightlife'],              rentEur:470,   region:'asia',       status:'soon' },
+  kyoto:          { climateBand:'temperate', climate:'Humid Subtropical',         vibes:['culture','family','budget'],                 rentEur:403,   region:'asia',       status:'soon' },
+  melbourne:      { climateBand:'temperate', climate:'Oceanic',                   vibes:['culture','nightlife','remote'],              rentEur:1412,  region:'asia',       status:'soon' },
+  brisbane:       { climateBand:'warm',      climate:'Subtropical',               vibes:['beach','family','remote'],                   rentEur:1294,  region:'asia',       status:'soon' },
+  'abu-dhabi':    { climateBand:'warm',      climate:'Desert',                    vibes:['family','culture'],                          rentEur:515,   region:'middleeast', status:'soon' },
 }
 
 const TOTAL_CITIES = Object.keys(CITY_EXTRAS).length
@@ -103,10 +103,10 @@ type SortKey = 'score' | 'rent-asc' | 'rent-desc'
 
 interface FilterState {
   budget: string
-  climate: string
+  region: string
   vibe: string
 }
-const DEFAULT_FILTERS: FilterState = { budget:'any', climate:'any', vibe:'any' }
+const DEFAULT_FILTERS: FilterState = { budget:'any', region:'any', vibe:'any' }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -129,9 +129,9 @@ function matchReasons(
   filters: FilterState,
 ): string[] {
   const out: string[] = []
-  if (filters.climate !== 'any' && extra.climateBand === filters.climate) {
-    const label: Record<string,string> = { warm:'warm year-round', temperate:'four seasons', cool:'cool & crisp' }
-    out.push(label[filters.climate])
+  if (filters.region !== 'any' && extra.region === filters.region) {
+    const label: Record<string,string> = { europe:'Europe', asia:'Asia & Pacific', americas:'Americas', middleeast:'Middle East & Africa' }
+    out.push(label[filters.region])
   }
   if (filters.budget !== 'any') {
     const r = extra.rentEur
@@ -206,8 +206,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
     if (filters.budget !== 'any') {
       list = list.filter(c => {
-        // Use the hardcoded EUR-normalised rentEur for budget bucketing
-        // (DB rent is in local currency; conversion happens in CITY_EXTRAS)
         const r = c.extra?.rentEur ?? 0
         if (filters.budget === 'low')  return r < 1500
         if (filters.budget === 'mid')  return r >= 1500 && r <= 2500
@@ -215,13 +213,10 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         return true
       })
     }
-    if (filters.climate !== 'any') {
-      list = list.filter(c => {
-        // Always use hardcoded climateBand — DB temp thresholds misclassify cities like Tokyo
-        return c.extra?.climateBand === filters.climate
-      })
+    if (filters.region !== 'any') {
+      list = list.filter(c => c.extra?.region === filters.region)
     }
-    if (filters.vibe    !== 'any') list = list.filter(c => (c.extra?.vibes ?? []).includes(filters.vibe as Vibe))
+    if (filters.vibe !== 'any') list = list.filter(c => (c.extra?.vibes ?? []).includes(filters.vibe as Vibe))
 
     list.sort((a, b) => {
       if (sort === 'score')     return (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0)
@@ -232,9 +227,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
     return list
   }, [enriched, filters, sort])
 
-  const anyFilterActive = filters.budget !== 'any' || filters.climate !== 'any' || filters.vibe !== 'any'
+  const anyFilterActive = filters.budget !== 'any' || filters.region !== 'any' || filters.vibe !== 'any'
 
-  const setFilter = useCallback((key: keyof FilterState, val: string) => {
+  const setFilter = useCallback(<K extends keyof FilterState>(key: K, val: string) => {
     setFilters(prev => ({ ...prev, [key]: val }))
   }, [])
 
@@ -306,14 +301,15 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           {/* ── FILTER BAR ── */}
           <div className={styles.filterBar}>
             <ChipGroup
-              label="Climate"
-              value={filters.climate}
-              onChange={v => setFilter('climate', v)}
+              label="Region"
+              value={filters.region}
+              onChange={v => setFilter('region', v)}
               options={[
-                { val:'any',       label:'Any' },
-                { val:'warm',      label:'🌞 Warm' },
-                { val:'temperate', label:'🍂 Temperate' },
-                { val:'cool',      label:'❄️ Cool' },
+                { val:'any',        label:'Anywhere' },
+                { val:'europe',     label:'Europe' },
+                { val:'asia',       label:'Asia & Pacific' },
+                { val:'americas',   label:'Americas' },
+                { val:'middleeast', label:'Middle East & Africa' },
               ]}
             />
             <ChipGroup
@@ -365,10 +361,60 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             </div>
           </div>
 
+          {/* ── COMPARE BANNER ── */}
+          <Link href="/cities/compare" className={styles.cmpBanner}>
+            <span className={styles.cmpBannerL}>Compare cities · rent · groceries · gym · transit — up to 4 side by side</span>
+            <span className={styles.cmpBannerR}>Open the ledger →</span>
+          </Link>
+
           {/* CITY GRID */}
           {filtered.length > 0 ? (
             <div className={styles.cityGrid}>
-              {filtered.map((c, i) => {
+              {/* ── FEATURED HERO CARD (first result) ── */}
+              {(() => {
+                const c = filtered[0]
+                const extra = c.extra!
+                const [solid, outl] = splitName(c.name)
+                return (
+                  <Link href={`/city/${c.slug}`} className={styles.heroCity}>
+                    <div className={styles.hcInner}>
+                      <span className={styles.hcBadge}>№ 01 · Top rated city</span>
+                      <h3 className={styles.hcName}>
+                        <span className={styles.solid}>{solid}</span>
+                        <span className={styles.outl}>{outl}</span>
+                      </h3>
+                      <p className={styles.hcSub}>
+                        {slugToIso(c.countrySlug) ? <FlagIcon code={slugToIso(c.countrySlug)!} size="sm" className={styles.flag} /> : <span className={styles.flag}>{c.flagEmoji}</span>}
+                        {c.countryName}<span className={styles.sep}> · </span>{extra.climate}
+                      </p>
+                      {c.tagline && <p className={styles.hcTagline}>{c.tagline}</p>}
+                      <div className={styles.ccTags} style={{ marginTop: 8 }}>
+                        {extra.vibes.map(v => (
+                          <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{VIBE_LABELS[v] ?? v}</span>
+                        ))}
+                      </div>
+                      <span className={styles.hcArrow}>Read the dispatch →</span>
+                    </div>
+                    <div className={styles.hcR}>
+                      <div className={styles.hcStat}>
+                        <p className={styles.hcStatL}>Move Score</p>
+                        <p className={styles.hcScore}>{c.data?.moveScore?.toFixed(1) ?? '—'}<span className={styles.hcScoreUnit}>/10</span></p>
+                      </div>
+                      <div className={styles.hcStat}>
+                        <p className={styles.hcStatL}>Rent · 1BR centre</p>
+                        <p className={styles.hcStatV}>{formatRent(c.data?.costRentCityCentre, c.currency)}<span className={styles.unit}>/mo</span></p>
+                      </div>
+                      <div className={styles.hcStat}>
+                        <p className={styles.hcStatL}>Climate</p>
+                        <p className={`${styles.hcStatV} ${styles.climate}`}>{extra.climate}</p>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })()}
+
+              {/* ── REMAINING CITIES ── */}
+              {filtered.slice(1).map((c, i) => {
                 const [solid, outl] = splitName(c.name)
                 const extra = c.extra!
                 const href = `/city/${c.slug}`
@@ -380,7 +426,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                     data-slug={c.slug}
                   >
                     <span className={styles.ccNum}>
-                      №{String(i+1).padStart(2,'0')}
+                      №{String(i+2).padStart(2,'0')}
                       <span className={styles.mark}>of {filtered.length}</span>
                     </span>
                     <div className={styles.ccL}>
@@ -399,7 +445,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                           <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
-                      {/* Why this city — shows on hover when filters active */}
                       {reasons.length > 0 && (
                         <div className={styles.whyHint}>
                           {reasons.map(r => <span key={r} className={styles.whyTag}>✓ {r}</span>)}
@@ -438,21 +483,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           )}
         </section>
 
-        {/* COMPARE CTA */}
-        <section className={`${styles.compareCta} ${styles.fu} ${styles.d4}`}>
-          <Link href="/cities/compare" className={styles.ccLink}>
-            <span className={styles.ccEyebrow}>III · A ledger of everyday life</span>
-            <span className={styles.ccHeadline}>
-              <span className={styles.ccLine}>Compare the</span>
-              <span className={`${styles.ccLine} ${styles.ccLineIt}`}><span className={styles.ccIt}>real cost</span></span>
-              <span className={styles.ccLine}>of any two or four cities.</span>
-            </span>
-            <span className={styles.ccMeta}>
-              <span className={styles.ccMetaL}>Rent · groceries · gym · doctor · internet · dining · utilities</span>
-              <span className={styles.ccMetaR}>Open the ledger <span className={styles.ccArr}>→</span></span>
-            </span>
-          </Link>
-        </section>
 
 
       </div>
