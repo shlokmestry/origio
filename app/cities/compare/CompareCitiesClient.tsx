@@ -34,7 +34,7 @@ const CITY_TO_ISO: Record<string, string> = {
   'da-nang': 'vn',
 }
 
-const REGION_ORDER = ['Europe', 'Asia', 'Americas', 'Middle East']
+const REGION_ORDER = ['Europe', 'Asia & Oceania', 'Americas', 'Middle East & Africa']
 const CITY_REGION: Record<string, string> = {
   lisbon:'Europe', porto:'Europe', funchal:'Europe', london:'Europe', manchester:'Europe',
   edinburgh:'Europe', dublin:'Europe', cork:'Europe', amsterdam:'Europe', rotterdam:'Europe',
@@ -43,10 +43,11 @@ const CITY_REGION: Record<string, string> = {
   'new-york':'Americas', 'san-francisco':'Americas', austin:'Americas', toronto:'Americas',
   vancouver:'Americas', montreal:'Americas', medellin:'Americas', 'mexico-city':'Americas',
   'buenos-aires':'Americas',
-  singapore:'Asia', tokyo:'Asia', osaka:'Asia', kyoto:'Asia', sydney:'Asia', melbourne:'Asia',
-  brisbane:'Asia', bangkok:'Asia', 'chiang-mai':'Asia', bali:'Asia', 'kuala-lumpur':'Asia',
-  'da-nang':'Asia', 'cape-town':'Asia',
-  dubai:'Middle East', 'abu-dhabi':'Middle East',
+  singapore:'Asia & Oceania', tokyo:'Asia & Oceania', osaka:'Asia & Oceania', kyoto:'Asia & Oceania',
+  sydney:'Asia & Oceania', melbourne:'Asia & Oceania', brisbane:'Asia & Oceania',
+  bangkok:'Asia & Oceania', 'chiang-mai':'Asia & Oceania', bali:'Asia & Oceania',
+  'kuala-lumpur':'Asia & Oceania', 'da-nang':'Asia & Oceania',
+  dubai:'Middle East & Africa', 'abu-dhabi':'Middle East & Africa', 'cape-town':'Middle East & Africa',
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
