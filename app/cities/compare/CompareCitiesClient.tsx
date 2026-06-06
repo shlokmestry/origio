@@ -34,6 +34,21 @@ const CITY_TO_ISO: Record<string, string> = {
   'da-nang': 'vn',
 }
 
+const REGION_ORDER = ['Europe', 'Asia', 'Americas', 'Middle East']
+const CITY_REGION: Record<string, string> = {
+  lisbon:'Europe', porto:'Europe', funchal:'Europe', london:'Europe', manchester:'Europe',
+  edinburgh:'Europe', dublin:'Europe', cork:'Europe', amsterdam:'Europe', rotterdam:'Europe',
+  eindhoven:'Europe', berlin:'Europe', munich:'Europe', hamburg:'Europe', barcelona:'Europe',
+  madrid:'Europe', valencia:'Europe', malaga:'Europe', tbilisi:'Europe', tallinn:'Europe',
+  'new-york':'Americas', 'san-francisco':'Americas', austin:'Americas', toronto:'Americas',
+  vancouver:'Americas', montreal:'Americas', medellin:'Americas', 'mexico-city':'Americas',
+  'buenos-aires':'Americas',
+  singapore:'Asia', tokyo:'Asia', osaka:'Asia', kyoto:'Asia', sydney:'Asia', melbourne:'Asia',
+  brisbane:'Asia', bangkok:'Asia', 'chiang-mai':'Asia', bali:'Asia', 'kuala-lumpur':'Asia',
+  'da-nang':'Asia', 'cape-town':'Asia',
+  dubai:'Middle East', 'abu-dhabi':'Middle East',
+}
+
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 export type CostKey = 'rent' | 'groc' | 'dine' | 'util' | 'gym' | 'cowork' | 'transport'
@@ -398,6 +413,12 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
       <main className={styles.folio} style={{ paddingTop: 80 }}>
 
+        {/* Heading */}
+        <div className={styles.mathHead}>
+          <span className={styles.mathSolid}>The </span>
+          <span className={styles.mathOutline}>Math</span>
+        </div>
+
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
@@ -410,30 +431,43 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Pick strip */}
         <section className={styles.pickStrip}>
-          <div className={styles.pickRow}>
+          <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>
               <span className={styles.pickLblArr}>→</span> Pick cities
             </span>
-            {allCities.map(c => {
-              const isOn = selected.includes(c.slug)
-              const atMax = selected.length >= LEDGER_MAX && !isOn
-              const minReached = selected.length <= 2 && isOn
-              return (
-                <button
-                  key={c.slug}
-                  type="button"
-                  className={`${styles.pickChip}${isOn ? ' ' + styles.pickChipOn : ''}`}
-                  disabled={atMax || minReached}
-                  onClick={() => toggleCity(c.slug)}
-                >
-                  {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
-                  {c.name}
-                </button>
-              )
-            })}
             <span className={styles.pickCap}>
               <span className={styles.pickCapNum}>{selected.length}</span> of 4 selected
             </span>
+          </div>
+          <div className={styles.pickGroups}>
+            {REGION_ORDER.map(region => {
+              const regionCities = allCities.filter(c => CITY_REGION[c.slug] === region)
+              if (!regionCities.length) return null
+              return (
+                <div key={region} className={styles.pickGroup}>
+                  <span className={styles.pickGroupLabel}>{region}</span>
+                  <div className={styles.pickGroupCities}>
+                    {regionCities.map(c => {
+                      const isOn = selected.includes(c.slug)
+                      const atMax = selected.length >= LEDGER_MAX && !isOn
+                      const minReached = selected.length <= 2 && isOn
+                      return (
+                        <button
+                          key={c.slug}
+                          type="button"
+                          className={`${styles.pickChip}${isOn ? ' ' + styles.pickChipOn : ''}`}
+                          disabled={atMax || minReached}
+                          onClick={() => toggleCity(c.slug)}
+                        >
+                          {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
+                          {c.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           {/* Legend */}
