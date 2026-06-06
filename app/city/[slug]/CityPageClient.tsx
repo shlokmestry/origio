@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import type { CityFull, CityDataRow } from "./page";
 
 interface Props {
@@ -620,28 +622,6 @@ export default function CityPageClient({ city }: Props) {
         }
         * { transition: color 1s ease, border-color 1s ease, background-color 1s ease; }
 
-        /* NAV */
-        nav {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-          background: color-mix(in srgb, var(--bg) 88%, transparent);
-          backdrop-filter: blur(14px);
-          border-bottom: 1px solid var(--rule);
-          height: 52px;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 36px;
-        }
-        .nav-logo {
-          text-decoration: none; color: var(--ink);
-          font-size: 10px; font-weight: 800;
-          letter-spacing: 0.16em; text-transform: uppercase;
-        }
-        .nav-center {
-          font-size: 8.5px; font-weight: 700;
-          letter-spacing: 0.18em; text-transform: uppercase;
-          color: var(--ink); display: flex; align-items: center; gap: 10px;
-        }
-        .nav-crumb { color: var(--dimmer); }
-
         /* SUN RAIL */
         .skyrail {
           position: fixed; top: 80px; left: 36px; right: 36px;
@@ -914,23 +894,7 @@ export default function CityPageClient({ city }: Props) {
       `}</style>
 
       {/* NAV */}
-      <nav>
-        <Link href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 22, height: 22, background: '#fff', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <rect width="12" height="12" rx="2" fill="#0a0a0a"/>
-              <circle cx="6" cy="6" r="3" fill="#fff"/>
-            </svg>
-          </div>
-          <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>Origio</span>
-        </Link>
-        <div className="nav-center">
-          <a href="/cities" style={{ textDecoration: "none", color: "var(--dimmer)" }}>CITIES</a>
-          <span className="nav-crumb">·</span>
-          <span>{city.name.toUpperCase()}</span>
-        </div>
-        <div />
-      </nav>
+      <Nav />
 
       {/* SUN RAIL */}
       <div className="skyrail">
@@ -1470,6 +1434,7 @@ export default function CityPageClient({ city }: Props) {
         </section>
 
       </div>
+      <Footer />
     </div>
   );
 }
