@@ -503,7 +503,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             })}
           </div>
 
-          {/* Legend */}
+          {/* Legend + actions */}
           <div className={styles.legendRow}>
             <span className={styles.legendLbl}>
               <span className={styles.legendLblArr}>↳</span> Categories · click to isolate
@@ -523,6 +523,17 @@ export default function CompareCitiesClient({ allCities }: Props) {
                 {r.label}
               </button>
             ))}
+            <span className={styles.legendSpacer} />
+            <button type="button" className={styles.legendAction} onClick={() => {
+              navigator.clipboard.writeText(window.location.href).catch(() => {})
+              setCopied(true)
+              setTimeout(() => setCopied(false), 1800)
+            }}>
+              {copied ? '✓ Copied' : '↗ Share'}
+            </button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>
+              ↻ Reset
+            </button>
           </div>
         </section>
 
@@ -606,23 +617,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
           </div>
         </section>
 
-        {/* Actions */}
-        <section className={styles.actions}>
-          <button type="button" className={styles.actBtn} onClick={() => {
-            navigator.clipboard.writeText(window.location.href).catch(() => {})
-            setCopied(true)
-            setTimeout(() => setCopied(false), 1800)
-          }}>
-            {copied ? '✓ Link copied' : '↗ Share'}
-          </button>
-          <button
-            type="button"
-            className={`${styles.actBtn} ${styles.actBtnGhost}`}
-            onClick={reset}
-          >
-            ↻ Reset
-          </button>
-        </section>
 
       </main>
       <Footer />

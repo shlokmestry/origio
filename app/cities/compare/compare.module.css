@@ -324,6 +324,22 @@
 .legendKeyOn .lkSw { box-shadow: 0 0 0 2px var(--paper); }
 .legendKeyDim { opacity: 0.28; }
 .lkSw { width: 14px; height: 14px; display: inline-block; flex-shrink: 0; border: 1px solid rgba(21,20,15,0.4); }
+.legendSpacer { flex: 1; }
+.legendAction {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px; margin-left: 4px;
+  cursor: pointer; background: var(--paperInk); border: 1px solid var(--paperInk);
+  font-family: 'Satoshi', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--paper);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.legendAction:hover { background: var(--teal); border-color: var(--teal); }
+.legendActionGhost {
+  background: transparent; color: rgba(240,240,232,0.5); border-color: rgba(240,240,232,0.18);
+}
+.legendActionGhost:hover { background: transparent; color: var(--paperInk); border-color: var(--paperInk); }
 
 /* ── RACE SECTION ── */
 .race { padding: 36px 56px 24px; position: relative; }
