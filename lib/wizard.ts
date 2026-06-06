@@ -583,7 +583,6 @@ export function scoreCountriesForWizard(
       finnish:    { slug: "finland",     reason: "Your Finnish gives you a big advantage in Finland" },
       georgian:   { slug: "georgia",     reason: "Your Georgian gives you a big advantage in Georgia" },
       hungarian:  { slug: "hungary",     reason: "Your Hungarian gives you a big advantage in Hungary" },
-      romanian:   { slug: "romania",     reason: "Your Romanian gives you a big advantage in Romania" },
       serbian:    { slug: "serbia",      reason: "Your Serbian gives you a big advantage in Serbia" },
       indonesian: { slug: "indonesia",   reason: "Your Indonesian gives you a huge advantage" },
     };
