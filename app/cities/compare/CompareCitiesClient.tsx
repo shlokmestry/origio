@@ -404,7 +404,39 @@ export default function CompareCitiesClient({ allCities }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [indexed, isolated, currency, minT, maxT, picks.length, scaleMax])
 
-  // ── JSX ───────────────────────────────────────────────────────────────────
+  // Verdict sentence — scenario-aware
+  const verdictSentence = useMemo((): React.ReactNode => {
+    if (!verdict) return 'Pick two cities to see what a month really costs.'
+    const { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta } = verdict
+    const cheap = <strong><span className={styles.amberText}>{cheapest.c.name}</span></strong>
+    const dear  = <strong><span className={styles.amberText}>{dearest.c.name}</span></strong>
+    const fGap      = <span className={styles.amberText}>{fmt(gap, currency)}</span>
+    const fYearGap  = <span className={styles.amberText}>{fmt(yearGap, currency)}</span>
+    const fBigDelta = <span className={styles.amberText}>{fmt(Math.abs(bigDelta), currency)}</span>
+
+    // Scenario 1: nearly equal
+    if (gapPct < 12) {
+      return <>{dear} and {cheap} cost almost the same — {fGap}/mo apart. Pick on vibes.</>
+    }
+
+    // Scenario 2: rent dominates
+    if (bigRow.key === 'rent' && Math.abs(bigDelta) > gap * 0.65) {
+      return <>The gap is mostly rent. {dear} charges {fBigDelta}/mo more for a 1BR than {cheap}. Everything else is close.</>
+    }
+
+    // Scenario 3: enormous gap
+    if (gapPct > 85) {
+      return <>{dear} costs +{gapPct}% more than {cheap} every month. That&rsquo;s {fYearGap}/year — or just move to {cheap}.</>
+    }
+
+    // Scenario 4: non-rent category drives it
+    if (bigRow.key !== 'rent') {
+      return <>Surprisingly, {bigRow.label.toLowerCase()} is the main gap. {dear} spends {fBigDelta}/mo more on it than {cheap}.</>
+    }
+
+    // Default
+    return <>Living in {dear} costs {fGap}/mo more than {cheap}. Over a year, that&rsquo;s <span className={styles.strike}>{strikeLabel}</span> — {fYearGap} you&rsquo;re not spending.</>
+  }, [verdict, currency, strikeLabel, styles])
 
   return (
     <div className={styles.page}>
@@ -532,19 +564,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         <section className={styles.verdict}>
           <div>
             <div className={styles.verdictEyebrow}>→ The Verdict</div>
-            {!verdict ? (
-              <p className={styles.verdictText}>Pick two cities to see what a month really costs.</p>
-            ) : (
-              <p className={styles.verdictText}>
-                A month in{' '}
-                <strong><span className={styles.it}>{verdict.dearest.c.name}</span></strong> costs{' '}
-                <span className={styles.it}>{fmt(verdict.gap, currency)}</span> more than{' '}
-                <strong><span className={styles.it}>{verdict.cheapest.c.name}</span></strong>.{' '}
-                Over a year that&rsquo;s{' '}
-                <span className={styles.strike}>{strikeLabel}</span>{' '}
-                <span className={styles.it}>{fmt(verdict.yearGap, currency)}</span>.
-              </p>
-            )}
+            <p className={styles.verdictText}>{verdictSentence}</p>
           </div>
 
           <div className={styles.verdictR}>
