@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import * as Sentry from '@sentry/nextjs'
 
 function FuzzyOverlay() {
   return (
@@ -23,6 +24,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
+    Sentry.captureException(error)
     console.error(error)
   }, [error])
 
