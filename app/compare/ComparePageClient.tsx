@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
-import { ArrowRightLeft, Lock, Star } from "lucide-react";
+import {
+  ArrowRightLeft, Lock, Star, ChevronDown,
+  Code2, Bot, BarChart2, Cloud, GitBranch, Shield, LayoutDashboard, PenTool, Palette,
+  Stethoscope, Heart, Smile, Pill, Activity, Brain, Microscope,
+  TrendingUp, Receipt, Scale, Building, HardHat, Leaf, Plane,
+  BookOpen, Users, BarChart, Megaphone, Package, Zap, ChefHat,
+  type LucideIcon,
+} from "lucide-react";
 import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
@@ -20,6 +27,72 @@ const COL_B = "#f0c84a";
 const COL_C = "#c4b5fd";
 
 const LABEL_W = 200; // px — label column width, shared everywhere
+
+// ── role → lucide icon map ────────────────────────────────────────────────────
+const ROLE_ICONS: Record<string, LucideIcon> = {
+  softwareEngineer: Code2, aiMlEngineer: Bot, dataScientist: BarChart2,
+  cloudArchitect: Cloud, devOps: GitBranch, cybersecurity: Shield,
+  productManager: LayoutDashboard, uxDesigner: PenTool, graphicDesigner: Palette,
+  doctor: Stethoscope, nurse: Heart, dentist: Smile, pharmacist: Pill,
+  physiotherapist: Activity, psychologist: Brain, biomedicalEngineer: Microscope,
+  financialAnalyst: TrendingUp, accountant: Receipt, lawyer: Scale,
+  architect: Building, civilEngineer: HardHat, renewableEnergyEngineer: Leaf,
+  pilot: Plane, teacher: BookOpen, hrManager: Users, salesManager: BarChart,
+  marketingManager: Megaphone, supplyChainManager: Package, electrician: Zap, chef: ChefHat,
+};
+
+// ── RoleDropdown ──────────────────────────────────────────────────────────────
+function RoleDropdown({ value, onChange }: { value: JobRole; onChange: (r: JobRole) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = JOB_ROLES.find(r => r.key === value)!;
+  const Icon = ROLE_ICONS[value] ?? Code2;
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 px-3 py-2 bg-[#111114] border border-white/[0.1] hover:border-white/20 transition-colors text-left"
+        style={{ minHeight: 36 }}
+      >
+        <Icon className="w-3.5 h-3.5 shrink-0 text-white/50" />
+        <span className="flex-1 truncate text-white text-[13px] font-semibold">{current.label}</span>
+        <ChevronDown className="w-3 h-3 shrink-0 text-white/30" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s" }} />
+      </button>
+      {open && (
+        <div
+          className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#111114] border border-white/[0.12] overflow-y-auto"
+          style={{ maxHeight: 320 }}
+        >
+          {JOB_ROLES.map(r => {
+            const RIcon = ROLE_ICONS[r.key] ?? Code2;
+            const active = r.key === value;
+            return (
+              <button
+                key={r.key}
+                onClick={() => { onChange(r.key); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.05] transition-colors"
+                style={{ background: active ? "rgba(255,255,255,0.06)" : undefined }}
+              >
+                <RIcon className="w-3.5 h-3.5 shrink-0" style={{ color: active ? "#4de6cc" : "rgba(255,255,255,0.4)" }} />
+                <span className="text-[12px]" style={{ color: active ? "#fff" : "rgba(255,255,255,0.7)" }}>{r.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -448,18 +521,7 @@ export default function ComparePageClient() {
               {/* Role */}
               <div className="flex flex-col gap-1.5">
                 <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Role</span>
-                <div className="relative">
-                  <select
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value as JobRole)}
-                    className={SEL}
-                  >
-                    {JOB_ROLES.map((r) => (
-                      <option key={r.key} value={r.key}>{r.emoji} {r.label}</option>
-                    ))}
-                  </select>
-                  <Chevron />
-                </div>
+                <RoleDropdown value={selectedRole} onChange={setSelectedRole} />
               </div>
 
               {/* Country A */}
