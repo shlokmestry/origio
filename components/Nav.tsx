@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Zap, LogIn, User, Menu, X } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { useAuth } from "@/lib/AuthProvider";
-import CommandSearch from "@/components/CommandSearch";
+import CommandSearch, { type CitySearchItem } from "@/components/CommandSearch";
 
 interface NavProps {
   countries?: GlobeCountry[];
@@ -15,7 +15,18 @@ interface NavProps {
 export default function Nav({ countries = [], onCountrySelect }: NavProps) {
   const [searchOpen, setSearchOpen]         = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cities, setCities]                 = useState<CitySearchItem[]>([]);
+  const citiesFetched                       = useRef(false);
   const { user, isPro } = useAuth();
+
+  useEffect(() => {
+    if (!searchOpen || citiesFetched.current) return;
+    citiesFetched.current = true;
+    fetch('/api/cities-search')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: CitySearchItem[]) => setCities(data))
+      .catch(() => {});
+  }, [searchOpen]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -380,6 +391,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
         onCountrySelect={handleCountrySelect}
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
+        cities={cities}
       />
     </>
   );

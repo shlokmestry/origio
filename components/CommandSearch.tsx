@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   X,
@@ -17,11 +18,20 @@ import { getScoreColor } from "@/lib/utils";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
 
+export interface CitySearchItem {
+  slug: string;
+  name: string;
+  countryName: string;
+  flagEmoji: string;
+  moveScore: number | null;
+}
+
 interface CommandSearchProps {
   countries: GlobeCountry[];
   onCountrySelect: (slug: string) => void;
   open: boolean;
   onClose: () => void;
+  cities?: CitySearchItem[];
 }
 
 interface QuickFilter {
@@ -203,7 +213,9 @@ export default function CommandSearch({
   onCountrySelect,
   open,
   onClose,
+  cities = [],
 }: CommandSearchProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] =
     useState<string | null>(null);
@@ -256,65 +268,69 @@ export default function CommandSearch({
 
   };
 
-  const results = useMemo(() => {
-    if (activeFilter && !query.trim()) {
-      const filter = QUICK_FILTERS.find(
-        (f) => f.id === activeFilter
-      );
+  type ResultItem =
+    | { kind: 'country'; data: GlobeCountry }
+    | { kind: 'city'; data: CitySearchItem };
 
+  const results = useMemo((): ResultItem[] => {
+    if (activeFilter && !query.trim()) {
+      const filter = QUICK_FILTERS.find((f) => f.id === activeFilter);
       if (filter) {
-        return [...countries]
-          .sort(filter.sort)
-          .slice(0, 8);
+        return [...countries].sort(filter.sort).slice(0, 8).map(c => ({ kind: 'country' as const, data: c }));
       }
     }
 
     if (!query.trim() && !activeFilter) return [];
 
-    return countries
+    const q = query.toLowerCase().trim();
+    const countryResults = countries
       .filter((c) => matchesQuery(c, query))
       .sort((a, b) => b.moveScore - a.moveScore)
-      .slice(0, 8);
-  }, [query, countries, activeFilter]);
+      .slice(0, 5)
+      .map(c => ({ kind: 'country' as const, data: c }));
+
+    const cityResults = cities
+      .filter(c => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q) || c.countryName.toLowerCase().includes(q))
+      .sort((a, b) => (b.moveScore ?? 0) - (a.moveScore ?? 0))
+      .slice(0, 5)
+      .map(c => ({ kind: 'city' as const, data: c }));
+
+    return [...countryResults, ...cityResults].slice(0, 10);
+  }, [query, countries, cities, activeFilter]);
 
   const recentCountries = useMemo(
     () =>
       recentSlugs
-        .map((slug) =>
-          countries.find((c) => c.slug === slug)
-        )
+        .map((slug) => countries.find((c) => c.slug === slug))
         .filter(Boolean) as GlobeCountry[],
     [recentSlugs, countries]
   );
 
   const showResults = results.length > 0;
-
-  const showRecent =
-    !query &&
-    !activeFilter &&
-    recentCountries.length > 0;
+  const showRecent = !query && !activeFilter && recentCountries.length > 0;
 
   const allItems = useMemo(
     () =>
       showResults
         ? results
         : showRecent
-        ? recentCountries
+        ? recentCountries.map(c => ({ kind: 'country' as const, data: c }))
         : [],
     [showResults, results, showRecent, recentCountries]
   );
 
   const select = useCallback(
-    (slug: string) => {
-      addRecent(slug);
-
-      onCountrySelect(slug);
-
+    (item: ResultItem) => {
+      if (item.kind === 'country') {
+        addRecent(item.data.slug);
+        onCountrySelect(item.data.slug);
+      } else {
+        router.push(`/city/${item.data.slug}`);
+      }
       onClose();
-
       setQuery("");
     },
-    [onCountrySelect, onClose]
+    [onCountrySelect, onClose, router]
   );
 
   useEffect(() => {
@@ -340,7 +356,7 @@ export default function CommandSearch({
       }
 
       if (e.key === "Enter" && allItems[cursor]) {
-        select(allItems[cursor].slug);
+        select(allItems[cursor]);
       }
     };
 
@@ -469,10 +485,10 @@ export default function CommandSearch({
                 overflowY: "auto",
               }}
             >
-              {results.map((c, i) => (
+              {allItems.map((item, i) => (
                 <ResultRow
-                  key={c.slug}
-                  country={c}
+                  key={`${item.kind}-${item.data.slug}`}
+                  item={item}
                   index={i}
                   active={cursor === i}
                   onSelect={select}
@@ -480,15 +496,11 @@ export default function CommandSearch({
                 />
               ))}
 
-              {!query && (
-                <div
-                  style={{
-                    padding: "36px",
-                    textAlign: "center",
-                    color: S.dim,
-                  }}
-                >
-                  37 countries. Start typing.
+              {!query && !activeFilter && (
+                <div style={{ padding: "36px", textAlign: "center", color: S.dim }}>
+                  {cities.length > 0
+                    ? `Countries & cities. Start typing.`
+                    : `37 countries. Start typing.`}
                 </div>
               )}
             </div>
@@ -515,19 +527,31 @@ export default function CommandSearch({
 }
 
 function ResultRow({
-  country,
+  item,
   index,
   active,
   onSelect,
   onHover,
-}: any) {
-  const continent =
-    CONTINENT_MAP[country.slug] ?? "";
+}: {
+  item: { kind: 'country'; data: GlobeCountry } | { kind: 'city'; data: CitySearchItem };
+  index: number;
+  active: boolean;
+  onSelect: (item: any) => void;
+  onHover: (i: number) => void;
+}) {
+  const isCity = item.kind === 'city';
+  const slug = item.data.slug;
+  const name = item.data.name;
+  const flagEmoji = item.data.flagEmoji;
+  const moveScore = item.data.moveScore;
+  const sub = isCity
+    ? (item.data as CitySearchItem).countryName
+    : (CONTINENT_MAP[slug] ?? "");
 
   return (
     <button
       data-index={index}
-      onClick={() => onSelect(country.slug)}
+      onClick={() => onSelect(item)}
       onMouseEnter={() => onHover(index)}
       style={{
         width: "100%",
@@ -535,49 +559,37 @@ function ResultRow({
         alignItems: "center",
         gap: 12,
         padding: "11px 20px",
-        background: active
-          ? "rgba(255,255,255,0.05)"
-          : "transparent",
+        background: active ? "rgba(255,255,255,0.05)" : "transparent",
         border: "none",
-        borderBottom:
-          "1px solid rgba(255,255,255,0.04)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
         cursor: "pointer",
         textAlign: "left",
       }}
     >
-      {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{country.flagEmoji}</span>}
+      {slugToIso(slug) ? <FlagIcon code={slugToIso(slug)!} size="sm" /> : <span style={{ fontSize: 20 }}>{flagEmoji}</span>}
 
       <div style={{ flex: 1 }}>
-        <p
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#fff",
-            margin: 0,
-          }}
-        >
-          {country.name}
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>
+          {name}
         </p>
-
-        <p
-          style={{
-            fontSize: 11,
-            color: "rgba(255,255,255,0.3)",
-            margin: 0,
-          }}
-        >
-          {continent}
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0 }}>
+          {sub}
         </p>
       </div>
 
-      <ScoreBar score={country.moveScore} />
-
-      {active && (
-        <ArrowRight
-          size={13}
-          color="rgba(255,255,255,0.6)"
-        />
+      {isCity && (
+        <span style={{
+          fontSize: 8, fontWeight: 800, letterSpacing: "0.18em",
+          color: "#00ffd5", border: "1px solid rgba(0,255,213,0.3)",
+          padding: "2px 6px", textTransform: "uppercase", flexShrink: 0,
+        }}>
+          CITY
+        </span>
       )}
+
+      {moveScore != null && <ScoreBar score={moveScore} />}
+
+      {active && <ArrowRight size={13} color="rgba(255,255,255,0.6)" />}
     </button>
   );
 }

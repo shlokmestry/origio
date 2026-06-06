@@ -99,14 +99,10 @@ function formatRent(rent: number | undefined, currency: string): string {
 
 // ── Filter + sort state ───────────────────────────────────────────────────
 
-type SortKey = 'score' | 'rent-asc' | 'rent-desc'
-
 interface FilterState {
-  budget: string
   region: string
-  vibe: string
 }
-const DEFAULT_FILTERS: FilterState = { budget:'any', region:'any', vibe:'any' }
+const DEFAULT_FILTERS: FilterState = { region:'any' }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -124,29 +120,12 @@ function splitName(name: string): [string, string] {
 }
 
 // Returns which active filters this city satisfies (for "why" hint)
-function matchReasons(
-  extra: CityExtra,
-  filters: FilterState,
-): string[] {
-  const out: string[] = []
+function matchReasons(extra: CityExtra, filters: FilterState): string[] {
   if (filters.region !== 'any' && extra.region === filters.region) {
     const label: Record<string,string> = { europe:'Europe', asia:'Asia & Pacific', americas:'Americas', middleeast:'Middle East & Africa' }
-    out.push(label[filters.region])
+    return [label[filters.region]]
   }
-  if (filters.budget !== 'any') {
-    const r = extra.rentEur
-    const match = (filters.budget === 'low' && r < 1500) ||
-                  (filters.budget === 'mid' && r >= 1500 && r <= 2500) ||
-                  (filters.budget === 'high' && r > 2500)
-    if (match) {
-      const label: Record<string,string> = { low:'under €1,500/mo', mid:'€1,500–2,500/mo', high:'over €2,500/mo' }
-      out.push(label[filters.budget])
-    }
-  }
-  if (filters.vibe !== 'any' && extra.vibes.includes(filters.vibe as Vibe)) {
-    out.push(filters.vibe)
-  }
-  return out
+  return []
 }
 
 const VIBE_LABELS: Record<string, string> = {
@@ -194,7 +173,7 @@ interface CitiesIndexClientProps { cities: City[] }
 
 export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [sort, setSort] = useState<SortKey>('score')
+  const [search, setSearch] = useState('')
   const enriched = useMemo(() =>
     cities
       .map(c => ({ ...c, extra: CITY_EXTRAS[c.slug] }))
@@ -204,38 +183,31 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   const filtered = useMemo(() => {
     let list = enriched.slice()
 
-    if (filters.budget !== 'any') {
-      list = list.filter(c => {
-        const r = c.extra?.rentEur ?? 0
-        if (filters.budget === 'low')  return r < 1500
-        if (filters.budget === 'mid')  return r >= 1500 && r <= 2500
-        if (filters.budget === 'high') return r > 2500
-        return true
-      })
-    }
-    if (filters.region !== 'any') {
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.slug.toLowerCase().includes(q) ||
+        c.countryName.toLowerCase().includes(q)
+      )
+    } else if (filters.region !== 'any') {
       list = list.filter(c => c.extra?.region === filters.region)
     }
-    if (filters.vibe !== 'any') list = list.filter(c => (c.extra?.vibes ?? []).includes(filters.vibe as Vibe))
 
-    list.sort((a, b) => {
-      if (sort === 'score')     return (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0)
-      if (sort === 'rent-asc')  return (a.extra?.rentEur ?? 0) - (b.extra?.rentEur ?? 0)
-      if (sort === 'rent-desc') return (b.extra?.rentEur ?? 0) - (a.extra?.rentEur ?? 0)
-      return 0
-    })
+    list.sort((a, b) => (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0))
     return list
-  }, [enriched, filters, sort])
+  }, [enriched, filters, search])
 
-  const anyFilterActive = filters.budget !== 'any' || filters.region !== 'any' || filters.vibe !== 'any'
+  const anyFilterActive = filters.region !== 'any'
 
   const setFilter = useCallback(<K extends keyof FilterState>(key: K, val: string) => {
     setFilters(prev => ({ ...prev, [key]: val }))
+    setSearch('')
   }, [])
 
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS)
-    setSort('score')
+    setSearch('')
   }, [])
 
   const liveCities = useMemo(() =>
@@ -298,67 +270,44 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <p className={styles.stepAside}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
           </div>
 
-          {/* ── FILTER BAR ── */}
+          {/* ── SEARCH + FILTER BAR ── */}
           <div className={styles.filterBar}>
-            <ChipGroup
-              label="Region"
-              value={filters.region}
-              onChange={v => setFilter('region', v)}
-              options={[
-                { val:'any',        label:'Anywhere' },
-                { val:'europe',     label:'Europe' },
-                { val:'asia',       label:'Asia & Pacific' },
-                { val:'americas',   label:'Americas' },
-                { val:'middleeast', label:'Middle East & Africa' },
-              ]}
-            />
-            <ChipGroup
-              label="Budget (EUR equiv.)"
-              value={filters.budget}
-              onChange={v => setFilter('budget', v)}
-              options={[
-                { val:'any',  label:'Any price' },
-                { val:'low',  label:'Under €1,500' },
-                { val:'mid',  label:'€1,500 – 2,500' },
-                { val:'high', label:'Over €2,500' },
-              ]}
-            />
-            <ChipGroup
-              label="Vibe"
-              value={filters.vibe}
-              onChange={v => setFilter('vibe', v)}
-              options={[
-                { val:'any',       label:'Anything' },
-                { val:'remote',    label:'Remote-friendly' },
-                { val:'family',    label:'Family' },
-                { val:'nightlife', label:'Nightlife' },
-                { val:'culture',   label:'Culture' },
-                { val:'beach',     label:'Beach' },
-                { val:'budget',    label:'Budget' },
-              ]}
-            />
-            <div className={styles.filterBarRight}>
-              <span className={styles.chipLabel}>Sort</span>
-              <div className={styles.chips}>
-                {([
-                  { val:'score',     label:'Top rated' },
-                  { val:'rent-asc',  label:'Cheapest first' },
-                  { val:'rent-desc', label:'Most expensive' },
-                ] as { val: SortKey; label: string }[]).map(o => (
-                  <button
-                    key={o.val}
-                    type="button"
-                    className={`${styles.chip}${sort === o.val ? ' ' + styles.chipOn : ''}`}
-                    onClick={() => setSort(o.val)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-              {anyFilterActive && (
-                <button className={styles.resetChip} onClick={resetFilters}>↺ Reset</button>
+            {/* Search input */}
+            <div className={styles.searchWrap}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: 'var(--c-dimmer)' }}>
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search cities..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setFilters(DEFAULT_FILTERS) }}
+              />
+              {search && (
+                <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
               )}
             </div>
+
+            {/* Region chips — hidden when searching */}
+            {!search && (
+              <ChipGroup
+                label="Region"
+                value={filters.region}
+                onChange={v => setFilter('region', v)}
+                options={[
+                  { val:'any',        label:'Anywhere' },
+                  { val:'europe',     label:'Europe' },
+                  { val:'asia',       label:'Asia & Pacific' },
+                  { val:'americas',   label:'Americas' },
+                  { val:'middleeast', label:'Middle East & Africa' },
+                ]}
+              />
+            )}
+            {anyFilterActive && !search && (
+              <button className={styles.resetChip} onClick={resetFilters} style={{ alignSelf: 'flex-end', marginBottom: 2 }}>↺ Reset</button>
+            )}
           </div>
 
           {/* ── COMPARE BANNER ── */}
@@ -370,8 +319,8 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           {/* CITY GRID */}
           {filtered.length > 0 ? (
             <div className={styles.cityGrid}>
-              {/* ── FEATURED HERO CARD (first result) ── */}
-              {(() => {
+              {/* ── FEATURED HERO CARD (first result, only when not searching) ── */}
+              {!search && (() => {
                 const c = filtered[0]
                 const extra = c.extra!
                 const [solid, outl] = splitName(c.name)
@@ -390,7 +339,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {c.tagline && <p className={styles.hcTagline}>{c.tagline}</p>}
                       <div className={styles.ccTags} style={{ marginTop: 8 }}>
                         {extra.vibes.map(v => (
-                          <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{VIBE_LABELS[v] ?? v}</span>
+                          <span key={v} className={`${styles.ccTag}${''}`}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
                       <span className={styles.hcArrow}>Read the dispatch →</span>
@@ -413,12 +362,13 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                 )
               })()}
 
-              {/* ── REMAINING CITIES ── */}
-              {filtered.slice(1).map((c, i) => {
+              {/* ── REMAINING CITIES (or all when searching) ── */}
+              {(search ? filtered : filtered.slice(1)).map((c, i) => {
                 const [solid, outl] = splitName(c.name)
                 const extra = c.extra!
                 const href = `/city/${c.slug}`
-                const reasons = anyFilterActive ? matchReasons(extra, filters) : []
+                const reasons = anyFilterActive && !search ? matchReasons(extra, filters) : []
+                const rank = search ? i : i + 1
                 return (
                   <Link key={c.id} href={href}
                     className={styles.cityCard}
@@ -426,7 +376,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                     data-slug={c.slug}
                   >
                     <span className={styles.ccNum}>
-                      №{String(i+2).padStart(2,'0')}
+                      №{String(rank + 1).padStart(2,'0')}
                       <span className={styles.mark}>of {filtered.length}</span>
                     </span>
                     <div className={styles.ccL}>
@@ -442,7 +392,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {c.tagline && <p className={styles.ccTagline}>{c.tagline}</p>}
                       <div className={styles.ccTags}>
                         {extra.vibes.map(v => (
-                          <span key={v} className={`${styles.ccTag}${filters.vibe === v ? ' ' + styles.ccTagMatch : ''}`}>{VIBE_LABELS[v] ?? v}</span>
+                          <span key={v} className={`${styles.ccTag}${''}`}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
                       {reasons.length > 0 && (
