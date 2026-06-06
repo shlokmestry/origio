@@ -60,13 +60,213 @@ function calcTakeHome(gross: number, taxRate: number, ssRate: number) {
 
 function getFallbackNarrative(slug: string, name: string, cs: string, grossSalary: number, takeHomeMonthly: number, disposable: number, disposableUSD: number, taxRate: number, safetyScore: number, qolScore: number): string {
   const g = `${cs}${grossSalary.toLocaleString()}`;
+  const th = `${cs}${takeHomeMonthly.toLocaleString()}`;
   const disp = `${cs}${Math.abs(disposable).toLocaleString()}`;
+  const isNeg = disposable < 0;
   const isTight = disposableUSD < PPP_TIGHT_USD;
-  if (slug === "uae") return `Zero tax. What you earn — ${g} — is what you keep.`;
-  if (HIGH_TAX_COUNTRIES.includes(slug) || taxRate > 45) return `${name} takes ${taxRate}% in tax. Decide if what you get in return works for you.`;
-  if (disposable >= 0 && !isTight) return `${g} gross, ${disp} left every month. ${name} makes that possible.`;
-  if (qolScore >= 7.5 && isTight) return `${disp}/mo surplus. ${name} is a quality of life move, not a wealth-building one.`;
-  return `${g} gross, ${disp} left after costs. Enough to live. Check if it's enough to stay.`;
+  // pick variation 0/1/2 based on salary to stay deterministic
+  const v = Math.abs(Math.round(grossSalary)) % 3;
+
+  const N: Record<string, string[]> = {
+    "uae": [
+      `Zero tax. What you earn — ${g} — is what you keep.`,
+      `No income tax. Your ${g} salary arrives exactly as advertised.`,
+      `${g} gross, ${g} net. That is the entire case for UAE.`,
+    ],
+    "singapore": [
+      `17% flat tax, world-class infrastructure. After rent and costs you keep ${disp}/mo.`,
+      `Tax stays low in Singapore. Housing does not. Net after full costs: ${disp}/mo.`,
+      `${g} gross, 17% tax. Rent is the number to watch. You clear ${disp}/mo.`,
+    ],
+    "switzerland": [
+      `${g} gross sounds strong. After Swiss costs, ${disp}/mo remains.`,
+      `Swiss salaries are real. Swiss costs are also real. You clear ${disp}/mo.`,
+      `Highest salaries in Europe. Also among the highest costs. Net: ${disp}/mo.`,
+    ],
+    "germany": [
+      `${taxRate}% tax, solid public services, ${disp}/mo disposable. The deal is clear.`,
+      `Germany takes ${taxRate}% and returns healthcare, transit and stability. Net: ${disp}/mo.`,
+      `${g} gross becomes ${disp}/mo after Berlin costs. Enough to live well and save.`,
+    ],
+    "netherlands": [
+      `Tax at ${taxRate}%, but ${disp}/mo clears comfortably outside Amsterdam.`,
+      `${g} gross, ${taxRate}% tax, ${disp}/mo left. Amsterdam costs more than the rest of the country.`,
+      `Netherlands takes ${taxRate}% and gives back infrastructure most countries would pay extra for.`,
+    ],
+    "portugal": [
+      `${g} gross, ${disp}/mo after Lisbon costs. The lifestyle gap versus northern Europe is real.`,
+      `Cost of living makes ${disp}/mo stretch further than the number alone suggests.`,
+      `Portugal has NHR tax benefits for new residents. Worth checking before you file anything.`,
+    ],
+    "spain": [
+      `${g} gross, ${disp}/mo surplus. Sun and a functioning social safety net included.`,
+      `Tax is ${taxRate}%. What stays is ${disp}/mo. Barcelona or Valencia changes that math.`,
+      `${disp}/mo in Spain goes further than the same number in Germany.`,
+    ],
+    "france": [
+      `Tax hits ${taxRate}%. What clears is ${disp}/mo. Paris costs more than the rest of the country.`,
+      `${g} gross, ${taxRate}% tax, ${disp}/mo left. French public services justify some of that loss.`,
+      `France takes a lot and returns a lot. Healthcare, infrastructure, stability. Net: ${disp}/mo.`,
+    ],
+    "italy": [
+      `${disp}/mo in Milan is tight. The same in Bologna or Palermo is comfortable.`,
+      `Tax rate is ${taxRate}%. Take-home is ${th}/mo. Italy rewards those who pick the right city.`,
+      `${g} gross clears ${disp}/mo in Italy. Location changes everything here.`,
+    ],
+    "ireland": [
+      `English-speaking, EU-accessible, ${taxRate}% tax. Net: ${disp}/mo. Dublin is the expensive variable.`,
+      `${g} gross, ${taxRate}% tax, Dublin rents. Net: ${disp}/mo. Outside the capital that math improves fast.`,
+      `Ireland tax rate: ${taxRate}%. Disposable: ${disp}/mo. Rents are the thing to stress-test.`,
+    ],
+    "united-kingdom": [
+      `${g} gross, ${taxRate}% tax, ${disp}/mo left. London vs the rest of the UK is a different calculation entirely.`,
+      `UK tax is ${taxRate}%. After costs you clear ${disp}/mo. Regional cities change that equation significantly.`,
+      `${disp}/mo in Manchester goes further than the same number in London by a considerable margin.`,
+    ],
+    "australia": [
+      `${g} in Australian dollars, ${disp}/mo after costs. The exchange rate matters if your income is offshore.`,
+      `Tax at ${taxRate}%, strong labour protections, ${disp}/mo disposable. Straightforward deal.`,
+      `${disp}/mo in Perth looks different to ${disp}/mo in Sydney. Pick your city before running the final numbers.`,
+    ],
+    "canada": [
+      `${g} Canadian, ${taxRate}% tax, ${disp}/mo left. Toronto and Vancouver are expensive. Calgary considerably less so.`,
+      `Tax is ${taxRate}%. Net: ${disp}/mo. Cold winters, strong institutions, predictable costs.`,
+      `${disp}/mo in Montreal goes significantly further than the same number in Toronto.`,
+    ],
+    "new-zealand": [
+      `${g} gross, ${disp}/mo left in NZ dollars. Auckland is expensive. Everywhere else less so.`,
+      `Tax at ${taxRate}%, quality of life among the highest measured. Net: ${disp}/mo.`,
+      `New Zealand clears ${disp}/mo after costs. The distance from everything is the actual tradeoff.`,
+    ],
+    "usa": [
+      `No federal mandate on state taxes. ${g} goes further in Texas than in California.`,
+      `${taxRate}% federal rate, ${disp}/mo after costs. Healthcare is the variable nobody prices in at first.`,
+      `${g} gross, ${disp}/mo net. High upside, you manage the downside yourself.`,
+    ],
+    "norway": [
+      `Tax is ${taxRate}%. What clears is ${disp}/mo. Expensive country. The public return is real.`,
+      `${g} NOK, ${taxRate}% tax, ${disp}/mo left. Oslo is costly. Smaller cities are a different story.`,
+      `Norway taxes heavily and delivers heavily. Net: ${disp}/mo after full costs.`,
+    ],
+    "sweden": [
+      `${taxRate}% tax is the headline. What you get back makes it livable. Net: ${disp}/mo.`,
+      `Sweden takes ${taxRate}%. Returns healthcare, childcare, transit and among the best parental leave globally. Net: ${disp}/mo.`,
+      `${g} gross, ${taxRate}% tax, ${disp}/mo left. Stockholm is pricey. Gothenburg noticeably less so.`,
+    ],
+    "denmark": [
+      `Denmark takes ${taxRate}% and returns a functioning state. Net after costs: ${disp}/mo.`,
+      `${taxRate}% tax sounds severe. The public infrastructure it buys is not. You clear ${disp}/mo.`,
+      `${g} gross, ${taxRate}% tax, ${disp}/mo disposable. Copenhagen costs are the other side of the equation.`,
+    ],
+    "finland": [
+      `${taxRate}% tax, one of the happiest countries on record, ${disp}/mo net. The winters are not in the data.`,
+      `Finland takes ${taxRate}%. Returns quality healthcare, education and infrastructure. Net: ${disp}/mo.`,
+      `${g} gross, ${disp}/mo left in Helsinki after costs. Not a wealth play. A stability play.`,
+    ],
+    "belgium": [
+      `${taxRate}% tax is among the highest in Europe. Net: ${disp}/mo. Central EU location offsets the pain for many.`,
+      `Belgium taxes at ${taxRate}%. What remains is ${disp}/mo. Strong expat community, strong EU connectivity.`,
+      `${g} gross shrinks fast at ${taxRate}%. You clear ${disp}/mo. Brussels draws people for the EU institutions, not the tax rate.`,
+    ],
+    "austria": [
+      `${g} gross, ${taxRate}% tax, ${disp}/mo left. Vienna consistently ranks among the most livable cities in the world.`,
+      `Tax is ${taxRate}%, Vienna is affordable for its quality, you keep ${disp}/mo. Strong deal.`,
+      `${disp}/mo in Vienna buys more lifestyle per euro than most western European capitals.`,
+    ],
+    "czech-republic": [
+      `${g} in Czech crowns, ${disp}/mo after Prague costs. One of the most affordable capitals in Europe.`,
+      `Tax at ${taxRate}%, Prague rents well below western Europe. Net: ${disp}/mo.`,
+      `${disp}/mo goes far in Prague. European quality without the European price tag.`,
+    ],
+    "poland": [
+      `${g} gross, ${taxRate}% tax, Warsaw costs are low. Net: ${disp}/mo with room to save.`,
+      `Poland is affordable. ${disp}/mo disposable in Warsaw. Quality of life improving year on year.`,
+      `Low cost base, ${taxRate}% tax, ${disp}/mo net. Warsaw punches above its weight for remote workers.`,
+    ],
+    "croatia": [
+      `Croatia joined the euro. Costs stayed low. ${disp}/mo goes further than the number suggests.`,
+      `${g} gross, ${taxRate}% tax, Adriatic coast access, ${disp}/mo left. The lifestyle case is strong.`,
+      `${disp}/mo in Split is a different life to ${disp}/mo in Frankfurt. Same number, different reality.`,
+    ],
+    "greece": [
+      `${g} gross, ${disp}/mo after Athens costs. Mediterranean climate and a flat tax for new residents worth checking.`,
+      `Greece offers a flat 7% tax rate for qualifying foreign pensioners. Check if you qualify.`,
+      `${disp}/mo in Athens goes further than most EU capitals. Low cost, improving infrastructure year on year.`,
+    ],
+    "japan": [
+      `${g} in yen, ${taxRate}% tax, ${disp}/mo after Tokyo costs. Safety here is genuinely exceptional.`,
+      `Japan taxes at ${taxRate}%. Infrastructure and safety are world-class. Net: ${disp}/mo.`,
+      `${disp}/mo in Osaka looks different to ${disp}/mo in Tokyo. The quality floor is high everywhere.`,
+    ],
+    "south-korea": [
+      `${g} in Korean won, ${taxRate}% tax, Seoul costs are moderate. Net: ${disp}/mo.`,
+      `South Korea taxes at ${taxRate}%, delivers fast internet and modern infrastructure. Net: ${disp}/mo.`,
+      `${disp}/mo in Seoul goes further than most assume. Strong value relative to quality of life.`,
+    ],
+    "malaysia": [
+      `${g} in ringgit, low tax, ${disp}/mo left. Malaysia costs a fraction of Singapore for comparable infrastructure.`,
+      `Malaysia MM2H visa is available. ${disp}/mo goes far in Kuala Lumpur. The cost case is clear.`,
+      `Tax is low, costs are low, ${disp}/mo net. KL is increasingly popular with remote workers for a reason.`,
+    ],
+    "thailand": [
+      `${g} in baht, ${disp}/mo surplus. Thailand costs make western salaries stretch significantly.`,
+      `Thailand LTR visa available for remote workers. ${disp}/mo covers a comfortable lifestyle in Chiang Mai.`,
+      `${disp}/mo in Bangkok is a very different life to ${disp}/mo in Frankfurt. The cost gap is real.`,
+    ],
+    "vietnam": [
+      `${disp}/mo in Ho Chi Minh City is well above what most locals earn. Cost case is compelling.`,
+      `${g} gross goes far in Vietnam. ${disp}/mo monthly surplus at local price levels.`,
+      `Vietnam is cheap. Infrastructure improving fast. ${disp}/mo covers a comfortable expat lifestyle.`,
+    ],
+    "india": [
+      `${g} in rupees, ${disp}/mo after Mumbai costs. PPP-adjusted that goes further than the number suggests.`,
+      `${disp}/mo in Bangalore funds a lifestyle that costs three times more in most western cities.`,
+      `India costs are low. ${disp}/mo net in most major cities after full expenses.`,
+    ],
+    "brazil": [
+      `${g} in reais, ${disp}/mo after Sao Paulo costs. Crime risk varies heavily by neighbourhood.`,
+      `${taxRate}% tax, significant bureaucracy, ${disp}/mo left. Brazil rewards those who do the research first.`,
+      `${disp}/mo in Florianopolis is a different proposition to the same amount in Sao Paulo.`,
+    ],
+    "colombia": [
+      `${g} in Colombian pesos, ${disp}/mo after Medellin costs. Cost of living is genuinely low.`,
+      `Colombia is affordable. ${disp}/mo disposable in Bogota or Medellin. Safety varies by district.`,
+      `${disp}/mo goes far in Medellin. Strong infrastructure for remote workers. Safety is the variable to track.`,
+    ],
+    "costa-rica": [
+      `${disp}/mo in Costa Rica covers a comfortable lifestyle. Rentista visa available from $2,500/mo income.`,
+      `${g} gross, ${disp}/mo after San Jose costs. Stable politically, dollarised economy.`,
+      `Costa Rica is one of the more stable options in the region. ${disp}/mo net covers the basics well.`,
+    ],
+    "mexico": [
+      `${g} in pesos or USD depending on employer, ${disp}/mo after Mexico City costs. Popular with remote workers.`,
+      `${disp}/mo in Merida goes further than the same in Mexico City. Regional spread is wide.`,
+      `Mexico City rents have climbed in recent years. Net: ${disp}/mo. Check if that holds at your specific rent level.`,
+    ],
+    "panama": [
+      `Panama uses the US dollar and taxes foreign income at 0%. ${g} gross stays intact.`,
+      `${disp}/mo in Panama City, dollarised economy, Pensionado visa available. Solid base for retirees.`,
+      `Zero tax on foreign income, Panama City infrastructure is solid. Net after full costs: ${disp}/mo.`,
+    ],
+    "georgia": [
+      `Georgia charges 1% flat tax on foreign income under certain conditions. Worth verifying eligibility.`,
+      `${disp}/mo in Tbilisi is ample. One of the cheapest capitals for quality of life in the wider region.`,
+      `Georgia is low cost and low tax. ${disp}/mo net in Tbilisi. Visa access is straightforward for most nationalities.`,
+    ],
+  };
+
+  const variants = N[slug];
+  if (variants) {
+    const idx = isNeg ? (v + 2) % variants.length : v % variants.length;
+    return variants[idx];
+  }
+
+  // generic fallbacks
+  if (taxRate > 45) return `${name} takes ${taxRate}% in tax. Decide if what you get in return works for you.`;
+  if (isNeg) return `The numbers do not clear in ${name} at this salary level. Worth running again with a higher figure or a cheaper city.`;
+  if (isTight) return `${disp}/mo surplus in ${name}. Quality of life move, not a wealth building one.`;
+  if (disposable >= 0) return `${g} gross, ${disp}/mo left after costs. ${name} makes that work.`;
+  return `${g} gross, ${disp} left after costs. Check if it is enough to stay.`;
 }
 
 function getMoveTimeline(visaDifficulty: number, isEU: boolean, passportTier?: 1|2|3|4) {
