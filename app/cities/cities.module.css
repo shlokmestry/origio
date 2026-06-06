@@ -696,7 +696,7 @@
 }
 .emptyN {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-size: 120px; line-height: 1;
+  font-size: clamp(64px, 20vw, 120px); line-height: 1;
   color: transparent; -webkit-text-stroke: 1px var(--c-rule);
 }
 .emptyMsg {
