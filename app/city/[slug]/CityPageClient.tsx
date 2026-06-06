@@ -940,6 +940,21 @@ export default function CityPageClient({ city }: Props) {
               A 24-hour field dispatch ~ what {city.name} costs, what it pays, and what it
               feels like to wake up here.
             </p>
+            <Link
+              href={`/cities/compare?cities=${city.slug}`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                marginTop: 24,
+                padding: "10px 20px",
+                border: "1px solid #2a2a2a",
+                color: "#f0f0e8",
+                fontSize: 12, fontWeight: 700,
+                textTransform: "uppercase", letterSpacing: "0.1em",
+                textDecoration: "none",
+              }}
+            >
+              Compare {city.name} →
+            </Link>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -1365,7 +1380,7 @@ export default function CityPageClient({ city }: Props) {
           <p className="cta-label">→ What next</p>
           <div className="cta-actions">
             <Link
-              href={`/cities/compare?cities=${city.slug},${city.slug === "berlin" ? "lisbon" : "berlin"}`}
+              href={`/cities/compare?cities=${city.slug}`}
               className="cta-btn"
             >
               Compare {city.name} to another city →
