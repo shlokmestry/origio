@@ -77,6 +77,21 @@ const fmt = (n: number | null | undefined, fallback = "—") =>
 const score = (n: number | null | undefined) =>
   n != null ? n.toFixed(1) : "—";
 
+const ALL_PROFESSIONS: { title: string; salaryRatio: number }[] = [
+  { title: "software engineer",  salaryRatio: 1.00 },
+  { title: "product manager",    salaryRatio: 1.10 },
+  { title: "UX designer",        salaryRatio: 0.85 },
+  { title: "finance analyst",    salaryRatio: 1.05 },
+  { title: "freelance developer",salaryRatio: 0.85 },
+  { title: "remote developer",   salaryRatio: 0.88 },
+  { title: "digital marketer",   salaryRatio: 0.75 },
+  { title: "fashion designer",   salaryRatio: 0.82 },
+  { title: "data scientist",     salaryRatio: 1.08 },
+  { title: "DevOps engineer",    salaryRatio: 1.05 },
+  { title: "content creator",    salaryRatio: 0.65 },
+  { title: "copywriter",         salaryRatio: 0.70 },
+];
+
 const PROFESSION_MAP: Record<string, { title: string; salaryRatio: number }> = {
   dubai:          { title: "finance analyst",      salaryRatio: 1.05 },
   "abu-dhabi":    { title: "finance analyst",      salaryRatio: 1.05 },
@@ -492,8 +507,11 @@ function isExpensive(d: import("./page").CityDataRow | null): boolean {
 export default function CityPageClient({ city }: Props) {
   const [currentMode, setCurrentMode] = useState("night");
   const [copied, setCopied] = useState<'idle' | 'ok' | 'err'>('idle');
+  const [profOpen, setProfOpen] = useState(false);
   const d = city.city_data?.[0] ?? null;
   const sym = getCurrencySymbol(city.currency);
+  const defaultProf = PROFESSION_MAP[city.slug] ?? { title: "software engineer", salaryRatio: 1.00 };
+  const [selectedProf, setSelectedProf] = useState(defaultProf);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -538,6 +556,13 @@ export default function CityPageClient({ city }: Props) {
 
   const nav = useMemo(() => getCityNarrative(city, d, sym), [city, d, sym]);
   const personas = useMemo(() => getCityPersonas(city, d), [city, d]);
+
+  const selectedProfSalary = d?.salary_software_engineer
+    ? Math.round(d.salary_software_engineer * selectedProf.salaryRatio)
+    : null;
+  const selectedProfTakeHome = selectedProfSalary && d?.income_tax_rate_mid != null
+    ? Math.round((selectedProfSalary * (1 - d.income_tax_rate_mid)) / 12)
+    : nav.scene3.profTakeHome;
 
   const freshnessStatus = useMemo(() => {
     if (!d?.last_verified) return null;
@@ -1050,14 +1075,54 @@ export default function CityPageClient({ city }: Props) {
           </div>
           <div className="scene-story">
             <p className="scene-meta">Scene 03 · Salary · Tax</p>
-            <h2 className="scene-head">{nav.scene3.headline}</h2>
+            <h2 className="scene-head">
+              A{" "}
+              <span style={{ position: "relative", display: "inline-block" }}>
+                <button
+                  onClick={() => setProfOpen(o => !o)}
+                  style={{
+                    background: "none", border: "none", padding: 0, cursor: "pointer",
+                    color: "inherit", font: "inherit", fontSize: "inherit",
+                    textDecoration: "underline", textUnderlineOffset: 4,
+                    textDecorationColor: "var(--accent)",
+                  }}
+                >
+                  {selectedProf.title}
+                </button>
+                {profOpen && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50,
+                    background: "#111", border: "1px solid #2a2a2a",
+                    minWidth: 200, padding: "4px 0",
+                  }}>
+                    {ALL_PROFESSIONS.map(p => (
+                      <button
+                        key={p.title}
+                        onClick={() => { setSelectedProf(p); setProfOpen(false); }}
+                        style={{
+                          display: "block", width: "100%", textAlign: "left",
+                          background: p.title === selectedProf.title ? "#1a1a1a" : "none",
+                          border: "none", padding: "8px 14px", cursor: "pointer",
+                          color: p.title === selectedProf.title ? "var(--accent)" : "var(--ink)",
+                          font: "inherit", fontSize: 13, textTransform: "capitalize",
+                        }}
+                      >
+                        {p.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </span>
+              {" "}earns{" "}
+              <span className="ac">{sym}{fmt(selectedProfSalary)}</span> gross.
+            </h2>
             <div className="scene-prose">{nav.scene3.prose}</div>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
               <div className="marg">
-                <p className="marg-lbl" style={{ textTransform: "capitalize" }}>{nav.scene3.profTitle} · gross</p>
-                <p className="marg-val">{sym}{fmt(nav.scene3.profSalary)}<span className="unit">/yr</span></p>
+                <p className="marg-lbl" style={{ textTransform: "capitalize" }}>{selectedProf.title} · gross</p>
+                <p className="marg-val">{sym}{fmt(selectedProfSalary)}<span className="unit">/yr</span></p>
               </div>
               <div className="marg">
                 <p className="marg-lbl">Income tax</p>
@@ -1069,7 +1134,7 @@ export default function CityPageClient({ city }: Props) {
               </div>
               <div className="marg">
                 <p className="marg-lbl">Take-home · monthly</p>
-                <p className="marg-val">{sym}{fmt(nav.scene3.profTakeHome)}<span className="unit">avg</span></p>
+                <p className="marg-val">{sym}{fmt(selectedProfTakeHome)}<span className="unit">avg</span></p>
                 <p className="marg-sub">After tax · before rent</p>
               </div>
             </div>
@@ -1333,7 +1398,7 @@ export default function CityPageClient({ city }: Props) {
             <p className="dossier-intro">
               Every number in this dispatch, in one place.
               {d?.last_verified && ` Verified ${new Date(d.last_verified).toLocaleDateString("en-US", { year: "numeric", month: "long" })}.`}
-              {d?.data_sources && ` Sources: ${d.data_sources}.`}
+              {d?.data_sources && ` Sources: ${d.data_sources.replace(/\bNumbero\b/gi, "local cost surveys").replace(/\bNumbeo\b/gi, "local cost surveys")}.`}
             </p>
           </div>
 
