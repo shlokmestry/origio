@@ -27,7 +27,7 @@ export interface CountryMatch {
 const EU_PASSPORTS = [
   "ireland", "germany", "france", "netherlands", "spain", "portugal",
   "sweden", "norway", "switzerland", "austria", "belgium", "denmark",
-  "finland", "italy", "poland", "romania",
+  "finland", "italy", "poland", "romania", "estonia", "hungary", "cyprus",
 ];
 
 // Passport strength tiers — how much visa-free access / ease of movement
@@ -42,12 +42,13 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
   "switzerland": 1, "portugal": 1, "ireland": 1, "belgium": 1,
   "new-zealand": 1, "australia": 1, "japan": 1, "singapore": 1,
   "united-kingdom": 1, "canada": 1, "united-states": 1, "south-korea": 1, "usa": 1,
+  "estonia": 1, "hungary": 1, "cyprus": 1,
   // Tier 2
   "poland": 2, "romania": 2, "malaysia": 2, "brazil": 2, "uae": 2,
   "mexico": 2, "chile": 2, "argentina": 2,
   // Tier 3
   "china": 3, "india": 3, "turkey": 3, "south-africa": 3, "ukraine": 3,
-  "south africa": 3,
+  "south africa": 3, "serbia": 3,
   "philippines": 3, "indonesia": 3, "vietnam": 3, "thailand": 3,
   // Tier 4 — most restricted
   "nigeria": 4, "pakistan": 4, "ghana": 4,
@@ -100,33 +101,38 @@ function passportVisaModifier(strength: 1 | 2 | 3 | 4, visaDifficulty: number): 
 }
 
 const ENGLISH_SPEAKING_COUNTRIES = [
-  "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore",
+  "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore", "south-africa",
 ];
 
 const EUROPEAN_COUNTRIES = [
   "germany", "netherlands", "portugal", "spain", "ireland", "france",
   "italy", "united-kingdom", "sweden", "switzerland", "norway", "austria",
   "finland", "belgium", "denmark", "poland", "greece", "croatia", "czech-republic",
+  "romania", "hungary", "estonia", "cyprus", "serbia",
 ];
 
 const WARM_COUNTRIES = [
   "uae", "spain", "portugal", "singapore", "australia", "india",
   "brazil", "malaysia", "thailand", "vietnam", "philippines",
   "mexico", "colombia", "costa-rica", "panama", "greece",
+  "cyprus", "indonesia", "south-africa", "argentina",
 ];
 
 // City vibe preferences
 const BIG_CITY_COUNTRIES = [
   "usa", "united-kingdom", "singapore", "japan", "germany", "france",
   "australia", "canada", "uae", "netherlands",
+  "indonesia", "argentina", "south-africa",
 ];
 const COASTAL_COUNTRIES = [
   "portugal", "spain", "australia", "new-zealand", "brazil", "malaysia",
   "thailand", "philippines", "vietnam", "uae", "italy",
+  "indonesia", "cyprus", "south-africa", "argentina",
 ];
 const MID_CITY_COUNTRIES = [
   "portugal", "germany", "netherlands", "austria", "sweden", "norway",
   "denmark", "finland", "belgium", "poland", "ireland", "new-zealand",
+  "hungary", "romania", "estonia", "serbia",
 ];
 
 const HIGH_COST_COUNTRIES = [
@@ -140,24 +146,27 @@ const HIGH_TAX_COUNTRIES = [
   "australia", "new-zealand", "france", "canada", "poland",
 ];
 
-const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica"];
+const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica", "indonesia"];
 const NATURE_COUNTRIES = [
   "new-zealand", "norway", "switzerland", "canada", "australia", "austria",
   "sweden", "finland", "new zealand", "costa-rica", "colombia",
+  "south-africa", "indonesia",
 ];
 const CULTURE_COUNTRIES = [
   "france", "italy", "japan", "spain", "germany", "portugal", "greece",
   "netherlands", "united-kingdom", "austria", "czech-republic",
+  "argentina", "hungary", "romania",
 ];
 const STARTUP_COUNTRIES = [
   "usa", "united-kingdom", "singapore", "germany", "netherlands", "ireland",
-  "sweden", "canada", "australia", "estonia", "israel",
+  "sweden", "canada", "australia", "estonia", "israel", "romania",
 ];
-const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama"];
+const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama", "south-africa", "indonesia", "argentina"];
 const NOMAD_VISA_COUNTRIES       = [
   "portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand",
   "mexico", "colombia", "panama", "thailand", "greece", "croatia", "costa-rica", "south-korea",
   "georgia", "vietnam", "czech-republic",
+  "indonesia", "south-africa", "argentina", "estonia", "hungary", "serbia", "romania",
 ];
 
 const STRONG_HEALTHCARE_COUNTRIES = [
@@ -176,6 +185,7 @@ export const TO_USD: Record<string, number> = {
   MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
   CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
   ZAR: 0.055, NGN: 0.00065, KES: 0.0077, PHP: 0.018, CNY: 0.14, RON: 0.22,
+  IDR: 0.000067, RSD: 0.0093, HUF: 0.0028,
 };
 
 function toUSD(amount: number, currency: string): number {
@@ -572,6 +582,10 @@ export function scoreCountriesForWizard(
       danish:     { slug: "denmark",     reason: "Your Danish gives you a big advantage in Denmark" },
       finnish:    { slug: "finland",     reason: "Your Finnish gives you a big advantage in Finland" },
       georgian:   { slug: "georgia",     reason: "Your Georgian gives you a big advantage in Georgia" },
+      hungarian:  { slug: "hungary",     reason: "Your Hungarian gives you a big advantage in Hungary" },
+      romanian:   { slug: "romania",     reason: "Your Romanian gives you a big advantage in Romania" },
+      serbian:    { slug: "serbia",      reason: "Your Serbian gives you a big advantage in Serbia" },
+      indonesian: { slug: "indonesia",   reason: "Your Indonesian gives you a huge advantage" },
     };
     Object.entries(languageMap).forEach(([lang, { slug, reason }]) => {
       if (answers.languages?.includes(lang) && country.slug === slug) { score += 0.4; reasons.push(reason); }

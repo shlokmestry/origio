@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       from: 'Origio <hello@findorigio.com>',
       to: email,
       subject: 'Your top 3 matches are ready',
-      text: `Here are your top matches:\n\n${countryLines}\n\nSee all 37 countries ranked → https://findorigio.com/pro\n\nSalary after tax · Visa checklist · 3-country compare\n\nOrigio`,
+      text: `Here are your top matches:\n\n${countryLines}\n\nSee all 45 countries ranked → https://findorigio.com/pro\n\nSalary after tax · Visa checklist · 3-country compare\n\nOrigio`,
       html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;">

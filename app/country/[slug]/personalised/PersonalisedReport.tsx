@@ -20,7 +20,9 @@ const SYM: Record<string, string> = {
   USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$",
   NZD: "NZ$", CHF: "CHF ", SGD: "S$", AED: "AED ",
   NOK: "kr ", SEK: "kr ", JPY: "¥", INR: "₹", BRL: "R$",
-  MYR: "RM ", DKK: "kr ",
+  MYR: "RM ", DKK: "kr ", ZAR: "R", KRW: "₩", COP: "Col$",
+  THB: "฿", VND: "₫", MXN: "MX$", CZK: "Kč", GEL: "₾",
+  CRC: "₡", PLN: "zł", RON: "lei ", IDR: "Rp ", RSD: "RSD ", HUF: "Ft ",
 };
 const sym = (c: string) => SYM[c] ?? c + " ";
 
@@ -29,6 +31,10 @@ const TO_USD: Record<string, number> = {
   NZD: 0.61, CHF: 1.13, SGD: 0.74, AED: 0.27,
   NOK: 0.093, SEK: 0.096, DKK: 0.145,
   JPY: 0.0067, INR: 0.012, BRL: 0.20, MYR: 0.22,
+  ZAR: 0.055, KRW: 0.00074, COP: 0.00024, THB: 0.028,
+  VND: 0.000039, MXN: 0.058, CZK: 0.044, GEL: 0.37,
+  CRC: 0.0019, PLN: 0.25, RON: 0.22, IDR: 0.000067,
+  RSD: 0.0093, HUF: 0.0028,
 };
 
 const PPP_TIGHT_USD = 500;
@@ -40,6 +46,7 @@ const RENT_MAX: Record<string, number> = {
 const EU_PASSPORTS = [
   "ireland", "germany", "france", "netherlands", "spain", "portugal",
   "sweden", "norway", "switzerland", "austria", "belgium", "denmark", "finland", "italy", "poland",
+  "romania", "estonia", "hungary", "cyprus",
 ];
 
 const ENGLISH_COUNTRIES = [

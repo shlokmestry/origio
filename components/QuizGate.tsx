@@ -105,7 +105,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
               You've used all your free runs
             </h1>
             <p className="text-sm text-[#888880] leading-relaxed">
-              Upgrade to Pro for unlimited quiz runs, all 37 countries ranked, full salary breakdown, and more.
+              Upgrade to Pro for unlimited quiz runs, all 45 countries ranked, full salary breakdown, and more.
             </p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
           <ul className="space-y-2.5">
             {[
               "Unlimited quiz runs",
-              "All 37 countries ranked",
+              "All 45 countries ranked",
               "Full salary and tax breakdown",
               "3-country comparison",
               "Complete visa checklist",

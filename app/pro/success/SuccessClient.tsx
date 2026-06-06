@@ -24,7 +24,7 @@ const SANS  = "'Satoshi', system-ui, sans-serif"
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 const PRO_FEATURES = [
-  { title: 'All 37 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
+  { title: 'All 45 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
   { title: 'Full personalised report',   desc: 'Salary, take-home after tax, costs, visa path — specific to you.' },
   { title: 'Salary calculator',          desc: 'Real take-home after tax in any country, for your salary.' },
   { title: 'Visa checklist',             desc: 'Every document, in order, with official links — country-specific.' },
@@ -327,7 +327,7 @@ export default function SuccessClient() {
 
               <div className="fu d4" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                 <Link href="/wizard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: MINT, color: BG, fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                  Run quiz — see all 37 <ArrowRight size={13} />
+                  Run quiz — see all 45 <ArrowRight size={13} />
                 </Link>
               </div>
             </div>

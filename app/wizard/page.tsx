@@ -73,7 +73,7 @@ const NO_DUAL_CITIZENSHIP: Record<string, string> = {
   'south korea': 'South Korea generally does not permit dual citizenship for adults.',
 };
 
-// All currencies for the 37 countries we score
+// All currencies for the 45 countries we score
 const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey?: string; big?: boolean }> = {
   EUR: { symbol: "€",    label: "Euro — Europe (EUR)" },
   USD: { symbol: "$",    label: "US Dollar (USD)",          passportKey: "usa" },
@@ -106,6 +106,9 @@ const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey
   CRC: { symbol: "₡",    label: "Costa Rican Colón (CRC)",                               big: true },
   GEL: { symbol: "₾",    label: "Georgian Lari (GEL)" },
   CZK: { symbol: "Kč",   label: "Czech Koruna (CZK)",                                    big: true },
+  IDR: { symbol: "Rp",   label: "Indonesian Rupiah (IDR)",                               big: true },
+  RSD: { symbol: "RSD",  label: "Serbian Dinar (RSD)",                                   big: true },
+  HUF: { symbol: "Ft",   label: "Hungarian Forint (HUF)",                                big: true },
 };
 
 // TO_USD rates (for converting $800/$1500/$2500 thresholds to local currency display)
@@ -116,6 +119,7 @@ const DISPLAY_TO_USD: Record<string, number> = {
   MXN: 0.058, THB: 0.028, COP: 0.00024, KRW: 0.00074,
   CZK: 0.044, GEL: 0.37, VND: 0.000039, CRC: 0.0019, PLN: 0.25,
   NGN: 0.00065, KES: 0.0077, PHP: 0.018, RON: 0.22, NZD2: 0.61,
+  IDR: 0.000067, RSD: 0.0093, HUF: 0.0028,
 };
 
 function fmtAmount(usd: number, cur: string): string {
@@ -708,7 +712,7 @@ export default function WizardPage() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 0, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 37 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 45 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>

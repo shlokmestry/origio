@@ -8,7 +8,7 @@ const faqs = [
   {
     category: "About Origio",
     items: [
-      { q: "What is Origio?", a: "Origio is a relocation research tool that helps you compare salaries, cost of living, visa requirements, and quality of life across 37 countries — all in one place." },
+      { q: "What is Origio?", a: "Origio is a relocation research tool that helps you compare salaries, cost of living, visa requirements, and quality of life across 45 countries — all in one place." },
       { q: "Who built Origio?", a: "Origio was built by Shlok Mestry, after spending weeks manually researching countries to move to and realising there was no single place that had everything." },
       { q: "Which countries are covered?", a: "Australia, Austria, Belgium, Brazil, Canada, Denmark, Finland, France, Germany, India, Ireland, Italy, Japan, Malaysia, Netherlands, New Zealand, Norway, Portugal, Singapore, Spain, Sweden, Switzerland, UAE, United Kingdom, and USA." },
     ],

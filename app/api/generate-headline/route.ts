@@ -47,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
     const languages    = Array.isArray(_lang) ? _lang.slice(0, 5).map((l: unknown) => sanitizeForPrompt(l, 30)) : [];
     const dealBreakers = Array.isArray(_db) ? _db.slice(0, 6).map((d: unknown) => sanitizeForPrompt(d, 30)) : [];
 
-    const cs = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", SGD: "S$", AED: "AED ", CHF: "CHF ", NOK: "kr ", NZD: "NZ$", INR: "₹", MYR: "RM ", JPY: "¥" }[currency] ?? "€";
+    const cs = { USD: "$", EUR: "€", GBP: "£", AUD: "A$", CAD: "C$", SGD: "S$", AED: "AED ", CHF: "CHF ", NOK: "kr ", NZD: "NZ$", INR: "₹", MYR: "RM ", JPY: "¥", ZAR: "R", KRW: "₩", THB: "฿", VND: "₫", MXN: "MX$", CZK: "Kč", GEL: "₾", CRC: "₡", PLN: "zł", RON: "lei ", IDR: "Rp ", RSD: "RSD ", HUF: "Ft " }[currency] ?? "€";
 
     const safeNum = (v: unknown) => { const n = Number(v); return isFinite(n) ? n : 0; }
     const isTight = safeNum(disposableUSD) < 500;

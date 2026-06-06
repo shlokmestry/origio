@@ -139,7 +139,7 @@ export default async function SharedResultsPage({ params }: { params: Promise<{ 
             Where would you rank?
           </h2>
           <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.65, margin: "0 0 24px", maxWidth: 380 }}>
-            Answer 8 questions. The algorithm scores 37 countries against your job, passport, priorities and budget.
+            Answer 8 questions. The algorithm scores 45 countries against your job, passport, priorities and budget.
           </p>
           <Link href="/wizard" style={{
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",

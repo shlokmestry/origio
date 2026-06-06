@@ -50,6 +50,8 @@ export const SLUG_TO_ISO: Record<string, string> = {
   'romania': 'ro',
   'croatia': 'hr',
   'estonia': 'ee',
+  'serbia': 'rs',
+  'cyprus': 'cy',
   'latvia': 'lv',
   'lithuania': 'lt',
   'slovakia': 'sk',

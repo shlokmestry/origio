@@ -128,7 +128,7 @@ export default function VisaMatcherPage() {
             Where can you<br /><em style={{ fontStyle: "normal", color: MINT }}>actually move?</em>
           </h1>
           <p style={{ fontFamily: SANS, fontSize: 15, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
-            Select your passport. See which of 37 countries are visa-free, easy, moderate, or restricted — adjusted for your specific passport strength.
+            Select your passport. See which of 45 countries are visa-free, easy, moderate, or restricted — adjusted for your specific passport strength.
           </p>
         </div>
 
@@ -285,7 +285,7 @@ export default function VisaMatcherPage() {
         {!passportSlug && !loadingData && (
           <div style={{ padding: "40px 0", borderTop: `1px solid ${LINE}` }}>
             <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7 }}>
-              Select your passport above to see a breakdown across all 37 countries.
+              Select your passport above to see a breakdown across all 45 countries.
             </p>
           </div>
         )}

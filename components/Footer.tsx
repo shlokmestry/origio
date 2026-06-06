@@ -45,7 +45,7 @@ export default function Footer() {
               Origio
             </Link>
             <p className="text-[11px] text-[#888] leading-relaxed max-w-[180px] font-body">
-              37 countries ranked for your job and passport.
+              45 countries ranked for your job and passport.
             </p>
           </div>
 

@@ -55,7 +55,7 @@ interface RunStats {
 }
 
 // ── Country configuration ────────────────────────────────────────────────────
-// 37 countries tracked in the system, ordered alphabetically by slug
+// 45 countries tracked in the system, ordered alphabetically by slug
 
 const COUNTRIES: CountryConfig[] = [
   { slug: 'argentina',      currency: 'ARS', wbCode: 'ARG', numbeoCity: 'Buenos Aires'      },
