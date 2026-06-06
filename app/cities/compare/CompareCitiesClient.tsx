@@ -607,15 +607,12 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Actions */}
         <section className={styles.actions}>
-          <button type="button" className={styles.actBtn} onClick={copyTable}>
-            {copied ? '✓ Copied' : '⧉ Copy table'}
-          </button>
-          <button
-            type="button"
-            className={`${styles.actBtn} ${styles.actBtnGhost}`}
-            onClick={() => window.print()}
-          >
-            ↓ Print / PDF
+          <button type="button" className={styles.actBtn} onClick={() => {
+            navigator.clipboard.writeText(window.location.href).catch(() => {})
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1800)
+          }}>
+            {copied ? '✓ Link copied' : '↗ Share'}
           </button>
           <button
             type="button"
@@ -624,8 +621,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
           >
             ↻ Reset
           </button>
-          <span className={styles.spacer} />
-          <span className={styles.note}>Bring this to your accountant.</span>
         </section>
 
       </main>
