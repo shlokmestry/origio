@@ -7,7 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Footer from "@/components/Footer";
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 type Props = { params: Promise<{ slug: string }> };
 
