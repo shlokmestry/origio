@@ -233,8 +233,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         <section className={`${styles.step} ${styles.fu} ${styles.d2}`}>
           <div className={styles.stepHead}>
             <div>
-              <p className={styles.stepTag}><span className={styles.num}>1</span> Find your city</p>
-              <h2 className={styles.stepTitle}>Here&rsquo;s what <span className={styles.it}>fits</span>.</h2>
+<h2 className={styles.stepTitle}>Here&rsquo;s what <span className={styles.it}>fits</span>.</h2>
             </div>
             <p className={styles.stepAside}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
           </div>
