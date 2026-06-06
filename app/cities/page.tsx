@@ -7,7 +7,7 @@ export const revalidate = 3600
 
 export const metadata = {
   title: 'Cities ~ Cost of Living, Salaries & Expat Guides · Origio',
-  description: 'Compare rent, salaries, climate and visa routes across 12 global cities. Real data for professionals considering a move abroad.',
+  description: 'Compare rent, salaries, climate and visa routes across 24 global cities. Real data for professionals considering a move abroad.',
 }
 
 async function getCities(): Promise<City[]> {

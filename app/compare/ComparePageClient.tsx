@@ -294,8 +294,14 @@ export default function ComparePageClient() {
   // FIX: re-run on pathname change so soft nav works
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const { data } = await supabase
+      if (session?.user && session.access_token) {
+        const { createClient } = await import('@supabase/supabase-js')
+        const authedClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
+        )
+        const { data } = await authedClient
           .from("profiles")
           .select("is_pro, passport_slug, second_passport_slug")
           .eq("id", session.user.id)

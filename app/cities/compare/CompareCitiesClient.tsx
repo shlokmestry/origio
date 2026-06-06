@@ -22,6 +22,16 @@ const CITY_TO_ISO: Record<string, string> = {
   tokyo: 'jp', osaka: 'jp', kyoto: 'jp',
   sydney: 'au', melbourne: 'au', brisbane: 'au',
   dubai: 'ae', 'abu-dhabi': 'ae',
+  bangkok: 'th', 'chiang-mai': 'th',
+  'mexico-city': 'mx',
+  bali: 'id',
+  medellin: 'co', 'buenos-aires': 'ar',
+  'kuala-lumpur': 'my',
+  'cape-town': 'za',
+  malaga: 'es',
+  tbilisi: 'ge',
+  tallinn: 'ee',
+  'da-nang': 'vn',
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
