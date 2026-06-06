@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Relocation Insights & Guides — Origio Blog",
