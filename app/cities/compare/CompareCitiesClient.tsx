@@ -328,14 +328,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
     return (
       <div key={c.slug} className={rowCls}>
-        {/* Podium tag */}
-        {(isCheap || isDear) && (
-          <div className={styles.rrTagStrip}>
-            <span className={styles.squig}>↳ {isCheap ? 'cheapest of the bunch' : 'steepest month'}</span>
-            <span className={styles.ruler} />
-            <span className={styles.tail}>{isCheap ? '↓ winner' : '↓ ouch'}</span>
-          </div>
-        )}
 
         {/* Left: rank + city */}
         <div className={styles.rrL}>
@@ -391,44 +383,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
     indexed.forEach(({ c, total }, rank) => {
       els.push(renderRaceRow(c, total, rank))
 
-      // Annotation after cheapest: rent gap to dearest
-      if (!isolated && rank === 0 && indexed.length >= 2) {
-        const dearest = indexed[indexed.length - 1]
-        const rentGap = (dearest.c.costs.rent ?? 0) - (c.costs.rent ?? 0)
-        if (rentGap > 200) {
-          els.push(
-            <div key="annot-rent" className={styles.annotRow}>
-              <div className={styles.annotL}>rent alone ↗</div>
-              <div className={styles.annotC}>
-                <span className={styles.annotCArr}>↘</span>
-                <span>
-                  <span className={styles.annotStrong}>{fmt(rentGap, currency)}/mo</span>{' '}
-                  gap on rent · {c.name} vs {dearest.c.name}
-                </span>
-              </div>
-              <div className={styles.annotR}></div>
-            </div>
-          )
-        }
-      }
-
-      // Annotation after dearest: yearly gap
-      if (!isolated && rank === indexed.length - 1) {
-        const totalGap = total - indexed[0].total
-        if (totalGap > 500) {
-          els.push(
-            <div key="annot-year" className={styles.annotRow}>
-              <div className={styles.annotL}></div>
-              <div className={styles.annotC}></div>
-              <div className={styles.annotR}>
-                ↗{' '}
-                <span className={styles.annotStrong}>{fmt(totalGap * 12, currency)}</span>
-                /year — a flight home, every month
-              </div>
-            </div>
-          )
-        }
-      }
     })
 
     return els
@@ -443,49 +397,14 @@ export default function CompareCitiesClient({ allCities }: Props) {
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <main className={styles.folio} style={{ paddingTop: 80 }}>
-        {/* Registration marks */}
-        <span className={styles.regTl} />
-        <span className={styles.regTr} />
-        <span className={styles.regBl} />
-        <span className={styles.regBr} />
-
-        {/* Folio strip */}
-        <div className={styles.folioStrip}>
-          <span>
-            <span className={styles.pulse} />
-            Origio Comparative Bureau · <span className={styles.folioIt}>Folio III</span> · 2026 Q1
-          </span>
-          <span>Cost of living, drawn to scale · <span className={styles.folioIt}>no axis lies</span></span>
-        </div>
-
-        {/* Headline */}
-        <header className={`${styles.raceHead} ${styles.fu}`}>
-          <div className={styles.eyebrow}>
-            <span className={styles.eyebrowNum}>3</span>
-            The Race · Cost of living, side by side
-          </div>
-          <h1 className={styles.raceH1}>
-            <span className={styles.it}>Whose month</span><br />
-            costs <span className={styles.amberText}>more?</span>{' '}
-            <span className={styles.grey}>Drawn to scale ~</span>{' '}
-            <span className={styles.stamp}>No axis lies</span>
-          </h1>
-        </header>
 
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Pick up to four cities below. The longer the bar, the steeper the rent, the heavier
-            the grocery cart. Numbers in{' '}
+            Pick up to four cities. Numbers in{' '}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
-            </button>{' '}
-            ~ re-tallied as you switch.
-          </div>
-          <div className={styles.raceSubR}>
-            <span className={styles.raceSubRIt}>Verified Q1 2026</span>
-            Local journalists · double-entered<br />
-            Sourced quarterly · seven line-items
+            </button>
           </div>
         </section>
 
@@ -655,12 +574,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
           <span className={styles.note}>Bring this to your accountant.</span>
         </section>
 
-        {/* Bureau */}
-        <div className={styles.bureau}>
-          <span>Origio · Comparative Bureau · est. 2024</span>
-          <span className={styles.seal}>~ it is what it is ~</span>
-          <span>All numbers real · sourced Q1 2026</span>
-        </div>
       </main>
       <Footer />
     </div>
