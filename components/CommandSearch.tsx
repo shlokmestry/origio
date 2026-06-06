@@ -29,6 +29,7 @@ export interface CitySearchItem {
 interface CommandSearchProps {
   countries: GlobeCountry[];
   onCountrySelect: (slug: string) => void;
+  onCitySelect?: (slug: string) => void;
   open: boolean;
   onClose: () => void;
   cities?: CitySearchItem[];
@@ -211,6 +212,7 @@ function ScoreBar({ score }: { score: number }) {
 export default function CommandSearch({
   countries,
   onCountrySelect,
+  onCitySelect,
   open,
   onClose,
   cities = [],
@@ -324,13 +326,21 @@ export default function CommandSearch({
       if (item.kind === 'country') {
         addRecent(item.data.slug);
         onCountrySelect(item.data.slug);
+        onClose();
+        setQuery("");
       } else {
-        router.push(`/city/${item.data.slug}`);
+        if (onCitySelect) {
+          onCitySelect(item.data.slug);
+          onClose();
+          setQuery("");
+        } else {
+          router.push(`/city/${item.data.slug}`);
+          onClose();
+          setQuery("");
+        }
       }
-      onClose();
-      setQuery("");
     },
-    [onCountrySelect, onClose, router]
+    [onCountrySelect, onCitySelect, onClose, router]
   );
 
   useEffect(() => {

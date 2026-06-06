@@ -6,6 +6,7 @@ import { Search, Zap, LogIn, User, Menu, X } from "lucide-react";
 import { GlobeCountry } from "@/types";
 import { useAuth } from "@/lib/AuthProvider";
 import CommandSearch, { type CitySearchItem } from "@/components/CommandSearch";
+import CityPanel from "@/components/CityPanel";
 
 interface NavProps {
   countries?: GlobeCountry[];
@@ -16,6 +17,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
   const [searchOpen, setSearchOpen]         = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cities, setCities]                 = useState<CitySearchItem[]>([]);
+  const [selectedCitySlug, setSelectedCitySlug] = useState<string | null>(null);
   const citiesFetched                       = useRef(false);
   const { user, isPro } = useAuth();
 
@@ -58,6 +60,10 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
 
   const handleCountrySelect = (slug: string) => {
     onCountrySelect?.(slug);
+  };
+
+  const handleCitySelect = (slug: string) => {
+    setSelectedCitySlug(slug);
   };
 
   return (
@@ -389,9 +395,15 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
       <CommandSearch
         countries={countries}
         onCountrySelect={handleCountrySelect}
+        onCitySelect={handleCitySelect}
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
         cities={cities}
+      />
+
+      <CityPanel
+        slug={selectedCitySlug}
+        onClose={() => setSelectedCitySlug(null)}
       />
     </>
   );
