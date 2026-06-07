@@ -1,4 +1,4 @@
-import { Html, Head, Body, Container, Text, Hr } from '@react-email/components';
+import { Html, Head, Body, Container, Text, Hr, Section } from '@react-email/components';
 
 interface CityRow {
   name: string
@@ -27,24 +27,26 @@ export default function CityComparison({ cities, shareUrl }: Props) {
             Your city cost breakdown.
           </Text>
           <Text style={{ fontSize: 14, color: '#666660', margin: '0 0 28px', lineHeight: '1.6', fontFamily: 'sans-serif' }}>
-            Here's the monthly cost comparison you built, saved so you can reference it later.
+            Here&apos;s the monthly cost comparison you built, saved so you can reference it later.
           </Text>
           <Hr style={{ borderColor: '#2a2a2a', margin: '0 0 24px' }} />
+
           {cities.map((city, i) => (
-            <div key={i} style={{ marginBottom: '16px', padding: '16px 20px', backgroundColor: '#1a1a1a', borderLeft: city.name === cheapest.name ? '3px solid #00ffd5' : '3px solid #2a2a2a' }}>
+            <Section key={i} style={{ marginBottom: '16px', padding: '16px 20px', backgroundColor: '#1a1a1a', borderLeft: city.name === cheapest.name ? '3px solid #00ffd5' : '3px solid #2a2a2a' }}>
               <Text style={{ fontSize: 13, fontWeight: 700, color: '#f0f0e8', margin: '0 0 4px', fontFamily: 'sans-serif' }}>
                 {city.name} · {city.country}
               </Text>
               <Text style={{ fontSize: 22, fontWeight: 900, color: city.name === cheapest.name ? '#00ffd5' : '#f0b07a', margin: 0, fontFamily: 'sans-serif' }}>
-                {city.sym}{Math.round(city.total).toLocaleString()}<span style={{ fontSize: 13, fontWeight: 400, color: '#555550' }}> /mo</span>
+                {city.sym}{Math.round(city.total).toLocaleString()} <span style={{ fontSize: 13, fontWeight: 400, color: '#555550' }}>/mo</span>
               </Text>
               {city.name === cheapest.name && cities.length > 1 && (
                 <Text style={{ fontSize: 11, color: '#00ffd5', margin: '4px 0 0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>
                   ↓ Best deal
                 </Text>
               )}
-            </div>
+            </Section>
           ))}
+
           <Hr style={{ borderColor: '#2a2a2a', margin: '24px 0' }} />
           <a
             href={shareUrl}
