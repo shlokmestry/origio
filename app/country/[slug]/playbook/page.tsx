@@ -225,7 +225,7 @@ export default function PlaybookPage() {
 
   function toggleStep(id: string) {
     setProgress(prev => {
-      const next = { ...prev, [id]: prev[id] === 'done' ? 'todo' : 'done' }
+      const next: Record<string, StepStatus> = { ...prev, [id]: prev[id] === 'done' ? 'todo' : 'done' }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
