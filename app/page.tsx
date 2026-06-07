@@ -193,7 +193,7 @@ function CitiesSection() {
         opacity:     inView ? 1 : 0,
         transition:  "opacity 0.5s ease 200ms",
       }}>
-        20+ cities across your matched countries. Rent, internet, liveability — side by side.
+        20+ cities across your matched countries. Rent, internet, liveability ~ side by side.
       </p>
     </section>
   );
@@ -384,7 +384,7 @@ export default function Home() {
             maxWidth:    440,
             marginBottom: "clamp(36px, 5vh, 56px)",
           }}>
-            Salaries, visas, cost of living and quality of life — personalised to your job and passport.
+            Salaries, visas, cost of living and quality of life ~ personalised to your job and passport.
           </p>
 
           <button

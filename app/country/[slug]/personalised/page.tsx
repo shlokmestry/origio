@@ -43,7 +43,7 @@ export async function generateMetadata({
   if (!country) return { title: "Not Found — Origio" };
   return {
     title: `Why ${country.name} could be your country · Origio`,
-    description: `Your personalised relocation report for ${country.name} — salary, visa path, cost reality, and how it matches your priorities.`,
+    description: `Your personalised relocation report for ${country.name} ~ salary, visa path, cost reality, and how it matches your priorities.`,
   };
 }
 

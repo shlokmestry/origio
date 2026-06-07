@@ -59,9 +59,9 @@ export default function PrivacyPage() {
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: S.text, margin: '0 0 20px' }}>What data we collect</h2>
             <div style={{ border: `1px solid ${S.border}`, overflow: 'hidden', boxShadow: '3px 3px 0 #1a1a1a' }}>
               {[
-                { title: 'Account data', body: 'When you create an account: your email address, name (optional), and password (hashed — we never see the plaintext). If you sign in with Google, we receive your name and email from Google.' },
+                { title: 'Account data', body: 'When you create an account: your email address, name (optional), and password (hashed, we never see the plaintext). If you sign in with Google, we receive your name and email from Google.' },
                 { title: 'Profile data', body: 'Information you choose to provide: passport country, job title. This is used to personalise your country recommendations.' },
-                { title: 'Usage data', body: 'Quiz answers and results (stored to show your history), saved countries, and pages you visit. We use Google Analytics (GA4) to understand how the site is used — this data is anonymised and aggregated.' },
+                { title: 'Usage data', body: 'Quiz answers and results (stored to show your history), saved countries, and pages you visit. We use Google Analytics (GA4) to understand how the site is used this data is anonymised and aggregated.' },
                 { title: 'Payment data', body: 'If you upgrade to Pro, payments are processed by Stripe. We receive confirmation that payment was made but never see your card details. Stripe stores payment data under their own privacy policy.' },
               ].map(({ title, body }, i, arr) => (
                 <div key={title} style={{
@@ -157,10 +157,10 @@ export default function PrivacyPage() {
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(22px,3vw,28px)', fontWeight: 400, color: S.text, margin: '0 0 16px' }}>How long we keep your data</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                'Account data — until you delete your account',
-                'Quiz results and saved countries — until you delete your account',
-                'Payment records — 7 years (legal requirement)',
-                'Analytics data — 26 months (Google Analytics default)',
+                'Account data: until you delete your account',
+                'Quiz results and saved countries: until you delete your account',
+                'Payment records: 7 years (legal requirement)',
+                'Analytics data: 26 months (Google Analytics default)',
               ].map((item) => (
                 <div key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span style={{ width: 4, height: 4, background: S.dimmer, flexShrink: 0, marginTop: 9 }} />

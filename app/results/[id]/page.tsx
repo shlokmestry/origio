@@ -26,13 +26,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .eq("is_public", true)
     .maybeSingle();
 
-  if (!data) return { title: "Origio — Shared Results" };
+  if (!data) return { title: "Origio ~ Shared Results" };
   const top = (data.top_countries as TopCountry[])[0];
   return {
-    title: `${top?.name ?? "Results"} — Origio`,
+    title: `${top?.name ?? "Results"} ~ Origio`,
     description: `${top?.matchPercent ?? ""}% match · See which countries ranked #1 for this profile on Origio.`,
     openGraph: {
-      title: `My top match: ${top?.name} (${top?.matchPercent}%) — Origio`,
+      title: `My top match: ${top?.name} (${top?.matchPercent}%) ~ Origio`,
       description: "Find which countries match your job, passport and priorities.",
     },
   };

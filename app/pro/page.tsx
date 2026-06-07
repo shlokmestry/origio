@@ -24,7 +24,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Take-home pay calculator',
-    desc: 'Enter your salary, see exact net monthly income and disposable pay after rent and food — for every country.',
+    desc: 'Enter your salary, see exact net monthly income and disposable pay after rent and food ~ for every country.',
   },
   {
     icon: (
@@ -33,7 +33,7 @@ const FEATURES = [
       </svg>
     ),
     title: '3-country comparison',
-    desc: 'Side-by-side: salaries, costs, taxes, visa difficulty — pick any 3 countries from your ranked list.',
+    desc: 'Side-by-side: salaries, costs, taxes, visa difficulty ~ pick any 3 countries from your ranked list.',
   },
   {
     icon: (
@@ -51,7 +51,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Budget reality check',
-    desc: 'Enter your monthly budget — see which countries you can afford and how much margin you have left.',
+    desc: 'Enter your monthly budget ~ see which countries you can afford and how much margin you have left.',
   },
 ]
 
@@ -62,7 +62,7 @@ const FAQS = [
   },
   {
     q: 'What does Pro actually give me?',
-    a: 'The tools you need to make a real decision: take-home pay after tax and rent, side-by-side country comparison, custom ranking weights, and a budget reality check. The free tier already shows you all 45 ranked countries — Pro helps you act on that information.',
+    a: 'The tools you need to make a real decision: take-home pay after tax and rent, side-by-side country comparison, custom ranking weights, and a budget reality check. The free tier already shows you all 45 ranked countries ~ Pro helps you act on that information.',
   },
   {
     q: 'What countries are included?',
@@ -209,7 +209,7 @@ function ProPageInner() {
             fontFamily: "'Satoshi', sans-serif",
             color: 'rgba(240,240,232,0.55)',
           }}>
-            <span style={{ color: '#00ffd5', fontWeight: 800 }}>FREE</span> — all 45 countries ranked. Pro unlocks the tools.
+            <span style={{ color: '#00ffd5', fontWeight: 800 }}>FREE</span> ~ all 45 countries ranked. Pro unlocks the tools.
           </span>
         </div>
 
@@ -279,7 +279,7 @@ function ProPageInner() {
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#f0f0e8', marginBottom: 3, fontFamily: "'Cabinet Grotesk', sans-serif", letterSpacing: '-0.01em' }}>
                     {f.title}{' '}
-                    <span style={{ fontWeight: 500, color: '#888880', fontFamily: "'Satoshi', sans-serif" }}>— {f.desc}</span>
+                    <span style={{ fontWeight: 500, color: '#888880', fontFamily: "'Satoshi', sans-serif" }}>~ {f.desc}</span>
                   </p>
                 </div>
               </div>
@@ -304,7 +304,7 @@ function ProPageInner() {
               { label: 'Top 3 personalised reports',        free: true,  pro: true  },
               { label: 'Salary by job role (gross)',        free: true,  pro: true  },
               { label: 'Visa difficulty rating',           free: true,  pro: true  },
-              { label: 'Take-home pay after tax',          free: false, pro: true  },
+              { label: 'Take home pay after tax',          free: false, pro: true  },
               { label: 'Disposable income (salary − costs)', free: false, pro: true  },
               { label: '3-country side-by-side compare',   free: false, pro: true  },
               { label: 'Custom ranking weights',           free: false, pro: true  },

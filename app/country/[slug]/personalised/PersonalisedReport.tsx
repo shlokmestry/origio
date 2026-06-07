@@ -76,7 +76,7 @@ function getFallbackNarrative(slug: string, name: string, cs: string, grossSalar
 
   const N: Record<string, string[]> = {
     "uae": [
-      `Zero tax. What you earn — ${g} — is what you keep.`,
+      `Zero tax. What you earn ${g} is what you keep.`,
       `No income tax. Your ${g} salary arrives exactly as advertised.`,
       `${g} gross, ${g} net. That is the entire case for UAE.`,
     ],
@@ -300,10 +300,10 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean, passportTier?: 1
     return {
       months: tierBonus ? "2–4 months" : "3–6 months",
       steps: [
-        { month: add(0), action: "Gather documents — passport, bank statements, proof of income" },
+        { month: add(0), action: "Gather documents ~ passport, bank statements, proof of income" },
         { month: add(1), action: "Submit visa application at consulate" },
         { month: add(2), action: `Processing period (${tierBonus ? "1–3" : "2–4"} months typical)${tierBonus ? " — strong passport speeds processing" : ""}` },
-        { month: add(4 - tierBonus), action: "Visa issued — book flights, sort accommodation" },
+        { month: add(4 - tierBonus), action: "Visa issued ~ book flights, sort accommodation" },
         { month: add(5 - tierBonus), action: "You're in.", final: true },
       ],
     };
@@ -314,7 +314,7 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean, passportTier?: 1
       steps: [
         { month: add(0), action: "Secure job offer or employer sponsor" },
         { month: add(2), action: "Employer submits work permit application" },
-        { month: add(3), action: `Processing period (${tierBonus ? "2–5" : "3–6"} months)${tierBonus ? " — Tier 1 passport reduces friction" : ""}` },
+        { month: add(3), action: `Processing period (${tierBonus ? "2–5" : "3–6"} months)${tierBonus ? " ~ Tier 1 passport reduces friction" : ""}` },
         { month: add(8 - tierBonus), action: "Permit issued — arrange relocation" },
         { month: add(10 - tierBonus), action: "You're in.", final: true },
       ],
@@ -323,7 +323,7 @@ function getMoveTimeline(visaDifficulty: number, isEU: boolean, passportTier?: 1
   return {
     months: tierBonus ? "10–15 months" : "12–18 months",
     steps: [
-      { month: add(0), action: "Begin job search — employer sponsorship essential" },
+      { month: add(0), action: "Begin job search ~ employer sponsorship essential" },
       { month: add(4), action: "Job offer secured" },
       { month: add(5), action: "Visa application submitted with full documentation" },
       { month: add(9 - tierBonus), action: `Processing + possible interview or biometrics${tierBonus ? " (Tier 1 passport may expedite)" : ""}` },
@@ -858,7 +858,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
         <div id="visa" style={{ padding: '56px 0', borderTop: `1px solid ${S.border}` }}>
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontFamily: S.serif, fontSize: 'clamp(28px,4vw,40px)', fontWeight: 400, color: '#fff', lineHeight: 1, margin: 0 }}>
-              Visa — your route
+              Visa ~ your route
             </h2>
           </div>
           <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
