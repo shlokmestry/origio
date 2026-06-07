@@ -699,6 +699,18 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
               </Link>
             )}
           </div>
+
+          {/* Playbook + Move Budget CTAs */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 20 }}>
+            <Link href={`/country/${country.slug}/playbook`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,255,213,0.1)', color: '#00ffd5', border: '1px solid rgba(0,255,213,0.25)', borderRadius: 100, padding: '10px 22px', fontSize: 12, fontWeight: 700, textDecoration: 'none', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              📋 The Playbook {isPro ? '' : '· Pro'}
+            </Link>
+            <Link href={`/move-budget?country=${country.slug}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(240,176,122,0.1)', color: '#f0b07a', border: '1px solid rgba(240,176,122,0.2)', borderRadius: 100, padding: '10px 22px', fontSize: 12, fontWeight: 700, textDecoration: 'none', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              💰 Move Budget
+            </Link>
+          </div>
         </div>
 
         {/* ── SALARY ── */}
