@@ -130,6 +130,8 @@ export default function CompareCitiesClient({ allCities }: Props) {
     return iso && COST_ROWS.some(r => r.key === iso) ? iso as CostKey : null
   })
   const [copied, setCopied] = useState(false)
+  const [emailVal, setEmailVal] = useState('')
+  const [emailState, setEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
 
   // Sync state → URL (client-only — window not available on server)
   useEffect(() => {
@@ -289,6 +291,27 @@ export default function CompareCitiesClient({ allCities }: Props) {
   const toggleIsolate = useCallback((key: CostKey) => {
     setIsolated(prev => prev === key ? null : key)
   }, [])
+
+  const submitEmail = useCallback(async () => {
+    if (!emailVal.includes('@') || picks.length < 2) return
+    setEmailState('loading')
+    try {
+      const shareUrl = typeof window !== 'undefined' ? window.location.href : 'https://findorigio.com/cities/compare'
+      const res = await fetch('/api/capture-city-comparison', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailVal,
+          cities: picks.map((c, i) => ({ slug: c.slug, name: c.name, country: c.country, total: totals[i] })),
+          currency,
+          shareUrl,
+        }),
+      })
+      setEmailState(res.ok ? 'sent' : 'error')
+    } catch {
+      setEmailState('error')
+    }
+  }, [emailVal, picks, totals, currency])
 
   const reset = useCallback(() => {
     setSelected(defaultSlugs)
@@ -617,6 +640,83 @@ export default function CompareCitiesClient({ allCities }: Props) {
           </div>
         </section>
 
+
+        {/* Email capture */}
+        {picks.length >= 2 && (
+          <section style={{
+            margin: '32px 0 0',
+            padding: '28px 32px',
+            background: '#111111',
+            border: '1px solid rgba(240,240,232,0.085)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+            flexWrap: 'wrap' as const,
+          }}>
+            <div style={{ flex: '1 1 260px' }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(240,240,232,0.4)', marginBottom: 6, fontFamily: 'sans-serif' }}>
+                → Save this comparison
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0e8', fontFamily: 'sans-serif' }}>
+                Want this emailed to you?
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(240,240,232,0.45)', marginTop: 4, fontFamily: 'sans-serif' }}>
+                We&rsquo;ll send the full breakdown to your inbox. No account needed.
+              </div>
+            </div>
+            {emailState === 'sent' ? (
+              <div style={{ fontSize: 14, color: '#00ffd5', fontWeight: 700, fontFamily: 'sans-serif' }}>
+                ✓ Sent — check your inbox.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, flex: '1 1 320px', alignItems: 'stretch' }}>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={emailVal}
+                  onChange={e => setEmailVal(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') submitEmail() }}
+                  disabled={emailState === 'loading'}
+                  style={{
+                    flex: 1,
+                    background: '#1a1a1a',
+                    border: '1px solid rgba(240,240,232,0.12)',
+                    color: '#f0f0e8',
+                    fontSize: 14,
+                    padding: '10px 14px',
+                    fontFamily: 'sans-serif',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={submitEmail}
+                  disabled={emailState === 'loading' || !emailVal.includes('@')}
+                  style={{
+                    background: '#00ffd5',
+                    color: '#0a0a0a',
+                    border: 'none',
+                    fontWeight: 800,
+                    fontSize: 11,
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase' as const,
+                    padding: '10px 20px',
+                    cursor: emailState === 'loading' ? 'wait' : 'pointer',
+                    fontFamily: 'sans-serif',
+                    opacity: !emailVal.includes('@') ? 0.4 : 1,
+                  }}
+                >
+                  {emailState === 'loading' ? '...' : 'Send →'}
+                </button>
+              </div>
+            )}
+            {emailState === 'error' && (
+              <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'sans-serif' }}>
+                Something went wrong. Try again.
+              </div>
+            )}
+          </section>
+        )}
 
       </main>
       <Footer />
