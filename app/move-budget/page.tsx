@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import Nav from '@/components/Nav'
@@ -90,7 +90,7 @@ const BUFFER_MONTHS = 3
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function MoveBudgetPage() {
+function MoveBudgetContent() {
   const searchParams = useSearchParams()
   const initialSlug = searchParams.get('country') ?? ''
 
@@ -405,5 +405,13 @@ export default function MoveBudgetPage() {
       </div>
       <Footer />
     </div>
+  )
+}
+
+export default function MoveBudgetPage() {
+  return (
+    <Suspense fallback={<div style={{ background: '#0a0a0a', minHeight: '100vh' }} />}>
+      <MoveBudgetContent />
+    </Suspense>
   )
 }
