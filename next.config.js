@@ -51,7 +51,7 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://*.sentry.io",
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://*.sentry.io`,
               "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://cdn.fontshare.com https://fonts.googleapis.com https://api.maptiler.com",
               "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://unpkg.com https://api.maptiler.com https://*.maptiler.com https://*.maptiles.io https://picsum.photos https://fastly.picsum.photos https://api.producthunt.com https://images.unsplash.com https://images.pexels.com https://pixabay.com https://cdn.pixabay.com",
               "font-src 'self' data: https://api.fontshare.com https://cdn.fontshare.com https://fonts.gstatic.com",
