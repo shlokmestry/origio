@@ -1276,6 +1276,10 @@ export default function SalaryCalculator() {
   // Pinned countries for comparison
   const [pinnedCountries, setPinnedCountries] = useState<(keyof typeof TAX_DATA)[]>([]);
 
+  // Email capture
+  const [salaryEmailVal, setSalaryEmailVal] = useState('');
+  const [salaryEmailState, setSalaryEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
+
   const fetchPro = useCallback(async (userId: string) => {
     const { data } = await supabase.from("profiles").select("is_pro").eq("id", userId).single();
     setIsPro(data?.is_pro ?? false);
@@ -1800,6 +1804,73 @@ export default function SalaryCalculator() {
           }
         }
       `}</style>
+
+      {/* ── EMAIL CAPTURE ── */}
+      <div style={{ maxWidth: 1440, margin: '32px auto 0', paddingLeft: 'clamp(12px,3vw,24px)', paddingRight: 'clamp(12px,3vw,24px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', padding: '20px 24px' }}>
+          <div style={{ flex: '1 1 220px' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.3)', marginBottom: 5, fontFamily: 'Satoshi, sans-serif' }}>→ Save your results</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', fontFamily: 'Satoshi, sans-serif' }}>Want this emailed to you?</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontFamily: 'Satoshi, sans-serif' }}>Full breakdown sent to your inbox. No account needed.</div>
+          </div>
+          {salaryEmailState === 'sent' ? (
+            <div style={{ fontSize: 13, color: '#4de6cc', fontWeight: 700, fontFamily: 'Satoshi, sans-serif' }}>✓ Sent — check your inbox.</div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, flex: '1 1 300px', alignItems: 'stretch' }}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={salaryEmailVal}
+                onChange={e => setSalaryEmailVal(e.target.value)}
+                onKeyDown={async e => {
+                  if (e.key !== 'Enter' || !salaryEmailVal.includes('@')) return
+                  setSalaryEmailState('loading')
+                  try {
+                    const res = await fetch('/api/capture-salary-calc', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: salaryEmailVal, countryName: d.name, countryFlag: d.flag, countryCode: country,
+                        role, level, symbol: d.symbol, grossLocal, netLocal: takeHomeAnnual,
+                        grossUSD, netUSD: takeHomeAnnualUSD, effectiveRate, currency: d.currency,
+                        shareUrl: typeof window !== 'undefined' ? window.location.href : 'https://findorigio.com/salary-calculator',
+                      }),
+                    })
+                    setSalaryEmailState(res.ok ? 'sent' : 'error')
+                  } catch { setSalaryEmailState('error') }
+                }}
+                disabled={salaryEmailState === 'loading'}
+                style={{ flex: 1, background: '#111114', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff', fontSize: 13, padding: '10px 14px', fontFamily: 'Satoshi, sans-serif', outline: 'none', borderRadius: 0 }}
+              />
+              <button
+                type="button"
+                disabled={salaryEmailState === 'loading' || !salaryEmailVal.includes('@')}
+                onClick={async () => {
+                  if (!salaryEmailVal.includes('@')) return
+                  setSalaryEmailState('loading')
+                  try {
+                    const res = await fetch('/api/capture-salary-calc', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: salaryEmailVal, countryName: d.name, countryFlag: d.flag, countryCode: country,
+                        role, level, symbol: d.symbol, grossLocal, netLocal: takeHomeAnnual,
+                        grossUSD, netUSD: takeHomeAnnualUSD, effectiveRate, currency: d.currency,
+                        shareUrl: typeof window !== 'undefined' ? window.location.href : 'https://findorigio.com/salary-calculator',
+                      }),
+                    })
+                    setSalaryEmailState(res.ok ? 'sent' : 'error')
+                  } catch { setSalaryEmailState('error') }
+                }}
+                style={{ background: '#4de6cc', color: '#0a0a0a', border: 'none', fontWeight: 800, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase' as const, padding: '10px 20px', cursor: salaryEmailState === 'loading' ? 'wait' : 'pointer', fontFamily: 'Satoshi, sans-serif', opacity: !salaryEmailVal.includes('@') ? 0.4 : 1 }}
+              >
+                {salaryEmailState === 'loading' ? '...' : 'Send →'}
+              </button>
+            </div>
+          )}
+          {salaryEmailState === 'error' && <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'Satoshi, sans-serif' }}>Something went wrong. Try again.</div>}
+        </div>
+      </div>
 
       <Footer />
     </div>

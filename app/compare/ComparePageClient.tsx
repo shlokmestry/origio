@@ -359,6 +359,8 @@ export default function ComparePageClient() {
   const [slugB, setSlugB] = useState<string | null>(null);
   const [slugC, setSlugC] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
+  const [cmpEmailVal, setCmpEmailVal] = useState('');
+  const [cmpEmailState, setCmpEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [isPro, setIsPro] = useState(false);
   const [passportCtx, setPassportCtx] = useState<{ tier: 1|2|3|4; rawTier: 1|2|3|4; upgraded: boolean; hasDual: boolean } | null>(null);
   // FIX: start true so we never render a black screen while checking
@@ -791,6 +793,81 @@ export default function ComparePageClient() {
 {slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" /> : <span>{c.flagEmoji}</span>} Full {c.name} report →
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── EMAIL CAPTURE ── */}
+      {countryA && countryB && (
+        <div style={{
+          maxWidth: 1100, margin: '32px auto 0', padding: '0 32px',
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+            background: '#111114', border: '1px solid rgba(255,255,255,0.07)',
+            padding: '20px 28px',
+          }}>
+            <div style={{ flex: '1 1 220px' }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 5, fontFamily: 'sans-serif' }}>→ Save this comparison</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f0e8', fontFamily: 'sans-serif' }}>Want this emailed to you?</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontFamily: 'sans-serif' }}>Full breakdown sent to your inbox. No account needed.</div>
+            </div>
+            {cmpEmailState === 'sent' ? (
+              <div style={{ fontSize: 13, color: '#00ffd5', fontWeight: 700, fontFamily: 'sans-serif' }}>✓ Sent — check your inbox.</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, flex: '1 1 300px', alignItems: 'stretch' }}>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={cmpEmailVal}
+                  onChange={e => setCmpEmailVal(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key !== 'Enter' || !cmpEmailVal.includes('@') || !countryA || !countryB) return
+                    setCmpEmailState('loading')
+                    try {
+                      const countries = [
+                        { slug: countryA.slug, name: countryA.name, flag: countryA.flagEmoji ?? '', color: COL_A },
+                        { slug: countryB.slug, name: countryB.name, flag: countryB.flagEmoji ?? '', color: COL_B },
+                        ...(isPro && countryC ? [{ slug: countryC.slug, name: countryC.name, flag: countryC.flagEmoji ?? '', color: COL_C }] : []),
+                      ]
+                      const res = await fetch('/api/capture-country-comparison', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cmpEmailVal, countries, role: JOB_ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole, shareUrl: window.location.href }),
+                      })
+                      setCmpEmailState(res.ok ? 'sent' : 'error')
+                    } catch { setCmpEmailState('error') }
+                  }}
+                  disabled={cmpEmailState === 'loading'}
+                  style={{ flex: 1, background: '#0d0d10', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0e8', fontSize: 13, padding: '10px 14px', fontFamily: 'sans-serif', outline: 'none' }}
+                />
+                <button
+                  type="button"
+                  disabled={cmpEmailState === 'loading' || !cmpEmailVal.includes('@')}
+                  onClick={async () => {
+                    if (!cmpEmailVal.includes('@') || !countryA || !countryB) return
+                    setCmpEmailState('loading')
+                    try {
+                      const countries = [
+                        { slug: countryA.slug, name: countryA.name, flag: countryA.flagEmoji ?? '', color: COL_A },
+                        { slug: countryB.slug, name: countryB.name, flag: countryB.flagEmoji ?? '', color: COL_B },
+                        ...(isPro && countryC ? [{ slug: countryC.slug, name: countryC.name, flag: countryC.flagEmoji ?? '', color: COL_C }] : []),
+                      ]
+                      const res = await fetch('/api/capture-country-comparison', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cmpEmailVal, countries, role: JOB_ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole, shareUrl: window.location.href }),
+                      })
+                      setCmpEmailState(res.ok ? 'sent' : 'error')
+                    } catch { setCmpEmailState('error') }
+                  }}
+                  style={{ background: '#00ffd5', color: '#0a0a0a', border: 'none', fontWeight: 800, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '10px 20px', cursor: cmpEmailState === 'loading' ? 'wait' : 'pointer', fontFamily: 'sans-serif', opacity: !cmpEmailVal.includes('@') ? 0.4 : 1 }}
+                >
+                  {cmpEmailState === 'loading' ? '...' : 'Send →'}
+                </button>
+              </div>
+            )}
+            {cmpEmailState === 'error' && <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'sans-serif' }}>Something went wrong. Try again.</div>}
           </div>
         </div>
       )}
