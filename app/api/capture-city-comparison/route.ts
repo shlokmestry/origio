@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getResend } from '@/lib/resend'
-import { render } from '@react-email/render'
 import CityComparison from '@/emails/CityComparison'
+import { createElement } from 'react'
 
 const RATE_LIMIT = new Map<string, number>()
 
@@ -67,13 +67,11 @@ export async function POST(req: NextRequest) {
     sym,
   }))
 
-  const html = await render(CityComparison({ cities: cityRows, shareUrl }))
-
   await resend.emails.send({
     from: 'Origio <hello@findorigio.com>',
     to: email,
     subject: `Your city comparison: ${cities.map(c => c.name).join(' vs ')}`,
-    html,
+    react: createElement(CityComparison, { cities: cityRows, shareUrl }),
   })
 
   return NextResponse.json({ ok: true })
