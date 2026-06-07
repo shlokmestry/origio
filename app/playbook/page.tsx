@@ -120,7 +120,7 @@ export default function PlaybookLandingPage() {
                     cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
                   }}
                 >
-                  <FlagIcon iso={slugToIso(c.slug)} size={22} />
+                  <FlagIcon code={slugToIso(c.slug)} size="sm" />
                   <span style={{ fontSize: 14, fontWeight: 600, color: hovered === c.slug ? '#fff' : 'rgba(255,255,255,0.75)', fontFamily: S.sans }}>
                     {c.name}
                   </span>
@@ -150,7 +150,7 @@ export default function PlaybookLandingPage() {
                   cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
                 }}
               >
-                <FlagIcon iso={slugToIso(c.slug)} size={20} />
+                <FlagIcon code={slugToIso(c.slug)} size="sm" />
                 <span style={{ fontSize: 15, fontWeight: 500, color: '#fff', fontFamily: S.sans }}>{c.name}</span>
               </button>
             ))}
