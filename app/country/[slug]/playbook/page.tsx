@@ -61,10 +61,9 @@ function relativeBucket(daysBefore: number | undefined): string {
 export default function PlaybookPage() {
   const params = useParams()
   const slug = params.slug as string
-  const { user } = useAuth()
+  const { user, loading: authLoading, isPro } = useAuth()
+  const proChecked = !authLoading
 
-  const [isPro, setIsPro] = useState(false)
-  const [proChecked, setProChecked] = useState(false)
   const [countryName, setCountryName] = useState('')
   const [countryFlag, setCountryFlag] = useState('')
   const [answers, setAnswers] = useState<Record<string,string> | null>(null)
@@ -77,25 +76,16 @@ export default function PlaybookPage() {
   const STORAGE_KEY = `playbook_${slug}`
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Pro status
-  useEffect(() => {
-    async function check() {
-      if (!user) { setProChecked(true); return }
-      const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single()
-      setIsPro(data?.is_pro ?? false)
-      setProChecked(true)
-    }
-    check()
-  }, [user])
-
   // Country name + flag
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from('countries').select('name, flag_emoji').eq('slug', slug).single()
-      if (data) { setCountryName(data.name ?? slug); setCountryFlag(data.flag_emoji ?? '') }
-      else setCountryName(slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
-    }
-    load()
+    const fallback = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    setCountryName(fallback)
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('countries').select('name, flag_emoji').eq('slug', slug).single()
+        if (data) { setCountryName(data.name ?? fallback); setCountryFlag(data.flag_emoji ?? '') }
+      } catch {}
+    })()
   }, [slug])
 
   // Wizard answers
@@ -119,18 +109,20 @@ export default function PlaybookPage() {
     if (!user || !isPro) return
     let cancelled = false
     ;(async () => {
-      const { data } = await supabase
-        .from('playbook_progress')
-        .select('state, updated_at')
-        .eq('user_id', user.id).eq('country_slug', slug)
-        .single()
-      if (cancelled || !data?.state) return
-      const remote = { ...EMPTY, ...(data.state as PlaybookState), updatedAt: new Date(data.updated_at).getTime() }
-      // newest wins
-      if (remote.updatedAt > local.updatedAt) {
-        setState(remote)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
-      }
+      try {
+        const { data } = await supabase
+          .from('playbook_progress')
+          .select('state, updated_at')
+          .eq('user_id', user.id).eq('country_slug', slug)
+          .single()
+        if (cancelled || !data?.state) return
+        const remote = { ...EMPTY, ...(data.state as PlaybookState), updatedAt: new Date(data.updated_at).getTime() }
+        // newest wins
+        if (remote.updatedAt > local.updatedAt) {
+          setState(remote)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
+        }
+      } catch {}
     })()
     return () => { cancelled = true }
   }, [STORAGE_KEY, user, isPro, slug])
