@@ -27,48 +27,64 @@ const S = {
   text:  '#f0f0e8',
 }
 
-// ── Animated country name display ─────────────────────────────────────────
-// Shows the top-matching country name letter by letter above the search bar
+// ── Typewriter display ────────────────────────────────────────────────────
+// Shows top match with typewriter animation above the input
 
-function AnimatedCountryName({ country }: { country: CountryRow | null }) {
-  const [key, setKey] = useState(0)
+function TypewriterMatch({ country }: { country: CountryRow | null }) {
+  const [displayed, setDisplayed] = useState('')
+  const [prevSlug, setPrevSlug]   = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (country) setKey(k => k + 1)
+    if (timerRef.current) clearTimeout(timerRef.current)
+
+    if (!country) {
+      setDisplayed('')
+      setPrevSlug('')
+      return
+    }
+
+    if (country.slug === prevSlug) return
+
+    // Reset and type out character by character
+    setDisplayed('')
+    setPrevSlug(country.slug)
+
+    const name = country.name
+    let i = 0
+    const tick = () => {
+      i++
+      setDisplayed(name.slice(0, i))
+      if (i < name.length) timerRef.current = setTimeout(tick, 45)
+    }
+    timerRef.current = setTimeout(tick, 60)
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [country?.slug]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!country) return <div style={{ height: 64, marginBottom: 8 }} />
+  if (!country) return <div style={{ height: 56 }} />
 
-  const iso  = slugToIso(country.slug) ?? ''
-  const name = country.name
-  // Each character step = total duration / chars, capped for feel
-  const steps = name.length
-  const dur   = Math.max(0.6, Math.min(steps * 0.07, 1.8))
+  const iso = slugToIso(country.slug) ?? ''
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 12, height: 64, marginBottom: 8,
+      gap: 10, height: 56,
     }}>
       <FlagIcon code={iso} size="md" />
-      <span
-        key={key}
-        style={{
-          fontFamily: S.serif, fontWeight: 800,
-          fontSize: 'clamp(24px, 3vw, 34px)',
-          letterSpacing: '-0.02em',
-          color: S.text,
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          borderRight: `3px solid ${S.teal}`,
-          display: 'inline-block',
-          animation: `
-            tw-typing ${dur}s steps(${steps}, end) forwards,
-            tw-caret 0.5s step-end infinite
-          `,
-        }}
-      >
-        {name}
+      <span style={{
+        fontFamily: S.serif, fontWeight: 800,
+        fontSize: 'clamp(22px, 2.8vw, 32px)',
+        letterSpacing: '-0.03em',
+        color: S.text,
+        whiteSpace: 'nowrap',
+      }}>
+        {displayed}
+        <span style={{
+          display: 'inline-block', width: 2, height: '1em',
+          background: S.teal, marginLeft: 2, verticalAlign: 'middle',
+          animation: 'blink 0.8s step-end infinite',
+        }} />
       </span>
     </div>
   )
@@ -120,7 +136,7 @@ function LoadingScreen({ country }: { country: CountryRow }) {
       </div>
       <style>{`
         @keyframes pb-fill { from { width: 0% } to { width: 100% } }
-        @keyframes tw-caret { from, to { border-color: transparent } 50% { border-color: ${S.teal} } }
+        @keyframes blink { from, to { opacity: 1 } 50% { opacity: 0 } }
       `}</style>
     </div>
   )
@@ -130,7 +146,7 @@ function LoadingScreen({ country }: { country: CountryRow }) {
 
 function GateScreen({ signedIn }: { signedIn: boolean }) {
   return (
-    <div style={{ minHeight: '100vh', background: S.bg, color: S.text, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: S.bg, color: S.text, display: 'flex', flexDirection: 'column', paddingTop: 52 }}>
       <Nav />
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
@@ -206,6 +222,7 @@ function ProScreen() {
   const router                        = useRouter()
   const [countries, setCountries]     = useState<CountryRow[]>([])
   const [search, setSearch]           = useState('')
+  const [activeIdx, setActiveIdx]     = useState(0)
   const [navigating, setNavigating]   = useState<CountryRow | null>(null)
 
   useEffect(() => {
@@ -213,14 +230,25 @@ function ProScreen() {
       .then(({ data }) => { if (data) setCountries(data as CountryRow[]) })
   }, [])
 
-  // Top matching country as user types
-  const topMatch = useMemo<CountryRow | null>(() => {
+  // Filter matches — show up to 5
+  const matches = useMemo<CountryRow[]>(() => {
     const q = search.toLowerCase().trim()
-    if (!q) return null
-    return countries.find(c =>
-      c.name.toLowerCase().includes(q) || c.slug.includes(q)
-    ) ?? null
+    if (!q) return []
+    return countries
+      .filter(c => c.name.toLowerCase().startsWith(q) || c.name.toLowerCase().includes(q) || c.slug.includes(q))
+      .sort((a, b) => {
+        const al = a.name.toLowerCase(), bl = b.name.toLowerCase()
+        if (al.startsWith(q) && !bl.startsWith(q)) return -1
+        if (!al.startsWith(q) && bl.startsWith(q)) return 1
+        return al.localeCompare(bl)
+      })
+      .slice(0, 5)
   }, [countries, search])
+
+  const topMatch = matches[activeIdx] ?? matches[0] ?? null
+
+  // Reset active index when matches change
+  useEffect(() => { setActiveIdx(0) }, [search])
 
   const navigate = useCallback((c: CountryRow) => {
     setNavigating(c)
@@ -231,6 +259,12 @@ function ProScreen() {
     if (e.key === 'Enter' && topMatch) {
       e.preventDefault()
       navigate(topMatch)
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIdx(i => Math.min(i + 1, matches.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIdx(i => Math.max(i - 1, 0))
     }
   }
 
@@ -239,23 +273,23 @@ function ProScreen() {
   return (
     <>
       <style>{`
-        @keyframes tw-typing { from { width: 0 } to { width: 100% } }
-        @keyframes tw-caret  { from, to { border-color: transparent } 50% { border-color: ${S.teal} } }
-        @keyframes pb-fill   { from { width: 0% } to { width: 100% } }
+        @keyframes blink { from, to { opacity: 1 } 50% { opacity: 0 } }
+        @keyframes pb-fill { from { width: 0% } to { width: 100% } }
       `}</style>
 
       <div style={{
-        minHeight: '100vh', background: S.bg, color: S.text,
+        background: S.bg, color: S.text,
         display: 'flex', flexDirection: 'column',
         paddingTop: 52,
       }}>
         <Nav />
 
-        {/* Centred main area — everything stacked here */}
+        {/* Hero — full viewport height so footer is below fold */}
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
+          minHeight: 'calc(100vh - 52px)',
+          display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '52px 24px 80px',
+          padding: '0 24px',
           textAlign: 'center',
         }}>
 
@@ -272,16 +306,16 @@ function ProScreen() {
             fontSize: 'clamp(36px, 6vw, 64px)',
             letterSpacing: '-0.04em', lineHeight: 1.0,
             color: S.text,
-            marginBottom: 48,
+            marginBottom: 52,
           }}>
             Ready to move?
           </h1>
 
-          {/* Animated country name above search */}
-          <AnimatedCountryName country={topMatch} />
+          {/* Typewriter top match */}
+          <TypewriterMatch country={matches[activeIdx] ?? null} />
 
-          {/* Search input */}
-          <div style={{ width: '100%', maxWidth: 560 }}>
+          {/* Search + dropdown */}
+          <div style={{ width: '100%', maxWidth: 560, marginTop: 12, position: 'relative' }}>
             <input
               type="text"
               placeholder="Type a country…"
@@ -303,14 +337,60 @@ function ProScreen() {
                 letterSpacing: '-0.01em',
                 transition: 'border-color 0.15s',
                 textAlign: 'center',
+                boxSizing: 'border-box',
               }}
               onFocus={e => (e.currentTarget.style.borderColor = '#444440')}
               onBlur={e  => (e.currentTarget.style.borderColor = S.border)}
             />
 
-            {/* Hint line */}
+            {/* Dropdown suggestions */}
+            {matches.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: S.card, border: `1px solid ${S.border}`,
+                borderTop: 'none', zIndex: 10,
+              }}>
+                {matches.map((c, i) => {
+                  const iso = slugToIso(c.slug) ?? ''
+                  const active = i === activeIdx
+                  return (
+                    <div
+                      key={c.slug}
+                      onMouseEnter={() => setActiveIdx(i)}
+                      onClick={() => navigate(c)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '13px 22px',
+                        cursor: 'pointer',
+                        background: active ? '#1a1a1a' : 'transparent',
+                        borderBottom: i < matches.length - 1 ? `1px solid ${S.border}` : 'none',
+                        transition: 'background 0.1s',
+                      }}
+                    >
+                      <FlagIcon code={iso} size="sm" />
+                      <span style={{
+                        fontFamily: S.sans, fontSize: 15,
+                        color: active ? S.text : S.muted,
+                        fontWeight: active ? 600 : 400,
+                        letterSpacing: '-0.01em',
+                      }}>{c.name}</span>
+                      {active && (
+                        <span style={{
+                          marginLeft: 'auto', fontSize: 11,
+                          color: S.teal, fontFamily: S.sans,
+                          letterSpacing: '0.06em',
+                        }}>↵ open</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Hint */}
             <p style={{
-              marginTop: 12, fontSize: 12, color: S.muted,
+              marginTop: matches.length > 0 ? 52 : 12,
+              fontSize: 12, color: S.muted,
               fontFamily: S.sans, textAlign: 'center',
             }}>
               {topMatch
