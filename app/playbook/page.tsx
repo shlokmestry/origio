@@ -247,6 +247,7 @@ function ProScreen() {
       <div style={{
         minHeight: '100vh', background: S.bg, color: S.text,
         display: 'flex', flexDirection: 'column',
+        paddingTop: 52,
       }}>
         <Nav />
 
@@ -254,7 +255,7 @@ function ProScreen() {
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '0 24px 80px',
+          padding: '52px 24px 80px',
           textAlign: 'center',
         }}>
 
