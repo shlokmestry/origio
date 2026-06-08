@@ -227,7 +227,11 @@ export default function ProfilePage() {
       if (!session) { setDeleteError('Session expired.'); setDeleteLoading(false); return }
       const res = await fetch('/api/delete-account', {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ confirm: deleteConfirmText }),
       })
       if (!res.ok) {
         const data = await res.json()

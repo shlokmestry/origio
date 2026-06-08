@@ -113,7 +113,11 @@ function ProPageInner() {
       })
       clearTimeout(timeout)
       const data = await res.json().catch(() => ({}))
-      if (data.url) { window.location.href = data.url; return }
+      if (data.url) { 
+        window.location.href = data.url; 
+        setTimeout(() => setLoading(false), 5000);
+        return; 
+      }
       setError(data.error ?? `Checkout failed (${res.status}). Please try again.`)
       setLoading(false)
     } catch {

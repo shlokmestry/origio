@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getResend } from '@/lib/resend'
+import { rateLimit } from '@/lib/rate-limit'
+import { isValidEmail } from '@/lib/utils'
 
-const RATE_LIMIT = new Map<string, number>()
-
-function supabase() {
+function adminSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -132,13 +132,25 @@ function buildHtml(data: {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const now = Date.now()
-  const last = RATE_LIMIT.get(ip) ?? 0
-  if (now - last < 60_000) {
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
+  // Rate limit using shared utility
+  const limited = await rateLimit(req, { name: 'capture-salary-calc', maxRequests: 5, windowSeconds: 60 })
+  if (limited) return limited
+
+  // Auth: verify bearer token
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  RATE_LIMIT.set(ip, now)
+  const token = authHeader.replace('Bearer ', '')
+
+  const userSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: { user }, error: authError } = await userSupabase.auth.getUser(token)
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   let body: {
     email: string
@@ -163,11 +175,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, ...data } = body
-  if (!email || !email.includes('@')) {
-    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
+  }
+  if (email !== user.email) {
+    return NextResponse.json({ error: 'Email mismatch' }, { status: 403 })
   }
 
-  await supabase().from('salary_calc_leads').insert({
+  await adminSupabase().from('salary_calc_leads').insert({
     email,
     country: data.countryCode,
     role: data.role,

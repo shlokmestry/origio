@@ -15,13 +15,16 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  const [recoveryReady, setRecoveryReady] = useState(false);
+
   useEffect(() => {
     // Supabase puts the token in the URL hash — this exchanges it for a session
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
-        // User is now in password recovery mode — let them set new password
+        setRecoveryReady(true);
       }
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleReset = async () => {
@@ -59,6 +62,11 @@ export default function ResetPasswordPage() {
               <CheckCircle className="w-12 h-12 text-accent mx-auto" />
               <h1 className="font-heading text-2xl font-extrabold">Password updated</h1>
               <p className="text-text-muted text-sm">Taking you back to the globe...</p>
+            </div>
+          ) : !recoveryReady ? (
+            <div className="text-center space-y-4">
+              <Loader2 className="w-8 h-8 text-accent mx-auto animate-spin" />
+              <p className="text-text-muted text-sm">Verifying reset link...</p>
             </div>
           ) : (
             <>

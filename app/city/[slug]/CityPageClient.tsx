@@ -1161,7 +1161,7 @@ export default function CityPageClient({ city }: Props) {
                     <p style={{ fontSize: 14, color: "var(--dim)", marginBottom: 8 }}>{nh.vibe}</p>
                     <p style={{ fontSize: 14, color: "var(--dim)" }}>
                       1BR rent: <strong style={{ color: "var(--ink)" }}>{sym}{nh.avgRent != null ? nh.avgRent.toLocaleString() : "—"}</strong>
-                      {" · "}Good for: {nh.goodFor.join(", ")}
+                      {" · "}Good for: {Array.isArray(nh.goodFor) ? nh.goodFor.join(", ") : "—"}
                     </p>
                   </div>
                 ))}

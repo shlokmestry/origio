@@ -4,7 +4,6 @@ import Stripe from 'stripe'
 import { getResend } from '@/lib/resend'
 import WelcomePro from '@/emails/WelcomePro'
 import { createElement } from 'react'
-import { rateLimit } from '@/lib/rate-limit'
 import * as Sentry from "@sentry/nextjs"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -24,8 +23,6 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const limited = await rateLimit(request, { name: 'webhook', maxRequests: 20, windowSeconds: 60 })
-  if (limited) return limited
 
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!

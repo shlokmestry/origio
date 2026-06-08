@@ -8,10 +8,24 @@ import { supabase } from '@/lib/supabase'
 function passwordStrength(pw: string): { pct: number; label: string; color: string } {
   if (pw.length === 0) return { pct: 0,   label: '',                color: '#e5e5e5' }
   if (pw.length < 6)   return { pct: 20,  label: 'Too weak',        color: '#ef4444' }
+
+  const hasLower = /[a-z]/.test(pw)
+  const hasUpper = /[A-Z]/.test(pw)
+  const hasNumber = /\d/.test(pw)
+  const hasSpecial = /[^A-Za-z0-9]/.test(pw)
+  const diversity = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length
+
   if (pw.length < 8)   return { pct: 40,  label: 'Fair',            color: '#f59e0b' }
-  if (pw.length < 12)  return { pct: 65,  label: 'Good',            color: '#22c55e' }
-  if (pw.length < 15)  return { pct: 85,  label: 'Strong',          color: '#4de6cc' }
-  return                      { pct: 100, label: 'Very strong',     color: '#818cf8' }
+  if (pw.length < 12)  {
+    if (diversity >= 3) return { pct: 65,  label: 'Good',            color: '#22c55e' }
+    return { pct: 50,  label: 'Fair',            color: '#f59e0b' }
+  }
+  if (pw.length < 15)  {
+    if (diversity >= 3) return { pct: 85,  label: 'Strong',          color: '#4de6cc' }
+    return { pct: 70,  label: 'Good',            color: '#22c55e' }
+  }
+  if (diversity >= 3) return { pct: 100, label: 'Very strong',     color: '#818cf8' }
+  return { pct: 85, label: 'Strong', color: '#4de6cc' }
 }
 
 export default function SignInClient() {

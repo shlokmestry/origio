@@ -224,7 +224,8 @@ export default function SuccessClient() {
 
     async function verify() {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { goError('You need to be signed in.'); return }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!session || !user) { goError('You need to be signed in.'); return }
       if (cancelled) return
 
       try {
@@ -239,17 +240,17 @@ export default function SuccessClient() {
 
         if (data.paid && data.pro) {
           router.refresh()
-          const { data: result } = await supabase.from('wizard_results').select('top_countries').eq('user_id', session.user.id).maybeSingle()
+          const { data: result } = await supabase.from('wizard_results').select('top_countries').eq('user_id', user.id).maybeSingle()
           goSuccess(result?.top_countries?.[0] ?? null)
           return
         }
 
         if (data.paid === false) { goError('Payment not completed. No charge was made.'); return }
 
-        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', session.user.id).single()
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single()
         if (profile?.is_pro) {
           router.refresh()
-          const { data: result } = await supabase.from('wizard_results').select('top_countries').eq('user_id', session.user.id).maybeSingle()
+          const { data: result } = await supabase.from('wizard_results').select('top_countries').eq('user_id', user.id).maybeSingle()
           goSuccess(result?.top_countries?.[0] ?? null)
         } else {
           goError("Something went wrong. If you were charged, contact us and we'll sort it out.")

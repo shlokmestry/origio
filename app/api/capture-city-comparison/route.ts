@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getResend } from '@/lib/resend'
-
-const RATE_LIMIT = new Map<string, number>()
+import { rateLimit } from '@/lib/rate-limit'
+import { isValidEmail } from '@/lib/utils'
 
 const SYM: Record<string, string> = { eur: '€', usd: '$', gbp: '£', jpy: '¥' }
 const RATES: Record<string, number> = { eur: 1, usd: 1.07, gbp: 0.85, jpy: 165 }
 
-function supabase() {
+function adminSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -136,13 +136,25 @@ function buildHtml(cities: { name: string; country: string; total: number; sym: 
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const now = Date.now()
-  const last = RATE_LIMIT.get(ip) ?? 0
-  if (now - last < 60_000) {
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
+  // Rate limit using shared utility (distributed, correct IP extraction)
+  const limited = await rateLimit(req, { name: 'capture-city-comparison', maxRequests: 5, windowSeconds: 60 })
+  if (limited) return limited
+
+  // Auth: verify bearer token
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  RATE_LIMIT.set(ip, now)
+  const token = authHeader.replace('Bearer ', '')
+
+  const userSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: { user }, error: authError } = await userSupabase.auth.getUser(token)
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   let body: {
     email: string
@@ -157,7 +169,15 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, cities, currency, shareUrl } = body
-  if (!email || !email.includes('@') || !Array.isArray(cities) || cities.length < 2) {
+
+  // Validate email format and ensure it belongs to the authenticated user
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
+  }
+  if (email !== user.email) {
+    return NextResponse.json({ error: 'Email mismatch' }, { status: 403 })
+  }
+  if (!Array.isArray(cities) || cities.length < 2) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
 
@@ -167,7 +187,7 @@ export async function POST(req: NextRequest) {
   const costSnapshot: Record<string, number> = {}
   cities.forEach(c => { costSnapshot[c.slug] = c.total })
 
-  await supabase().from('city_comparison_leads').insert({
+  await adminSupabase().from('city_comparison_leads').insert({
     email,
     cities: cities.map(c => c.slug),
     currency,

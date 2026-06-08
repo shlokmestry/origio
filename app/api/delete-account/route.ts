@@ -27,6 +27,15 @@ export async function DELETE(request: Request): Promise<Response> {
   }
   const token = authHeader.replace('Bearer ', '')
 
+  try {
+    const body = await request.json()
+    if (body.confirm !== 'DELETE') {
+      return NextResponse.json({ error: 'Confirmation required' }, { status: 400 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Bad request' }, { status: 400 })
+  }
+
   const userClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
