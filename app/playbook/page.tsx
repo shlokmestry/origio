@@ -17,61 +17,76 @@ interface CountryRow {
 }
 
 const S = {
-  bg:     '#0a0a0a',
-  card:   '#111111',
-  border: '#2a2a2a',
-  muted:  '#555550',
-  serif:  "'Cabinet Grotesk', sans-serif",
-  sans:   "'Satoshi', sans-serif",
-  teal:   '#00ffd5',
-  text:   '#f0f0e8',
+  bg:    '#0a0a0a',
+  card:  '#111111',
+  border:'#2a2a2a',
+  muted: '#555550',
+  serif: "'Cabinet Grotesk', sans-serif",
+  sans:  "'Satoshi', sans-serif",
+  teal:  '#00ffd5',
+  text:  '#f0f0e8',
 }
 
-// ── Animated suggestion row ───────────────────────────────────────────────
+// ── Animated country name display ─────────────────────────────────────────
+// Shows the top-matching country name letter by letter above the search bar
 
-function SuggestionRow({ name, slug, visible, selected, onClick }: {
-  name: string; slug: string; visible: boolean; selected: boolean; onClick: () => void
-}) {
-  const [mounted, setMounted] = useState(false)
-  const iso = slugToIso(slug) ?? ''
+function AnimatedCountryName({ country }: { country: CountryRow | null }) {
+  const [displayed, setDisplayed] = useState<string>('')
+  const [prevSlug, setPrevSlug]   = useState<string>('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (visible) {
-      const t = setTimeout(() => setMounted(true), 10)
-      return () => clearTimeout(t)
-    } else {
-      setMounted(false)
+    if (timerRef.current) clearTimeout(timerRef.current)
+
+    if (!country) {
+      setDisplayed('')
+      setPrevSlug('')
+      return
     }
-  }, [visible])
+
+    const target = country.name
+
+    // If same country, don't re-animate
+    if (country.slug === prevSlug) return
+    setPrevSlug(country.slug)
+    setDisplayed('')
+
+    let i = 0
+    function tick() {
+      i++
+      setDisplayed(target.slice(0, i))
+      if (i < target.length) {
+        timerRef.current = setTimeout(tick, 38)
+      }
+    }
+    timerRef.current = setTimeout(tick, 40)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [country?.slug]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!country) return <div style={{ height: 56 }} />
+
+  const iso = slugToIso(country.slug) ?? ''
 
   return (
-    <div
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '11px 16px',
-        background: selected ? '#1a1a1a' : 'transparent',
-        border: `1px solid ${selected ? '#444440' : 'transparent'}`,
-        cursor: 'pointer',
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(6px)',
-        transition: 'opacity 0.18s ease, transform 0.18s ease, background 0.1s, border-color 0.1s',
-      }}
-    >
-      <FlagIcon code={iso} size="sm" />
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 12, height: 56, marginBottom: 8,
+    }}>
+      <FlagIcon code={iso} size="md" />
       <span style={{
-        fontSize: 15, fontWeight: selected ? 700 : 500,
-        color: selected ? S.text : '#aaa',
-        fontFamily: S.sans,
-        transition: 'color 0.1s',
+        fontFamily: S.serif, fontWeight: 800,
+        fontSize: 'clamp(24px, 3vw, 32px)',
+        letterSpacing: '-0.03em',
+        color: S.text,
+        minWidth: 4,
       }}>
-        {name}
+        {displayed}
+        <span style={{
+          display: 'inline-block', width: 2, height: '0.85em',
+          background: S.teal, marginLeft: 3, verticalAlign: 'middle',
+          animation: 'blink 0.8s step-end infinite',
+        }} />
       </span>
-      {selected && (
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: S.teal, fontFamily: S.sans, letterSpacing: '0.06em' }}>
-          ↵ enter
-        </span>
-      )}
     </div>
   )
 }
@@ -91,32 +106,28 @@ function LoadingScreen({ country }: { country: CountryRow }) {
     <div style={{
       position: 'fixed', inset: 0, background: S.bg,
       display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      zIndex: 50,
+      alignItems: 'center', justifyContent: 'center', zIndex: 50,
     }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
           <FlagIcon code={iso} size="xl" />
         </div>
         <h2 style={{
           fontFamily: S.serif, fontWeight: 800,
-          fontSize: 'clamp(22px, 3vw, 30px)',
-          letterSpacing: '-0.03em', color: S.text,
-          marginBottom: 12,
+          fontSize: 'clamp(20px, 3vw, 28px)',
+          letterSpacing: '-0.03em', color: S.text, marginBottom: 10,
         }}>
           Building your {country.name} playbook
         </h2>
         <p style={{
           fontSize: 13, color: S.muted,
-          fontFamily: S.sans, letterSpacing: '0.08em',
+          fontFamily: S.sans, letterSpacing: '0.06em',
         }}>
           Personalising to your passport{'.'.repeat(dots + 1)}
         </p>
-
-        {/* Progress bar */}
         <div style={{
-          width: 200, height: 2, background: S.border,
-          margin: '28px auto 0', overflow: 'hidden',
+          width: 180, height: 2, background: S.border,
+          margin: '24px auto 0', overflow: 'hidden',
         }}>
           <div style={{
             height: '100%', background: S.teal,
@@ -124,12 +135,9 @@ function LoadingScreen({ country }: { country: CountryRow }) {
           }} />
         </div>
       </div>
-
       <style>{`
-        @keyframes pb-fill {
-          from { width: 0% }
-          to   { width: 100% }
-        }
+        @keyframes pb-fill { from { width: 0% } to { width: 100% } }
+        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
       `}</style>
     </div>
   )
@@ -151,12 +159,10 @@ function GateScreen({ signedIn }: { signedIn: boolean }) {
           background: S.card, display: 'flex', alignItems: 'center',
           justifyContent: 'center', fontSize: 20, marginBottom: 24,
         }}>🔒</div>
-
         <p style={{
           fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
           color: S.teal, fontWeight: 700, fontFamily: S.sans, marginBottom: 10,
         }}>Pro Feature</p>
-
         <h1 style={{
           fontFamily: S.serif, fontWeight: 800,
           fontSize: 'clamp(26px, 5vw, 42px)',
@@ -165,28 +171,23 @@ function GateScreen({ signedIn }: { signedIn: boolean }) {
         }}>
           The Playbook requires Pro
         </h1>
-
         <p style={{
           fontSize: 14, color: S.muted, lineHeight: 1.65,
           fontFamily: S.sans, maxWidth: 380, marginBottom: 32,
         }}>
           Step-by-step relocation plan — visa, money, housing, life admin — personalised to your passport.
         </p>
-
         {signedIn ? (
           <Link href="/pro" style={{
             padding: '12px 28px', background: S.teal, color: '#000',
             fontFamily: S.sans, fontWeight: 700, fontSize: 14,
-            textDecoration: 'none', letterSpacing: '-0.01em',
-          }}>
-            Upgrade to Pro
-          </Link>
+            textDecoration: 'none',
+          }}>Upgrade to Pro</Link>
         ) : (
           <div style={{ display: 'flex', gap: 10 }}>
             <Link href="/signin?next=/playbook" style={{
               padding: '12px 28px', background: S.teal, color: '#000',
-              fontFamily: S.sans, fontWeight: 700, fontSize: 14,
-              textDecoration: 'none',
+              fontFamily: S.sans, fontWeight: 700, fontSize: 14, textDecoration: 'none',
             }}>Sign in</Link>
             <Link href="/pro" style={{
               padding: '12px 28px', background: 'transparent', color: S.text,
@@ -195,7 +196,6 @@ function GateScreen({ signedIn }: { signedIn: boolean }) {
             }}>See Pro plans</Link>
           </div>
         )}
-
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 48 }}>
           {[
             { icon: '📋', label: 'Papers',     color: '#f0b07a' },
@@ -208,9 +208,7 @@ function GateScreen({ signedIn }: { signedIn: boolean }) {
               padding: '5px 12px', border: `1px solid ${t.color}30`,
               background: `${t.color}0d`, fontSize: 12,
               fontWeight: 600, color: t.color, fontFamily: S.sans,
-            }}>
-              {t.icon} {t.label}
-            </div>
+            }}>{t.icon} {t.label}</div>
           ))}
         </div>
       </div>
@@ -222,149 +220,126 @@ function GateScreen({ signedIn }: { signedIn: boolean }) {
 // ── Pro screen ────────────────────────────────────────────────────────────
 
 function ProScreen() {
-  const router                          = useRouter()
-  const [countries, setCountries]       = useState<CountryRow[]>([])
-  const [search, setSearch]             = useState('')
-  const [selectedIdx, setSelectedIdx]   = useState(0)
-  const [loading, setLoading]           = useState<CountryRow | null>(null)
-  const inputRef                        = useRef<HTMLInputElement>(null)
+  const router                        = useRouter()
+  const [countries, setCountries]     = useState<CountryRow[]>([])
+  const [search, setSearch]           = useState('')
+  const [navigating, setNavigating]   = useState<CountryRow | null>(null)
 
   useEffect(() => {
-    supabase
-      .from('countries').select('slug, name, flag_emoji').order('name')
+    supabase.from('countries').select('slug, name, flag_emoji').order('name')
       .then(({ data }) => { if (data) setCountries(data as CountryRow[]) })
   }, [])
 
-  const filtered = useMemo(() => {
+  // Top matching country as user types
+  const topMatch = useMemo<CountryRow | null>(() => {
     const q = search.toLowerCase().trim()
-    if (!q) return []
-    return countries.filter(c =>
+    if (!q) return null
+    return countries.find(c =>
       c.name.toLowerCase().includes(q) || c.slug.includes(q)
-    ).slice(0, 6)
+    ) ?? null
   }, [countries, search])
 
-  // Reset selection when results change
-  useEffect(() => { setSelectedIdx(0) }, [filtered.length])
-
   const navigate = useCallback((c: CountryRow) => {
-    setLoading(c)
+    setNavigating(c)
     setTimeout(() => router.push(`/country/${c.slug}/playbook`), 2000)
   }, [router])
 
   const handleKey = (e: React.KeyboardEvent) => {
-    if (!filtered.length) return
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'Enter' && topMatch) {
       e.preventDefault()
-      setSelectedIdx(i => Math.min(i + 1, filtered.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIdx(i => Math.max(i - 1, 0))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      navigate(filtered[selectedIdx])
+      navigate(topMatch)
     }
   }
 
-  if (loading) return <LoadingScreen country={loading} />
+  if (navigating) return <LoadingScreen country={navigating} />
 
   return (
-    <div style={{ minHeight: '100vh', background: S.bg, color: S.text, display: 'flex', flexDirection: 'column' }}>
-      <Nav />
+    <>
+      <style>{`
+        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+      `}</style>
 
-      {/* THE PLAYBOOK — top left corner */}
-      <div style={{ padding: '20px 32px 0' }}>
-        <span style={{
-          fontFamily: S.serif, fontWeight: 800,
-          fontSize: 13, letterSpacing: '0.04em',
-          color: S.muted, textTransform: 'uppercase',
-        }}>
-          The Playbook
-        </span>
-      </div>
-
-      {/* Centred content */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '0 24px 80px',
+        minHeight: '100vh', background: S.bg, color: S.text,
+        display: 'flex', flexDirection: 'column',
       }}>
+        <Nav />
 
-        {/* Heading */}
-        <h1 style={{
-          fontFamily: S.serif, fontWeight: 800,
-          fontSize: 'clamp(32px, 5vw, 52px)',
-          letterSpacing: '-0.03em', lineHeight: 1.05,
-          color: S.text, marginBottom: 40,
-          textAlign: 'center',
-        }}>
-          Ready to move?
-        </h1>
-
-        {/* Search + suggestions */}
-        <div style={{ width: '100%', maxWidth: 520, position: 'relative' }}>
-
-          {/* Animated suggestions — above the input */}
-          {filtered.length > 0 && (
-            <div style={{
-              position: 'absolute', bottom: '100%', left: 0, right: 0,
-              marginBottom: 4,
-              background: S.card,
-              border: `1px solid ${S.border}`,
-              overflow: 'hidden',
-            }}>
-              {filtered.map((c, i) => (
-                <SuggestionRow
-                  key={c.slug}
-                  name={c.name}
-                  slug={c.slug}
-                  visible={true}
-                  selected={i === selectedIdx}
-                  onClick={() => navigate(c)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Search input */}
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Type a country…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={handleKey}
-            autoFocus
-            spellCheck={false}
-            autoComplete="off"
-            style={{
-              width: '100%',
-              background: S.card,
-              border: `1px solid ${S.border}`,
-              padding: '16px 20px',
-              fontSize: 16,
-              color: S.text,
-              fontFamily: S.sans,
-              outline: 'none',
-              letterSpacing: '-0.01em',
-              transition: 'border-color 0.15s',
-            }}
-            onFocus={e => (e.currentTarget.style.borderColor = '#444440')}
-            onBlur={e  => (e.currentTarget.style.borderColor = S.border)}
-          />
+        {/* THE PLAYBOOK — sits below nav, left-aligned, part of the flow */}
+        <div style={{ padding: '16px 40px 0' }}>
+          <span style={{
+            fontFamily: S.sans, fontWeight: 700, fontSize: 11,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: S.muted,
+          }}>
+            The Playbook
+          </span>
         </div>
 
-        {/* Hint */}
-        <p style={{
-          marginTop: 14, fontSize: 12, color: S.muted,
-          fontFamily: S.sans, textAlign: 'center',
+        {/* Centred main area */}
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '0 24px 80px',
         }}>
-          {search ? 'Use ↑ ↓ to navigate · ↵ to select' : '45 countries available'}
-        </p>
 
+          <h1 style={{
+            fontFamily: S.serif, fontWeight: 800,
+            fontSize: 'clamp(36px, 6vw, 64px)',
+            letterSpacing: '-0.04em', lineHeight: 1.0,
+            color: S.text, textAlign: 'center',
+            marginBottom: 48,
+          }}>
+            Ready to move?
+          </h1>
+
+          {/* Animated country name above search */}
+          <AnimatedCountryName country={topMatch} />
+
+          {/* Search input */}
+          <div style={{ width: '100%', maxWidth: 560 }}>
+            <input
+              type="text"
+              placeholder="Type a country…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={handleKey}
+              autoFocus
+              spellCheck={false}
+              autoComplete="off"
+              style={{
+                width: '100%',
+                background: S.card,
+                border: `1px solid ${S.border}`,
+                padding: '18px 22px',
+                fontSize: 17,
+                color: S.text,
+                fontFamily: S.sans,
+                outline: 'none',
+                letterSpacing: '-0.01em',
+                transition: 'border-color 0.15s',
+                textAlign: 'center',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#444440')}
+              onBlur={e  => (e.currentTarget.style.borderColor = S.border)}
+            />
+
+            {/* Hint line */}
+            <p style={{
+              marginTop: 12, fontSize: 12, color: S.muted,
+              fontFamily: S.sans, textAlign: 'center',
+            }}>
+              {topMatch
+                ? `Press ↵ to open ${topMatch.name} playbook`
+                : '45 countries available'}
+            </p>
+          </div>
+
+        </div>
+
+        <Footer />
       </div>
-
-      <Footer />
-    </div>
+    </>
   )
 }
 
