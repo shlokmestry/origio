@@ -265,29 +265,27 @@ function ProScreen() {
       }}>
         <Nav />
 
-        {/* THE PLAYBOOK — sits below nav, left-aligned, part of the flow */}
-        <div style={{ padding: '16px 40px 0' }}>
-          <span style={{
-            fontFamily: S.sans, fontWeight: 700, fontSize: 11,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: S.muted,
-          }}>
-            The Playbook
-          </span>
-        </div>
-
-        {/* Centred main area */}
+        {/* Centred main area — everything stacked here */}
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           padding: '0 24px 80px',
+          textAlign: 'center',
         }}>
+
+          <p style={{
+            fontFamily: S.sans, fontWeight: 700, fontSize: 11,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: S.muted, marginBottom: 20,
+          }}>
+            The Playbook
+          </p>
 
           <h1 style={{
             fontFamily: S.serif, fontWeight: 800,
             fontSize: 'clamp(36px, 6vw, 64px)',
             letterSpacing: '-0.04em', lineHeight: 1.0,
-            color: S.text, textAlign: 'center',
+            color: S.text,
             marginBottom: 48,
           }}>
             Ready to move?
