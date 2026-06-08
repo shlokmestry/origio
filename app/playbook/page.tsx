@@ -31,61 +31,44 @@ const S = {
 // Shows the top-matching country name letter by letter above the search bar
 
 function AnimatedCountryName({ country }: { country: CountryRow | null }) {
-  const [displayed, setDisplayed] = useState<string>('')
-  const [prevSlug, setPrevSlug]   = useState<string>('')
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [key, setKey] = useState(0)
 
   useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-
-    if (!country) {
-      setDisplayed('')
-      setPrevSlug('')
-      return
-    }
-
-    const target = country.name
-
-    // If same country, don't re-animate
-    if (country.slug === prevSlug) return
-    setPrevSlug(country.slug)
-    setDisplayed('')
-
-    let i = 0
-    function tick() {
-      i++
-      setDisplayed(target.slice(0, i))
-      if (i < target.length) {
-        timerRef.current = setTimeout(tick, 38)
-      }
-    }
-    timerRef.current = setTimeout(tick, 40)
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+    if (country) setKey(k => k + 1)
   }, [country?.slug]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!country) return <div style={{ height: 56 }} />
+  if (!country) return <div style={{ height: 64, marginBottom: 8 }} />
 
-  const iso = slugToIso(country.slug) ?? ''
+  const iso  = slugToIso(country.slug) ?? ''
+  const name = country.name
+  // Each character step = total duration / chars, capped for feel
+  const steps = name.length
+  const dur   = Math.max(0.6, Math.min(steps * 0.07, 1.8))
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 12, height: 56, marginBottom: 8,
+      gap: 12, height: 64, marginBottom: 8,
     }}>
       <FlagIcon code={iso} size="md" />
-      <span style={{
-        fontFamily: S.serif, fontWeight: 800,
-        fontSize: 'clamp(24px, 3vw, 32px)',
-        letterSpacing: '-0.03em',
-        color: S.text,
-        minWidth: 4,
-      }}>
-        {displayed}
-        <span style={{
-          display: 'inline-block', width: 2, height: '0.85em',
-          background: S.teal, marginLeft: 3, verticalAlign: 'middle',
-          animation: 'blink 0.8s step-end infinite',
-        }} />
+      <span
+        key={key}
+        style={{
+          fontFamily: S.serif, fontWeight: 800,
+          fontSize: 'clamp(24px, 3vw, 34px)',
+          letterSpacing: '-0.02em',
+          color: S.text,
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          borderRight: `3px solid ${S.teal}`,
+          display: 'inline-block',
+          animation: `
+            tw-typing ${dur}s steps(${steps}, end) forwards,
+            tw-caret 0.5s step-end infinite
+          `,
+        }}
+      >
+        {name}
       </span>
     </div>
   )
@@ -137,7 +120,7 @@ function LoadingScreen({ country }: { country: CountryRow }) {
       </div>
       <style>{`
         @keyframes pb-fill { from { width: 0% } to { width: 100% } }
-        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+        @keyframes tw-caret { from, to { border-color: transparent } 50% { border-color: ${S.teal} } }
       `}</style>
     </div>
   )
@@ -256,7 +239,9 @@ function ProScreen() {
   return (
     <>
       <style>{`
-        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+        @keyframes tw-typing { from { width: 0 } to { width: 100% } }
+        @keyframes tw-caret  { from, to { border-color: transparent } 50% { border-color: ${S.teal} } }
+        @keyframes pb-fill   { from { width: 0% } to { width: 100% } }
       `}</style>
 
       <div style={{
