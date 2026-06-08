@@ -111,7 +111,7 @@ export const COUNTRY_RESOURCES: Record<string, {
 // ── Verified country overrides ─────────────────────────────────────────────
 // Hand-checked against official government sources. Costs in local currency.
 
-const OVERRIDES: Record<string, (workType: string) => PlaybookData> = {
+const OVERRIDES: Record<string, (workType: string, isEU: boolean) => PlaybookData> = {
   // AUSTRALIA — skilled migration reality (subclass 189 points-tested route).
   // Verified: immi.homeaffairs.gov.au. Fees & timelines current as of 2025.
   australia: (workType) => ({
@@ -145,6 +145,120 @@ const OVERRIDES: Record<string, (workType: string) => PlaybookData> = {
       { id:'l6', track:'life', title:'Join the community', desc:'r/australia and local Facebook groups answer the practical questions guides miss — housing leads, job tips, meetups.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/australia', urlLabel:'Open r/australia' },
     ],
   }),
+
+  // INDIA — inbound foreign professional (Employment Visa). Verified against
+  // MHA / e-FRRO / Income Tax Dept. Costs in INR.
+  india: (workType) => ({
+    currency: '₹', verified: true,
+    steps: [
+      // PAPERS
+      { id:'p1', track:'papers', title:'Confirm your Employment Visa route', desc:'India\'s "E" visa is for skilled professionals with an Indian employment contract paying at least ₹16.25 lakh/year (some roles exempt). Other routes exist for business and research.', timeEst:'2–3 hours', daysBefore:180, url:'https://indianvisaonline.gov.in', urlLabel:'Indian Visa Online' },
+      { id:'p2', track:'papers', title:'Gather your visa documents', desc:'Passport, the signed employment contract / appointment letter from your Indian employer, proof of qualifications and the employer\'s registration papers.', timeEst:'1–2 weeks', daysBefore:150 },
+      { id:'p3', track:'papers', title:'Apply for the Employment Visa', desc:'Apply at your local Indian mission. The fee depends on your nationality and visa length — check your home-country consulate.', timeEst:'2–3 weeks', costEst:'Fee varies by nationality', daysBefore:120 },
+      { id:'p4', track:'papers', title:'Register with the FRRO within 14 days', desc:'Any visa valid over 180 days requires online registration at the e-FRRO portal within 14 days of arrival. No in-person visit unless summoned.', timeEst:'1–3 weeks', daysBefore:-7, url:'https://indianfrro.gov.in/eservices/home.jsp', urlLabel:'e-FRRO portal' },
+      // MONEY
+      WISE,
+      { id:'m2', track:'money', title:'Apply for a PAN card', desc:'The PAN is your tax ID and is required to open a bank account and file tax. Foreigners apply on Form 49AA. Costs about ₹110 for an Indian address, ₹1,020 for an overseas one.', timeEst:'2–3 weeks', costEst:'₹110–1,020', estCost:1020, daysBefore:60, url:'https://www.protean-tinpan.com', urlLabel:'Apply for PAN (49AA)' },
+      { id:'m3', track:'money', title:'Open an Indian bank account', desc:'Bring your passport, long-term visa, FRRO registration, PAN and proof of address. Long-stay workers can open a resident savings account; non-residents use NRE/NRO accounts.', timeEst:'1–3 days', daysBefore:-3 },
+      { id:'m4', track:'money', title:'Set up UPI for everyday payments', desc:'India runs on UPI — link an app like Google Pay, PhonePe or Paytm to your Indian account and an Indian SIM. It is used everywhere, from rent to street vendors.', timeEst:'30 min', daysBefore:-1 },
+      { id:'m5', track:'money', title:'Understand your tax residency', desc:'You become an Indian tax resident at 182 days in the April–March tax year (120 days if your Indian income tops ₹15 lakh). Check your home country\'s tax treaty.', timeEst:'2–3 hours', daysBefore:30 },
+      // HOME
+      { id:'h1', track:'home', title:'Research neighbourhoods', desc:'Compare areas on commute, safety and amenities before committing.', timeEst:'2–4 hours', daysBefore:45, url:'/country/india', urlLabel:'City guide' },
+      { id:'h2', track:'home', title:'Browse rentals', desc:'NoBroker (broker-free), MagicBricks and 99acres are the main sites. Deposits vary wildly by city — 1–2 months in Delhi but 5–10 months in Bengaluru.', timeEst:'Ongoing', daysBefore:30, url:'https://www.nobroker.in', urlLabel:'NoBroker' },
+      { id:'h3', track:'home', title:'Book a short stay for week one', desc:'Land somewhere before you sign a lease so you can view places in person.', timeEst:'1 hour', daysBefore:14, url:'https://www.booking.com', urlLabel:'Find short-stay', affiliate:true },
+      // LIFE ADMIN
+      { id:'l1', track:'life', title:'Get private health insurance', desc:'Foreign residents rely on the private system from day one. Buy a local plan or an international policy. Private hospitals (Apollo, Fortis, Max) are world-class and English-speaking.', timeEst:'1 hour', daysBefore:30, url:'https://safetywing.com/?referenceID=origio', urlLabel:'Get SafetyWing', affiliate:true },
+      { id:'l2', track:'life', title:'Get an Indian SIM on arrival', desc:'A local SIM (Jio, Airtel) is needed for UPI, OTPs and almost every app. Bring your passport, visa and a passport photo.', timeEst:'1 hour', daysBefore:-1 },
+      { id:'l3', track:'life', title:'Deregister tax in your home country', desc:'Notify your home tax authority that you have left, or risk being taxed in both places.', timeEst:'1–2 hours', daysBefore:14 },
+      { id:'l4', track:'life', title:'Join the community', desc:'City subreddits (r/bangalore, r/mumbai, r/delhi) and InterNations groups are active for local logistics.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/india', urlLabel:'Open r/india' },
+    ],
+  }),
+
+  // IRELAND — verified against citizensinformation.ie / enterprise.gov.ie /
+  // revenue.ie. Branches on EU free movement. Costs in EUR.
+  ireland: (workType, isEU) => ({
+    currency: '€', verified: true,
+    steps: [
+      // PAPERS
+      ...(isEU
+        ? [{ id:'p1', track:'papers' as Track, title:'No permit needed — you have free movement', desc:'As an EU/EEA/Swiss citizen you can live and work in Ireland with no visa, registration or IRP. You only need a PPS number for work and tax.', timeEst:'—', daysBefore:0 }]
+        : [
+          { id:'p1', track:'papers' as Track, title:'Secure an employment permit', desc:'Most skilled workers use the Critical Skills permit (≈€38,000+, eligible roles, route to Stamp 4) or the General permit (≈€34,000+). Thresholds rose from 1 March 2026 — verify the current figure.', timeEst:'4–10 weeks', daysBefore:180, url:'https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/', urlLabel:'Employment permits' },
+          { id:'p2', track:'papers' as Track, title:'Register your immigration permission (IRP)', desc:'Non-EEA nationals staying over 90 days must register and get an IRP card. Book the appointment early — slots are scarce.', timeEst:'1 day + 10 days post', costEst:'€300', estCost:300, daysBefore:-30, url:'https://www.irishimmigration.ie/registering-your-immigration-permission/', urlLabel:'Register IRP' },
+        ]),
+      { id:'p3', track:'papers', title:'Get a PPS number', desc:'Your PPS number unlocks work, tax, healthcare and (in practice) banking. Apply via MyWelfare with a MyGovID account, an Irish address and a reason such as a job offer. An in-person Intreo appointment is required.', timeEst:'2–3 weeks', daysBefore:-14, url:'https://services.mywelfare.ie', urlLabel:'Apply on MyWelfare' },
+      // MONEY
+      WISE,
+      { id:'m2', track:'money', title:'Open an Irish bank account', desc:'AIB and Bank of Ireland need photo ID plus proof of an Irish address (non-residents need two proofs) — the usual blocker for newcomers. Revolut and N26 onboard fast with lighter requirements.', timeEst:'1–3 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Register for tax with Revenue', desc:'Set up your tax record in Revenue\'s myAccount once you have a PPS number and a job, so you are taxed correctly from your first payslip.', timeEst:'30 min', daysBefore:-7, url:'https://www.revenue.ie', urlLabel:'Revenue myAccount' },
+      // HOME
+      { id:'h1', track:'home', title:'Research neighbourhoods', desc:'Compare commute, rent and amenities before you commit.', timeEst:'2–4 hours', daysBefore:60, url:'/country/ireland', urlLabel:'City guide' },
+      { id:'h2', track:'home', title:'Hunt on Daft.ie', desc:'Daft.ie is the dominant rental site. Supply is at record lows — Dublin places let within about a week and average rents top €2,000, so set alerts and move fast. Deposit is usually one month plus first month upfront.', timeEst:'Ongoing', daysBefore:45, url:'https://www.daft.ie/property-for-rent/ireland', urlLabel:'Daft.ie' },
+      { id:'h3', track:'home', title:'Book a short stay for week one', desc:'Land somewhere before your lease starts — viewings are far easier on the ground.', timeEst:'1 hour', daysBefore:21, url:'https://www.booking.com', urlLabel:'Find short-stay', affiliate:true },
+      // LIFE ADMIN
+      { id:'l1', track:'life', title:'Sort health cover', desc:'Public HSE care needs you to be "ordinarily resident" (intending to stay 1+ year). Many take private cover too — VHI, Laya or Irish Life Health, roughly €1,900/year.', timeEst:'1 hour', daysBefore:30 },
+      { id:'l2', track:'life', title:'Deregister tax in your home country', desc:'Tell your home tax authority you have left to avoid double taxation.', timeEst:'1–2 hours', daysBefore:14 },
+      { id:'l3', track:'life', title:'Join the community', desc:'r/ireland and r/MoveToIreland answer the practical relocation questions guides miss.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/MoveToIreland', urlLabel:'Open r/MoveToIreland' },
+    ],
+  }),
+
+  // GERMANY — verified against make-it-in-germany.com / iamexpat / allaboutberlin.
+  // Branches on EU free movement. Costs in EUR.
+  germany: (workType, isEU) => ({
+    currency: '€', verified: true,
+    steps: [
+      // PAPERS
+      ...(isEU
+        ? [{ id:'p1', track:'papers' as Track, title:'No permit needed — you have free movement', desc:'As an EU/EEA/Swiss citizen you can work in Germany with no visa or permit. You still must do the Anmeldung, take out health insurance and get a tax ID.', timeEst:'—', daysBefore:0 }]
+        : [
+          { id:'p1', track:'papers' as Track, title:'Secure a visa or permit', desc:'Options: the EU Blue Card (≈€48,300, or ≈€43,759 in shortage fields like IT/STEM), the Skilled Worker visa (≈€43,470, recognised qualification), or the points-based Opportunity Card to job-hunt on the ground. Figures rise yearly.', timeEst:'4–12 weeks', daysBefore:180, url:'https://www.make-it-in-germany.com/en/visa-residence', urlLabel:'Make it in Germany' },
+          { id:'p3', track:'papers' as Track, title:'Convert to a residence permit', desc:'After entering on a national D-visa, book the Ausländerbehörde about six weeks before it expires to get your electronic residence permit (eAT). A Fiktionsbescheinigung bridges the wait.', timeEst:'4–12 weeks', daysBefore:-30 },
+        ]),
+      { id:'p2', track:'papers', title:'Do your Anmeldung within 14 days', desc:'Register your address at the Bürgeramt within two weeks of moving in. The Meldebescheinigung you receive is the key that unlocks your bank account, tax ID and residence permit.', timeEst:'1 hour + booking', daysBefore:-14 },
+      // MONEY
+      WISE,
+      { id:'m2', track:'money', title:'Open a bank account', desc:'Traditional banks (Sparkasse, Deutsche Bank) need your Anmeldung first. Neo-banks N26 and Revolut open in minutes with just a passport — useful before you have registered. Germany is still cash- and girocard-heavy.', timeEst:'15 min–1 day', daysBefore:-10 },
+      { id:'m3', track:'money', title:'Get a SCHUFA credit report', desc:'SCHUFA is Germany\'s credit score. Landlords almost always ask for a SCHUFA-BonitätsCheck with rental applications, and banks check it for credit. A rental-ready report costs about €29.95.', timeEst:'1–3 days', costEst:'€29.95', estCost:30, daysBefore:30 },
+      { id:'m4', track:'money', title:'Wait for your tax ID (Steuer-ID)', desc:'Your Steuer-ID is issued automatically by post 2–6 weeks after your Anmeldung — no application needed. Your employer needs it to tax you correctly.', timeEst:'2–6 weeks (passive)', daysBefore:-14 },
+      // HOME
+      { id:'h1', track:'home', title:'Research neighbourhoods', desc:'Compare commute, rent and Kiez feel before you commit.', timeEst:'2–4 hours', daysBefore:60, url:'/country/germany', urlLabel:'City guide' },
+      { id:'h2', track:'home', title:'Hunt on ImmoScout24 and WG-Gesucht', desc:'ImmobilienScout24 for whole flats, WG-Gesucht for shared flats (WG). Prepare a Bewerbungsmappe: ID, SCHUFA, last three payslips and a rent-debt-free letter. The Kaution deposit can be up to three months\' cold rent.', timeEst:'Ongoing', daysBefore:45, url:'https://www.immobilienscout24.de', urlLabel:'ImmoScout24' },
+      { id:'h3', track:'home', title:'Book a short stay for week one', desc:'You need an address to do your Anmeldung — land in temporary housing first if needed.', timeEst:'1 hour', daysBefore:21, url:'https://www.booking.com', urlLabel:'Find short-stay', affiliate:true },
+      // LIFE ADMIN
+      { id:'l1', track:'life', title:'Take out health insurance', desc:'Health cover is legally mandatory and often required for your visa and Anmeldung. Most employees join a public Krankenkasse (TK, AOK); private (PKV) is mainly for high earners (over €73,800) and the self-employed.', timeEst:'1 hour', daysBefore:30 },
+      { id:'l2', track:'life', title:'Deregister tax in your home country', desc:'Notify your home tax authority you have left to avoid double taxation.', timeEst:'1–2 hours', daysBefore:14 },
+      { id:'l3', track:'life', title:'Join the community', desc:'r/germany and the Toytown Germany forum answer the bureaucracy questions guides miss.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/germany', urlLabel:'Open r/germany' },
+    ],
+  }),
+
+  // PORTUGAL — verified against vistos.mne.gov.pt / AIMA / portaldasfinancas.
+  // Branches on EU free movement. Costs in EUR.
+  portugal: (workType, isEU) => ({
+    currency: '€', verified: true,
+    steps: [
+      // PAPERS
+      ...(isEU
+        ? [{ id:'p1', track:'papers' as Track, title:'Register for a CRUE after 3 months', desc:'As an EU/EEA/Swiss citizen you may live and work freely. For stays over three months, register at your local Câmara Municipal for a CRUE certificate (about €15). You still need a NIF first.', timeEst:'1 hour', costEst:'≈€15', estCost:15, daysBefore:-60, url:'https://www.portaldasfinancas.gov.pt', urlLabel:'Finanças' }]
+        : [
+          { id:'p1', track:'papers' as Track, title:'Apply for your visa at the consulate', desc:'Common routes: the D8 digital nomad visa (foreign income of about €3,680/month), the D7 (passive income) or an employer-sponsored work visa. Apply before you travel via the official portal.', timeEst:'4–12 weeks', daysBefore:180, url:'https://vistos.mne.gov.pt', urlLabel:'Visa portal' },
+          { id:'p4', track:'papers' as Track, title:'Attend your AIMA residence appointment', desc:'AIMA (which replaced SEF) issues your residence permit after arrival. There is a large backlog and a strict complete-documents rule — bring everything, as incomplete files are rejected outright.', timeEst:'Varies (backlog)', daysBefore:-30, url:'https://aima.gov.pt', urlLabel:'AIMA' },
+        ]),
+      { id:'p2', track:'papers', title:'Get a NIF (tax number) first', desc:'The NIF is needed for almost everything — renting, banking, utilities and contracts. Non-EU non-residents usually need a fiscal representative to obtain one.', timeEst:'1 day–2 weeks', costEst:'Rep fee may apply', daysBefore:150, url:'https://www.portaldasfinancas.gov.pt', urlLabel:'Portal das Finanças' },
+      { id:'p3', track:'papers', title:'Get a NISS (social security number)', desc:'If you will work — including D8 remote workers — you need a NISS. It is now also required for AIMA residence applications.', timeEst:'1–2 weeks', daysBefore:-14 },
+      // MONEY
+      WISE,
+      { id:'m2', track:'money', title:'Open a Portuguese bank account', desc:'Millennium BCP, Novobanco and Caixa Geral need your NIF, passport and proof of address. Some let you open remotely before arrival. Revolut is widely used as a fast everyday option.', timeEst:'1 day', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Set up MB WAY', desc:'MB WAY is Portugal\'s dominant mobile payment app — instant transfers, virtual cards and bill payments tied to your local account on the Multibanco network.', timeEst:'15 min', daysBefore:-3 },
+      // HOME
+      { id:'h1', track:'home', title:'Research neighbourhoods', desc:'Compare commute, rent and lifestyle before you commit.', timeEst:'2–4 hours', daysBefore:60, url:'/country/portugal', urlLabel:'City guide' },
+      { id:'h2', track:'home', title:'Hunt on Idealista', desc:'Idealista.pt and Imovirtual are the main rental sites. Expect to pay the first month plus one to two months\' deposit upfront; the landlord must register the lease with the tax authority.', timeEst:'Ongoing', daysBefore:45, url:'https://www.idealista.pt', urlLabel:'Idealista' },
+      { id:'h3', track:'home', title:'Book a short stay for week one', desc:'Land somewhere before you sign so you can view places in person.', timeEst:'1 hour', daysBefore:21, url:'https://www.booking.com', urlLabel:'Find short-stay', affiliate:true },
+      // LIFE ADMIN
+      { id:'l1', track:'life', title:'Register with the SNS', desc:'Register at your local Centro de Saúde for the public health system — you need your NIF and NISS. Many add private insurance (about €30–100/month) to skip waiting lists.', timeEst:'1 hour', daysBefore:30 },
+      { id:'l2', track:'life', title:'Check the IFICI tax regime', desc:'The old NHR is closed to new arrivals. Its replacement, IFICI ("NHR 2.0"), gives a 20% flat rate on income from qualifying high-skill roles — register by 15 January of the year after you become resident. Confirm eligibility with an adviser.', timeEst:'1–2 hours', daysBefore:0 },
+      { id:'l3', track:'life', title:'Join the community', desc:'r/Portugal and r/PortugalExpats answer the practical relocation questions.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/PortugalExpats', urlLabel:'Open r/PortugalExpats' },
+    ],
+  }),
 }
 
 // ── Generic generator (fallback for countries without an override) ─────────
@@ -158,7 +272,7 @@ export function getPlaybook(
   workType: string,
 ): PlaybookData {
   const override = OVERRIDES[slug]
-  if (override) return override(workType)
+  if (override) return override(workType, isEU)
 
   const res = COUNTRY_RESOURCES[slug] ?? {}
   const easyVisa = isEU && EU_DEST.includes(slug) // free movement, no visa
