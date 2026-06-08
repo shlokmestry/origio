@@ -222,33 +222,23 @@ function ProScreen() {
   const router                        = useRouter()
   const [countries, setCountries]     = useState<CountryRow[]>([])
   const [search, setSearch]           = useState('')
-  const [activeIdx, setActiveIdx]     = useState(0)
   const [navigating, setNavigating]   = useState<CountryRow | null>(null)
 
   useEffect(() => {
     supabase.from('countries').select('slug, name, flag_emoji').order('name')
-      .then(({ data }) => { if (data) setCountries(data as CountryRow[]) })
+      .then(({ data, error }) => {
+        if (error) console.error('countries load error:', error)
+        if (data) setCountries(data as CountryRow[])
+      })
   }, [])
 
-  // Filter matches — show up to 5
-  const matches = useMemo<CountryRow[]>(() => {
+  const topMatch = useMemo<CountryRow | null>(() => {
     const q = search.toLowerCase().trim()
-    if (!q) return []
-    return countries
-      .filter(c => c.name.toLowerCase().startsWith(q) || c.name.toLowerCase().includes(q) || c.slug.includes(q))
-      .sort((a, b) => {
-        const al = a.name.toLowerCase(), bl = b.name.toLowerCase()
-        if (al.startsWith(q) && !bl.startsWith(q)) return -1
-        if (!al.startsWith(q) && bl.startsWith(q)) return 1
-        return al.localeCompare(bl)
-      })
-      .slice(0, 5)
+    if (!q || !countries.length) return null
+    const startsWith = countries.find(c => c.name.toLowerCase().startsWith(q))
+    if (startsWith) return startsWith
+    return countries.find(c => c.name.toLowerCase().includes(q) || c.slug.includes(q)) ?? null
   }, [countries, search])
-
-  const topMatch = matches[activeIdx] ?? matches[0] ?? null
-
-  // Reset active index when matches change
-  useEffect(() => { setActiveIdx(0) }, [search])
 
   const navigate = useCallback((c: CountryRow) => {
     setNavigating(c)
@@ -259,12 +249,6 @@ function ProScreen() {
     if (e.key === 'Enter' && topMatch) {
       e.preventDefault()
       navigate(topMatch)
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setActiveIdx(i => Math.min(i + 1, matches.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setActiveIdx(i => Math.max(i - 1, 0))
     }
   }
 
@@ -306,16 +290,16 @@ function ProScreen() {
             fontSize: 'clamp(36px, 6vw, 64px)',
             letterSpacing: '-0.04em', lineHeight: 1.0,
             color: S.text,
-            marginBottom: 52,
+            marginBottom: 40,
           }}>
             Ready to move?
           </h1>
 
-          {/* Typewriter top match */}
-          <TypewriterMatch country={matches[activeIdx] ?? null} />
+          {/* Search + typewriter above it */}
+          <div style={{ width: '100%', maxWidth: 560 }}>
+            {/* Typewriter sits directly above input */}
+            <TypewriterMatch country={topMatch} />
 
-          {/* Search + dropdown */}
-          <div style={{ width: '100%', maxWidth: 560, marginTop: 12, position: 'relative' }}>
             <input
               type="text"
               placeholder="Type a country…"
@@ -343,59 +327,15 @@ function ProScreen() {
               onBlur={e  => (e.currentTarget.style.borderColor = S.border)}
             />
 
-            {/* Dropdown suggestions */}
-            {matches.length > 0 && (
-              <div style={{
-                position: 'absolute', top: '100%', left: 0, right: 0,
-                background: S.card, border: `1px solid ${S.border}`,
-                borderTop: 'none', zIndex: 10,
-              }}>
-                {matches.map((c, i) => {
-                  const iso = slugToIso(c.slug) ?? ''
-                  const active = i === activeIdx
-                  return (
-                    <div
-                      key={c.slug}
-                      onMouseEnter={() => setActiveIdx(i)}
-                      onClick={() => navigate(c)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '13px 22px',
-                        cursor: 'pointer',
-                        background: active ? '#1a1a1a' : 'transparent',
-                        borderBottom: i < matches.length - 1 ? `1px solid ${S.border}` : 'none',
-                        transition: 'background 0.1s',
-                      }}
-                    >
-                      <FlagIcon code={iso} size="sm" />
-                      <span style={{
-                        fontFamily: S.sans, fontSize: 15,
-                        color: active ? S.text : S.muted,
-                        fontWeight: active ? 600 : 400,
-                        letterSpacing: '-0.01em',
-                      }}>{c.name}</span>
-                      {active && (
-                        <span style={{
-                          marginLeft: 'auto', fontSize: 11,
-                          color: S.teal, fontFamily: S.sans,
-                          letterSpacing: '0.06em',
-                        }}>↵ open</span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Hint */}
             <p style={{
-              marginTop: matches.length > 0 ? 52 : 12,
-              fontSize: 12, color: S.muted,
+              marginTop: 12, fontSize: 12, color: S.muted,
               fontFamily: S.sans, textAlign: 'center',
             }}>
               {topMatch
                 ? `Press ↵ to open ${topMatch.name} playbook`
-                : '45 countries available'}
+                : countries.length > 0
+                  ? `${countries.length} countries available`
+                  : '…'}
             </p>
           </div>
 
