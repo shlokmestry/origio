@@ -7,7 +7,6 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { slugToIso } from '@/lib/flagCodes'
-import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthProvider'
 
 interface CountryRow {
@@ -225,11 +224,13 @@ function ProScreen() {
   const [navigating, setNavigating]   = useState<CountryRow | null>(null)
 
   useEffect(() => {
-    supabase.from('countries').select('slug, name, flag_emoji').order('name')
-      .then(({ data, error }) => {
-        if (error) console.error('countries load error:', error)
-        if (data) setCountries(data as CountryRow[])
+    fetch('/api/countries')
+      .then(r => r.json())
+      .then((data: Array<{ slug: string; name: string; flagEmoji?: string; flag_emoji?: string }>) => {
+        if (!Array.isArray(data)) return
+        setCountries(data.map(c => ({ slug: c.slug, name: c.name, flag_emoji: c.flagEmoji ?? c.flag_emoji ?? '' })))
       })
+      .catch(e => console.error('countries load error:', e))
   }, [])
 
   const topMatch = useMemo<CountryRow | null>(() => {
