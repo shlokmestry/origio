@@ -330,7 +330,7 @@ function ProScreen() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <FlagIcon iso={slugToIso[c.slug] ?? ''} style={{ width: 22, height: 16, objectFit: 'cover', border: `1px solid ${S.border}`, flexShrink: 0 }} />
+                    <FlagIcon code={slugToIso(c.slug) ?? ''} size="sm" />
                     <span style={{ fontSize: 13, fontWeight: 600, color: S.text, fontFamily: S.sans }}>
                       {c.name}
                     </span>
