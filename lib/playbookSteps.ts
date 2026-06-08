@@ -31,6 +31,33 @@ export interface PlaybookData {
   verified: boolean       // true when sourced from a hand-checked override
 }
 
+// ── Currency ────────────────────────────────────────────────────────────────
+// ISO code per country (from the countries table) → display symbol.
+
+const SLUG_CURRENCY: Record<string, string> = {
+  argentina:'USD', australia:'AUD', austria:'EUR', belgium:'EUR', brazil:'BRL',
+  canada:'CAD', colombia:'COP', 'costa-rica':'CRC', croatia:'EUR', cyprus:'EUR',
+  'czech-republic':'CZK', denmark:'DKK', estonia:'EUR', finland:'EUR', france:'EUR',
+  georgia:'GEL', germany:'EUR', greece:'EUR', hungary:'HUF', india:'INR',
+  indonesia:'IDR', ireland:'EUR', italy:'EUR', japan:'JPY', malaysia:'MYR',
+  mexico:'MXN', netherlands:'EUR', 'new-zealand':'NZD', norway:'NOK', panama:'USD',
+  poland:'PLN', portugal:'EUR', romania:'RON', serbia:'RSD', singapore:'SGD',
+  'south-africa':'ZAR', 'south-korea':'KRW', spain:'EUR', sweden:'SEK',
+  switzerland:'CHF', thailand:'THB', uae:'AED', 'united-kingdom':'GBP',
+  usa:'USD', vietnam:'VND',
+}
+
+const CURRENCY_SYMBOL: Record<string, string> = {
+  USD:'$', AUD:'A$', EUR:'€', BRL:'R$', CAD:'C$', COP:'$', CRC:'₡', CZK:'Kč',
+  DKK:'kr', GEL:'₾', HUF:'Ft', INR:'₹', IDR:'Rp', JPY:'¥', MYR:'RM', MXN:'$',
+  NZD:'NZ$', NOK:'kr', PLN:'zł', RON:'lei', RSD:'дин', SGD:'S$', ZAR:'R',
+  KRW:'₩', SEK:'kr', CHF:'CHF', THB:'฿', AED:'AED', GBP:'£', VND:'₫',
+}
+
+export function currencyFor(slug: string): string {
+  return CURRENCY_SYMBOL[SLUG_CURRENCY[slug] ?? 'EUR'] ?? '€'
+}
+
 export const TRACKS: { key: Track; label: string; color: string }[] = [
   { key: 'papers', label: 'Papers',     color: '#f0b07a' },
   { key: 'money',  label: 'Money',      color: '#00ffd5' },
@@ -88,7 +115,7 @@ const OVERRIDES: Record<string, (workType: string) => PlaybookData> = {
   // AUSTRALIA — skilled migration reality (subclass 189 points-tested route).
   // Verified: immi.homeaffairs.gov.au. Fees & timelines current as of 2025.
   australia: (workType) => ({
-    currency: '$', verified: true,
+    currency: 'A$', verified: true,
     steps: [
       // PAPERS
       { id:'p1', track:'papers', title:'Check your visa pathway', desc:'The Skilled Independent visa (189) is points-tested — no sponsor needed, but you need 65+ points and an in-demand occupation. Confirm yours is on the skilled list.', timeEst:'2–3 hours', daysBefore:365, url:'https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-independent-189', urlLabel:'Official 189 page' },
@@ -145,14 +172,14 @@ export function getPlaybook(
   } else if (passportTier <= 2) {
     steps.push({ id:'p1', track:'papers', title:'Research your visa options', desc:`Check the routes open to your passport. The ${res.visaName ?? 'main route'} is commonly used.`, timeEst:'2–4 hours', daysBefore:180, url:res.visaUrl, urlLabel:'Official visa portal' })
     steps.push({ id:'p2', track:'papers', title:'Gather required documents', desc:'Passport, proof of income, health insurance, clean record, photos. Start early — apostilles take time.', timeEst:'2–4 weeks', daysBefore:150 })
-    steps.push({ id:'p3', track:'papers', title:'Translate and notarise documents', desc:'Most applications need official translations by a sworn translator.', timeEst:'1–2 weeks', costEst:'€100–300', estCost:200, daysBefore:120 })
-    steps.push({ id:'p4', track:'papers', title:'Lodge your application', desc:'Many routes are online; some require an appointment at the nearest consulate. Check which applies and book early.', timeEst:'Varies', costEst:'€50–200 fee', estCost:120, daysBefore:90 })
+    steps.push({ id:'p3', track:'papers', title:'Translate and notarise documents', desc:'Most applications need official translations by a sworn translator.', timeEst:'1–2 weeks', costEst:'Translation fees apply', daysBefore:120 })
+    steps.push({ id:'p4', track:'papers', title:'Lodge your application', desc:'Many routes are online; some require an appointment at the nearest consulate. Check which applies and book early.', timeEst:'Varies', costEst:'Visa fee applies', daysBefore:90 })
     steps.push({ id:'p5', track:'papers', title:'Track the decision', desc:'Processing times vary by route. Monitor your application status online.', timeEst:'4–12 weeks', daysBefore:60 })
   } else {
     steps.push({ id:'p1', track:'papers', title:'Research visa options for your passport', desc:`A Tier ${passportTier} passport has fewer routes. Look for sponsored work, investor or specific nomad visas.`, timeEst:'1 day', daysBefore:240, url:res.visaUrl, urlLabel:'Immigration authority' })
-    steps.push({ id:'p2', track:'papers', title:'Consult an immigration lawyer', desc:'For a Tier 3–4 passport a local lawyer cuts rejection risk and finds routes you would miss.', timeEst:'1–2 weeks', costEst:'€200–800', estCost:500, daysBefore:210 })
-    steps.push({ id:'p3', track:'papers', title:'Prepare and apostille documents', desc:'Apostilles can take 2–4 weeks. Budget for certified translations too.', timeEst:'3–6 weeks', costEst:'€200–500', estCost:350, daysBefore:150 })
-    steps.push({ id:'p4', track:'papers', title:'Lodge your application', desc:'Submit online or at the nearest consulate, depending on the route. Bring originals and copies of everything.', timeEst:'Varies', costEst:'€100–350 fee', estCost:200, daysBefore:90 })
+    steps.push({ id:'p2', track:'papers', title:'Consult an immigration lawyer', desc:'For a Tier 3–4 passport a local lawyer cuts rejection risk and finds routes you would miss.', timeEst:'1–2 weeks', costEst:'Lawyer fees apply', daysBefore:210 })
+    steps.push({ id:'p3', track:'papers', title:'Prepare and apostille documents', desc:'Apostilles can take 2–4 weeks. Budget for certified translations too.', timeEst:'3–6 weeks', costEst:'Apostille + translation fees', daysBefore:150 })
+    steps.push({ id:'p4', track:'papers', title:'Lodge your application', desc:'Submit online or at the nearest consulate, depending on the route. Bring originals and copies of everything.', timeEst:'Varies', costEst:'Visa fee applies', daysBefore:90 })
     steps.push({ id:'p5', track:'papers', title:'Await the decision and plan a fallback', desc:'Have a contingency if refused — a temporary base while you re-apply.', timeEst:'6–16 weeks', daysBefore:60 })
   }
 
@@ -162,7 +189,7 @@ export function getPlaybook(
   steps.push({ id:'m3', track:'money', title:'Research your tax position', desc:'Will you be taxed as a resident? Does your home country have a tax treaty? When does residency start?', timeEst:'2–4 hours', daysBefore:90 })
   steps.push({ id:'m4', track:'money', title:'Tell your current bank you are leaving', desc:'Some banks close accounts for non-residents. Keep a home account as a bridge.', timeEst:'30 min', daysBefore:30 })
   if (workType === 'freelancer' || workType === 'owner') {
-    steps.push({ id:'m5', track:'money', title:'Register as self-employed', desc:'Most countries require you to register under the local self-employment scheme within 30–90 days of starting work.', timeEst:'1–4 weeks', costEst:'€100–500', estCost:300, daysBefore:-30 })
+    steps.push({ id:'m5', track:'money', title:'Register as self-employed', desc:'Most countries require you to register under the local self-employment scheme within 30–90 days of starting work.', timeEst:'1–4 weeks', costEst:'Registration fee may apply', daysBefore:-30 })
   }
   steps.push({ id:'m6', track:'money', title:'Open a local bank account', desc:'Do this in your first week. Bring your lease, residency registration and tax number.', timeEst:'1–3 days', daysBefore:-7 })
 
@@ -185,5 +212,5 @@ export function getPlaybook(
   steps.push({ id:'l5', track:'life', title:'Download offline maps and translation', desc:'Offline maps for the city, plus DeepL or Google Translate camera mode for signs and menus.', timeEst:'15 min', costEst:'Free', daysBefore:7 })
   steps.push({ id:'l6', track:'life', title:'Cancel subscriptions tied to home', desc:'Gym, delivery apps, car insurance — many keep charging while you are gone.', timeEst:'1 hour', daysBefore:14 })
 
-  return { steps, currency: '€', verified: false }
+  return { steps, currency: currencyFor(slug), verified: false }
 }

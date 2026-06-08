@@ -284,7 +284,7 @@ export default function PlaybookPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, fontSize: 12 }}>
               <div>
                 <div style={{ color: S.faint, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 10, fontWeight: 700, marginBottom: 3 }}>Est. cost</div>
-                <div style={{ fontFamily: S.serif, fontSize: 18, fontWeight: 800, color: S.text }}>{currency}{estTotal.toLocaleString()}</div>
+                <div style={{ fontFamily: S.serif, fontSize: 18, fontWeight: 800, color: estTotal > 0 ? S.text : S.faint }}>{estTotal > 0 ? `${currency}${estTotal.toLocaleString()}` : '—'}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ color: S.faint, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 10, fontWeight: 700, marginBottom: 3 }}>Spent so far</div>
