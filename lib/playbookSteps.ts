@@ -259,6 +259,113 @@ const OVERRIDES: Record<string, (workType: string, isEU: boolean) => PlaybookDat
       { id:'l3', track:'life', title:'Join the community', desc:'r/Portugal and r/PortugalExpats answer the practical relocation questions.', timeEst:'10 min', daysBefore:0, url:'https://reddit.com/r/PortugalExpats', urlLabel:'Open r/PortugalExpats' },
     ],
   }),
+
+  // NETHERLANDS — IND-verified. Kennismigrant salary thresholds current 2025.
+  netherlands: (workType, isEU) => ({
+    currency: '€', verified: true,
+    steps: isEU ? [
+      { id:'p1', track:'papers', title:'Register at the gemeente (BRP)', desc:'EU citizens register at the local municipality. Book a BRP appointment to get your BSN — the single number used for tax, benefits, banking and healthcare.', timeEst:'1–2 hours', costEst:'Free', daysBefore:0, url:'https://www.rijksoverheid.nl', urlLabel:'Rijksoverheid' },
+      { id:'p2', track:'papers', title:'Activate DigiD', desc:'Your digital identity for all Dutch government portals. Apply at DigiD.nl using your BSN — activation letter arrives in 5 days.', timeEst:'10 min + 5-day wait', costEst:'Free', daysBefore:-7, url:'https://www.digid.nl', urlLabel:'DigiD.nl' },
+      WISE,
+      { id:'m2', track:'money', title:'Open a Dutch bank account (iDEAL)', desc:'ING, ABN AMRO, or Rabobank. Bring BSN and passport. Almost every Dutch payment — rent, utilities, webshops — uses iDEAL. Get a Dutch account before you sign anything.', timeEst:'1–3 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Get mandatory health insurance', desc:'Everyone in the Netherlands must hold basic Dutch health insurance (basisverzekering) within 4 months of arrival. Cost: ~€140–160/month (2025). Compare via Zorgwijzer.nl.', timeEst:'1 hour', costEst:'€140–160/mo', estCost:150, daysBefore:-30, url:'https://www.zorgwijzer.nl', urlLabel:'Compare plans' },
+      { id:'h1', track:'home', title:'Browse rentals on Funda and Pararius', desc:'Funda.nl covers all properties; Pararius focuses on rentals. Amsterdam 1-bed: €1,600–2,400/mo. Rotterdam and The Hague are 20–30% cheaper.', timeEst:'Ongoing', daysBefore:60, url:'https://www.funda.nl', urlLabel:'Funda.nl' },
+      { id:'l1', track:'life', title:'Register with a huisarts (GP)', desc:'Dutch healthcare requires a registered GP. Ask neighbours or use Zorgwijzer to find one accepting new patients.', timeEst:'1–2 days', daysBefore:-14 },
+      SAFETYWING,
+    ] : [
+      { id:'p1', track:'papers', title:'Secure a job meeting the Kennismigrant threshold', desc:'Highly Skilled Migrant visa requires an IND-recognised sponsor employer. Salary threshold 2025: €4,171/mo (under 30) or €5,688/mo (30+). Check the IND salary table annually.', timeEst:'Employer-led', daysBefore:120, url:'https://ind.nl/en/work/working-in-the-netherlands', urlLabel:'IND work permits' },
+      { id:'p2', track:'papers', title:'Employer submits IND application', desc:'Your employer files via IND online portal. Processing: 2 weeks (premium) or 90 days (standard). You receive an MVV entry visa sticker.', timeEst:'2–12 weeks', daysBefore:90 },
+      { id:'p3', track:'papers', title:'Collect residence permit (VVR) on arrival', desc:'Register at the IND desk within 3 days of arrival to receive your biometric residence card. Bring your MVV passport.', timeEst:'1–2 hours', costEst:'€67', estCost:67, daysBefore:0, url:'https://ind.nl' },
+      { id:'p4', track:'papers', title:'Register at gemeente for BSN', desc:'Municipal BRP registration within 5 days of arrival. BSN is required for banking, tax, and employment. Bring passport, VVR, and rental contract.', timeEst:'1–2 hours', costEst:'Free', daysBefore:-3 },
+      WISE,
+      { id:'m2', track:'money', title:'Open an iDEAL-compatible bank account', desc:'ING, ABN AMRO or Rabobank. Bring BSN and passport. iDEAL is used for virtually all Dutch payments — essential from day one.', timeEst:'1–2 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Apply for the 30% ruling', desc:"Expats with specific expertise can get 30% of salary tax-free for up to 5 years. Apply within 4 months of starting work — employer submits to Belastingdienst. Worth checking even if you're unsure.", timeEst:'1–4 months processing', daysBefore:-30, url:'https://www.belastingdienst.nl', urlLabel:'Belastingdienst' },
+      { id:'m4', track:'money', title:'Get mandatory health insurance', desc:'Required within 4 months of arrival. ~€140–160/mo (2025). Compare options at Zorgwijzer.nl. Your employer may provide supplementary coverage.', timeEst:'1 hour', costEst:'€140–160/mo', estCost:150, daysBefore:-30, url:'https://www.zorgwijzer.nl', urlLabel:'Compare plans' },
+      { id:'h1', track:'home', title:'Browse Funda and Pararius', desc:'Amsterdam 1-bed: €1,600–2,400/mo. Rotterdam ~€1,200–1,600. Market moves fast — have bank details and proof of income ready before you message anyone.', timeEst:'Ongoing', daysBefore:60, url:'https://www.funda.nl', urlLabel:'Funda.nl' },
+      { id:'l1', track:'life', title:'Set up DigiD and register with a GP', desc:'Apply for DigiD at DigiD.nl (BSN required) — activation takes 5 days. Register with a local huisarts within 2 weeks of arrival.', timeEst:'2 hours', daysBefore:-14, url:'https://www.digid.nl', urlLabel:'DigiD.nl' },
+      SAFETYWING,
+    ],
+  }),
+
+  // UNITED KINGDOM — gov.uk-verified. Fees and thresholds current April 2025.
+  'united-kingdom': () => ({
+    currency: '£', verified: true,
+    steps: [
+      { id:'p1', track:'papers', title:'Secure a Skilled Worker sponsor and Certificate of Sponsorship', desc:"Your employer must hold a sponsor licence and issue you a Certificate of Sponsorship (CoS). Salary threshold: £41,700 (2024 uplift) or the going rate for your occupation — whichever is higher.", timeEst:'Employer-led', daysBefore:120, url:'https://www.gov.uk/skilled-worker-visa', urlLabel:'GOV.UK Skilled Worker' },
+      { id:'p2', track:'papers', title:'Pay the Immigration Health Surcharge (IHS)', desc:'Paid upfront as part of the visa application: £1,035 per year. Gives full NHS access from visa start date. Pay for the full visa length in one go.', timeEst:'During visa application', costEst:'£1,035/yr', estCost:1035, daysBefore:120 },
+      { id:'p3', track:'papers', title:'Apply for the Skilled Worker visa', desc:'Apply online at GOV.UK. Processing: 3 weeks standard; 5 working days priority (£500 extra). You will need: CoS reference, English language evidence, finance proof, and a valid passport.', timeEst:'3–5 weeks', costEst:'£827 visa fee', estCost:827, daysBefore:90, url:'https://www.gov.uk/skilled-worker-visa/apply', urlLabel:'Apply online' },
+      { id:'p4', track:'papers', title:'Access your eVisa on UKVI', desc:"From 2025 the UK issues digital eVisas only (no physical BRP). View your status and generate a 'share code' for landlords, employers, and banks via the UKVI online service.", timeEst:'On arrival', costEst:'Free', daysBefore:0, url:'https://www.gov.uk/view-prove-immigration-status', urlLabel:'View eVisa' },
+      { id:'p5', track:'papers', title:'Apply for a National Insurance number (NINo)', desc:'Apply online after arrival. Takes 2–4 weeks. Required to pay the correct tax and build your NI record for future state pension.', timeEst:'30 min apply / 2–4 wks wait', costEst:'Free', daysBefore:-7, url:'https://www.gov.uk/apply-national-insurance-number', urlLabel:'Apply for NINo' },
+      WISE,
+      { id:'m2', track:'money', title:'Open a UK bank account', desc:'Monzo and Starling open in minutes — ideal as a bridge account. HSBC, Barclays, and NatWest accept new arrivals with passport + eVisa share code + proof of address.', timeEst:'1–3 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Check your PAYE tax code', desc:"Your employer handles PAYE deductions. Log into your HMRC personal tax account and verify your tax code — an emergency code (e.g. 1257L W1) means you're overpaying.", timeEst:'30 min', url:'https://www.gov.uk/personal-tax-account', urlLabel:'HMRC personal tax' },
+      { id:'h1', track:'home', title:'Browse Rightmove or SpareRoom', desc:'Rightmove for all rentals; SpareRoom for room shares. London 1-bed: £1,600–2,500/mo. Manchester, Leeds, Bristol: £900–1,400/mo. Deposit is legally capped at 5 weeks rent.', timeEst:'Ongoing', daysBefore:60, url:'https://www.rightmove.co.uk', urlLabel:'Rightmove' },
+      { id:'h2', track:'home', title:'Know your deposit rights', desc:"Deposit capped at 5 weeks rent (Tenant Fees Act 2019). Landlord must protect it in a government-approved scheme (DPS, MyDeposits, or TDS). Always get a written tenancy agreement.", timeEst:'1 hour reading', daysBefore:45 },
+      { id:'l1', track:'life', title:'Register with an NHS GP', desc:"Your IHS payment covers full NHS access. Register with a local GP on arrival — lists fill quickly. Walk-in centres are the backup while you wait.", timeEst:'30 min', costEst:'Free (IHS covers this)', daysBefore:-7, url:'https://www.nhs.uk/service-search/find-a-gp', urlLabel:'Find a GP' },
+      SAFETYWING,
+      { id:'l3', track:'life', title:'Join expat communities', desc:'r/unitedkingdom, r/london (or city-specific subs), and InterNations UK are all active. Meetup.com has groups in every major city.', timeEst:'10 min' },
+    ],
+  }),
+
+  // CANADA — canada.ca-verified. Express Entry CRS and fees current 2025.
+  canada: () => ({
+    currency: 'C$', verified: true,
+    steps: [
+      { id:'p1', track:'papers', title:'Calculate your CRS score and submit an EOI', desc:'Express Entry pools draws at ~470–500+ CRS (2025 average). Use the IRCC CRS tool. Biggest score boosters: Canadian job offer (+50–200 pts), provincial nomination (+600 pts), or a higher language test score.', timeEst:'30 min', daysBefore:365, url:'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html', urlLabel:'IRCC Express Entry' },
+      { id:'p2', track:'papers', title:'Get IELTS or CELPIP (language test)', desc:'Minimum CLB 7 (≈ IELTS 6.0 each band) for Federal Skilled Worker. Higher scores increase CRS significantly. Book 6–8 weeks in advance.', timeEst:'Test day + 2 weeks result', costEst:'C$310–390', estCost:350, daysBefore:270 },
+      { id:'p3', track:'papers', title:'Get an Educational Credential Assessment (WES)', desc:'WES Canada is the standard. Submit transcripts and degree certificates. Standard: 7–15 weeks; rush: 5 days.', timeEst:'7–15 weeks', costEst:'C$300–340', estCost:320, daysBefore:270, url:'https://www.wes.org/ca/', urlLabel:'WES Canada' },
+      { id:'p4', track:'papers', title:'Lodge PR application within 60 days of ITA', desc:'60-day window after Invitation to Apply. Documents needed: passport, police certificates, medical exam, ECA, language results, employment records.', timeEst:'3–6 months processing', costEst:'C$1,365 (primary applicant)', estCost:1365, daysBefore:90 },
+      { id:'p5', track:'papers', title:'Apply for a Social Insurance Number (SIN)', desc:'Apply online or at a Service Canada centre on or after landing. Free. Required for employment, CRA tax filings, and government benefits.', timeEst:'15 min', costEst:'Free', daysBefore:-3, url:'https://www.canada.ca/en/employment-social-development/services/sin.html', urlLabel:'Apply for SIN' },
+      WISE,
+      { id:'m2', track:'money', title:'Open a newcomer bank account', desc:'RBC, Scotiabank, TD, and BMO all offer free newcomer accounts for the first year. Bring passport, SIN, and landing documents (COPR or PR card).', timeEst:'1 hour', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Set up Interac e-Transfer', desc:"Canada's universal payment network for transfers and many bill payments. Linked to your bank account — free and used everywhere for rent, peer payments, and small businesses.", timeEst:'10 min', costEst:'Free', daysBefore:-3 },
+      { id:'m4', track:'money', title:'Register with CRA (tax account)', desc:'File your first T1 return by 30 April. Register at CRA My Account using your SIN. New residents may qualify for the GST/HST credit.', timeEst:'1 hour', url:'https://www.canada.ca/en/revenue-agency/services/e-services/e-services-individuals/account-individuals.html', urlLabel:'CRA My Account' },
+      { id:'h1', track:'home', title:'Browse Rentals.ca or Kijiji', desc:'Rentals.ca and Kijiji Rentals are the main platforms. Toronto 1-bed: C$2,200–2,800/mo; Vancouver: C$2,400–3,200; Calgary/Ottawa: C$1,600–2,000. Facebook Marketplace also has listings.', timeEst:'Ongoing', daysBefore:60, url:'https://rentals.ca', urlLabel:'Rentals.ca' },
+      { id:'h2', track:'home', title:'Understand deposit rules by province', desc:"Most provinces allow first + last month's rent upfront (Ontario, BC). Ontario bans damage deposits. Landlords cannot demand more by law.", timeEst:'30 min', daysBefore:45 },
+      { id:'l1', track:'life', title:'Apply for provincial health insurance', desc:'Each province runs its own health plan. Most have a 3-month waiting period (BC, Ontario). Get gap travel insurance through the wait — SafetyWing covers this.', timeEst:'30 min', costEst:'Free (provincial)', daysBefore:-7, url:'https://www.canada.ca/en/health-canada/services/health-care-system/provincial-territorial-health-plans.html', urlLabel:'Provincial health plans' },
+      SAFETYWING,
+      { id:'l3', track:'life', title:'Exchange your driving licence', desc:'Most provinces allow driving on a foreign licence for 60–90 days. Convert at a provincial licensing office — no road test required from many countries.', timeEst:'1–2 hours', costEst:'C$30–90', daysBefore:60 },
+    ],
+  }),
+
+  // UAE — u.ae-verified. Employer-sponsored residency flow, Dubai/AD 2025.
+  uae: () => ({
+    currency: 'AED', verified: true,
+    steps: [
+      { id:'p1', track:'papers', title:'Get an employer-sponsored Entry Permit', desc:"UAE residency is employer-led. Your company applies for an Employment Entry Permit via MOHRE and GDRFA. Freelancers and remote workers can use the Ministry of Economy Freelance Permit or the Green Visa (self-sponsored, income proof required).", timeEst:'2–4 weeks', daysBefore:60, url:'https://u.ae/en/information-and-services/visa-and-emirates-id', urlLabel:'UAE visa portal' },
+      { id:'p2', track:'papers', title:'Complete the medical fitness test (on arrival)', desc:'Mandatory for all new residents. Tests for TB, HIV, Hepatitis B/C at an authorised clinic. Usually arranged by your employer. Required before the Emirates ID is issued.', timeEst:'Half day', costEst:'AED 300–500', estCost:400, daysBefore:0 },
+      { id:'p3', track:'papers', title:'Apply for Emirates ID', desc:'Apply online via ICP Smart Services or through your employer. Biometrics at a typing centre. Issued in 3–7 working days. Required for banking, SIM, driving licence, and almost everything else.', timeEst:'3–7 working days', costEst:'AED 370', estCost:370, daysBefore:0, url:'https://icp.gov.ae', urlLabel:'ICP Smart Services' },
+      { id:'p4', track:'papers', title:'Receive residence visa stamp', desc:'Once the medical clears and Emirates ID is processed, GDRFA stamps your passport with a 2–3 year residence visa. Keep your passport accessible for hotel check-ins and random checks.', timeEst:'1–5 working days', daysBefore:-7 },
+      WISE,
+      { id:'m2', track:'money', title:'Open a UAE bank account', desc:'Emirates NBD, FAB, ADCB, and Mashreq are expat-friendly. Bring: Emirates ID, salary certificate, passport, and employer letter. Your salary will be paid here (mandatory under the WPS system).', timeEst:'1–3 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'No personal income tax — understand what is', desc:'UAE has zero personal income tax. VAT is 5% on most goods and services. Corporate tax (9%) applies to businesses earning >AED 375,000. Freelancers using free-zone structures have separate rules.', timeEst:'1 hour reading', daysBefore:30 },
+      { id:'h1', track:'home', title:'Register your tenancy with Ejari', desc:"All Dubai tenancies must be registered with Ejari (~AED 220–250). Usually handled by your agent. Required for connecting utilities, residency, and car insurance.", timeEst:'1–2 hours', costEst:'AED 220–250', estCost:235, daysBefore:-3, url:'https://ejari.ae', urlLabel:'Ejari.ae' },
+      { id:'h2', track:'home', title:'Browse Bayut or Property Finder', desc:'Bayut.com and PropertyFinder.ae are the main rental platforms. Dubai 1-bed: AED 60,000–120,000/yr. Abu Dhabi: AED 55,000–95,000/yr. Rent is typically paid in 1–4 post-dated cheques.', timeEst:'Ongoing', daysBefore:60, url:'https://www.bayut.com', urlLabel:'Bayut' },
+      { id:'l1', track:'life', title:'Get health insurance (mandatory in Dubai)', desc:"Dubai law requires employers to provide basic health insurance. In Abu Dhabi all residents must hold mandatory Thiqa or private insurance. Private plans from Cigna/AXA/Daman run AED 3,000–8,000/yr.", timeEst:'Employer-provided or 2 hours to compare', costEst:'AED 3,000–8,000/yr', daysBefore:0 },
+      { id:'l2', track:'life', title:'Exchange your driving licence (RTA)', desc:'UK, US, EU, AUS, and many other nationalities exchange directly with no test. Go to an RTA centre with your Emirates ID, passport, eye test, and existing licence. Fee ~AED 200.', timeEst:'2 hours', costEst:'AED 200', estCost:200, daysBefore:30, url:'https://www.rta.ae', urlLabel:'RTA Dubai' },
+      SAFETYWING,
+    ],
+  }),
+
+  // SINGAPORE — MOM-verified. EP thresholds and COMPASS current Jan 2025.
+  singapore: () => ({
+    currency: 'S$', verified: true,
+    steps: [
+      { id:'p1', track:'papers', title:'Secure an EP-eligible job (or ONE Pass)', desc:"Employment Pass minimum: S$5,600/mo (S$6,200 for financial services, 2025). COMPASS framework scores employer on salary, qualifications, diversity — your employer must pass. ONE Pass: S$30,000/mo or recognised top talent, 5-year duration.", timeEst:'Employer-led', daysBefore:90, url:'https://www.mom.gov.sg/passes-and-permits', urlLabel:'MOM passes portal' },
+      { id:'p2', track:'papers', title:'Employer applies via EP Online', desc:'Your employer submits the EP application on MOM\'s EP Online portal. Processing: 3–8 weeks standard. You receive an In-Principle Approval (IPA) letter — bring it to collect your pass.', timeEst:'3–8 weeks', daysBefore:90, url:'https://www.mom.gov.sg/compass', urlLabel:'COMPASS checker' },
+      { id:'p3', track:'papers', title:'Register address with ICA within 2 weeks', desc:'All EP holders must register their Singapore residential address with ICA within 2 weeks of arrival. Bring passport and EP/pass card.', timeEst:'1–2 hours', costEst:'Free', daysBefore:-10, url:'https://www.ica.gov.sg', urlLabel:'ICA.gov.sg' },
+      WISE,
+      { id:'m2', track:'money', title:'Open a Singapore bank account', desc:'DBS, OCBC, and UOB are all strong. DBS MyAccount can be opened online. Bring EP card, passport, and proof of address. Accounts are highly regulated and stable.', timeEst:'1–3 days', daysBefore:-7 },
+      { id:'m3', track:'money', title:'Set up PayNow', desc:"Singapore's instant payment system — link your FIN or mobile number to your bank. Free 24/7 transfers to any Singapore bank. Used universally for rent, food, and peer payments.", timeEst:'10 min', costEst:'Free', daysBefore:-3 },
+      { id:'m4', track:'money', title:'Understand Singapore tax (territorial, low rates)', desc:'Singapore taxes only Singapore-sourced income. Rates: 0% up to S$20,000, then 2–24% in bands. No capital gains or inheritance tax. File via myTax Portal by 15 April.', timeEst:'1 hour', url:'https://mytax.iras.gov.sg', urlLabel:'myTax Portal' },
+      { id:'h1', track:'home', title:'Browse PropertyGuru or 99.co', desc:'PropertyGuru.com.sg and 99.co are the main platforms. Central 1-bed condo: S$3,500–5,500/mo. Outer areas: S$2,200–3,500. Standard deposit: 1–2 months.', timeEst:'Ongoing', daysBefore:60, url:'https://www.propertyguru.com.sg', urlLabel:'PropertyGuru' },
+      { id:'h2', track:'home', title:'Consider HDB rentals for lower cost', desc:"EP holders can rent HDB flats from Singaporean or PR owners — typically 30–50% cheaper than private condos. Check MOM eligibility rules before messaging landlords.", timeEst:'Ongoing', daysBefore:60, url:'https://www.hdb.gov.sg', urlLabel:'HDB info' },
+      { id:'l1', track:'life', title:'Review employer health insurance on day one', desc:"Singapore has excellent but expensive healthcare — foreigners pay 2–3× the citizen rate at public hospitals and polyclinics. Your employer's group plan covers most of this; review limits before you need it.", timeEst:'1 hour', daysBefore:0 },
+      { id:'l2', track:'life', title:'Get a Singapore SIM card', desc:'Singtel, StarHub, and M1 are the main providers. SIM-only plans from S$18–40/mo. Bring passport and EP card. eSIM options available online.', timeEst:'30 min', costEst:'S$18–40/mo', daysBefore:-1 },
+      SAFETYWING,
+      { id:'l4', track:'life', title:'Join the expat community', desc:'r/singapore is one of the most active city subreddits globally. InterNations Singapore and many employer-linked communities are also available.', timeEst:'10 min' },
+    ],
+  }),
 }
 
 // ── Generic generator (fallback for countries without an override) ─────────
