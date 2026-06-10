@@ -5,7 +5,7 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// ─── Tokens ───────────────────────────────────────────────────────────────────
 const BG   = "#0a0a0a";
 const FG   = "#f0f0e8";
 const MINT = "#00ffd5";
@@ -15,663 +15,625 @@ const BORD = "#2a2a2a";
 const SANS = "'Satoshi', system-ui, sans-serif";
 const HEAD = "'Cabinet Grotesk', sans-serif";
 
-// ─── Passport dataset ─────────────────────────────────────────────────────────
-// visaFree: Henley Passport Index 2024 (visa-free + visa-on-arrival)
-// population: approx. millions of citizens holding this passport
-// rank: global rank out of 199 passports
-const PASSPORTS = [
-  { slug: "argentina",      name: "Argentina",      flag: "🇦🇷", visaFree: 171, population: 45,    rank: 24  },
-  { slug: "australia",      name: "Australia",      flag: "🇦🇺", visaFree: 185, population: 26.5,  rank: 14  },
-  { slug: "austria",        name: "Austria",        flag: "🇦🇹", visaFree: 188, population: 9,     rank: 7   },
-  { slug: "belgium",        name: "Belgium",        flag: "🇧🇪", visaFree: 186, population: 11.6,  rank: 10  },
-  { slug: "brazil",         name: "Brazil",         flag: "🇧🇷", visaFree: 173, population: 215,   rank: 22  },
-  { slug: "canada",         name: "Canada",         flag: "🇨🇦", visaFree: 184, population: 38.8,  rank: 16  },
-  { slug: "chile",          name: "Chile",          flag: "🇨🇱", visaFree: 175, population: 19.5,  rank: 20  },
-  { slug: "china",          name: "China",          flag: "🇨🇳", visaFree: 85,  population: 1400,  rank: 68  },
-  { slug: "cyprus",         name: "Cyprus",         flag: "🇨🇾", visaFree: 173, population: 1.2,   rank: 22  },
-  { slug: "denmark",        name: "Denmark",        flag: "🇩🇰", visaFree: 188, population: 5.9,   rank: 7   },
-  { slug: "estonia",        name: "Estonia",        flag: "🇪🇪", visaFree: 186, population: 1.4,   rank: 10  },
-  { slug: "finland",        name: "Finland",        flag: "🇫🇮", visaFree: 189, population: 5.5,   rank: 5   },
-  { slug: "france",         name: "France",         flag: "🇫🇷", visaFree: 190, population: 68,    rank: 3   },
-  { slug: "germany",        name: "Germany",        flag: "🇩🇪", visaFree: 190, population: 84,    rank: 3   },
-  { slug: "ghana",          name: "Ghana",          flag: "🇬🇭", visaFree: 63,  population: 33,    rank: 78  },
-  { slug: "hungary",        name: "Hungary",        flag: "🇭🇺", visaFree: 186, population: 10,    rank: 10  },
-  { slug: "india",          name: "India",          flag: "🇮🇳", visaFree: 58,  population: 1400,  rank: 82  },
-  { slug: "indonesia",      name: "Indonesia",      flag: "🇮🇩", visaFree: 77,  population: 275,   rank: 71  },
-  { slug: "ireland",        name: "Ireland",        flag: "🇮🇪", visaFree: 188, population: 5.1,   rank: 7   },
-  { slug: "italy",          name: "Italy",          flag: "🇮🇹", visaFree: 190, population: 60,    rank: 3   },
-  { slug: "japan",          name: "Japan",          flag: "🇯🇵", visaFree: 193, population: 125,   rank: 1   },
-  { slug: "malaysia",       name: "Malaysia",       flag: "🇲🇾", visaFree: 179, population: 33,    rank: 18  },
-  { slug: "mexico",         name: "Mexico",         flag: "🇲🇽", visaFree: 162, population: 130,   rank: 27  },
-  { slug: "netherlands",    name: "Netherlands",    flag: "🇳🇱", visaFree: 188, population: 17.5,  rank: 7   },
-  { slug: "new-zealand",    name: "New Zealand",    flag: "🇳🇿", visaFree: 185, population: 5,     rank: 14  },
-  { slug: "nigeria",        name: "Nigeria",        flag: "🇳🇬", visaFree: 46,  population: 225,   rank: 98  },
-  { slug: "norway",         name: "Norway",         flag: "🇳🇴", visaFree: 186, population: 5.4,   rank: 10  },
-  { slug: "pakistan",       name: "Pakistan",       flag: "🇵🇰", visaFree: 33,  population: 230,   rank: 103 },
-  { slug: "philippines",    name: "Philippines",    flag: "🇵🇭", visaFree: 67,  population: 115,   rank: 76  },
-  { slug: "poland",         name: "Poland",         flag: "🇵🇱", visaFree: 187, population: 41,    rank: 9   },
-  { slug: "portugal",       name: "Portugal",       flag: "🇵🇹", visaFree: 186, population: 10.3,  rank: 10  },
-  { slug: "romania",        name: "Romania",        flag: "🇷🇴", visaFree: 174, population: 19,    rank: 21  },
-  { slug: "serbia",         name: "Serbia",         flag: "🇷🇸", visaFree: 138, population: 7,     rank: 40  },
-  { slug: "singapore",      name: "Singapore",      flag: "🇸🇬", visaFree: 192, population: 5.9,   rank: 2   },
-  { slug: "south-africa",   name: "South Africa",   flag: "🇿🇦", visaFree: 104, population: 60,    rank: 56  },
-  { slug: "south-korea",    name: "South Korea",    flag: "🇰🇷", visaFree: 189, population: 51.7,  rank: 5   },
-  { slug: "spain",          name: "Spain",          flag: "🇪🇸", visaFree: 190, population: 47,    rank: 3   },
-  { slug: "sweden",         name: "Sweden",         flag: "🇸🇪", visaFree: 189, population: 10.4,  rank: 5   },
-  { slug: "switzerland",    name: "Switzerland",    flag: "🇨🇭", visaFree: 186, population: 8.7,   rank: 10  },
-  { slug: "thailand",       name: "Thailand",       flag: "🇹🇭", visaFree: 81,  population: 72,    rank: 66  },
-  { slug: "turkey",         name: "Turkey",         flag: "🇹🇷", visaFree: 111, population: 85,    rank: 50  },
-  { slug: "uae",            name: "UAE",            flag: "🇦🇪", visaFree: 185, population: 1.1,   rank: 12  },
-  { slug: "ukraine",        name: "Ukraine",        flag: "🇺🇦", visaFree: 148, population: 44,    rank: 35  },
-  { slug: "united-kingdom", name: "United Kingdom", flag: "🇬🇧", visaFree: 187, population: 67,    rank: 9   },
-  { slug: "usa",            name: "United States",  flag: "🇺🇸", visaFree: 186, population: 335,   rank: 10  },
-  { slug: "vietnam",        name: "Vietnam",        flag: "🇻🇳", visaFree: 55,  population: 98,    rank: 90  },
-] as const;
+// ─── Full Henley Passport Index 2024 dataset ──────────────────────────────────
+// Score = visa-free + visa-on-arrival + eTA destinations (Henley 2024 Q3)
+// population = approx. millions of passport-holding citizens
+// vf = visa-free only, voa = visa on arrival, evisa = eVisa/eTA (approximate splits)
+export type Passport = {
+  rank: number;
+  name: string;
+  flag: string;
+  score: number;  // Henley total
+  vf: number;     // visa-free (no application)
+  voa: number;    // visa on arrival
+  evisa: number;  // e-visa / eTA
+  population: number; // millions
+  slug: string;
+};
 
-const WORLD_POP   = 8000; // million
-const MAX_RANK    = 199;
-const MAX_VF      = 193; // Japan's score, the ceiling
+const ALL_PASSPORTS: Passport[] = [
+  // Rank 1 — 194
+  { rank:1,  name:"Japan",          flag:"🇯🇵", score:194, vf:131, voa:47, evisa:16, population:125,   slug:"japan"         },
+  { rank:1,  name:"Singapore",      flag:"🇸🇬", score:194, vf:133, voa:44, evisa:17, population:5.9,   slug:"singapore"     },
+  // Rank 2 — 193
+  { rank:2,  name:"France",         flag:"🇫🇷", score:193, vf:132, voa:43, evisa:18, population:68,    slug:"france"        },
+  { rank:2,  name:"Germany",        flag:"🇩🇪", score:193, vf:132, voa:43, evisa:18, population:84,    slug:"germany"       },
+  { rank:2,  name:"Italy",          flag:"🇮🇹", score:193, vf:132, voa:43, evisa:18, population:60,    slug:"italy"         },
+  { rank:2,  name:"Spain",          flag:"🇪🇸", score:193, vf:132, voa:43, evisa:18, population:47,    slug:"spain"         },
+  // Rank 3 — 192
+  { rank:3,  name:"Austria",        flag:"🇦🇹", score:192, vf:131, voa:43, evisa:18, population:9,     slug:"austria"       },
+  { rank:3,  name:"Finland",        flag:"🇫🇮", score:192, vf:131, voa:43, evisa:18, population:5.5,   slug:"finland"       },
+  { rank:3,  name:"Ireland",        flag:"🇮🇪", score:192, vf:131, voa:43, evisa:18, population:5.1,   slug:"ireland"       },
+  { rank:3,  name:"Luxembourg",     flag:"🇱🇺", score:192, vf:131, voa:43, evisa:18, population:0.67,  slug:"luxembourg"    },
+  { rank:3,  name:"Netherlands",    flag:"🇳🇱", score:192, vf:131, voa:43, evisa:18, population:17.5,  slug:"netherlands"   },
+  { rank:3,  name:"South Korea",    flag:"🇰🇷", score:192, vf:131, voa:43, evisa:18, population:51.7,  slug:"south-korea"   },
+  { rank:3,  name:"Sweden",         flag:"🇸🇪", score:192, vf:131, voa:43, evisa:18, population:10.4,  slug:"sweden"        },
+  // Rank 4 — 191
+  { rank:4,  name:"Belgium",        flag:"🇧🇪", score:191, vf:130, voa:42, evisa:19, population:11.6,  slug:"belgium"       },
+  { rank:4,  name:"Denmark",        flag:"🇩🇰", score:191, vf:130, voa:42, evisa:19, population:5.9,   slug:"denmark"       },
+  { rank:4,  name:"New Zealand",    flag:"🇳🇿", score:191, vf:130, voa:42, evisa:19, population:5,     slug:"new-zealand"   },
+  { rank:4,  name:"Norway",         flag:"🇳🇴", score:191, vf:130, voa:42, evisa:19, population:5.4,   slug:"norway"        },
+  { rank:4,  name:"Switzerland",    flag:"🇨🇭", score:191, vf:130, voa:42, evisa:19, population:8.7,   slug:"switzerland"   },
+  { rank:4,  name:"United Kingdom", flag:"🇬🇧", score:191, vf:130, voa:42, evisa:19, population:67,    slug:"united-kingdom"},
+  // Rank 5 — 190
+  { rank:5,  name:"Australia",      flag:"🇦🇺", score:190, vf:129, voa:42, evisa:19, population:26.5,  slug:"australia"     },
+  { rank:5,  name:"Portugal",       flag:"🇵🇹", score:190, vf:129, voa:42, evisa:19, population:10.3,  slug:"portugal"      },
+  // Rank 6 — 189
+  { rank:6,  name:"Czechia",        flag:"🇨🇿", score:189, vf:128, voa:42, evisa:19, population:10.9,  slug:"czechia"       },
+  { rank:6,  name:"Greece",         flag:"🇬🇷", score:189, vf:128, voa:42, evisa:19, population:10.4,  slug:"greece"        },
+  // Rank 7 — 188
+  { rank:7,  name:"Malta",          flag:"🇲🇹", score:188, vf:127, voa:42, evisa:19, population:0.54,  slug:"malta"         },
+  { rank:7,  name:"Poland",         flag:"🇵🇱", score:188, vf:127, voa:42, evisa:19, population:41,    slug:"poland"        },
+  // Rank 8 — 187
+  { rank:8,  name:"Canada",         flag:"🇨🇦", score:187, vf:126, voa:42, evisa:19, population:38.8,  slug:"canada"        },
+  { rank:8,  name:"Hungary",        flag:"🇭🇺", score:187, vf:126, voa:42, evisa:19, population:10,    slug:"hungary"       },
+  { rank:8,  name:"United States",  flag:"🇺🇸", score:187, vf:126, voa:42, evisa:19, population:335,   slug:"usa"           },
+  // Rank 9 — 186
+  { rank:9,  name:"Estonia",        flag:"🇪🇪", score:186, vf:125, voa:42, evisa:19, population:1.4,   slug:"estonia"       },
+  { rank:9,  name:"Lithuania",      flag:"🇱🇹", score:186, vf:125, voa:42, evisa:19, population:2.8,   slug:"lithuania"     },
+  { rank:9,  name:"Slovakia",       flag:"🇸🇰", score:186, vf:125, voa:42, evisa:19, population:5.5,   slug:"slovakia"      },
+  { rank:9,  name:"Slovenia",       flag:"🇸🇮", score:186, vf:125, voa:42, evisa:19, population:2.1,   slug:"slovenia"      },
+  // Rank 10 — 185
+  { rank:10, name:"Iceland",        flag:"🇮🇸", score:185, vf:124, voa:42, evisa:19, population:0.37,  slug:"iceland"       },
+  { rank:10, name:"Latvia",         flag:"🇱🇻", score:185, vf:124, voa:42, evisa:19, population:1.8,   slug:"latvia"        },
+  // Rank 11 — 184
+  { rank:11, name:"Cyprus",         flag:"🇨🇾", score:184, vf:122, voa:42, evisa:20, population:1.2,   slug:"cyprus"        },
+  { rank:11, name:"Romania",        flag:"🇷🇴", score:184, vf:122, voa:42, evisa:20, population:19,    slug:"romania"       },
+  // Rank 12 — 183
+  { rank:12, name:"UAE",            flag:"🇦🇪", score:183, vf:116, voa:47, evisa:20, population:1.1,   slug:"uae"           },
+  // Rank 13 — 179
+  { rank:13, name:"Malaysia",       flag:"🇲🇾", score:179, vf:114, voa:46, evisa:19, population:33,    slug:"malaysia"      },
+  // Rank 14 — 177
+  { rank:14, name:"Chile",          flag:"🇨🇱", score:177, vf:113, voa:44, evisa:20, population:19.5,  slug:"chile"         },
+  // Rank 15 — 174
+  { rank:15, name:"Brazil",         flag:"🇧🇷", score:174, vf:110, voa:43, evisa:21, population:215,   slug:"brazil"        },
+  // Rank 16 — 172
+  { rank:16, name:"Argentina",      flag:"🇦🇷", score:172, vf:109, voa:42, evisa:21, population:45,    slug:"argentina"     },
+  // Rank 17 — 162
+  { rank:17, name:"Mexico",         flag:"🇲🇽", score:162, vf:102, voa:40, evisa:20, population:130,   slug:"mexico"        },
+  // Rank 18 — 148
+  { rank:18, name:"Ukraine",        flag:"🇺🇦", score:148, vf:93,  voa:38, evisa:17, population:44,    slug:"ukraine"       },
+  // Rank 19 — 138
+  { rank:19, name:"Serbia",         flag:"🇷🇸", score:138, vf:87,  voa:35, evisa:16, population:7,     slug:"serbia"        },
+  // Rank 20 — 111
+  { rank:20, name:"Turkey",         flag:"🇹🇷", score:111, vf:70,  voa:30, evisa:11, population:85,    slug:"turkey"        },
+  // Rank 21 — 104
+  { rank:21, name:"South Africa",   flag:"🇿🇦", score:104, vf:66,  voa:27, evisa:11, population:60,    slug:"south-africa"  },
+  // Rank 22 — 85
+  { rank:22, name:"China",          flag:"🇨🇳", score:85,  vf:54,  voa:22, evisa:9,  population:1400,  slug:"china"         },
+  // Rank 23 — 81
+  { rank:23, name:"Thailand",       flag:"🇹🇭", score:81,  vf:51,  voa:21, evisa:9,  population:72,    slug:"thailand"      },
+  // Rank 24 — 77
+  { rank:24, name:"Indonesia",      flag:"🇮🇩", score:77,  vf:49,  voa:20, evisa:8,  population:275,   slug:"indonesia"     },
+  // Rank 25 — 67
+  { rank:25, name:"Philippines",    flag:"🇵🇭", score:67,  vf:43,  voa:17, evisa:7,  population:115,   slug:"philippines"   },
+  // Rank 26 — 63
+  { rank:26, name:"Ghana",          flag:"🇬🇭", score:63,  vf:40,  voa:16, evisa:7,  population:33,    slug:"ghana"         },
+  // Rank 27 — 58
+  { rank:27, name:"India",          flag:"🇮🇳", score:58,  vf:37,  voa:15, evisa:6,  population:1400,  slug:"india"         },
+  // Rank 28 — 55
+  { rank:28, name:"Vietnam",        flag:"🇻🇳", score:55,  vf:35,  voa:14, evisa:6,  population:98,    slug:"vietnam"       },
+  // Rank 29 — 46
+  { rank:29, name:"Nigeria",        flag:"🇳🇬", score:46,  vf:29,  voa:12, evisa:5,  population:225,   slug:"nigeria"       },
+  // Rank 30 — 33
+  { rank:30, name:"Pakistan",       flag:"🇵🇰", score:33,  vf:21,  voa:8,  evisa:4,  population:230,   slug:"pakistan"      },
+];
+
+const WORLD_POP = 8000; // million
+const MAX_SCORE = 194;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-type Passport = typeof PASSPORTS[number];
-
-function getPowerTier(vf: number): { label: string; color: string; desc: string } {
-  if (vf >= 180) return { label: "ELITE",   color: MINT,      desc: "Top-tier global access" };
-  if (vf >= 140) return { label: "STRONG",  color: "#a3e635", desc: "Well above average"     };
-  if (vf >= 100) return { label: "AVERAGE", color: "#facc15", desc: "Middle of the pack"     };
-  return               { label: "WEAK",    color: "#ef4444", desc: "Significantly restricted" };
-}
-
-function formatPop(pop: number): string {
-  if (pop >= 1000) return `${(pop / 1000).toFixed(1)}B`;
-  if (pop >= 1)    return `${pop % 1 === 0 ? pop : pop.toFixed(1)}M`;
-  return `${(pop * 1000).toFixed(0)}K`;
-}
-
-function getRarity(pop: number): { pct: string; rarer: string; share: number } {
+function getRarity(pop: number) {
   const share    = (pop / WORLD_POP) * 100;
   const rarerNum = 100 - share;
   const rarer    = rarerNum >= 99.9 ? "99.9%+" : rarerNum >= 99 ? `${rarerNum.toFixed(1)}%` : `${Math.round(rarerNum)}%`;
   const pct      = share < 0.1 ? "<0.1%" : share < 1 ? `${share.toFixed(2)}%` : `${share.toFixed(1)}%`;
-  return { pct, rarer, share };
+  const holders  = pop >= 1000 ? `${(pop/1000).toFixed(1)}B` : pop >= 1 ? `${pop % 1 === 0 ? pop : pop.toFixed(1)}M` : `${(pop*1000).toFixed(0)}K`;
+  return { rarer, pct, holders };
 }
 
-// ─── Count-up animation hook ──────────────────────────────────────────────────
-function useCountUp(target: number, active: boolean, duration = 900): number {
+function getTierColor(score: number): string {
+  if (score >= 180) return MINT;
+  if (score >= 140) return "#a3e635";
+  if (score >= 100) return "#facc15";
+  return "#ef4444";
+}
+
+function getTierLabel(score: number): string {
+  if (score >= 180) return "ELITE";
+  if (score >= 140) return "STRONG";
+  if (score >= 100) return "AVERAGE";
+  return "WEAK";
+}
+
+// ─── Count-up hook ────────────────────────────────────────────────────────────
+function useCountUp(target: number, active: boolean, delay = 0, duration = 1000): number {
   const [count, setCount]   = useState(0);
   const rafRef              = useRef<number | null>(null);
   const startRef            = useRef<number | null>(null);
 
   useEffect(() => {
     if (!active) { setCount(0); return; }
-    startRef.current = null;
-    const step = (ts: number) => {
-      if (!startRef.current) startRef.current = ts;
-      const p = Math.min((ts - startRef.current) / duration, 1);
-      const e = 1 - Math.pow(1 - p, 4); // ease-out-quart
-      setCount(Math.round(target * e));
-      if (p < 1) rafRef.current = requestAnimationFrame(step);
+    const timeout = setTimeout(() => {
+      startRef.current = null;
+      const step = (ts: number) => {
+        if (!startRef.current) startRef.current = ts;
+        const p = Math.min((ts - startRef.current) / duration, 1);
+        const e = 1 - Math.pow(1 - p, 4);
+        setCount(Math.round(target * e));
+        if (p < 1) rafRef.current = requestAnimationFrame(step);
+      };
+      rafRef.current = requestAnimationFrame(step);
+    }, delay);
+    return () => {
+      clearTimeout(timeout);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-    rafRef.current = requestAnimationFrame(step);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [target, active, duration]);
+  }, [target, active, delay, duration]);
 
   return count;
 }
 
-// ─── Tier bar ─────────────────────────────────────────────────────────────────
-const TIER_BANDS = [
-  { label: "WEAK",    min: 0,   max: 99,  color: "#ef4444" },
-  { label: "AVERAGE", min: 100, max: 139, color: "#facc15" },
-  { label: "STRONG",  min: 140, max: 179, color: "#a3e635" },
-  { label: "ELITE",   min: 180, max: 193, color: MINT      },
-];
-
-function TierBar({ visaFree }: { visaFree: number }) {
-  const pct = (visaFree / MAX_VF) * 100;
+// ─── SVG animated border for hero cards ───────────────────────────────────────
+function TraceBorder({ color, speed = 2 }: { color: string; speed?: number }) {
+  const id = `tb-${color.replace("#", "")}`;
   return (
-    <div style={{ marginTop: 32 }}>
-      <p style={{ fontFamily: SANS, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, marginBottom: 12 }}>
-        Global range — 0 to 193 countries
-      </p>
-      {/* Track */}
-      <div style={{ position: "relative", height: 6, background: BORD, marginBottom: 20 }}>
-        {/* Coloured fill up to this passport's score */}
-        <div
-          style={{
-            position: "absolute", top: 0, left: 0, height: "100%",
-            width: `${pct}%`,
-            background: getPowerTier(visaFree).color,
-            transition: "width 1s cubic-bezier(0.16,1,0.3,1)",
-          }}
-        />
-        {/* Tick mark */}
-        <div style={{
-          position: "absolute", top: -5, left: `${pct}%`,
-          transform: "translateX(-50%)",
-          width: 2, height: 16, background: FG,
-        }} />
-      </div>
-      {/* Tier labels */}
-      <div style={{ display: "flex", gap: 4 }}>
-        {TIER_BANDS.map(b => {
-          const active = visaFree >= b.min && visaFree <= b.max;
-          return (
-            <div key={b.label} style={{
-              flex: (b.max - b.min + 1),
-              padding: "6px 8px",
-              border: `1px solid ${active ? b.color : BORD}`,
-              background: active ? `${b.color}18` : "transparent",
-              transition: "all 0.4s ease",
-            }}>
-              <p style={{ fontFamily: HEAD, fontSize: 10, letterSpacing: "0.14em", color: active ? b.color : DIM, margin: 0 }}>
-                {b.label}
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 10, color: active ? FG : DIM, margin: "2px 0 0", opacity: active ? 1 : 0.6 }}>
-                {b.min}–{b.max}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <svg
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <style>{`
+          @keyframes trace-${id} {
+            0%   { stroke-dashoffset: 800; opacity: 0.4; }
+            20%  { opacity: 1; }
+            80%  { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 0.6; }
+          }
+          @keyframes pulse-${id} {
+            0%, 100% { opacity: 0.5; }
+            50%       { opacity: 1; }
+          }
+          .tb-${id} {
+            fill: none;
+            stroke: ${color};
+            stroke-width: 1.5;
+            stroke-dasharray: 800;
+            stroke-dashoffset: 800;
+            animation: trace-${id} ${speed}s cubic-bezier(0.16,1,0.3,1) forwards,
+                       pulse-${id} 2.5s ease-in-out ${speed}s infinite;
+          }
+        `}</style>
+      </defs>
+      <rect className={`tb-${id}`} x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" />
+    </svg>
   );
 }
 
-// ─── Share card (screenshot-friendly) ────────────────────────────────────────
-function ShareCard({ passport }: { passport: Passport }) {
-  const tier    = getPowerTier(passport.visaFree);
-  const rarity  = getRarity(passport.population);
+// ─── Hero card (top 3) ────────────────────────────────────────────────────────
+function HeroCard({ passport, position, active }: { passport: Passport; position: 1 | 2 | 3; active: boolean }) {
+  const color  = position === 1 ? MINT : position === 2 ? "#a3e635" : "#facc15";
+  const delay  = (position - 1) * 180;
+  const count  = useCountUp(passport.score, active, delay + 400);
+  const rarity = getRarity(passport.population);
+
+  const rankLabels: Record<1|2|3, string> = { 1: "#1 WORLDWIDE", 2: "#1 TIED", 3: "#2 TIER" };
 
   return (
-    <div
-      id="passport-share-card"
-      style={{
-        background: "#0d0d0d",
-        border: `2px solid ${MINT}`,
-        boxShadow: `4px 4px 0 ${MINT}`,
-        padding: "28px 32px",
-        maxWidth: 420,
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <span style={{ fontFamily: HEAD, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: MINT }}>
-          ORIGIO · PASSPORT POWER
-        </span>
-        <span style={{ fontFamily: SANS, fontSize: 10, color: DIM }}>
-          findorigio.com
-        </span>
-      </div>
+    <div style={{
+      position: "relative",
+      flex: position === 1 ? "1.15" : "1",
+      background: SURF,
+      padding: "28px 24px 24px",
+      overflow: "hidden",
+      opacity: active ? 1 : 0,
+      transform: active ? "translateY(0)" : "translateY(16px)",
+      transition: `opacity 0.5s ease ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+    }}>
+      <TraceBorder color={color} speed={1.2 + position * 0.3} />
 
-      {/* Country */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
-        <span style={{ fontSize: 36, lineHeight: 1 }}>{passport.flag}</span>
-        <div>
-          <p style={{ fontFamily: HEAD, fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1 }}>
-            {passport.name.toUpperCase()}
-          </p>
-          <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "4px 0 0" }}>
-            Ranked #{passport.rank} of {MAX_RANK} passports
-          </p>
-        </div>
-      </div>
-
-      {/* Main stat + tier */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${BORD}` }}>
-        <div>
-          <p style={{ fontFamily: HEAD, fontSize: 52, fontWeight: 800, letterSpacing: "-0.04em", color: FG, margin: 0, lineHeight: 1 }}>
-            {passport.visaFree}
-          </p>
-          <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "6px 0 0", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            countries visa-free
-          </p>
-        </div>
-        <div style={{
-          padding: "6px 12px",
-          border: `1px solid ${tier.color}`,
-          background: `${tier.color}18`,
-          marginBottom: 4,
+      {/* Rank badge */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+        <span style={{
+          fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
+          textTransform: "uppercase", color,
+          border: `1px solid ${color}`,
+          padding: "3px 8px",
         }}>
-          <span style={{ fontFamily: HEAD, fontSize: 13, letterSpacing: "0.12em", color: tier.color }}>
-            {tier.label}
-          </span>
-        </div>
+          {rankLabels[position]}
+        </span>
+        {position === 1 && (
+          <span style={{ fontSize: 18, filter: "drop-shadow(0 0 6px #00ffd5)" }}>⚡</span>
+        )}
+        {position === 2 && (
+          <span style={{ fontSize: 18, filter: "drop-shadow(0 0 4px #a3e635)" }}>🔑</span>
+        )}
+        {position === 3 && (
+          <span style={{ fontSize: 18, filter: "drop-shadow(0 0 4px #facc15)" }}>🛂</span>
+        )}
+      </div>
+
+      {/* Flag + name */}
+      <div style={{ marginBottom: 20 }}>
+        <span style={{ fontSize: 32, display: "block", marginBottom: 8 }}>{passport.flag}</span>
+        <p style={{
+          fontFamily: HEAD, fontSize: 20, fontWeight: 800,
+          letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1,
+        }}>
+          {passport.name.toUpperCase()}
+        </p>
+      </div>
+
+      {/* Big score */}
+      <div style={{ marginBottom: 16 }}>
+        <p style={{
+          fontFamily: HEAD,
+          fontSize: position === 1 ? 60 : 52,
+          fontWeight: 800,
+          letterSpacing: "-0.04em",
+          color,
+          margin: 0,
+          lineHeight: 1,
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {count}
+        </p>
+        <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "6px 0 0", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          destinations accessible
+        </p>
+      </div>
+
+      {/* Score bar */}
+      <div style={{ height: 2, background: BORD, marginBottom: 14, overflow: "hidden" }}>
+        <div style={{
+          height: "100%",
+          background: color,
+          width: active ? `${(passport.score / MAX_SCORE) * 100}%` : "0%",
+          transition: `width 1.2s cubic-bezier(0.16,1,0.3,1) ${delay + 600}ms`,
+        }} />
       </div>
 
       {/* Rarity */}
-      <p style={{ fontFamily: HEAD, fontSize: 16, fontWeight: 700, letterSpacing: "-0.01em", color: MINT, margin: "0 0 6px" }}>
-        Rarer than {rarity.rarer} of the world
-      </p>
-      <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, margin: 0 }}>
-        {formatPop(passport.population)} holders · {rarity.pct} of world population
+      <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: 0, lineHeight: 1.5 }}>
+        <span style={{ color: FG }}>{rarity.holders}</span> holders ·{" "}
+        <span style={{ color }}>rarer than {rarity.rarer}</span>
       </p>
     </div>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-export default function PassportPowerClient() {
-  const [search,       setSearch]       = useState("");
-  const [selected,     setSelected]     = useState<Passport | null>(null);
-  const [showDrop,     setShowDrop]     = useState(false);
-  const [revealed,     setRevealed]     = useState(false);
-  const [copied,       setCopied]       = useState(false);
-  const inputRef                        = useRef<HTMLInputElement>(null);
-  const dropRef                         = useRef<HTMLDivElement>(null);
-  const resultRef                       = useRef<HTMLDivElement>(null);
+// ─── Passport modal ────────────────────────────────────────────────────────────
+function PassportModal({ passport, onClose }: { passport: Passport; onClose: () => void }) {
+  const rarity = getRarity(passport.population);
+  const color  = getTierColor(passport.score);
 
-  const visaCount = useCountUp(selected?.visaFree ?? 0, revealed);
-
-  const filtered = PASSPORTS.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const pick = useCallback((p: Passport) => {
-    setSelected(p);
-    setSearch(p.name);
-    setShowDrop(false);
-    setRevealed(false);
-    // small delay so count-up fires after mount
-    setTimeout(() => setRevealed(true), 80);
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
-  }, []);
-
-  // close dropdown on outside click
+  // Close on Escape
   useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (
-        dropRef.current && !dropRef.current.contains(e.target as Node) &&
-        inputRef.current && !inputRef.current.contains(e.target as Node)
-      ) setShowDrop(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  // Lock scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const handleShare = useCallback(async () => {
-    if (!selected) return;
-    const url = `${window.location.origin}/passport-power?passport=${selected.slug}`;
-    const text = `${selected.flag} ${selected.name} passport: ${selected.visaFree} countries visa-free. Rarer than ${getRarity(selected.population).rarer} of the world.`;
+  const barW = `${(passport.score / MAX_SCORE) * 100}%`;
 
-    if (navigator.share) {
-      try { await navigator.share({ title: "Passport Power — Origio", text, url }); return; }
-      catch {}
-    }
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "rgba(0,0,0,0.75)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+        backdropFilter: "blur(4px)",
+        animation: "modalFadeIn 0.2s ease forwards",
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "#0f0f0f",
+          border: `1px solid ${color}`,
+          boxShadow: `4px 4px 0 ${color}`,
+          width: "100%",
+          maxWidth: 560,
+          maxHeight: "90vh",
+          overflowY: "auto",
+          padding: "32px",
+          animation: "modalSlideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards",
+          position: "relative",
+        }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: 16, right: 16,
+            background: "transparent", border: `1px solid ${BORD}`,
+            color: DIM, fontFamily: SANS, fontSize: 12,
+            padding: "4px 10px", cursor: "pointer",
+            letterSpacing: "0.1em",
+          }}
+        >
+          ESC
+        </button>
 
-    try {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {}
-  }, [selected]);
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+          <span style={{ fontSize: 44 }}>{passport.flag}</span>
+          <div>
+            <p style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1 }}>
+              {passport.name.toUpperCase()}
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "6px 0 0", letterSpacing: "0.08em" }}>
+              HENLEY PASSPORT INDEX 2024 · RANK #{passport.rank} OF 199
+            </p>
+          </div>
+        </div>
 
-  const tier   = selected ? getPowerTier(selected.visaFree) : null;
-  const rarity = selected ? getRarity(selected.population)  : null;
+        {/* Tier badge + score bar */}
+        <div style={{ marginBottom: 28, padding: "16px 18px", border: `1px solid ${color}`, background: `${color}0d` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: HEAD, fontSize: 13, letterSpacing: "0.12em", color }}>
+              {getTierLabel(passport.score)}
+            </span>
+            <span style={{ fontFamily: HEAD, fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: FG }}>
+              {passport.score}
+              <span style={{ fontSize: 13, color: DIM, fontWeight: 400 }}> / {MAX_SCORE}</span>
+            </span>
+          </div>
+          <div style={{ height: 3, background: BORD }}>
+            <div style={{ height: "100%", background: color, width: barW, transition: "width 0.8s ease" }} />
+          </div>
+        </div>
+
+        {/* Visa breakdown */}
+        <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 12px" }}>
+          Access breakdown
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2, marginBottom: 28 }}>
+          {[
+            { label: "Visa-free",        value: passport.vf,    desc: "No application", color: MINT      },
+            { label: "Visa on arrival",  value: passport.voa,   desc: "At the border",  color: "#a3e635" },
+            { label: "eVisa / eTA",      value: passport.evisa, desc: "Online only",    color: "#facc15" },
+          ].map(item => (
+            <div key={item.label} style={{ background: SURF, padding: "14px 14px 12px", border: `1px solid ${BORD}` }}>
+              <p style={{ fontFamily: HEAD, fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: item.color, margin: 0, lineHeight: 1 }}>
+                {item.value}
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, color: FG, margin: "6px 0 2px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                {item.label}
+              </p>
+              <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: 0 }}>{item.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Rarity */}
+        <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 12px" }}>
+          Passport rarity
+        </p>
+        <div style={{ background: SURF, border: `1px solid ${BORD}`, padding: "18px 18px 16px", marginBottom: 24 }}>
+          <p style={{ fontFamily: HEAD, fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", color: MINT, margin: "0 0 10px", lineHeight: 1.2 }}>
+            Rarer than {rarity.rarer} of the world.
+          </p>
+          <div style={{ display: "flex", gap: 28 }}>
+            <div>
+              <p style={{ fontFamily: HEAD, fontSize: 22, fontWeight: 700, color: FG, margin: 0, lineHeight: 1 }}>{rarity.holders}</p>
+              <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "4px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>holders</p>
+            </div>
+            <div>
+              <p style={{ fontFamily: HEAD, fontSize: 22, fontWeight: 700, color: FG, margin: 0, lineHeight: 1 }}>{rarity.pct}</p>
+              <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "4px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>of world pop</p>
+            </div>
+            <div>
+              <p style={{ fontFamily: HEAD, fontSize: 22, fontWeight: 700, color: FG, margin: 0, lineHeight: 1 }}>#{passport.rank}</p>
+              <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "4px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>global rank</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <Link href="/wizard" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 20px",
+          background: MINT, color: "#0a0a0a",
+          fontFamily: HEAD, fontSize: 12, fontWeight: 700,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          textDecoration: "none",
+          boxShadow: `3px 3px 0 ${FG}`,
+        }}>
+          <span>See which countries suit this passport</span>
+          <span>→</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─── Ranked list row ──────────────────────────────────────────────────────────
+function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Passport) => void }) {
+  const color  = getTierColor(passport.score);
+  const [hov, setHov] = useState(false);
+
+  return (
+    <button
+      onClick={() => onSelect(passport)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: "100%",
+        display: "grid",
+        gridTemplateColumns: "40px 28px 1fr 56px 120px",
+        alignItems: "center",
+        gap: 12,
+        padding: "13px 16px",
+        background: hov ? SURF : "transparent",
+        border: "none",
+        borderBottom: `1px solid ${BORD}`,
+        color: FG,
+        cursor: "pointer",
+        textAlign: "left",
+        transition: "background 0.12s",
+      }}
+    >
+      {/* Rank */}
+      <span style={{ fontFamily: HEAD, fontSize: 12, fontWeight: 700, color: DIM, letterSpacing: "0.06em" }}>
+        #{passport.rank}
+      </span>
+      {/* Flag */}
+      <span style={{ fontSize: 20 }}>{passport.flag}</span>
+      {/* Name */}
+      <span style={{ fontFamily: SANS, fontSize: 14, color: FG }}>{passport.name}</span>
+      {/* Score */}
+      <span style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color, textAlign: "right" }}>
+        {passport.score}
+      </span>
+      {/* Bar */}
+      <div style={{ height: 2, background: BORD, overflow: "hidden" }}>
+        <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
+      </div>
+    </button>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+export default function PassportPowerClient() {
+  const [heroActive, setHeroActive]   = useState(false);
+  const [selected,   setSelected]     = useState<Passport | null>(null);
+
+  // Top 3 showcase: one each from rank 1, rank 1 (second), rank 2
+  const top1 = ALL_PASSPORTS[0]; // Japan
+  const top2 = ALL_PASSPORTS[1]; // Singapore
+  const top3 = ALL_PASSPORTS[2]; // France
+
+  const rest = ALL_PASSPORTS.slice(3);
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroActive(true), 200);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleSelect = useCallback((p: Passport) => setSelected(p), []);
+  const handleClose  = useCallback(() => setSelected(null), []);
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      {/* ─── Hero ──────────────────────────────────────────────────────────── */}
+      <style>{`
+        @keyframes modalFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+      `}</style>
+
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
 
-        <div style={{ marginBottom: 56 }}>
+        {/* ── Header ─────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 48 }}>
           <p style={{
             fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
-            textTransform: "uppercase", color: DIM, marginBottom: 20,
+            textTransform: "uppercase", color: DIM, marginBottom: 16,
             display: "flex", alignItems: "center", gap: 8,
           }}>
             <span style={{ color: MINT, fontSize: 8 }}>●</span>
-            Passport Power · Free tool
+            Passport Power · Henley Index 2024
           </p>
-
           <h1 style={{
             fontFamily: HEAD,
-            fontSize: "clamp(38px, 7vw, 80px)",
+            fontSize: "clamp(36px, 6vw, 72px)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
             lineHeight: 0.95,
             color: FG,
-            margin: "0 0 24px",
-            textWrap: "balance" as React.CSSProperties["textWrap"],
+            margin: "0 0 18px",
           } as React.CSSProperties}>
-            How powerful
+            The world&apos;s
             <br />
-            is your passport.
-            <br />
-            <span style={{ color: MINT }}>How rare.</span>
+            <span style={{ color: MINT }}>strongest passports.</span>
           </h1>
-
-          <p style={{ fontFamily: SANS, fontSize: 15, color: DIM, lineHeight: 1.7, maxWidth: 500, margin: 0 }}>
-            Select your passport. See your visa-free score, global rank, and exactly how few people on earth carry the same document.
+          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
+            Ranked by visa-free access across 199 countries. Click any passport to see the full breakdown.
           </p>
         </div>
 
-        {/* ─── Selector ──────────────────────────────────────────────────── */}
-        <div style={{ maxWidth: 480, marginBottom: 64, position: "relative" }}>
-          <label style={{
-            fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em",
-            textTransform: "uppercase", color: DIM, display: "block", marginBottom: 10,
-          }}>
-            Your passport
-          </label>
-
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Type your country…"
-            value={showDrop ? search : (selected ? selected.name : search)}
-            onFocus={() => { setShowDrop(true); setSearch(""); }}
-            onBlur={() => setTimeout(() => setShowDrop(false), 150)}
-            onChange={e => { setSearch(e.target.value); setShowDrop(true); }}
-            style={{
-              width: "100%",
-              fontFamily: SANS,
-              fontSize: 16,
-              color: FG,
-              background: SURF,
-              border: `1px solid ${selected ? MINT : BORD}`,
-              padding: "14px 18px",
-              outline: "none",
-              boxShadow: selected ? `3px 3px 0 ${MINT}` : "none",
-              transition: "border-color 0.2s, box-shadow 0.2s",
-              borderRadius: 0,
-            }}
-          />
-
-          {/* Dropdown */}
-          {showDrop && filtered.length > 0 && (
-            <div
-              ref={dropRef}
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                background: "#111",
-                border: `1px solid ${BORD}`,
-                borderTop: "none",
-                maxHeight: 300,
-                overflowY: "auto",
-                zIndex: 50,
-              }}
-            >
-              {filtered.map(p => (
-                <button
-                  key={p.slug}
-                  onMouseDown={() => pick(p)}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "11px 18px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: `1px solid ${BORD}`,
-                    color: FG,
-                    fontFamily: SANS,
-                    fontSize: 14,
-                    textAlign: "left",
-                    cursor: "pointer",
-                    transition: "background 0.1s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#1a1a1a")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                >
-                  <span style={{ fontSize: 20 }}>{p.flag}</span>
-                  <span>{p.name}</span>
-                  <span style={{ marginLeft: "auto", fontFamily: HEAD, fontSize: 11, color: getPowerTier(p.visaFree).color, letterSpacing: "0.1em" }}>
-                    {getPowerTier(p.visaFree).label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ─── Results ───────────────────────────────────────────────────── */}
-        {selected && tier && rarity && (
-          <div
-            ref={resultRef}
-            style={{
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? "translateY(0)" : "translateY(20px)",
-              transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
-            }}
-          >
-            {/* Country header */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              marginBottom: 40,
-              paddingBottom: 32,
-              borderBottom: `1px solid ${BORD}`,
-            }}>
-              <span style={{ fontSize: 48, lineHeight: 1 }}>{selected.flag}</span>
-              <div>
-                <h2 style={{
-                  fontFamily: HEAD,
-                  fontSize: "clamp(28px, 4vw, 48px)",
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                  color: FG,
-                  margin: 0,
-                  lineHeight: 1,
-                }}>
-                  {selected.name.toUpperCase()}
-                </h2>
-                <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "8px 0 0", letterSpacing: "0.08em" }}>
-                  RANKED #{selected.rank} OF {MAX_RANK} PASSPORTS WORLDWIDE
-                </p>
-              </div>
-            </div>
-
-            {/* Stats grid */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: 2,
-              marginBottom: 48,
-            }}>
-              {/* Visa-free count — the big number */}
-              <div style={{
-                background: SURF,
-                border: `1px solid ${BORD}`,
-                padding: "28px 28px 24px",
-                gridColumn: "span 1",
-              }}>
-                <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 12px" }}>
-                  Visa-free access
-                </p>
-                <p style={{
-                  fontFamily: HEAD,
-                  fontSize: "clamp(52px, 8vw, 80px)",
-                  fontWeight: 800,
-                  letterSpacing: "-0.04em",
-                  color: FG,
-                  margin: 0,
-                  lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {visaCount}
-                </p>
-                <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "8px 0 0", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  countries
-                </p>
-              </div>
-
-              {/* Power tier */}
-              <div style={{
-                background: `${tier.color}0d`,
-                border: `1px solid ${tier.color}`,
-                boxShadow: `3px 3px 0 ${tier.color}`,
-                padding: "28px 28px 24px",
-              }}>
-                <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 12px" }}>
-                  Power tier
-                </p>
-                <p style={{
-                  fontFamily: HEAD,
-                  fontSize: "clamp(36px, 5vw, 56px)",
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                  color: tier.color,
-                  margin: 0,
-                  lineHeight: 1,
-                }}>
-                  {tier.label}
-                </p>
-                <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "8px 0 0" }}>
-                  {tier.desc}
-                </p>
-              </div>
-
-              {/* Rarity — the hook */}
-              <div style={{
-                background: SURF,
-                border: `1px solid ${BORD}`,
-                padding: "28px 28px 24px",
-                gridColumn: "1 / -1",
-              }}>
-                <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 16px" }}>
-                  Passport rarity
-                </p>
-                <p style={{
-                  fontFamily: HEAD,
-                  fontSize: "clamp(22px, 3.5vw, 36px)",
-                  fontWeight: 800,
-                  letterSpacing: "-0.02em",
-                  color: MINT,
-                  margin: "0 0 12px",
-                  lineHeight: 1.1,
-                  textWrap: "balance" as React.CSSProperties["textWrap"],
-                } as React.CSSProperties}>
-                  Rarer than {rarity.rarer} of the world.
-                </p>
-                <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-                  <div>
-                    <p style={{ fontFamily: HEAD, fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1 }}>
-                      {formatPop(selected.population)}
-                    </p>
-                    <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "5px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      passport holders
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontFamily: HEAD, fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1 }}>
-                      {rarity.pct}
-                    </p>
-                    <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "5px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      of world population
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tier bar */}
-            <TierBar visaFree={selected.visaFree} />
-
-            {/* Divider */}
-            <div style={{ height: 1, background: BORD, margin: "48px 0" }} />
-
-            {/* Share card */}
-            <div style={{ marginBottom: 40 }}>
-              <p style={{
-                fontFamily: SANS, fontSize: 11, letterSpacing: "0.18em",
-                textTransform: "uppercase", color: DIM, marginBottom: 20,
-              }}>
-                Share your result
-              </p>
-              <ShareCard passport={selected} />
-              <button
-                onClick={handleShare}
-                style={{
-                  marginTop: 16,
-                  padding: "13px 28px",
-                  background: "transparent",
-                  border: `1px solid ${MINT}`,
-                  boxShadow: `3px 3px 0 ${MINT}`,
-                  color: MINT,
-                  fontFamily: HEAD,
-                  fontSize: 12,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = `${MINT}18`)}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-              >
-                {copied ? "Copied to clipboard" : "Share result"}
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div style={{ height: 1, background: BORD, margin: "0 0 56px" }} />
-          </div>
-        )}
-
-        {/* ─── CTA ───────────────────────────────────────────────────────── */}
+        {/* ── Top 3 showcase ─────────────────────────────────────────────── */}
         <div style={{
-          padding: "48px 0 80px",
-          borderTop: selected ? "none" : `1px solid ${BORD}`,
+          display: "flex",
+          gap: 2,
+          marginBottom: 2,
         }}>
-          <p style={{
-            fontFamily: HEAD, fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 700,
-            letterSpacing: "-0.02em", color: FG, margin: "0 0 12px", lineHeight: 1.15,
+          <HeroCard passport={top1} position={1} active={heroActive} />
+          <HeroCard passport={top2} position={2} active={heroActive} />
+          <HeroCard passport={top3} position={3} active={heroActive} />
+        </div>
+
+        {/* Tap hint */}
+        <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "12px 0 40px", letterSpacing: "0.06em" }}>
+          ↑ Top 3 showcased · click any row below to explore all {ALL_PASSPORTS.length} passports
+        </p>
+
+        {/* ── Ranked list ────────────────────────────────────────────────── */}
+        <div>
+          {/* Column headers */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "40px 28px 1fr 56px 120px",
+            gap: 12,
+            padding: "8px 16px",
+            borderBottom: `1px solid ${BORD}`,
           }}>
-            {selected
-              ? `See which countries actually suit a ${selected.name} passport.`
-              : "See which countries fit your passport, budget and priorities."}
+            {["RANK", "", "COUNTRY", "SCORE", "ACCESS"].map((h, i) => (
+              <span key={i} style={{
+                fontFamily: SANS, fontSize: 9, letterSpacing: "0.16em",
+                textTransform: "uppercase", color: DIM,
+                textAlign: i === 3 ? "right" : "left",
+              }}>{h}</span>
+            ))}
+          </div>
+
+          {/* All passports clickable */}
+          {ALL_PASSPORTS.map(p => (
+            <RankRow key={p.slug} passport={p} onSelect={handleSelect} />
+          ))}
+        </div>
+
+        {/* ── CTA ────────────────────────────────────────────────────────── */}
+        <div style={{ padding: "56px 0 80px", borderTop: `1px solid ${BORD}`, marginTop: 40 }}>
+          <p style={{
+            fontFamily: HEAD, fontSize: "clamp(18px, 2.5vw, 28px)", fontWeight: 700,
+            letterSpacing: "-0.02em", color: FG, margin: "0 0 10px", lineHeight: 1.2,
+          }}>
+            Know which countries actually fit your passport, salary and priorities.
           </p>
-          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, margin: "0 0 28px", maxWidth: 460, lineHeight: 1.7 }}>
-            Origio scores 25 countries against your job, salary expectations and deal breakers. Free to start.
+          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, margin: "0 0 24px", lineHeight: 1.7 }}>
+            Origio scores 25 destinations against your job, budget and deal breakers.
           </p>
           <Link href="/wizard" style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "14px 28px",
-            background: MINT,
-            color: "#0a0a0a",
-            fontFamily: HEAD,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            textDecoration: "none",
-            boxShadow: `4px 4px 0 ${FG}`,
-            transition: "box-shadow 0.15s, transform 0.15s",
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLAnchorElement).style.boxShadow = `2px 2px 0 ${FG}`;
-            (e.currentTarget as HTMLAnchorElement).style.transform = "translate(2px,2px)";
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLAnchorElement).style.boxShadow = `4px 4px 0 ${FG}`;
-            (e.currentTarget as HTMLAnchorElement).style.transform = "translate(0,0)";
-          }}
-          >
-            Start free
-            <span style={{ fontSize: 16 }}>→</span>
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "14px 28px", background: MINT, color: "#0a0a0a",
+            fontFamily: HEAD, fontSize: 12, fontWeight: 700,
+            letterSpacing: "0.12em", textTransform: "uppercase",
+            textDecoration: "none", boxShadow: `4px 4px 0 ${FG}`,
+          }}>
+            Start free →
           </Link>
-
-          <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "16px 0 0" }}>
-            No account needed to see your top 3 matches.
+          <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "14px 0 0" }}>
+            No account needed · top 3 matches free
           </p>
         </div>
+
       </div>
 
-      {/* ─── Reduced motion ────────────────────────────────────────────────── */}
-      <style>{`
-        @media (prefers-reduced-motion: reduce) {
-          * { transition: none !important; animation: none !important; }
-        }
-      `}</style>
+      {/* ── Modal ──────────────────────────────────────────────────────────── */}
+      {selected && (
+        <PassportModal passport={selected} onClose={handleClose} />
+      )}
 
       <Footer />
     </div>
