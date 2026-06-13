@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -8,6 +8,7 @@ import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
 import { getPassportStrength, PASSPORT_TIER_LABEL } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
+import { X } from "lucide-react";
 
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
@@ -60,6 +61,62 @@ const PASSPORTS = [
   { label: "Vietnam",        slug: "vietnam" },
 ];
 
+// Passport stats: visaFreeCount (Henley Passport Index 2024), populationM (millions of citizens)
+// UAE citizens ~1M (most UAE residents are expats), others = total population
+const PASSPORT_STATS: Record<string, { visaFreeCount: number; populationM: number; rarityLabel: string }> = {
+  "australia":      { visaFreeCount: 187, populationM: 26,    rarityLabel: "Uncommon" },
+  "austria":        { visaFreeCount: 191, populationM: 9,     rarityLabel: "Rare" },
+  "belgium":        { visaFreeCount: 191, populationM: 11,    rarityLabel: "Rare" },
+  "brazil":         { visaFreeCount: 171, populationM: 215,   rarityLabel: "Common" },
+  "canada":         { visaFreeCount: 185, populationM: 38,    rarityLabel: "Uncommon" },
+  "chile":          { visaFreeCount: 175, populationM: 19,    rarityLabel: "Uncommon" },
+  "china":          { visaFreeCount: 85,  populationM: 1400,  rarityLabel: "Very common" },
+  "denmark":        { visaFreeCount: 191, populationM: 6,     rarityLabel: "Rare" },
+  "finland":        { visaFreeCount: 191, populationM: 5.5,   rarityLabel: "Very rare" },
+  "france":         { visaFreeCount: 191, populationM: 68,    rarityLabel: "Common" },
+  "germany":        { visaFreeCount: 191, populationM: 84,    rarityLabel: "Common" },
+  "ghana":          { visaFreeCount: 65,  populationM: 33,    rarityLabel: "Common" },
+  "india":          { visaFreeCount: 62,  populationM: 1400,  rarityLabel: "Very common" },
+  "indonesia":      { visaFreeCount: 100, populationM: 277,   rarityLabel: "Very common" },
+  "ireland":        { visaFreeCount: 188, populationM: 5,     rarityLabel: "Very rare" },
+  "italy":          { visaFreeCount: 191, populationM: 59,    rarityLabel: "Common" },
+  "japan":          { visaFreeCount: 193, populationM: 124,   rarityLabel: "Common" },
+  "malaysia":       { visaFreeCount: 179, populationM: 33,    rarityLabel: "Uncommon" },
+  "mexico":         { visaFreeCount: 161, populationM: 128,   rarityLabel: "Common" },
+  "netherlands":    { visaFreeCount: 191, populationM: 17,    rarityLabel: "Uncommon" },
+  "new-zealand":    { visaFreeCount: 189, populationM: 5,     rarityLabel: "Very rare" },
+  "nigeria":        { visaFreeCount: 47,  populationM: 220,   rarityLabel: "Very common" },
+  "norway":         { visaFreeCount: 190, populationM: 5.4,   rarityLabel: "Very rare" },
+  "pakistan":       { visaFreeCount: 33,  populationM: 230,   rarityLabel: "Very common" },
+  "philippines":    { visaFreeCount: 72,  populationM: 115,   rarityLabel: "Common" },
+  "poland":         { visaFreeCount: 188, populationM: 38,    rarityLabel: "Uncommon" },
+  "portugal":       { visaFreeCount: 191, populationM: 10,    rarityLabel: "Rare" },
+  "romania":        { visaFreeCount: 177, populationM: 19,    rarityLabel: "Uncommon" },
+  "singapore":      { visaFreeCount: 192, populationM: 4,     rarityLabel: "Very rare" },
+  "south-africa":   { visaFreeCount: 108, populationM: 60,    rarityLabel: "Common" },
+  "south-korea":    { visaFreeCount: 192, populationM: 52,    rarityLabel: "Common" },
+  "spain":          { visaFreeCount: 190, populationM: 47,    rarityLabel: "Common" },
+  "sweden":         { visaFreeCount: 191, populationM: 10,    rarityLabel: "Rare" },
+  "switzerland":    { visaFreeCount: 189, populationM: 8.7,   rarityLabel: "Rare" },
+  "thailand":       { visaFreeCount: 82,  populationM: 72,    rarityLabel: "Common" },
+  "turkey":         { visaFreeCount: 111, populationM: 85,    rarityLabel: "Common" },
+  "uae":            { visaFreeCount: 180, populationM: 1,     rarityLabel: "Very rare" },
+  "united-kingdom": { visaFreeCount: 190, populationM: 67,    rarityLabel: "Common" },
+  "usa":            { visaFreeCount: 185, populationM: 335,   rarityLabel: "Common" },
+  "ukraine":        { visaFreeCount: 148, populationM: 44,    rarityLabel: "Uncommon" },
+  "vietnam":        { visaFreeCount: 56,  populationM: 98,    rarityLabel: "Common" },
+  "argentina":      { visaFreeCount: 171, populationM: 46,    rarityLabel: "Common" },
+  "serbia":         { visaFreeCount: 138, populationM: 7,     rarityLabel: "Rare" },
+};
+
+const RARITY_COLORS: Record<string, string> = {
+  "Very rare":    "#00ffd5",
+  "Rare":         "#a3e635",
+  "Uncommon":     "#facc15",
+  "Common":       "#888880",
+  "Very common":  "#555550",
+};
+
 const VISA_DIFFICULTY_LABEL: Record<number, { label: string; color: string; short: string }> = {
   1: { label: "Visa-free or visa on arrival",  color: "#4ade80", short: "Visa-free" },
   2: { label: "Simple application, fast approval", color: "#a3e635", short: "Easy" },
@@ -71,11 +128,152 @@ const TIER_COLORS: Record<1 | 2 | 3 | 4, string> = {
   1: "#4ade80", 2: "#a3e635", 3: "#facc15", 4: "#ef4444",
 };
 
-// Adjusts difficulty based on passport strength (mirrors wizard.ts logic)
 function effectiveDifficulty(passportSlug: string, visaDifficulty: number): number {
   const strength = getPassportStrength(passportSlug);
   const reductions: Record<1 | 2 | 3 | 4, number> = { 1: 2.0, 2: 1.0, 3: 0, 4: -1.0 };
   return Math.max(1, Math.min(4, Math.round(visaDifficulty - reductions[strength])));
+}
+
+function formatPopulation(m: number): string {
+  if (m >= 1000) return `${(m / 1000).toFixed(1)}B`;
+  if (m >= 1)    return `${m % 1 === 0 ? m : m.toFixed(1)}M`;
+  return `${(m * 1000).toFixed(0)}K`;
+}
+
+// ── Passport Dialog ─────────────────────────────────────────────────────────
+function PassportDialog({
+  country,
+  userPassportSlug,
+  onClose,
+}: {
+  country: CountryWithData;
+  userPassportSlug: string;
+  onClose: () => void;
+}) {
+  const stats = PASSPORT_STATS[country.slug];
+  const destTier = getPassportStrength(country.slug) as 1 | 2 | 3 | 4;
+  const effDiff = effectiveDifficulty(userPassportSlug, country.data.visaDifficulty);
+  const visaMeta = VISA_DIFFICULTY_LABEL[effDiff as 1 | 2 | 3 | 4];
+  const rarityColor = stats ? RARITY_COLORS[stats.rarityLabel] ?? DIM : DIM;
+  const destTierColor = TIER_COLORS[destTier];
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const row = (label: string, value: React.ReactNode, sub?: string) => (
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "14px 24px", borderBottom: `1px solid ${LINE}` }}>
+      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, paddingTop: 2 }}>{label}</span>
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontFamily: SERIF, fontSize: 15, color: FG }}>{value}</div>
+        {sub && <div style={{ fontFamily: MONO, fontSize: 9, color: "#444", marginTop: 3, letterSpacing: "0.1em" }}>{sub}</div>}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+          zIndex: 100, backdropFilter: "blur(2px)",
+        }}
+      />
+      {/* Dialog */}
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 101, width: "min(480px, calc(100vw - 32px))",
+        background: "#0f0f0f", border: `1px solid #2a2a2a`,
+        boxShadow: "4px 4px 0 #000",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "18px 24px", borderBottom: `1px solid ${LINE}` }}>
+          {slugToIso(country.slug)
+            ? <FlagIcon code={slugToIso(country.slug)!} size="sm" />
+            : <span style={{ fontSize: 22 }}>{country.flagEmoji}</span>
+          }
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: SERIF, fontSize: 18, color: FG, marginBottom: 2 }}>{country.name}</div>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: DIM }}>
+              Passport &amp; visa overview
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: "none", border: "none", cursor: "pointer", color: DIM, padding: 4, display: "flex", alignItems: "center" }}
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Your access row */}
+        <div style={{ padding: "12px 24px", background: `${visaMeta.color}08`, borderBottom: `1px solid ${LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM }}>Your access with selected passport</span>
+          <span style={{
+            fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
+            padding: "3px 10px", border: `1px solid ${visaMeta.color}44`, color: visaMeta.color,
+          }}>{visaMeta.short}</span>
+        </div>
+
+        {/* Stats rows */}
+        {stats ? (
+          <>
+            {row(
+              "Visa-free access",
+              <span style={{ color: destTierColor }}>{stats.visaFreeCount} countries</span>,
+              `With ${country.name} passport · Henley Index 2024`
+            )}
+            {row(
+              "Passport holders",
+              formatPopulation(stats.populationM),
+              `Approx. citizens of ${country.name}`
+            )}
+            {row(
+              "Rarity",
+              <span style={{ color: rarityColor }}>{stats.rarityLabel}</span>,
+              `${stats.populationM < 10 ? "Under 10M" : stats.populationM < 50 ? "10–50M" : stats.populationM < 200 ? "50–200M" : "200M+"} holders globally`
+            )}
+            {row(
+              "Passport tier",
+              <span style={{ color: destTierColor }}>Tier {destTier}</span>,
+              PASSPORT_TIER_LABEL[destTier].split("—")[1]?.trim()
+            )}
+          </>
+        ) : (
+          row("Passport data", <span style={{ color: DIM }}>Not available</span>)
+        )}
+
+        {/* Visa difficulty */}
+        {row(
+          "Visa difficulty (base)",
+          <span style={{ color: VISA_DIFFICULTY_LABEL[country.data.visaDifficulty as 1 | 2 | 3 | 4]?.color ?? DIM }}>
+            {VISA_DIFFICULTY_LABEL[country.data.visaDifficulty as 1 | 2 | 3 | 4]?.short ?? country.data.visaDifficulty}
+          </span>,
+          country.data.visaPopularRoutes?.[0] ?? undefined
+        )}
+
+        {/* Footer */}
+        <div style={{ padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: "#333", letterSpacing: "0.1em" }}>
+            Source: Henley &amp; Partners, 2024
+          </span>
+          <Link
+            href={`/country/${country.slug}`}
+            style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: MINT, textDecoration: "none" }}
+          >
+            Full profile →
+          </Link>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default function VisaMatcherPage() {
@@ -84,6 +282,7 @@ export default function VisaMatcherPage() {
   const [countries, setCountries]         = useState<CountryWithData[]>([]);
   const [loadingData, setLoadingData]     = useState(true);
   const [showDropdown, setShowDropdown]   = useState(false);
+  const [dialogCountry, setDialogCountry] = useState<CountryWithData | null>(null);
 
   useEffect(() => {
     fetch("/api/countries")
@@ -94,6 +293,8 @@ export default function VisaMatcherPage() {
       })
       .catch(() => setLoadingData(false));
   }, []);
+
+  const closeDialog = useCallback(() => setDialogCountry(null), []);
 
   const filteredPassports = PASSPORTS.filter(p =>
     p.label.toLowerCase().includes(search.toLowerCase())
@@ -128,7 +329,7 @@ export default function VisaMatcherPage() {
             Where can you<br /><em style={{ fontStyle: "normal", color: MINT }}>actually move?</em>
           </h1>
           <p style={{ fontFamily: SANS, fontSize: 15, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
-            Select your passport. See which of 45 countries are visa-free, easy, moderate, or restricted — adjusted for your specific passport strength.
+            Select your passport. See which of 45 countries are visa-free, easy, moderate, or restricted — adjusted for your specific passport strength. Click any country for passport details.
           </p>
         </div>
 
@@ -220,13 +421,14 @@ export default function VisaMatcherPage() {
                   </div>
                   <div style={{ borderTop: `1px solid ${LINE}` }}>
                     {group.map(c => (
-                      <Link
+                      <button
                         key={c.slug}
-                        href={`/country/${c.slug}`}
+                        onClick={() => setDialogCountry(c)}
                         style={{
-                          display: "flex", alignItems: "center", gap: 14,
+                          display: "flex", alignItems: "center", gap: 14, width: "100%",
                           padding: "12px 4px", borderBottom: `1px solid #0f0f0f`,
-                          textDecoration: "none", transition: "background 0.1s",
+                          background: "none", border: "none",
+                          textAlign: "left", cursor: "pointer", transition: "background 0.1s",
                         }}
                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -250,7 +452,7 @@ export default function VisaMatcherPage() {
                         }}>
                           {meta.short}
                         </span>
-                      </Link>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -292,6 +494,15 @@ export default function VisaMatcherPage() {
       </div>
 
       <Footer />
+
+      {/* Passport dialog */}
+      {dialogCountry && passportSlug && (
+        <PassportDialog
+          country={dialogCountry}
+          userPassportSlug={passportSlug}
+          onClose={closeDialog}
+        />
+      )}
     </div>
   );
 }
