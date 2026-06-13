@@ -193,7 +193,7 @@ function CitiesSection() {
         opacity:     inView ? 1 : 0,
         transition:  "opacity 0.5s ease 200ms",
       }}>
-        20+ cities across your matched countries. Rent, internet, liveability ~ side by side.
+        55 cities across your matched countries. Rent, internet, liveability ~ side by side.
       </p>
     </section>
   );

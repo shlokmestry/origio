@@ -1142,7 +1142,7 @@ function CitiesCTA() {
           fontFamily: "Satoshi, sans-serif", fontSize: 12,
           color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 4,
         }}>
-          Compare rent, food &amp; lifestyle costs across 12 cities →
+          Compare rent, food &amp; lifestyle costs across 55 cities →
         </div>
       </div>
     </Link>
