@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getResend } from '@/lib/resend'
+import { rateLimit } from '@/lib/rate-limit'
+import { isValidEmail } from '@/lib/utils'
 
-const RATE_LIMIT = new Map<string, number>()
+function escapeHtml(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
 
 function supabase() {
   return createClient(
@@ -18,9 +22,9 @@ function buildHtml(
 ): string {
   const countryCards = countries.map(c => `
     <td width="${countries.length === 2 ? '48%' : '31%'}" valign="top" style="padding:0;">
-      <div style="background:#161616;border:1px solid #222222;border-top:2px solid ${c.color};padding:16px 18px;">
-        <div style="font-size:20px;margin-bottom:6px;">${c.flag}</div>
-        <div style="font-size:14px;font-weight:700;color:#f0f0e8;font-family:Arial,sans-serif;">${c.name}</div>
+      <div style="background:#161616;border:1px solid #222222;border-top:2px solid ${escapeHtml(c.color)};padding:16px 18px;">
+        <div style="font-size:20px;margin-bottom:6px;">${escapeHtml(c.flag)}</div>
+        <div style="font-size:14px;font-weight:700;color:#f0f0e8;font-family:Arial,sans-serif;">${escapeHtml(c.name)}</div>
       </div>
     </td>`).join('<td width="2%" style="padding:0;"></td>')
 
@@ -48,7 +52,7 @@ function buildHtml(
         <div style="font-size:24px;font-weight:900;color:#f0f0e8;line-height:1.1;font-family:Arial,sans-serif;">Your country comparison.</div>
       </td></tr>
       <tr><td style="padding-bottom:24px;">
-        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${role} &nbsp;·&nbsp; ${countries.map(c => c.name).join(' vs ')}</div>
+        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${escapeHtml(role)} &nbsp;·&nbsp; ${countries.map(c => escapeHtml(c.name)).join(' vs ')}</div>
       </td></tr>
 
       <!-- Divider -->
@@ -73,7 +77,7 @@ function buildHtml(
 
       <!-- CTA -->
       <tr><td style="padding-bottom:28px;">
-        <a href="${shareUrl}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
+        <a href="${escapeHtml(shareUrl)}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
       </td></tr>
 
       <!-- Footer -->
@@ -89,13 +93,24 @@ function buildHtml(
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const now = Date.now()
-  const last = RATE_LIMIT.get(ip) ?? 0
-  if (now - last < 60_000) {
-    return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
+  const limited = await rateLimit(req, { name: 'capture-country-comparison', maxRequests: 5, windowSeconds: 60 })
+  if (limited) return limited
+
+  // Require auth — prevents sending emails to arbitrary addresses
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  RATE_LIMIT.set(ip, now)
+  const token = authHeader.replace('Bearer ', '')
+
+  const userSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: { user }, error: authError } = await userSupabase.auth.getUser(token)
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   let body: {
     email: string
@@ -110,7 +125,15 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, countries, role, shareUrl } = body
-  if (!email || !email.includes('@') || !Array.isArray(countries) || countries.length < 2) {
+
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+  }
+  // Only allow sending to the authenticated user's own email
+  if (email !== user.email) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  if (!Array.isArray(countries) || countries.length < 2) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
 

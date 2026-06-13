@@ -5,6 +5,10 @@ import { createClient } from '@supabase/supabase-js'
 import { isValidEmail } from '@/lib/utils'
 import * as Sentry from '@sentry/nextjs'
 
+function escapeHtml(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function POST(request: Request) {
   const limited = await rateLimit(request, { name: 'send-results', maxRequests: 3, windowSeconds: 60 })
   if (limited) return limited
@@ -72,9 +76,9 @@ export async function POST(request: Request) {
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #2a2a2a;background:#111111;">
           <tr>
             <td width="32" style="padding:16px 0 16px 20px;font-size:11px;color:#555550;font-weight:700;font-family:sans-serif;vertical-align:middle;">${String(i + 1).padStart(2, '0')}</td>
-            <td width="36" style="padding:16px 8px;font-size:22px;vertical-align:middle;">${c.flagEmoji}</td>
-            <td style="padding:16px 0;font-size:16px;font-weight:700;color:#f0f0e8;font-family:sans-serif;vertical-align:middle;">${c.name}</td>
-            <td width="60" align="right" style="padding:16px 20px 16px 0;font-size:14px;color:#00ffd5;font-weight:700;font-family:sans-serif;vertical-align:middle;">${c.matchPercent}%</td>
+            <td width="36" style="padding:16px 8px;font-size:22px;vertical-align:middle;">${escapeHtml(c.flagEmoji)}</td>
+            <td style="padding:16px 0;font-size:16px;font-weight:700;color:#f0f0e8;font-family:sans-serif;vertical-align:middle;">${escapeHtml(c.name)}</td>
+            <td width="60" align="right" style="padding:16px 20px 16px 0;font-size:14px;color:#00ffd5;font-weight:700;font-family:sans-serif;vertical-align:middle;">${Number(c.matchPercent)}%</td>
           </tr>
         </table>
       </td></tr>`).join('')}

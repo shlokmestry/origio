@@ -4,6 +4,10 @@ import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { isValidEmail } from '@/lib/utils'
 
+function escapeHtml(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 const SYM: Record<string, string> = { eur: '€', usd: '$', gbp: '£', jpy: '¥' }
 const RATES: Record<string, number> = { eur: 1, usd: 1.07, gbp: 0.85, jpy: 165 }
 
@@ -44,8 +48,8 @@ function buildHtml(cities: { name: string; country: string; total: number; sym: 
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td style="background:#161616;border:1px solid #222222;padding:16px 18px;">
       <div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${rankColor};font-family:Arial,sans-serif;margin-bottom:8px;">№${rank + 1}</div>
-      <div style="font-size:15px;font-weight:700;color:#f0f0e8;font-family:Arial,sans-serif;line-height:1.2;">${c.name}</div>
-      <div style="font-size:11px;color:#555550;font-family:Arial,sans-serif;margin-bottom:10px;">${c.country}</div>
+      <div style="font-size:15px;font-weight:700;color:#f0f0e8;font-family:Arial,sans-serif;line-height:1.2;">${escapeHtml(c.name)}</div>
+      <div style="font-size:11px;color:#555550;font-family:Arial,sans-serif;margin-bottom:10px;">${escapeHtml(c.country)}</div>
       <div style="font-size:20px;font-weight:900;color:${costColor};font-family:Arial,sans-serif;line-height:1;">${c.sym}${Math.round(c.total).toLocaleString()}<span style="font-size:11px;font-weight:400;color:#444440;">/mo</span></div>
       <div style="${barFill}"><div style="${barInner}"></div></div>
       <div style="font-size:10px;color:${rankColor};font-family:Arial,sans-serif;margin-top:6px;">${rankLabel}</div>
