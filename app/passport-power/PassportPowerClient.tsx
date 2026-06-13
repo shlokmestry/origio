@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -223,10 +224,12 @@ function HeroCard({ passport, position, onSelect }: {
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function PassportModal({ passport, onClose }: { passport: Passport; onClose: () => void }) {
-  const rarity = getRarity(passport.population);
-  const color  = tierColor(passport.score);
+  const rarity  = getRarity(passport.population);
+  const color   = tierColor(passport.score);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", fn);
     document.body.style.overflow = "hidden";
@@ -236,12 +239,12 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
     };
   }, [onClose]);
 
-  return (
+  const modal = (
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        background: "rgba(0,0,0,0.82)",
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.85)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "24px",
       }}
@@ -359,6 +362,9 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(modal, document.body);
 }
 
 // ─── List row ─────────────────────────────────────────────────────────────────
