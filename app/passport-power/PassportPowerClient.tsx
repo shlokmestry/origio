@@ -145,11 +145,11 @@ function HeroCard({ passport, position, onSelect }: {
 
   // Pulse glow on/off
   useEffect(() => {
+    let id: ReturnType<typeof setInterval>;
     const t = setTimeout(() => {
-      const id = setInterval(() => setGlow(g => !g), 1600);
-      return () => clearInterval(id);
+      id = setInterval(() => setGlow(g => !g), 1600);
     }, 1200 + (position - 1) * 300);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); clearInterval(id); };
   }, [position]);
 
   const shadow = hov
@@ -161,15 +161,14 @@ function HeroCard({ passport, position, onSelect }: {
   const icons: Record<1|2|3, string> = { 1: "⚡", 2: "🔑", 3: "🌍" };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={() => onSelect(passport)}
-      onKeyDown={e => (e.key === "Enter" || e.key === " ") && onSelect(passport)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
         flex: position === 1 ? "1.15" : "1",
+        display: "block",
         background: SURF,
         border: `1px solid ${color}`,
         boxShadow: shadow,
@@ -177,6 +176,9 @@ function HeroCard({ passport, position, onSelect }: {
         padding: "24px 20px 20px",
         cursor: "pointer",
         userSelect: "none",
+        textAlign: "left",
+        font: "inherit",
+        color: "inherit",
       }}
     >
       {/* Badge + icon */}
@@ -218,7 +220,7 @@ function HeroCard({ passport, position, onSelect }: {
         <span style={{ color: FG }}>{rarity.holders}</span> holders ·{" "}
         <span style={{ color }}>rarer than {rarity.rarer}</span>
       </p>
-    </div>
+    </button>
   );
 }
 
@@ -373,11 +375,9 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
   const [hov, setHov] = useState(false);
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={() => onSelect(passport)}
-      onKeyDown={e => (e.key === "Enter" || e.key === " ") && onSelect(passport)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -386,11 +386,16 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
         alignItems: "center",
         gap: 12,
         padding: "12px 16px",
+        width: "100%",
         background: hov ? SURF : "transparent",
+        border: "none",
         borderBottom: `1px solid ${BORD}`,
         cursor: "pointer",
         transition: "background 0.1s",
         userSelect: "none",
+        textAlign: "left",
+        font: "inherit",
+        color: "inherit",
       }}
     >
       <span style={{ fontFamily: HEAD, fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: "0.06em" }}>
@@ -404,7 +409,7 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
       <div style={{ height: 2, background: BORD }}>
         <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
       </div>
-    </div>
+    </button>
   );
 }
 
