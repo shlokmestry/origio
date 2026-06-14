@@ -8,6 +8,7 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { slugToIso } from '@/lib/flagCodes'
+import { CityMonument } from './monuments'
 
 export type CityItem = City
 
@@ -337,110 +338,54 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <span className={styles.cmpBannerR}>Open the ledger →</span>
           </Link>
 
-          {/* CITY GRID */}
+          {/* ── MONUMENT CARD GRID ── */}
           {filtered.length > 0 ? (
-            <div className={styles.cityGrid}>
-              {/* ── FEATURED HERO CARD (first result, only when not searching) ── */}
-              {!search && (() => {
-                const c = filtered[0]
+            <div className={styles.monumentGrid}>
+              {filtered.map((c, i) => {
                 const extra = c.extra!
-                const [solid, outl] = splitName(c.name)
                 return (
-                  <Link href={`/city/${c.slug}`} className={styles.heroCity}>
-                    <div className={styles.hcInner}>
-                      <span className={styles.hcBadge}>№ 01 · Top rated city</span>
-                      <h3 className={styles.hcName}>
-                        <span className={styles.solid}>{solid}</span>
-                        <span className={styles.outl}>{outl}</span>
-                      </h3>
-                      <p className={styles.hcSub}>
-                        {slugToIso(c.countrySlug) ? <FlagIcon code={slugToIso(c.countrySlug)!} size="sm" className={styles.flag} /> : <span className={styles.flag}>{c.flagEmoji}</span>}
-                        {c.countryName}<span className={styles.sep}> · </span>{extra.climate}
-                      </p>
-                      {c.tagline && <p className={styles.hcTagline}>{c.tagline}</p>}
-                      <div className={styles.ccTags} style={{ marginTop: 8 }}>
-                        {extra.vibes.map(v => (
-                          <span key={v} className={styles.ccTag}>{VIBE_LABELS[v] ?? v}</span>
-                        ))}
-                      </div>
-                      <span className={styles.hcArrow}>Read the dispatch →</span>
-                    </div>
-                    <div className={styles.hcR}>
-                      <div className={styles.hcStat}>
-                        <p className={styles.hcStatL}>Move Score</p>
-                        <p className={styles.hcScore}>{c.data?.moveScore != null ? Math.round(c.data.moveScore) : '—'}<span className={styles.hcScoreUnit}>/10</span></p>
-                      </div>
-                      <div className={styles.hcStat}>
-                        <p className={styles.hcStatL}>Rent · 1BR centre</p>
-                        <p className={styles.hcStatV}>{formatRent(c.data?.costRentCityCentre, c.currency)}<span className={styles.unit}>/mo</span></p>
-                      </div>
-                      <div className={styles.hcStat}>
-                        <p className={styles.hcStatL}>Climate</p>
-                        <p className={`${styles.hcStatV} ${styles.climate}`}>{extra.climate}</p>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })()}
+                  <Link key={c.id} href={`/city/${c.slug}`} className={styles.monumentCard}>
+                    {/* Rank badge */}
+                    <span className={styles.mcRank}>№{String(i + 1).padStart(2, '0')}</span>
 
-              {/* ── REMAINING CITIES (or all when searching) ── */}
-              {(search ? filtered : filtered.slice(1)).map((c, i) => {
-                const [solid, outl] = splitName(c.name)
-                const extra = c.extra!
-                const href = `/city/${c.slug}`
-                const reasons = anyFilterActive && !search ? matchReasons(extra, filters) : []
-                const rank = search ? i : i + 1
-                return (
-                  <Link key={c.id} href={href}
-                    className={styles.cityCard}
-                    data-climate={extra.climateBand}
-                    data-slug={c.slug}
-                  >
-                    <span className={styles.ccNum}>
-                      №{String(rank + 1).padStart(2,'0')}
-                      <span className={styles.mark}>of {filtered.length}</span>
-                    </span>
-                    <div className={styles.ccL}>
-                      <span className={`${styles.ccStatus} ${styles.live}`}>In atlas · live</span>
-                      <h3 className={styles.ccName}>
-                        <span className={styles.solid}>{solid}</span>
-                        <span className={styles.outl}>{outl}</span>
-                      </h3>
-                      <p className={styles.ccSub}>
-                        {slugToIso(c.countrySlug) ? <FlagIcon code={slugToIso(c.countrySlug)!} size="sm" className={styles.flag} /> : <span className={styles.flag}>{c.flagEmoji}</span>}
-                        {c.countryName}<span className={styles.sep}>·</span>{c.slug.slice(0,3).toUpperCase()}
-                      </p>
-                      {c.tagline && <p className={styles.ccTagline}>{c.tagline}</p>}
-                      <div className={styles.ccTags}>
-                        {extra.vibes.map(v => (
-                          <span key={v} className={styles.ccTag}>{VIBE_LABELS[v] ?? v}</span>
+                    {/* Monument illustration */}
+                    <div className={styles.mcIllustration}>
+                      <CityMonument slug={c.slug} stroke="rgba(240,240,232,0.55)" />
+                    </div>
+
+                    {/* City info */}
+                    <div className={styles.mcBody}>
+                      <div className={styles.mcFlag}>
+                        {slugToIso(c.countrySlug)
+                          ? <FlagIcon code={slugToIso(c.countrySlug)!} size="sm" />
+                          : <span>{c.flagEmoji}</span>}
+                      </div>
+                      <h3 className={styles.mcName}>{c.name}</h3>
+                      <p className={styles.mcCountry}>{c.countryName}</p>
+
+                      <div className={styles.mcStats}>
+                        <div className={styles.mcStat}>
+                          <span className={styles.mcStatV}>
+                            {formatRent(c.data?.costRentCityCentre, c.currency)}
+                          </span>
+                          <span className={styles.mcStatL}>/mo rent</span>
+                        </div>
+                        {c.data?.moveScore != null && (
+                          <div className={styles.mcStat}>
+                            <span className={styles.mcStatV}>{Math.round(c.data.moveScore)}<span className={styles.mcStatL}>/10</span></span>
+                            <span className={styles.mcStatL}>score</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.mcVibes}>
+                        {extra.vibes.slice(0, 2).map(v => (
+                          <span key={v} className={styles.mcVibe}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
-                      {reasons.length > 0 && (
-                        <div className={styles.whyHint}>
-                          {reasons.map(r => <span key={r} className={styles.whyTag}>✓ {r}</span>)}
-                        </div>
-                      )}
                     </div>
-                    <div className={styles.ccR}>
-                      <div className={styles.ccStat}>
-                        <p className={styles.ccStatL}>Move score</p>
-                        <p className={`${styles.ccStatV} ${styles.score}`}>
-                          {c.data?.moveScore != null ? Math.round(c.data.moveScore) : '—'}<span className={styles.unit}>/10</span>
-                        </p>
-                      </div>
-                      <div className={styles.ccStat}>
-                        <p className={styles.ccStatL}>Rent · 1BR centre</p>
-                        <p className={styles.ccStatV}>
-                          {formatRent(c.data?.costRentCityCentre, c.currency)}<span className={styles.unit}>/mo</span>
-                        </p>
-                      </div>
-                      <div className={styles.ccStat}>
-                        <p className={styles.ccStatL}>Climate</p>
-                        <p className={`${styles.ccStatV} ${styles.climate}`}>{extra.climate}</p>
-                      </div>
-                      <span className={styles.ccArrow}>View city →</span>
-                    </div>
+
+                    <div className={styles.mcHover}>View city →</div>
                   </Link>
                 )
               })}
