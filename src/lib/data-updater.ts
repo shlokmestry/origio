@@ -535,7 +535,6 @@ function computeSalaries(
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any;
 
 async function getCountryId(
