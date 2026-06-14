@@ -401,27 +401,18 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
         {/* COMING SOON */}
         <section className={`${styles.step} ${styles.fu} ${styles.d3}`} style={{ paddingTop: 0 }}>
-          <div className={styles.stepHead}>
-            <div>
-              <h2 className={styles.stepTitle}>Coming <span className={styles.it}>next</span>.</h2>
-            </div>
-            <p className={styles.stepAside}>{Object.entries(CITY_EXTRAS).filter(([, v]) => v.status === 'soon').length} cities</p>
-          </div>
-          <div className={styles.soonGrid}>
-            {Object.entries(CITY_EXTRAS)
-              .filter(([, v]) => v.status === 'soon')
-              .map(([slug, extra]) => (
-                <div key={slug} className={styles.soonCard}>
-                  <span className={styles.soonStatus}>Coming soon</span>
-                  <p className={styles.soonName}>{slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
-                  <p className={styles.soonClimate}>{extra.climate}</p>
-                  <div className={styles.soonTags}>
-                    {extra.vibes.slice(0, 2).map(v => (
-                      <span key={v} className={styles.soonTag}>{VIBE_LABELS[v] ?? v}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          <div className={styles.soonStrip}>
+            <span className={styles.soonLabel}>Coming next</span>
+            <p className={styles.soonFlow}>
+              {Object.entries(CITY_EXTRAS)
+                .filter(([, v]) => v.status === 'soon')
+                .map(([slug], i, arr) => (
+                  <span key={slug}>
+                    {slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    {i < arr.length - 1 && <span className={styles.dot}>·</span>}
+                  </span>
+                ))}
+            </p>
           </div>
         </section>
 

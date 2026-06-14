@@ -1192,55 +1192,35 @@
   .ccLineIt { margin-left: 16px; }
 }
 
-/* ── Coming soon grid ── */
-.soonGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 24px;
-}
-.soonCard {
-  border: 1px solid var(--c-rule);
-  padding: 18px 16px;
+/* ── Coming soon strip ── */
+.soonStrip {
+  border-top: 1px solid var(--c-rule);
+  padding: 20px 0 32px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.soonStatus {
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--c-dimmer);
-  font-family: 'Inter', sans-serif;
-}
-.soonName {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--c-ink);
-  font-family: 'Inter', sans-serif;
-  margin: 0;
-  opacity: 0.5;
-}
-.soonClimate {
-  font-size: 11px;
-  color: var(--c-dimmer);
-  font-family: 'Inter', sans-serif;
-  margin: 0;
-}
-.soonTags {
-  display: flex;
-  gap: 6px;
+  align-items: baseline;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-top: 4px;
 }
-.soonTag {
+.soonLabel {
   font-size: 9px;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--c-dimmer);
-  border: 1px solid var(--c-rule);
-  padding: 2px 6px;
   font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.soonFlow {
+  font-size: 12px;
+  color: rgba(240,240,232,0.28);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+.soonFlow .dot {
+  margin: 0 6px;
+  opacity: 0.4;
 }
 
 /* ── Quick filter chips ── */
