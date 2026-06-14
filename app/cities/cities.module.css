@@ -1277,6 +1277,9 @@
   border: 1px solid var(--c-rule);
   margin-top: 24px;
 }
+.monumentFiller {
+  background: #0d0d0d;
+}
 .monumentCard {
   position: relative;
   display: flex;

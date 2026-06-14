@@ -389,6 +389,9 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                   </Link>
                 )
               })}
+              {Array.from({ length: (4 - (filtered.length % 4)) % 4 }).map((_, i) => (
+                <div key={`filler-${i}`} className={styles.monumentFiller} />
+              ))}
             </div>
           ) : (
             <div className={styles.emptyState}>
