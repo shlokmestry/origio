@@ -697,8 +697,19 @@ export default function CompareCitiesClient({ allCities }: Props) {
               </div>
             </div>
             {emailState === 'sent' ? (
-              <div style={{ fontSize: 14, color: '#00ffd5', fontWeight: 700, fontFamily: 'sans-serif' }}>
-                ✓ Sent — check your inbox.
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 320px' }}>
+                <div style={{ fontSize: 14, color: '#00ffd5', fontWeight: 700, fontFamily: 'sans-serif' }}>
+                  ✓ On its way — check your inbox.
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(240,240,232,0.4)', fontFamily: 'sans-serif' }}>
+                  Didn&rsquo;t arrive? Check spam, or{' '}
+                  <button type="button" onClick={() => setEmailState('idle')} style={{ background: 'none', border: 'none', color: '#00ffd5', cursor: 'pointer', fontSize: 12, fontFamily: 'sans-serif', padding: 0, textDecoration: 'underline' }}>
+                    try again
+                  </button>.
+                </div>
+                <button type="button" onClick={copyLink} style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid rgba(240,240,232,0.15)', color: '#f0f0e8', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '8px 14px', cursor: 'pointer', fontFamily: 'sans-serif', fontWeight: 700 }}>
+                  {linkCopied ? '✓ Link copied' : '↗ Share comparison link'}
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 8, flex: '1 1 320px', alignItems: 'stretch' }}>
@@ -712,7 +723,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                   style={{
                     flex: 1,
                     background: '#1a1a1a',
-                    border: '1px solid rgba(240,240,232,0.12)',
+                    border: `1px solid ${emailState === 'error' ? '#f87171' : 'rgba(240,240,232,0.12)'}`,
                     color: '#f0f0e8',
                     fontSize: 14,
                     padding: '10px 14px',
@@ -744,7 +755,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             )}
             {emailState === 'error' && (
               <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'sans-serif' }}>
-                Something went wrong. Try again.
+                Failed to send — double-check your email and try again.
               </div>
             )}
           </section>
