@@ -70,3 +70,52 @@ export const SLUG_TO_ISO: Record<string, string> = {
 export function slugToIso(slug: string): string | undefined {
   return SLUG_TO_ISO[slug]
 }
+
+/** Maps city slug to ISO 3166-1 alpha-2 country code for flag icons */
+export const CITY_SLUG_TO_ISO: Record<string, string> = {
+  lisbon: 'pt', porto: 'pt', funchal: 'pt',
+  london: 'gb', manchester: 'gb', edinburgh: 'gb',
+  dublin: 'ie', cork: 'ie',
+  amsterdam: 'nl', rotterdam: 'nl', eindhoven: 'nl',
+  berlin: 'de', munich: 'de', hamburg: 'de',
+  barcelona: 'es', madrid: 'es', valencia: 'es', malaga: 'es',
+  paris: 'fr',
+  milan: 'it', rome: 'it',
+  athens: 'gr',
+  vienna: 'at',
+  prague: 'cz',
+  budapest: 'hu',
+  bucharest: 'ro',
+  warsaw: 'pl',
+  stockholm: 'se',
+  copenhagen: 'dk',
+  helsinki: 'fi',
+  oslo: 'no',
+  brussels: 'be',
+  zurich: 'ch',
+  limassol: 'cy',
+  split: 'hr',
+  belgrade: 'rs',
+  tbilisi: 'ge',
+  tallinn: 'ee',
+  'new-york': 'us', 'san-francisco': 'us', austin: 'us', miami: 'us',
+  toronto: 'ca', vancouver: 'ca', montreal: 'ca',
+  medellin: 'co', 'buenos-aires': 'ar', 'sao-paulo': 'br',
+  'mexico-city': 'mx', 'panama-city': 'pa', 'san-jose-cr': 'cr',
+  singapore: 'sg',
+  tokyo: 'jp', osaka: 'jp', kyoto: 'jp',
+  sydney: 'au', melbourne: 'au', brisbane: 'au', auckland: 'nz',
+  seoul: 'kr',
+  dubai: 'ae', 'abu-dhabi': 'ae',
+  bangkok: 'th', 'chiang-mai': 'th',
+  bali: 'id',
+  'kuala-lumpur': 'my',
+  'da-nang': 'vn', 'ho-chi-minh-city': 'vn',
+  bangalore: 'in',
+  'cape-town': 'za',
+}
+
+/** Get ISO alpha-2 code from a city slug, or undefined if not mapped */
+export function citySlugToIso(slug: string): string | undefined {
+  return CITY_SLUG_TO_ISO[slug]
+}

@@ -1358,7 +1358,7 @@ export default function CityPageClient({ city }: Props) {
                   <span className="nearby-flag" aria-label={`${n.name} flag`}>{n.flag_emoji}</span>
                   <span className="nearby-name">{n.name}</span>
                   {n.tagline && <span className="nearby-tagline">{n.tagline}</span>}
-                  {(() => { const ms = n.city_data?.[0]?.move_score; return ms != null ? <span className="nearby-score">{ms.toFixed(1)} / 10 move score</span> : null; })()}
+                  {(() => { const ms = n.city_data?.[0]?.move_score; return ms != null ? <span className="nearby-score">{Math.round(ms)} / 10 move score</span> : null; })()}
                 </Link>
               ))}
             </div>

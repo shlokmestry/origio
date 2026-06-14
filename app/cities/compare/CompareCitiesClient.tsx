@@ -7,50 +7,7 @@ import styles from './compare.module.css'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
-
-// City slug → ISO 3166-1 alpha-2 country code
-const CITY_TO_ISO: Record<string, string> = {
-  lisbon: 'pt', porto: 'pt', funchal: 'pt',
-  london: 'gb', manchester: 'gb', edinburgh: 'gb',
-  dublin: 'ie', cork: 'ie',
-  amsterdam: 'nl', rotterdam: 'nl', eindhoven: 'nl',
-  berlin: 'de', munich: 'de', hamburg: 'de',
-  barcelona: 'es', madrid: 'es', valencia: 'es', malaga: 'es',
-  paris: 'fr',
-  milan: 'it', rome: 'it',
-  athens: 'gr',
-  vienna: 'at',
-  prague: 'cz',
-  budapest: 'hu',
-  bucharest: 'ro',
-  warsaw: 'pl',
-  stockholm: 'se',
-  copenhagen: 'dk',
-  helsinki: 'fi',
-  oslo: 'no',
-  brussels: 'be',
-  zurich: 'ch',
-  limassol: 'cy',
-  split: 'hr',
-  belgrade: 'rs',
-  tbilisi: 'ge',
-  tallinn: 'ee',
-  'new-york': 'us', 'san-francisco': 'us', austin: 'us', miami: 'us',
-  toronto: 'ca', vancouver: 'ca', montreal: 'ca',
-  medellin: 'co', 'buenos-aires': 'ar', 'sao-paulo': 'br',
-  'mexico-city': 'mx', 'panama-city': 'pa', 'san-jose-cr': 'cr',
-  singapore: 'sg',
-  tokyo: 'jp', osaka: 'jp', kyoto: 'jp',
-  sydney: 'au', melbourne: 'au', brisbane: 'au', auckland: 'nz',
-  seoul: 'kr',
-  dubai: 'ae', 'abu-dhabi': 'ae',
-  bangkok: 'th', 'chiang-mai': 'th',
-  bali: 'id',
-  'kuala-lumpur': 'my',
-  'da-nang': 'vn', 'ho-chi-minh-city': 'vn',
-  bangalore: 'in',
-  'cape-town': 'za',
-}
+import { CITY_SLUG_TO_ISO } from '@/lib/flagCodes'
 
 const REGION_ORDER = ['Europe', 'Asia & Oceania', 'Americas', 'Middle East & Africa']
 const CITY_REGION: Record<string, string> = {
@@ -365,6 +322,24 @@ export default function CompareCitiesClient({ allCities }: Props) {
     setTimeout(() => setLinkCopied(false), 1600)
   }, [])
 
+  const downloadCSV = useCallback(() => {
+    if (picks.length < 2) return
+    const rows: string[] = []
+    rows.push(['Category', ...picks.map(p => p.name)].map(v => `"${v}"`).join(','))
+    COST_ROWS.forEach(r => {
+      rows.push([r.label, ...picks.map(p => p.costs[r.key] == null ? '' : fmt(p.costs[r.key]!, currency))].map(v => `"${v}"`).join(','))
+    })
+    const tots = picks.map(c => COST_ROWS.reduce((s, r) => s + (c.costs[r.key] ?? 0), 0))
+    rows.push(['TOTAL / MO', ...tots.map(t => fmt(t, currency))].map(v => `"${v}"`).join(','))
+    rows.push(['', ...picks.map(p => `https://findorigio.com/city/${p.slug}`)].map(v => `"${v}"`).join(','))
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `origio-compare-${picks.map(p => p.slug).join('-')}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }, [picks, currency])
+
   // ── Render helpers ────────────────────────────────────────────────────────
 
   function renderRaceRow(c: CityData, total: number, rank: number) {
@@ -405,7 +380,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         <div className={styles.rrL}>
           <span className={styles.rrRank}>№{rank + 1}</span>
           <div className={styles.rrId}>
-            {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.rrFlag} /> : <span className={styles.rrFlag}>{c.flag}</span>}
+            {CITY_SLUG_TO_ISO[c.slug] ? <FlagIcon code={CITY_SLUG_TO_ISO[c.slug]} size="sm" className={styles.rrFlag} /> : <span className={styles.rrFlag}>{c.flag}</span>}
             <span className={styles.rrName}>{c.name}</span>
             <span className={styles.rrMeta}>{c.country} · {c.code}</span>
           </div>
@@ -548,7 +523,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                           disabled={atMax || minReached}
                           onClick={() => toggleCity(c.slug)}
                         >
-                          {CITY_TO_ISO[c.slug] ? <FlagIcon code={CITY_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
+                          {CITY_SLUG_TO_ISO[c.slug] ? <FlagIcon code={CITY_SLUG_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
                           {c.name}
                         </button>
                       )
@@ -585,6 +560,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={copyTable}>
               {copied ? '✓ Copied' : '⬇ Copy data'}
+            </button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={downloadCSV}>
+              ↓ CSV
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>
               ↻ Reset

@@ -368,7 +368,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                     <div className={styles.hcR}>
                       <div className={styles.hcStat}>
                         <p className={styles.hcStatL}>Move Score</p>
-                        <p className={styles.hcScore}>{c.data?.moveScore?.toFixed(1) ?? '—'}<span className={styles.hcScoreUnit}>/10</span></p>
+                        <p className={styles.hcScore}>{c.data?.moveScore != null ? Math.round(c.data.moveScore) : '—'}<span className={styles.hcScoreUnit}>/10</span></p>
                       </div>
                       <div className={styles.hcStat}>
                         <p className={styles.hcStatL}>Rent · 1BR centre</p>
@@ -426,7 +426,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       <div className={styles.ccStat}>
                         <p className={styles.ccStatL}>Move score</p>
                         <p className={`${styles.ccStatV} ${styles.score}`}>
-                          {c.data?.moveScore?.toFixed(1) ?? '—'}<span className={styles.unit}>/10</span>
+                          {c.data?.moveScore != null ? Math.round(c.data.moveScore) : '—'}<span className={styles.unit}>/10</span>
                         </p>
                       </div>
                       <div className={styles.ccStat}>

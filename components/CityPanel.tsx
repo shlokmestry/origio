@@ -190,8 +190,17 @@ export default function CityPanel({ slug, onClose }: CityPanelProps) {
 
           {/* BODY */}
           {loading && (
-            <div style={{ padding: "40px 24px", textAlign: "center", color: "#555", fontSize: "12px" }}>
-              Loading...
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              {[100, 60, 80, 60, 90].map((w, i) => (
+                <div key={i} style={{
+                  height: i === 0 ? 48 : 14,
+                  width: `${w}%`,
+                  background: "linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%)",
+                  backgroundSize: "200% 100%",
+                  animation: "cpShimmer 1.4s infinite",
+                }} />
+              ))}
+              <style>{`@keyframes cpShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
             </div>
           )}
 
