@@ -360,7 +360,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {c.tagline && <p className={styles.hcTagline}>{c.tagline}</p>}
                       <div className={styles.ccTags} style={{ marginTop: 8 }}>
                         {extra.vibes.map(v => (
-                          <span key={v} className={`${styles.ccTag}${''}`}>{VIBE_LABELS[v] ?? v}</span>
+                          <span key={v} className={styles.ccTag}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
                       <span className={styles.hcArrow}>Read the dispatch →</span>
@@ -413,7 +413,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {c.tagline && <p className={styles.ccTagline}>{c.tagline}</p>}
                       <div className={styles.ccTags}>
                         {extra.vibes.map(v => (
-                          <span key={v} className={`${styles.ccTag}${''}`}>{VIBE_LABELS[v] ?? v}</span>
+                          <span key={v} className={styles.ccTag}>{VIBE_LABELS[v] ?? v}</span>
                         ))}
                       </div>
                       {reasons.length > 0 && (
