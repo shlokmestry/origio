@@ -127,8 +127,18 @@ function formatRent(rent: number | undefined, currency: string): string {
 
 interface FilterState {
   region: string
+  vibe: string
 }
-const DEFAULT_FILTERS: FilterState = { region:'any' }
+const DEFAULT_FILTERS: FilterState = { region:'any', vibe:'any' }
+
+const QUICK_FILTERS: { label: string; vibe: string }[] = [
+  { label: 'Best for remote work',  vibe: 'remote' },
+  { label: 'Budget cities',         vibe: 'budget' },
+  { label: 'Beach life',            vibe: 'beach' },
+  { label: 'Nightlife',             vibe: 'nightlife' },
+  { label: 'Family-friendly',       vibe: 'family' },
+  { label: 'Culture & arts',        vibe: 'culture' },
+]
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -216,15 +226,16 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         c.slug.toLowerCase().includes(q) ||
         c.countryName.toLowerCase().includes(q)
       )
-    } else if (filters.region !== 'any') {
-      list = list.filter(c => c.extra?.region === filters.region)
+    } else {
+      if (filters.region !== 'any') list = list.filter(c => c.extra?.region === filters.region)
+      if (filters.vibe !== 'any') list = list.filter(c => c.extra?.vibes.includes(filters.vibe as Vibe))
     }
 
     list.sort((a, b) => (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0))
     return list
   }, [enriched, filters, search])
 
-  const anyFilterActive = filters.region !== 'any'
+  const anyFilterActive = filters.region !== 'any' || filters.vibe !== 'any'
 
   const setFilter = useCallback(<K extends keyof FilterState>(key: K, val: string) => {
     setFilters(prev => ({ ...prev, [key]: val }))
@@ -283,6 +294,22 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                 <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
               )}
             </div>
+
+            {/* Quick filter chips */}
+            {!search && (
+              <div className={styles.quickFilters}>
+                {QUICK_FILTERS.map(qf => (
+                  <button
+                    key={qf.vibe}
+                    type="button"
+                    className={`${styles.quickChip}${filters.vibe === qf.vibe ? ' ' + styles.quickChipOn : ''}`}
+                    onClick={() => setFilter('vibe', filters.vibe === qf.vibe ? 'any' : qf.vibe)}
+                  >
+                    {qf.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Region chips — hidden when searching */}
             {!search && (
