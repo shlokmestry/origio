@@ -683,4 +683,7 @@
   .spacer { display: none; }
   .pickChip { min-height: 44px; }
   .rrRank { font-size: 28px; min-width: 28px; }
+  /* Legend action buttons: scroll horizontally instead of overflowing */
+  .legendRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .legendAction, .legendActionGhost { min-height: 36px; padding: 4px 10px; font-size: 9px; flex-shrink: 0; }
 }

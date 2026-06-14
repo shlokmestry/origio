@@ -1271,3 +1271,19 @@
   color: #00ffd5;
   border-color: #00ffd5;
 }
+
+/* ── Mobile: quick filters + coming soon ── */
+@media (max-width: 760px) {
+  .quickFilters { gap: 6px; }
+  .quickChip { font-size: 10px; padding: 8px 10px; min-height: 40px; }
+  .soonGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+}
+@media (max-width: 480px) {
+  .quickFilters { gap: 6px; }
+  .quickChip { font-size: 10px; padding: 10px 10px; min-height: 44px; } /* iOS tap target */
+  .soonGrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .soonCard { padding: 14px 12px; }
+  .soonName { font-size: 13px; }
+  .cmpBanner { padding: 14px 16px; }
+  .cmpBannerL { font-size: 10px; }
+}
