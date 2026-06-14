@@ -155,6 +155,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     return iso && COST_ROWS.some(r => r.key === iso) ? iso as CostKey : null
   })
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const [emailVal, setEmailVal] = useState('')
   const [emailState, setEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
 
@@ -356,6 +357,13 @@ export default function CompareCitiesClient({ allCities }: Props) {
     setCopied(true)
     setTimeout(() => setCopied(false), 1400)
   }, [picks, currency])
+
+  const copyLink = useCallback(() => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    navigator.clipboard.writeText(url).catch(() => {})
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 1600)
+  }, [])
 
   // ── Render helpers ────────────────────────────────────────────────────────
 
@@ -572,12 +580,11 @@ export default function CompareCitiesClient({ allCities }: Props) {
               </button>
             ))}
             <span className={styles.legendSpacer} />
-            <button type="button" className={styles.legendAction} onClick={() => {
-              navigator.clipboard.writeText(window.location.href).catch(() => {})
-              setCopied(true)
-              setTimeout(() => setCopied(false), 1800)
-            }}>
-              {copied ? '✓ Copied' : '↗ Share'}
+            <button type="button" className={styles.legendAction} onClick={copyLink}>
+              {linkCopied ? '✓ Link copied' : '↗ Share'}
+            </button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={copyTable}>
+              {copied ? '✓ Copied' : '⬇ Copy data'}
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>
               ↻ Reset
