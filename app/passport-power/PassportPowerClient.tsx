@@ -406,16 +406,21 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PassportPowerClient() {
   const [selected, setSelected] = useState<Passport | null>(null);
+  const [clickCount, setClickCount] = useState(0);
 
   const top1 = ALL_PASSPORTS[0];
   const top2 = ALL_PASSPORTS[1];
   const top3 = ALL_PASSPORTS[2];
 
-  const handleSelect = useCallback((p: Passport) => setSelected(p), []);
+  const handleSelect = (p: Passport) => { setClickCount(c => c + 1); setSelected(p); };
   const handleClose  = useCallback(() => setSelected(null), []);
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
+      {/* DEBUG STRIP — remove once clicks confirmed working */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99998, background: clickCount > 0 ? "#00ffd5" : "#333", color: "#000", padding: "8px 16px", fontFamily: "monospace", fontSize: 12, textAlign: "center" }}>
+        {clickCount === 0 ? "Click any passport to test" : `✓ Click #${clickCount} registered — last: ${selected?.name ?? "none"} — modal should be visible`}
+      </div>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
