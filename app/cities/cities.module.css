@@ -1190,3 +1190,54 @@
   .ccLine { font-size: clamp(28px, 8vw, 56px); }
   .ccLineIt { margin-left: 16px; }
 }
+
+/* ── Coming soon grid ── */
+.soonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+.soonCard {
+  border: 1px solid var(--c-rule);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.soonStatus {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-dimmer);
+  font-family: 'Inter', sans-serif;
+}
+.soonName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-ink);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  opacity: 0.5;
+}
+.soonClimate {
+  font-size: 11px;
+  color: var(--c-dimmer);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+.soonTags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.soonTag {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-dimmer);
+  border: 1px solid var(--c-rule);
+  padding: 2px 6px;
+  font-family: 'Inter', sans-serif;
+}
