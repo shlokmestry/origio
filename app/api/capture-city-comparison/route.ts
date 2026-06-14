@@ -144,22 +144,6 @@ export async function POST(req: NextRequest) {
   const limited = await rateLimit(req, { name: 'capture-city-comparison', maxRequests: 5, windowSeconds: 60 })
   if (limited) return limited
 
-  // Auth: verify bearer token
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const token = authHeader.replace('Bearer ', '')
-
-  const userSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  const { data: { user }, error: authError } = await userSupabase.auth.getUser(token)
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   let body: {
     email: string
     cities: { slug: string; name: string; country: string; total: number }[]
@@ -174,12 +158,8 @@ export async function POST(req: NextRequest) {
 
   const { email, cities, currency, shareUrl } = body
 
-  // Validate email format and ensure it belongs to the authenticated user
   if (!isValidEmail(email)) {
     return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
-  }
-  if (email !== user.email) {
-    return NextResponse.json({ error: 'Email mismatch' }, { status: 403 })
   }
   if (!Array.isArray(cities) || cities.length < 2) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
