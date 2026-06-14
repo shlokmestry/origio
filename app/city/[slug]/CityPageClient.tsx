@@ -925,6 +925,16 @@ export default function CityPageClient({ city }: Props) {
             <p style={{ fontSize: 16, color: "var(--dim)", marginBottom: 20 }}>
               <span aria-label={`${city.country_name} flag`}>{city.flag_emoji}</span> {city.country_name}
             </p>
+            {city.cover_image_url && (
+              <div style={{ margin: '24px 0', lineHeight: 0 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={city.cover_image_url}
+                  alt={`${city.name} cityscape`}
+                  style={{ width: '100%', maxHeight: 340, objectFit: 'cover', display: 'block' }}
+                />
+              </div>
+            )}
             <p style={{ fontSize: 16, color: "var(--dim)", lineHeight: 1.7, fontWeight: 300 }}>
               A 24-hour field dispatch ~ what {city.name} costs, what it pays, and what it
               feels like to wake up here.
