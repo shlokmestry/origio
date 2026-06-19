@@ -350,7 +350,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
                     {/* Monument illustration */}
                     <div className={styles.mcIllustration}>
-                      <CityMonument slug={c.slug} stroke="rgba(240,240,232,0.55)" />
+                      <CityMonument slug={c.slug} stroke="rgba(240,240,232,0.72)" />
                     </div>
 
                     {/* City info */}
