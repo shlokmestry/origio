@@ -1330,7 +1330,7 @@
 }
 .mcIllustration svg {
   width: 100%;
-  max-width: 170px;
+  max-width: 210px;
   height: auto;
   opacity: 0.82;
   transition: opacity 0.25s, filter 0.25s;
