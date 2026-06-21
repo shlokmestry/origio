@@ -1390,20 +1390,18 @@ export default function CityPageClient({ city }: Props) {
               { label: "Healthcare", val: d?.score_healthcare, unit: "/10", decimal: true },
               { label: "Expat-friendly", val: d?.score_expat_friendliness, unit: "/10", decimal: true },
               { label: "Nightlife", val: d?.score_nightlife, unit: "/10", decimal: true },
-            ].map(({ label, val, unit, accent, raw, decimal }) => (
+            ].map(({ label, val, unit, decimal }) => (
               <div key={label} className="df-cell">
                 <p className="df-lbl">{label}</p>
-                <p className={`df-val${accent ? " ac" : ""}`}>
-                  {raw
-                    ? val ?? "—"
-                    : val != null
-                      ? decimal
-                        ? `${(val as number).toFixed(1)}`
-                        : typeof val === "number"
-                          ? `${sym}${val.toLocaleString()}`
-                          : val
-                      : "—"}
-                  {val != null && !raw && <span className="unit">{unit}</span>}
+                <p className="df-val">
+                  {val != null
+                    ? decimal
+                      ? `${(val as number).toFixed(1)}`
+                      : typeof val === "number"
+                        ? `${sym}${val.toLocaleString()}`
+                        : val
+                    : "—"}
+                  {val != null && <span className="unit">{unit}</span>}
                 </p>
               </div>
             ))}
