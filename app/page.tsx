@@ -109,11 +109,28 @@ function CitiesSection() {
       ref={ref}
       aria-label="Cities Atlas"
       style={{
-        background: "#0d0d0d",
-        padding:    "clamp(64px, 9vh, 100px) clamp(20px, 4vw, 56px)",
-        borderTop:  "1px solid #1c1c1c",
+        background:  "#0d0d0d",
+        paddingTop:  "calc(80px + clamp(48px, 7vh, 80px))",
+        paddingBottom: "clamp(64px, 9vh, 100px)",
+        paddingLeft:   "clamp(20px, 4vw, 56px)",
+        paddingRight:  "clamp(20px, 4vw, 56px)",
       }}
     >
+      {/* ── Section title ── */}
+      <h2 style={{
+        fontFamily:    "Cabinet Grotesk, sans-serif",
+        fontWeight:    800,
+        fontSize:      "clamp(28px, 4vw, 52px)",
+        letterSpacing: "-0.03em",
+        color:         "#ffffff",
+        margin:        "0 0 clamp(24px, 3.5vh, 40px)",
+        maxWidth:      1200,
+        marginLeft:    "auto",
+        marginRight:   "auto",
+        lineHeight:    1,
+      }}>
+        WHERE WILL YOU LIVE?
+      </h2>
 
       {/* ── Cards grid ── */}
       <div style={{
