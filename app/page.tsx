@@ -156,15 +156,45 @@ function CitiesSection() {
 
         {/* Compare CTA card */}
         <div style={{
-          background:  "#161616",
+          background:  "#0e0e0e",
           border:      "1px solid #252525",
           padding:     "clamp(20px, 2.5vw, 32px)",
           display:     "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           minHeight:   140,
+          position:    "relative",
+          overflow:    "hidden",
         }}>
-          <div>
+          {/* Coordinate background */}
+          {[
+            { text: "38.7169° N, 9.1399° W",  top: "8%",  left: "5%",   rotate: "-8deg",  size: 9,  op: 0.07 },
+            { text: "52.5200° N, 13.4050° E", top: "18%", left: "38%",  rotate: "4deg",   size: 11, op: 0.10 },
+            { text: "1.3521° N, 103.8198° E", top: "38%", left: "-2%",  rotate: "-4deg",  size: 8,  op: 0.06 },
+            { text: "35.6762° N, 139.6503° E",top: "55%", left: "42%",  rotate: "7deg",   size: 10, op: 0.09 },
+            { text: "48.8566° N, 2.3522° E",  top: "70%", left: "8%",   rotate: "-6deg",  size: 13, op: 0.12 },
+            { text: "25.2048° N, 55.2708° E", top: "80%", left: "44%",  rotate: "3deg",   size: 8,  op: 0.07 },
+            { text: "19.0760° N, 72.8777° E", top: "5%",  left: "62%",  rotate: "-3deg",  size: 9,  op: 0.06 },
+            { text: "43.6532° N, 79.3832° W", top: "48%", left: "60%",  rotate: "9deg",   size: 10, op: 0.08 },
+          ].map((c, i) => (
+            <span key={i} style={{
+              position:      "absolute",
+              top:           c.top,
+              left:          c.left,
+              transform:     `rotate(${c.rotate})`,
+              fontFamily:    "Satoshi, monospace",
+              fontSize:      c.size,
+              fontWeight:    500,
+              letterSpacing: "0.08em",
+              color:         `rgba(255,255,255,${c.op})`,
+              whiteSpace:    "nowrap",
+              userSelect:    "none",
+              pointerEvents: "none",
+            }}>
+              {c.text}
+            </span>
+          ))}
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
             <p style={{
               fontFamily:    "Satoshi, sans-serif",
               fontSize:      10,
@@ -196,7 +226,6 @@ function CitiesSection() {
             }}>
               Rent. Internet. Safety.<br />Side by side.
             </p>
-          </div>
           <Link
             href="/cities/compare"
             style={{
@@ -227,6 +256,7 @@ function CitiesSection() {
           >
             Compare →
           </Link>
+          </div>
         </div>
       </div>
     </section>
