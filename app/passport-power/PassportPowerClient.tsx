@@ -15,7 +15,7 @@ const BORD = "#2a2a2a";
 const SANS = "'Satoshi', system-ui, sans-serif";
 const HEAD = "'Cabinet Grotesk', sans-serif";
 
-// ─── Passport data (Henley 2025 Q1) ──────────────────────────────────────────
+// ─── Passport data (Henley 2026 Q2 (17 June 2026)) ───────────────────────────
 export type Passport = {
   rank: number; name: string; flag: string;
   score: number; vf: number; voa: number; evisa: number;
