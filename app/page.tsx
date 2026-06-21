@@ -554,132 +554,10 @@ export default function Home() {
     <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-      {/* ── SECTION 1: HERO (photo background) ── */}
-      <section
-        ref={heroRef}
-        style={{
-          position:   "relative",
-          minHeight:  "100vh",
-          overflow:   "hidden",
-          display:    "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* Background photo */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/manstandingalone.jpg"
-          alt=""
-          aria-hidden
-          style={{
-            position:   "absolute",
-            inset:      0,
-            width:      "100%",
-            height:     "100%",
-            objectFit:  "cover",
-            objectPosition: "center 30%",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Dark overlay */}
-        <div style={{
-          position:   "absolute",
-          inset:      0,
-          background: "rgba(8,8,8,0.62)",
-          pointerEvents: "none",
-        }} />
-
-        {/* Bottom fade to match globe section */}
-        <div style={{
-          position:   "absolute",
-          bottom:     0,
-          left:       0,
-          right:      0,
-          height:     "30%",
-          background: "linear-gradient(to bottom, transparent, #0a0a0a)",
-          pointerEvents: "none",
-        }} />
-
-        {/* Content */}
-        <div style={{
-          position:      "relative",
-          zIndex:        5,
-          display:       "flex",
-          flexDirection: "column",
-          alignItems:    "center",
-          textAlign:     "center",
-          padding:       "clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 8vh, 100px)",
-          width:         "100%",
-        }}>
-          <h1 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(14px, 5.2vw, 80px)",
-            lineHeight:    1.0,
-            letterSpacing: "-0.03em",
-            color:         "#ffffff",
-            marginBottom:  "clamp(20px, 3vh, 32px)",
-          }}>
-            Find Where You <FlickerWord />
-          </h1>
-
-          <p style={{
-            fontFamily:  "Satoshi, sans-serif",
-            fontSize:    "clamp(15px, 1.6vw, 18px)",
-            color:       "rgba(255,255,255,0.52)",
-            fontWeight:  400,
-            lineHeight:  1.65,
-            maxWidth:    440,
-            marginBottom: "clamp(36px, 5vh, 56px)",
-          }}>
-            Salaries, visas, cost of living and quality of life ~ personalised to your job and passport.
-          </p>
-
-          <button
-            onClick={() => router.push("/wizard")}
-            style={{
-              display:       "inline-flex",
-              alignItems:    "center",
-              justifyContent: "center",
-              gap:           10,
-              background:    "transparent",
-              color:         "#00ffd5",
-              fontFamily:    "Satoshi, sans-serif",
-              fontSize:      "clamp(13px, 1.4vw, 15px)",
-              fontWeight:    700,
-              padding:       "clamp(13px, 1.6vh, 17px) clamp(36px, 5vw, 60px)",
-              border:        "2px solid #00ffd5",
-              cursor:        "pointer",
-              letterSpacing: "0.05em",
-              textTransform: "uppercase" as const,
-              boxShadow:     "4px 4px 0 #00ffd5",
-              transition:    "box-shadow 0.12s ease, background 0.12s ease",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,255,213,0.07)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "2px 2px 0 #00ffd5";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "4px 4px 0 #00ffd5";
-            }}
-          >
-            Find My Country
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
-              <path d="M2 6.5h9M7 2.5l4 4-4 4" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-      </section>
-
-      {/* ── SECTION 2: CITIES ATLAS ── */}
+      {/* ── SECTION 1: CITIES ATLAS ── */}
       <CitiesSection />
 
-      {/* ── SECTION 3: GLOBE ── */}
+      {/* ── SECTION 2: GLOBE ── */}
       <section
         className="globe-section"
         style={{
@@ -713,6 +591,128 @@ export default function Home() {
             highlightedSlugs={highlightedSlugs}
             savedSlugs={savedSlugs}
           />
+        </div>
+      </section>
+
+      {/* ── SECTION 3: COUNTRIES HERO ── */}
+      <section
+        ref={heroRef}
+        style={{
+          position:       "relative",
+          minHeight:      "100vh",
+          overflow:       "hidden",
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* Background photo */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/manstandingalone.jpg"
+          alt=""
+          aria-hidden
+          style={{
+            position:       "absolute",
+            inset:          0,
+            width:          "100%",
+            height:         "100%",
+            objectFit:      "cover",
+            objectPosition: "center 30%",
+            userSelect:     "none",
+            pointerEvents:  "none",
+          }}
+        />
+
+        {/* Dark overlay */}
+        <div style={{
+          position:      "absolute",
+          inset:         0,
+          background:    "rgba(8,8,8,0.62)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Top fade from globe */}
+        <div style={{
+          position:      "absolute",
+          top:           0,
+          left:          0,
+          right:         0,
+          height:        "30%",
+          background:    "linear-gradient(to top, transparent, #0a0a0a)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Content */}
+        <div style={{
+          position:      "relative",
+          zIndex:        5,
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          textAlign:     "center",
+          padding:       "clamp(80px, 12vh, 140px) clamp(24px, 6vw, 80px) clamp(60px, 8vh, 100px)",
+          width:         "100%",
+        }}>
+          <h2 style={{
+            fontFamily:    "Cabinet Grotesk, sans-serif",
+            fontWeight:    800,
+            fontSize:      "clamp(14px, 5.2vw, 80px)",
+            lineHeight:    1.0,
+            letterSpacing: "-0.03em",
+            color:         "#ffffff",
+            marginBottom:  "clamp(20px, 3vh, 32px)",
+          }}>
+            Find Where You <FlickerWord />
+          </h2>
+
+          <p style={{
+            fontFamily:   "Satoshi, sans-serif",
+            fontSize:     "clamp(15px, 1.6vw, 18px)",
+            color:        "rgba(255,255,255,0.52)",
+            fontWeight:   400,
+            lineHeight:   1.65,
+            maxWidth:     440,
+            marginBottom: "clamp(36px, 5vh, 56px)",
+          }}>
+            Salaries, visas, cost of living and quality of life ~ personalised to your job and passport.
+          </p>
+
+          <button
+            onClick={() => router.push("/wizard")}
+            style={{
+              display:        "inline-flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              gap:            10,
+              background:     "transparent",
+              color:          "#00ffd5",
+              fontFamily:     "Satoshi, sans-serif",
+              fontSize:       "clamp(13px, 1.4vw, 15px)",
+              fontWeight:     700,
+              padding:        "clamp(13px, 1.6vh, 17px) clamp(36px, 5vw, 60px)",
+              border:         "2px solid #00ffd5",
+              cursor:         "pointer",
+              letterSpacing:  "0.05em",
+              textTransform:  "uppercase" as const,
+              boxShadow:      "4px 4px 0 #00ffd5",
+              transition:     "box-shadow 0.12s ease, background 0.12s ease",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,255,213,0.07)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "2px 2px 0 #00ffd5";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "4px 4px 0 #00ffd5";
+            }}
+          >
+            Find My Country
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
+              <path d="M2 6.5h9M7 2.5l4 4-4 4" stroke="#00ffd5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </section>
 
