@@ -109,7 +109,7 @@ function CitiesSection() {
       ref={ref}
       aria-label="Cities Atlas"
       style={{
-        background:  "#0d0d0d",
+        background:  "#08090f",
         paddingTop:  "calc(80px + clamp(48px, 7vh, 80px))",
         paddingBottom: "clamp(64px, 9vh, 100px)",
         paddingLeft:   "clamp(20px, 4vw, 56px)",
