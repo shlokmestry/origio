@@ -28,8 +28,9 @@ const CITY_REGION: Record<string, string> = {
   auckland:'Asia & Oceania', seoul:'Asia & Oceania',
   bangkok:'Asia & Oceania', 'chiang-mai':'Asia & Oceania', bali:'Asia & Oceania',
   'kuala-lumpur':'Asia & Oceania', 'da-nang':'Asia & Oceania', 'ho-chi-minh-city':'Asia & Oceania',
-  bangalore:'Asia & Oceania',
+  bangalore:'Asia & Oceania', taipei:'Asia & Oceania',
   dubai:'Middle East & Africa', 'abu-dhabi':'Middle East & Africa', 'cape-town':'Middle East & Africa',
+  nairobi:'Middle East & Africa',
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -495,6 +496,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Pick strip */}
         <section className={styles.pickStrip}>
+          <p className={styles.pickSeoLine}>
+            Compare rent, groceries, utilities across 60 cities. Pick up to 4.
+          </p>
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>
               <span className={styles.pickLblArr}>→</span> Pick cities
