@@ -140,7 +140,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const { data } = await supabase.from("cities").select("slug").limit(50);
+  const { data } = await supabase.from("cities").select("slug").limit(100);
   return (data ?? []).map((c) => ({ slug: c.slug }));
 }
 

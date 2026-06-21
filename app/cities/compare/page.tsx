@@ -19,6 +19,8 @@ const TO_EUR: Record<string, number> = {
   ZAR: 0.050,             // South African Rand — Cape Town
   GEL: 0.34,              // Georgian Lari — Tbilisi
   VND: 0.000037,          // Vietnamese Dong — Da Nang
+  TWD: 0.028,             // Taiwan Dollar — Taipei
+  KES: 0.0072,            // Kenyan Shilling — Nairobi (city uses USD in DB)
   ARS: 0.00092,           // Argentine Peso (kept for reference; BA rows use USD)
 }
 
