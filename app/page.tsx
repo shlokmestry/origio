@@ -114,103 +114,6 @@ function CitiesSection() {
         borderTop:  "1px solid #1c1c1c",
       }}
     >
-      {/* ── Header row ── */}
-      <div style={{
-        display:        "flex",
-        justifyContent: "space-between",
-        alignItems:     "flex-start",
-        marginBottom:   "clamp(24px, 3.5vh, 40px)",
-        opacity:        inView ? 1 : 0,
-        transform:      inView ? "none" : "translateY(16px)",
-        transition:     "opacity 0.6s ease, transform 0.6s ease",
-      }}>
-        <div>
-          {/* Eyebrow */}
-          <p style={{
-            fontFamily:    "Satoshi, sans-serif",
-            fontSize:      11,
-            fontWeight:    700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color:         "rgba(255,255,255,0.35)",
-            margin:        "0 0 10px",
-            display:       "flex",
-            alignItems:    "center",
-            gap:           8,
-          }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#00ffd5", display: "inline-block", flexShrink: 0 }} />
-            Feature · Cities Atlas
-          </p>
-
-          {/* Headline */}
-          <h2 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(44px, 7vw, 96px)",
-            lineHeight:    0.92,
-            letterSpacing: "-0.03em",
-            color:         "#ffffff",
-            margin:        0,
-          }}>
-            CITIES.
-          </h2>
-          <h2 style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(44px, 7vw, 96px)",
-            lineHeight:    0.92,
-            letterSpacing: "-0.03em",
-            color:         "rgba(255,255,255,0.22)",
-            margin:        "4px 0 0",
-          }}>
-            NOT JUST COUNTRIES.
-          </h2>
-
-          {/* Sub-line */}
-          <p style={{
-            fontFamily: "Satoshi, sans-serif",
-            fontSize:   "clamp(13px, 1.3vw, 15px)",
-            color:      "rgba(255,255,255,0.38)",
-            marginTop:  "clamp(14px, 2vh, 22px)",
-            marginBottom: 0,
-            maxWidth:   520,
-            lineHeight: 1.6,
-          }}>
-            Real rent, internet speed and liveability data — not blended country averages.
-          </p>
-        </div>
-
-        {/* Count badge */}
-        <div style={{
-          textAlign:  "right",
-          flexShrink: 0,
-          paddingTop: 4,
-        }}>
-          <p style={{
-            fontFamily:    "Cabinet Grotesk, sans-serif",
-            fontWeight:    800,
-            fontSize:      "clamp(18px, 2vw, 26px)",
-            letterSpacing: "0.06em",
-            color:         "rgba(255,255,255,0.55)",
-            margin:        0,
-          }}>
-            60 CITIES
-          </p>
-          <p style={{
-            fontFamily:    "Satoshi, sans-serif",
-            fontSize:      10,
-            letterSpacing: "0.14em",
-            color:         "rgba(255,255,255,0.22)",
-            margin:        "4px 0 0",
-            textTransform: "uppercase",
-          }}>
-            6 Regions · 20+ Countries
-          </p>
-        </div>
-      </div>
-
-      {/* ── Divider ── */}
-      <div style={{ borderTop: "1px solid #222", marginBottom: "clamp(24px, 3.5vh, 40px)" }} />
 
       {/* ── Cards grid ── */}
       <div style={{
@@ -219,6 +122,7 @@ function CitiesSection() {
         gridTemplateRows:    "1fr auto",
         gap:                 12,
         maxWidth:            1200,
+        margin:              "0 auto",
         opacity:             inView ? 1 : 0,
         transform:           inView ? "none" : "translateY(24px)",
         transition:          "opacity 0.7s ease 120ms, transform 0.7s ease 120ms",
