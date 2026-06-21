@@ -74,128 +74,380 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
-// ─── Cities teaser section ────────────────────────────────────────────────────
+// ─── City card data ───────────────────────────────────────────────────────────
+const FEATURE_CITIES = [
+  {
+    slug:    "lisbon",
+    name:    "LISBON",
+    country: "Portugal",
+    cc:      "PT",
+    rent:    "€1,240/mo",
+    internet:"94 Mbps",
+    safety:  "7.2",
+    img:     "/cities/lisbon.jpg",
+    imgPos:  "center 55%",
+  },
+  {
+    slug:    "berlin",
+    name:    "BERLIN",
+    country: "Germany",
+    cc:      "DE",
+    rent:    "€1,350/mo",
+    internet:"88 Mbps",
+    safety:  "6.8",
+    img:     "/cities/berlin.jpg",
+    imgPos:  "center 40%",
+  },
+];
+
+// ─── Cities Atlas section ─────────────────────────────────────────────────────
 function CitiesSection() {
-  const { ref, inView } = useInView(0.1);
+  const { ref, inView } = useInView(0.08);
 
   return (
     <section
       ref={ref}
-      aria-label="Explore cities"
+      aria-label="Cities Atlas"
       style={{
-        background:    "#0a0a0a",
-        padding:       "clamp(72px, 10vh, 112px) clamp(16px, 3vw, 40px)",
-        display:       "flex",
-        flexDirection: "column",
-        alignItems:    "center",
-        borderTop:     "1px solid #1a1a1a",
+        background: "#0d0d0d",
+        padding:    "clamp(64px, 9vh, 100px) clamp(20px, 4vw, 56px)",
+        borderTop:  "1px solid #1c1c1c",
       }}
     >
-      {/* Photo — wider, with border */}
+      {/* ── Header row ── */}
       <div style={{
-        position:     "relative",
-        width:        "100%",
-        maxWidth:     1040,
-        marginBottom: "clamp(32px, 5vh, 52px)",
-        opacity:      inView ? 1 : 0,
-        transform:    inView ? "translateY(0)" : "translateY(20px)",
-        transition:   "opacity 0.7s cubic-bezier(0.16,1,0.3,1) 80ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) 80ms",
+        display:        "flex",
+        justifyContent: "space-between",
+        alignItems:     "flex-start",
+        marginBottom:   "clamp(24px, 3.5vh, 40px)",
+        opacity:        inView ? 1 : 0,
+        transform:      inView ? "none" : "translateY(16px)",
+        transition:     "opacity 0.6s ease, transform 0.6s ease",
       }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/manincity.jpg"
-          alt="Person standing in a city at night"
-          style={{
-            width:          "100%",
-            height:         "clamp(320px, 44vw, 560px)",
-            objectFit:      "cover",
-            objectPosition: "center 40%",
-            display:        "block",
-            border:         "2px solid rgba(240,240,232,0.14)",
-            boxShadow:      "5px 5px 0 rgba(240,240,232,0.05)",
-          }}
-        />
+        <div>
+          {/* Eyebrow */}
+          <p style={{
+            fontFamily:    "Satoshi, sans-serif",
+            fontSize:      11,
+            fontWeight:    700,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color:         "rgba(255,255,255,0.35)",
+            margin:        "0 0 10px",
+            display:       "flex",
+            alignItems:    "center",
+            gap:           8,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#00ffd5", display: "inline-block", flexShrink: 0 }} />
+            Feature · Cities Atlas
+          </p>
 
-        {/* Text overlay at bottom */}
+          {/* Headline */}
+          <h2 style={{
+            fontFamily:    "Cabinet Grotesk, sans-serif",
+            fontWeight:    800,
+            fontSize:      "clamp(44px, 7vw, 96px)",
+            lineHeight:    0.92,
+            letterSpacing: "-0.03em",
+            color:         "#ffffff",
+            margin:        0,
+          }}>
+            CITIES.
+          </h2>
+          <h2 style={{
+            fontFamily:    "Cabinet Grotesk, sans-serif",
+            fontWeight:    800,
+            fontSize:      "clamp(44px, 7vw, 96px)",
+            lineHeight:    0.92,
+            letterSpacing: "-0.03em",
+            color:         "rgba(255,255,255,0.22)",
+            margin:        "4px 0 0",
+          }}>
+            NOT JUST COUNTRIES.
+          </h2>
+
+          {/* Sub-line */}
+          <p style={{
+            fontFamily: "Satoshi, sans-serif",
+            fontSize:   "clamp(13px, 1.3vw, 15px)",
+            color:      "rgba(255,255,255,0.38)",
+            marginTop:  "clamp(14px, 2vh, 22px)",
+            marginBottom: 0,
+            maxWidth:   520,
+            lineHeight: 1.6,
+          }}>
+            Real rent, internet speed and liveability data — not blended country averages.
+          </p>
+        </div>
+
+        {/* Count badge */}
         <div style={{
-          position:   "absolute",
-          bottom:     0,
-          left:       0,
-          right:      0,
-          padding:    "clamp(20px, 3.5vw, 44px)",
-          background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 55%, transparent 100%)",
+          textAlign:  "right",
+          flexShrink: 0,
+          paddingTop: 4,
         }}>
           <p style={{
             fontFamily:    "Cabinet Grotesk, sans-serif",
             fontWeight:    800,
-            fontSize:      "clamp(28px, 4.5vw, 60px)",
-            letterSpacing: "-0.03em",
-            lineHeight:    1.05,
-            color:         "#f0f0e8",
+            fontSize:      "clamp(18px, 2vw, 26px)",
+            letterSpacing: "0.06em",
+            color:         "rgba(255,255,255,0.55)",
             margin:        0,
           }}>
-            Explore{" "}
-            <Link
-              href="/cities"
-              style={{
-                color:                   "inherit",
-                textDecoration:          "underline",
-                textDecorationColor:     "rgba(240,240,232,0.45)",
-                textUnderlineOffset:     "5px",
-                textDecorationThickness: "2px",
-                transition:              "text-decoration-color 0.15s ease",
-              }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "#00ffd5"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecorationColor = "rgba(240,240,232,0.45)"}
-            >
-              Cities
-            </Link>
+            60 CITIES
           </p>
-
-          {/* Click hint — tiny annotation below */}
-          <Link
-            href="/cities"
-            aria-hidden
-            tabIndex={-1}
-            style={{
-              display:        "inline-flex",
-              alignItems:     "center",
-              gap:            5,
-              marginTop:      8,
-              textDecoration: "none",
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden style={{ opacity: 0.4 }}>
-              <path d="M1 10L10 1M10 1H4M10 1V7" stroke="#f0f0e8" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{
-              fontFamily:    "Satoshi, sans-serif",
-              fontSize:      10,
-              letterSpacing: "0.1em",
-              color:         "rgba(240,240,232,0.35)",
-              textTransform: "uppercase" as const,
-            }}>
-              click to explore
-            </span>
-          </Link>
+          <p style={{
+            fontFamily:    "Satoshi, sans-serif",
+            fontSize:      10,
+            letterSpacing: "0.14em",
+            color:         "rgba(255,255,255,0.22)",
+            margin:        "4px 0 0",
+            textTransform: "uppercase",
+          }}>
+            6 Regions · 20+ Countries
+          </p>
         </div>
       </div>
 
-      {/* Sub-line */}
-      <p style={{
-        fontFamily:  "Satoshi, sans-serif",
-        fontSize:    "clamp(13px, 1.4vw, 15px)",
-        color:       "rgba(240,240,232,0.32)",
-        lineHeight:  1.65,
-        maxWidth:    460,
-        textAlign:   "center",
-        margin:      0,
-        opacity:     inView ? 1 : 0,
-        transition:  "opacity 0.5s ease 200ms",
+      {/* ── Divider ── */}
+      <div style={{ borderTop: "1px solid #222", marginBottom: "clamp(24px, 3.5vh, 40px)" }} />
+
+      {/* ── Cards grid ── */}
+      <div style={{
+        display:             "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gridTemplateRows:    "1fr auto",
+        gap:                 12,
+        maxWidth:            1200,
+        opacity:             inView ? 1 : 0,
+        transform:           inView ? "none" : "translateY(24px)",
+        transition:          "opacity 0.7s ease 120ms, transform 0.7s ease 120ms",
       }}>
-        60 cities across your matched countries. Rent, internet, liveability ~ side by side.
-      </p>
+        {/* Large city card — spans 2 rows */}
+        <div style={{ gridRow: "1 / 3" }}>
+          <CityCard city={FEATURE_CITIES[0]} large />
+        </div>
+
+        {/* Smaller city card */}
+        <div>
+          <CityCard city={FEATURE_CITIES[1]} large={false} />
+        </div>
+
+        {/* Compare CTA card */}
+        <div style={{
+          background:  "#161616",
+          border:      "1px solid #252525",
+          padding:     "clamp(20px, 2.5vw, 32px)",
+          display:     "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          minHeight:   140,
+        }}>
+          <div>
+            <p style={{
+              fontFamily:    "Satoshi, sans-serif",
+              fontSize:      10,
+              fontWeight:    700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color:         "rgba(255,255,255,0.28)",
+              margin:        "0 0 10px",
+            }}>
+              Tool
+            </p>
+            <h3 style={{
+              fontFamily:    "Cabinet Grotesk, sans-serif",
+              fontWeight:    800,
+              fontSize:      "clamp(22px, 2.6vw, 36px)",
+              letterSpacing: "-0.02em",
+              lineHeight:    1.0,
+              color:         "#ffffff",
+              margin:        0,
+            }}>
+              COMPARE<br />ANY 2 CITIES
+            </h3>
+            <p style={{
+              fontFamily: "Satoshi, sans-serif",
+              fontSize:   12,
+              color:      "rgba(255,255,255,0.35)",
+              margin:     "10px 0 0",
+              lineHeight: 1.55,
+            }}>
+              Rent. Internet. Safety.<br />Side by side.
+            </p>
+          </div>
+          <Link
+            href="/cities/compare"
+            style={{
+              display:        "inline-flex",
+              alignItems:     "center",
+              gap:            8,
+              marginTop:      20,
+              padding:        "9px 18px",
+              border:         "1px solid rgba(255,255,255,0.22)",
+              color:          "rgba(255,255,255,0.75)",
+              fontFamily:     "Satoshi, sans-serif",
+              fontSize:       11,
+              fontWeight:     700,
+              letterSpacing:  "0.1em",
+              textTransform:  "uppercase",
+              textDecoration: "none",
+              transition:     "border-color 0.15s, color 0.15s",
+              alignSelf:      "flex-start",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = "#00ffd5";
+              (e.currentTarget as HTMLElement).style.color = "#00ffd5";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)";
+            }}
+          >
+            Compare →
+          </Link>
+        </div>
+      </div>
     </section>
+  );
+}
+
+// ─── Individual city card ─────────────────────────────────────────────────────
+function CityCard({ city, large }: { city: typeof FEATURE_CITIES[0]; large: boolean }) {
+  return (
+    <Link
+      href={`/city/${city.slug}`}
+      style={{
+        display:        "block",
+        position:       "relative",
+        height:         large ? "clamp(340px, 46vw, 580px)" : "clamp(180px, 22vw, 290px)",
+        overflow:       "hidden",
+        textDecoration: "none",
+        background:     "#111",
+      }}
+    >
+      {/* Photo placeholder — user will supply images later */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={city.img}
+        alt={city.name}
+        style={{
+          position:       "absolute",
+          inset:          0,
+          width:          "100%",
+          height:         "100%",
+          objectFit:      "cover",
+          objectPosition: city.imgPos,
+          transition:     "transform 0.5s ease",
+        }}
+        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+      />
+
+      {/* Gradient overlay */}
+      <div style={{
+        position:   "absolute",
+        inset:      0,
+        background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.35) 100%)",
+      }} />
+
+      {/* Top row: country tag + IN ATLAS badge */}
+      <div style={{
+        position:       "absolute",
+        top:            0,
+        left:           0,
+        right:          0,
+        padding:        "clamp(12px, 1.5vw, 18px) clamp(14px, 1.8vw, 22px)",
+        display:        "flex",
+        justifyContent: "space-between",
+        alignItems:     "flex-start",
+      }}>
+        <p style={{
+          fontFamily:    "Satoshi, sans-serif",
+          fontSize:      10,
+          fontWeight:    700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color:         "rgba(255,255,255,0.65)",
+          margin:        0,
+        }}>
+          {city.cc} · {city.country}
+        </p>
+        <p style={{
+          fontFamily:    "Satoshi, sans-serif",
+          fontSize:      9,
+          fontWeight:    700,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color:         "rgba(255,255,255,0.45)",
+          margin:        0,
+          border:        "1px solid rgba(255,255,255,0.2)",
+          padding:       "3px 7px",
+        }}>
+          In Atlas
+        </p>
+      </div>
+
+      {/* Bottom: city name + stats + CTA */}
+      <div style={{
+        position: "absolute",
+        bottom:   0,
+        left:     0,
+        right:    0,
+        padding:  "clamp(14px, 1.8vw, 22px) clamp(14px, 1.8vw, 22px) clamp(16px, 2vw, 24px)",
+      }}>
+        <h3 style={{
+          fontFamily:    "Cabinet Grotesk, sans-serif",
+          fontWeight:    800,
+          fontSize:      large ? "clamp(40px, 6.5vw, 88px)" : "clamp(26px, 3.8vw, 52px)",
+          letterSpacing: "-0.03em",
+          lineHeight:    0.9,
+          color:         "#ffffff",
+          margin:        "0 0 clamp(10px, 1.4vw, 16px)",
+        }}>
+          {city.name}
+        </h3>
+
+        {/* Stats chips */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: "clamp(10px, 1.4vw, 16px)" }}>
+          {[
+            { label: city.rent },
+            { label: city.internet },
+            { label: `Safety ${city.safety}` },
+          ].map(chip => (
+            <span key={chip.label} style={{
+              fontFamily:    "Satoshi, sans-serif",
+              fontSize:      11,
+              fontWeight:    600,
+              color:         "rgba(255,255,255,0.85)",
+              background:    "rgba(0,0,0,0.55)",
+              border:        "1px solid rgba(255,255,255,0.15)",
+              padding:       "4px 10px",
+              backdropFilter:"blur(4px)",
+              letterSpacing: "0.02em",
+            }}>
+              {chip.label}
+            </span>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <span style={{
+          display:       "inline-flex",
+          alignItems:    "center",
+          gap:           7,
+          fontFamily:    "Satoshi, sans-serif",
+          fontSize:      11,
+          fontWeight:    700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color:         "#00ffd5",
+          border:        "1px solid rgba(0,255,213,0.45)",
+          padding:       "7px 14px",
+        }}>
+          View City →
+        </span>
+      </div>
+    </Link>
   );
 }
 
@@ -424,7 +676,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SECTION 2: GLOBE ── */}
+      {/* ── SECTION 2: CITIES ATLAS ── */}
+      <CitiesSection />
+
+      {/* ── SECTION 3: GLOBE ── */}
       <section
         className="globe-section"
         style={{
@@ -460,9 +715,6 @@ export default function Home() {
           />
         </div>
       </section>
-
-      {/* ── SECTION 3: CITIES TEASER ── */}
-      <CitiesSection />
 
       <Footer />
       {overlays}
