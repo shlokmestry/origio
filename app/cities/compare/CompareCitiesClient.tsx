@@ -497,7 +497,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Pick strip */}
         <section className={styles.pickStrip}>
           <p className={styles.pickSeoLine}>
-            Compare rent, groceries, utilities across 55 cities. Pick up to 4.
+            Compare rent, groceries, utilities across 60 cities. Pick up to 4.
           </p>
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>

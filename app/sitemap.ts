@@ -22,15 +22,35 @@ const BLOG_SLUGS = [
   "cost-of-living-dublin-vs-berlin",
 ];
 
+const CITY_SLUGS = [
+  "amsterdam","athens","auckland","bali","bangalore","bangkok","barcelona",
+  "belgrade","berlin","brussels","bucharest","budapest","buenos-aires",
+  "cape-town","chiang-mai","copenhagen","da-nang","dubai","dublin",
+  "helsinki","ho-chi-minh-city","kuala-lumpur","limassol","lisbon","london",
+  "malaga","medellin","melbourne","mexico-city","miami","milan","munich",
+  "new-york","osaka","oslo","panama-city","paris","porto","prague","rome",
+  "san-jose-cr","sao-paulo","seoul","singapore","split","stockholm","sydney",
+  "tallinn","tbilisi","tokyo","toronto","vancouver","vienna","warsaw","zurich",
+  "san-francisco","austin","madrid","taipei","nairobi",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/wizard`, lastModified: NOW, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/cities`, lastModified: NOW, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/cities/compare`, lastModified: NOW, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/blog`, lastModified: NOW, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/compare`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/salary-calculator`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/about`, lastModified: NOW, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/faq`, lastModified: NOW, changeFrequency: "monthly", priority: 0.5 },
+    ...CITY_SLUGS.map(slug => ({
+      url: `${BASE}/city/${slug}`,
+      lastModified: NOW,
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    })),
     ...COUNTRY_SLUGS.map(slug => ({
       url: `${BASE}/country/${slug}`,
       lastModified: NOW,

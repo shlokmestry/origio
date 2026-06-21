@@ -7,6 +7,25 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
 
   /* ── Europe ── */
 
+  lisbon: ( // Belém Tower — Manueline stone tower rising from the Tagus
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="78" y="30" width="44" height="72" strokeWidth="1.8"/>
+      <rect x="70" y="88" width="60" height="14" strokeWidth="1.8"/>
+      <path d="M78 30 Q100 14 122 30" strokeWidth="1.8"/>
+      <line x1="100" y1="14" x2="100" y2="6" strokeWidth="1.8"/>
+      <line x1="93" y1="10" x2="107" y2="10" strokeWidth="1.1"/>
+      <rect x="84" y="40" width="10" height="14" strokeWidth="1.1"/>
+      <rect x="106" y="40" width="10" height="14" strokeWidth="1.1"/>
+      <rect x="84" y="62" width="10" height="14" strokeWidth="1.1"/>
+      <rect x="106" y="62" width="10" height="14" strokeWidth="1.1"/>
+      <line x1="78" y1="56" x2="122" y2="56" strokeWidth="1.1"/>
+      <line x1="70" y1="88" x2="130" y2="88" strokeWidth="1.1"/>
+      <line x1="4" y1="110" x2="196" y2="110" strokeWidth="1.8"/>
+      <path d="M4 110 Q52 100 70 102 Q80 110 4 110" strokeWidth="1.1"/>
+      <path d="M196 110 Q148 100 130 102 Q120 110 196 110" strokeWidth="1.1"/>
+    </svg>
+  ),
+
   paris: ( // Eiffel Tower — arched legs + lattice
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
       <line x1="100" y1="5" x2="100" y2="18" strokeWidth="1.8"/>
