@@ -139,87 +139,116 @@ function HeroCard({ passport, position, onSelect }: {
   const color  = position === 1 ? MINT : position === 2 ? "#a3e635" : "#facc15";
   const count  = useCountUp(passport.score, (position - 1) * 200);
   const rarity = getRarity(passport.population);
-  const [glow, setGlow]   = useState(false);
-  const [hov,  setHov]    = useState(false);
 
-  // Pulse glow on/off
-  useEffect(() => {
-    let id: ReturnType<typeof setInterval>;
-    const t = setTimeout(() => {
-      id = setInterval(() => setGlow(g => !g), 1600);
-    }, 1200 + (position - 1) * 300);
-    return () => { clearTimeout(t); clearInterval(id); };
-  }, [position]);
-
-  const shadow = hov
-    ? `0 0 24px ${color}50, 4px 4px 0 ${color}`
-    : glow
-      ? `0 0 16px ${color}35, 3px 3px 0 ${color}`
-      : `3px 3px 0 ${color}`;
-
-  const icons: Record<1|2|3, string> = { 1: "⚡", 2: "🔑", 3: "🌍" };
+  const animDelay = `${(position - 1) * 0.6}s`;
+  const boltId    = `bolt-${position}`;
+  const scanId    = `scan-${position}`;
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(passport)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        flex: position === 1 ? "1.15" : "1",
-        display: "block",
-        background: SURF,
-        border: `1px solid ${color}`,
-        boxShadow: shadow,
-        transition: "box-shadow 1.4s ease",
-        padding: "24px 20px 20px",
-        cursor: "pointer",
-        userSelect: "none",
-        textAlign: "left",
-        font: "inherit",
-        color: "inherit",
-      }}
-    >
-      {/* Badge + icon */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <span style={{
-          fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
-          textTransform: "uppercase", color,
-          border: `1px solid ${color}`, padding: "3px 8px",
+    <>
+      <style>{`
+        @keyframes ${boltId} {
+          0%   { opacity: 0; transform: scaleY(0.6) scaleX(0.8); filter: brightness(1); }
+          8%   { opacity: 1; transform: scaleY(1) scaleX(1);     filter: brightness(2.5); }
+          16%  { opacity: 0.3; transform: scaleY(0.9);            filter: brightness(1.2); }
+          22%  { opacity: 1; filter: brightness(3); }
+          30%  { opacity: 0; }
+          100% { opacity: 0; }
+        }
+        @keyframes ${scanId} {
+          0%   { transform: translateY(-100%); opacity: 0; }
+          10%  { opacity: 0.6; }
+          90%  { opacity: 0.2; }
+          100% { transform: translateY(400%); opacity: 0; }
+        }
+        @keyframes border-charge-${position} {
+          0%, 70%, 100% { box-shadow: 3px 3px 0 ${color}; }
+          72%  { box-shadow: 0 0 8px ${color}60, 3px 3px 0 ${color}; }
+          74%  { box-shadow: 0 0 20px ${color}90, 0 0 40px ${color}40, 4px 4px 0 ${color}; }
+          76%  { box-shadow: 0 0 6px ${color}40, 3px 3px 0 ${color}; }
+          78%  { box-shadow: 0 0 16px ${color}70, 4px 4px 0 ${color}; }
+          80%  { box-shadow: 3px 3px 0 ${color}; }
+        }
+      `}</style>
+
+      <button
+        type="button"
+        onClick={() => onSelect(passport)}
+        style={{
+          flex: position === 1 ? "1.15" : "1",
+          display: "block",
+          background: SURF,
+          border: `1px solid ${color}`,
+          animation: `border-charge-${position} 4s ease-in-out ${animDelay} infinite`,
+          padding: "24px 20px 20px",
+          cursor: "pointer",
+          userSelect: "none",
+          textAlign: "left",
+          font: "inherit",
+          color: "inherit",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Scan line */}
+        <div style={{
+          position: "absolute", left: 0, right: 0, top: 0,
+          height: "30%", pointerEvents: "none",
+          background: `linear-gradient(to bottom, ${color}00, ${color}18, ${color}00)`,
+          animation: `${scanId} 4s ease-in-out ${animDelay} infinite`,
+        }} />
+
+        {/* Lightning bolt SVG */}
+        <div style={{
+          position: "absolute", top: 10, right: 10,
+          pointerEvents: "none",
+          animation: `${boltId} 4s ease-out ${animDelay} infinite`,
         }}>
-          RANK #{passport.rank}
-        </span>
-        <span style={{ fontSize: 18 }}>{icons[position]}</span>
-      </div>
+          <svg width="14" height="22" viewBox="0 0 14 22" fill="none">
+            <path d="M8 0L0 13h6l-1 9 9-13H8l1-9z" fill={color} />
+          </svg>
+        </div>
 
-      {/* Flag + name */}
-      <span style={{ fontSize: 30, display: "block", marginBottom: 8 }}>{passport.flag}</span>
-      <p style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: "0 0 16px", lineHeight: 1 }}>
-        {passport.name.toUpperCase()}
-      </p>
+        {/* Badge */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <span style={{
+            fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
+            textTransform: "uppercase", color,
+            border: `1px solid ${color}`, padding: "3px 8px",
+          }}>
+            RANK #{passport.rank}
+          </span>
+        </div>
 
-      {/* Score */}
-      <p style={{
-        fontFamily: HEAD, fontSize: position === 1 ? 56 : 48, fontWeight: 800,
-        letterSpacing: "-0.04em", color, margin: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums",
-      }}>
-        {count}
-      </p>
-      <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "6px 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        destinations
-      </p>
+        {/* Flag + name */}
+        <span style={{ fontSize: 30, display: "block", marginBottom: 8 }}>{passport.flag}</span>
+        <p style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: "0 0 16px", lineHeight: 1 }}>
+          {passport.name.toUpperCase()}
+        </p>
 
-      {/* Bar */}
-      <div style={{ height: 2, background: BORD, marginBottom: 12 }}>
-        <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
-      </div>
+        {/* Score */}
+        <p style={{
+          fontFamily: HEAD, fontSize: position === 1 ? 56 : 48, fontWeight: 800,
+          letterSpacing: "-0.04em", color, margin: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+        }}>
+          {count}
+        </p>
+        <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "6px 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          destinations
+        </p>
 
-      {/* Rarity */}
-      <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: 0 }}>
-        <span style={{ color: FG }}>{rarity.holders}</span> holders ·{" "}
-        <span style={{ color }}>rarer than {rarity.rarer}</span>
-      </p>
-    </button>
+        {/* Bar */}
+        <div style={{ height: 2, background: BORD, marginBottom: 12 }}>
+          <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
+        </div>
+
+        {/* Rarity */}
+        <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: 0 }}>
+          <span style={{ color: FG }}>{rarity.holders}</span> holders ·{" "}
+          <span style={{ color }}>rarer than {rarity.rarer}</span>
+        </p>
+      </button>
+    </>
   );
 }
 
@@ -406,21 +435,16 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PassportPowerClient() {
   const [selected, setSelected] = useState<Passport | null>(null);
-  const [clickCount, setClickCount] = useState(0);
 
   const top1 = ALL_PASSPORTS[0];
   const top2 = ALL_PASSPORTS[1];
   const top3 = ALL_PASSPORTS[2];
 
-  const handleSelect = (p: Passport) => { setClickCount(c => c + 1); setSelected(p); };
+  const handleSelect = (p: Passport) => setSelected(p);
   const handleClose  = useCallback(() => setSelected(null), []);
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
-      {/* DEBUG STRIP — remove once clicks confirmed working */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99998, background: clickCount > 0 ? "#00ffd5" : "#333", color: "#000", padding: "8px 16px", fontFamily: "monospace", fontSize: 12, textAlign: "center" }}>
-        {clickCount === 0 ? "Click any passport to test" : `✓ Click #${clickCount} registered — last: ${selected?.name ?? "none"} — modal should be visible`}
-      </div>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
