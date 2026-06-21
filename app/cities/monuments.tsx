@@ -860,6 +860,52 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
     </svg>
   ),
 
+  'madrid': ( // Royal Palace — symmetrical facade, pitched roof, two flanking towers
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="20" y="54" width="160" height="56" strokeWidth="1.8"/>
+      <rect x="8" y="66" width="28" height="44" strokeWidth="1.8"/>
+      <rect x="164" y="66" width="28" height="44" strokeWidth="1.8"/>
+      <line x1="8" y1="66" x2="36" y2="54" strokeWidth="1.1"/>
+      <line x1="164" y1="66" x2="192" y2="54" strokeWidth="1.1"/>
+      <rect x="84" y="36" width="32" height="18" strokeWidth="1.1"/>
+      <line x1="100" y1="20" x2="100" y2="36" strokeWidth="1.8"/>
+      <line x1="94" y1="26" x2="106" y2="26" strokeWidth="1.1"/>
+      {[40,60,80,100,120,140,160].map(x => <line key={x} x1={x} y1="54" x2={x} y2="110" strokeWidth="1.1"/>)}
+      <line x1="4" y1="110" x2="196" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  'taipei': ( // Taipei 101 — tapered segmented tower with pagoda-style notches
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="100" y1="4" x2="100" y2="24" strokeWidth="1.8"/>
+      <rect x="90" y="24" width="20" height="6" strokeWidth="1.1"/>
+      <rect x="84" y="30" width="32" height="10" strokeWidth="1.8"/>
+      <rect x="80" y="40" width="40" height="10" strokeWidth="1.1"/>
+      <rect x="76" y="50" width="48" height="10" strokeWidth="1.8"/>
+      <rect x="72" y="60" width="56" height="10" strokeWidth="1.1"/>
+      <rect x="68" y="70" width="64" height="10" strokeWidth="1.8"/>
+      <rect x="64" y="80" width="72" height="10" strokeWidth="1.1"/>
+      <rect x="60" y="90" width="80" height="10" strokeWidth="1.8"/>
+      <rect x="56" y="100" width="88" height="10" strokeWidth="1.1"/>
+      <line x1="4" y1="110" x2="196" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  'nairobi': ( // Kenyatta ICC — cylindrical tower with disc crown above city skyline
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="86" y="32" width="28" height="72" strokeWidth="1.8"/>
+      <path d="M76 32 Q100 18 124 32" strokeWidth="1.8"/>
+      <ellipse cx="100" cy="32" rx="24" ry="6" strokeWidth="1.1"/>
+      <line x1="100" y1="18" x2="100" y2="8" strokeWidth="1.8"/>
+      <line x1="94" y1="14" x2="106" y2="14" strokeWidth="1.1"/>
+      <rect x="30" y="74" width="18" height="36" strokeWidth="1.1"/>
+      <rect x="56" y="82" width="14" height="28" strokeWidth="1.1"/>
+      <rect x="130" y="78" width="16" height="32" strokeWidth="1.1"/>
+      <rect x="154" y="86" width="18" height="24" strokeWidth="1.1"/>
+      <line x1="4" y1="110" x2="196" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
   'abu-dhabi': ( // Sheikh Zayed Grand Mosque — central dome + twin minarets
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
       <rect x="16" y="78" width="168" height="32" strokeWidth="1.8"/>
