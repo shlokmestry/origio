@@ -761,7 +761,7 @@ export default function CityPageClient({ city }: Props) {
 
         /* PERSONAS */
         .personas { padding: 100px 0 0; border-top: 1px solid var(--rule); }
-        .personas-head { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dimmer); margin-bottom: 32px; }
+        .personas-head { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(28px, 3vw, 48px); font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 40px; line-height: 1; }
         .persona-list { display: grid; gap: 2px; max-width: 760px; }
         .persona-row { display: grid; grid-template-columns: 16px 1fr; gap: 16px; align-items: start; padding: 18px 0; border-bottom: 1px solid var(--rule); }
         .persona-row:last-child { border-bottom: none; }
@@ -915,12 +915,10 @@ export default function CityPageClient({ city }: Props) {
         {/* SCENE 0 — OPENER */}
         <section className="scene" style={{ paddingTop: 160 }}>
           <div className="scene-time">
-            <span className="hr">00:00</span>
-            Filed
-            <span className="rule" />
+            <span className="rule" style={{ marginTop: 0 }} />
           </div>
           <div className="scene-story">
-            <p className="scene-meta">Origio Dispatch · Public</p>
+            <p className="scene-meta">{city.continent ?? city.country_name}{city.continent && city.continent !== city.country_name ? ` · ${city.country_name}` : ''}</p>
             <h1 className="scene-head">{city.name}.</h1>
             <p style={{ fontSize: 16, color: "var(--dim)", marginBottom: 20 }}>
               <span aria-label={`${city.country_name} flag`}>{city.flag_emoji}</span> {city.country_name}
@@ -939,21 +937,6 @@ export default function CityPageClient({ city }: Props) {
               A 24-hour field dispatch ~ what {city.name} costs, what it pays, and what it
               feels like to wake up here.
             </p>
-            <Link
-              href={`/cities/compare?cities=${city.slug}`}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                marginTop: 24,
-                padding: "10px 20px",
-                border: "1px solid #2a2a2a",
-                color: "#f0f0e8",
-                fontSize: 12, fontWeight: 700,
-                textTransform: "uppercase", letterSpacing: "0.1em",
-                textDecoration: "none",
-              }}
-            >
-              Compare {city.name} →
-            </Link>
           </div>
           <div className="scene-margin sticky-margin">
             <div className="margin-stack">
@@ -964,6 +947,13 @@ export default function CityPageClient({ city }: Props) {
                   <p className="marg-sub">Cost, salary, visa, quality of life combined.</p>
                 </div>
               )}
+              {d?.cost_rent_city_centre != null && (
+                <div className="marg">
+                  <p className="marg-lbl">Rent · 1BR centre</p>
+                  <p className="marg-val">{sym}{d.cost_rent_city_centre.toLocaleString()}<span className="unit">/mo</span></p>
+                  <p className="marg-sub">Within 15 min of city centre</p>
+                </div>
+              )}
               {city.population && (
                 <div className="marg">
                   <p className="marg-lbl">Population</p>
@@ -971,6 +961,22 @@ export default function CityPageClient({ city }: Props) {
                   <p className="marg-sub">{city.timezone} · {city.language}</p>
                 </div>
               )}
+              <div className="marg" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+                <Link
+                  href={`/cities/compare?cities=${city.slug}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    padding: "10px 20px",
+                    border: "1px solid var(--rule)",
+                    color: "var(--ink)",
+                    fontSize: 11, fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.1em",
+                    textDecoration: "none", transition: "border-color 0.2s",
+                  }}
+                >
+                  Compare {city.name} →
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -1323,7 +1329,7 @@ export default function CityPageClient({ city }: Props) {
 
         {/* PERSONAS */}
         <section className="personas">
-          <p className="personas-head">→ Who this city is for</p>
+          <h2 className="personas-head">Who this city is for.</h2>
           <div className="persona-list">
             {personas.map((p) => (
               <div key={p.label} className="persona-row">
@@ -1378,22 +1384,12 @@ export default function CityPageClient({ city }: Props) {
 
           <div className="df-grid">
             {[
-              { label: "Rent · 1BR centre", val: d?.cost_rent_city_centre, unit: "/mo", accent: true },
-              { label: "Rent · 1BR outside", val: d?.cost_rent_outside, unit: "/mo" },
-              { label: "Utilities", val: d?.cost_utilities_monthly, unit: "/mo" },
-              { label: "Groceries", val: d?.cost_groceries_monthly, unit: "/mo" },
-              { label: "Transit", val: d?.cost_transport_monthly, unit: "/mo" },
+              { label: "Eating out · dinner for two", val: d?.cost_eating_out, unit: "" },
               { label: "Coworking", val: d?.cost_coworking_monthly, unit: "/mo" },
               { label: "Gym", val: d?.cost_gym_monthly, unit: "/mo" },
-              { label: missingCostFields ? "Est. total · incomplete" : "Est. total · single", val: monthlyTotal, unit: "/mo", accent: true },
-              { label: "Software engineer", val: d?.salary_software_engineer, unit: "/yr" },
-              { label: "Income tax", val: d?.income_tax_rate_mid != null ? `${(d.income_tax_rate_mid * 100).toFixed(0)}%` : null, unit: "", raw: true },
-              { label: "Move score", val: d?.move_score, unit: "/10", accent: true },
-              { label: "Safety", val: d?.score_safety, unit: "/10", decimal: true },
-              { label: "Walkability", val: d?.score_walkability, unit: "/10", decimal: true },
-              { label: "Quality of life", val: d?.score_quality_of_life, unit: "/10", decimal: true },
               { label: "Healthcare", val: d?.score_healthcare, unit: "/10", decimal: true },
               { label: "Expat-friendly", val: d?.score_expat_friendliness, unit: "/10", decimal: true },
+              { label: "Nightlife", val: d?.score_nightlife, unit: "/10", decimal: true },
             ].map(({ label, val, unit, accent, raw, decimal }) => (
               <div key={label} className="df-cell">
                 <p className="df-lbl">{label}</p>
