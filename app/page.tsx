@@ -84,7 +84,7 @@ const FEATURE_CITIES = [
     rent:    "€1,240/mo",
     internet:"94 Mbps",
     safety:  "7.2",
-    img:     "/cities/lisbon.jpg",
+    img:     "/lisbonmain.jpg",
     imgPos:  "center 55%",
   },
   {
@@ -95,7 +95,7 @@ const FEATURE_CITIES = [
     rent:    "€1,350/mo",
     internet:"88 Mbps",
     safety:  "6.8",
-    img:     "/cities/berlin.jpg",
+    img:     "/berlinmain.jpg",
     imgPos:  "center 40%",
   },
 ];
