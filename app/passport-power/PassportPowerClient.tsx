@@ -994,8 +994,9 @@ const FUN_FACTS = [
 ];
 
 function FactsTicker() {
-  const [idx, setIdx]     = useState(() => Math.floor(Math.random() * FUN_FACTS.length));
-  const [fade, setFade]   = useState(true);
+  const [idx, setIdx]       = useState(() => Math.floor(Math.random() * FUN_FACTS.length));
+  const [fade, setFade]     = useState(true);
+  const [open, setOpen]     = useState(true);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -1012,62 +1013,101 @@ function FactsTicker() {
 
   return (
     <div style={{
-      border: `1px solid ${BORD}`,
-      padding: "20px",
-      background: SURF,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      minHeight: 160,
-      position: "relative",
-      overflow: "hidden",
+      position: "fixed",
+      bottom: 24,
+      right: 24,
+      zIndex: 9000,
+      width: 280,
     }}>
-      {/* Label */}
-      <p style={{
-        fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
-        textTransform: "uppercase", color: DIM, margin: "0 0 14px",
-        display: "flex", alignItems: "center", gap: 6,
-      }}>
-        <span style={{
-          display: "inline-block", width: 6, height: 6,
-          background: MINT, borderRadius: "50%",
-          animation: "pulse-dot 2s ease-in-out infinite",
-        }} />
-        Did you know
-      </p>
-
-      {/* Fact */}
-      <div style={{
-        flex: 1,
-        opacity: fade ? 1 : 0,
-        transition: "opacity 0.4s ease",
-      }}>
-        <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>{fact.flag}</span>
-        <p style={{
-          fontFamily: SANS, fontSize: 13, color: FG,
-          lineHeight: 1.6, margin: 0,
-        }}>
-          {fact.text}
-        </p>
-      </div>
-
-      {/* Progress dots */}
-      <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
-        {FUN_FACTS.map((_, i) => (
-          <div key={i} style={{
-            width: i === idx ? 16 : 4, height: 4,
-            background: i === idx ? MINT : BORD,
-            transition: "all 0.4s ease",
-          }} />
-        ))}
-      </div>
-
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
       `}</style>
+
+      {/* Collapsed pill */}
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 16px",
+            background: SURF, border: `1px solid ${BORD}`,
+            color: FG, cursor: "pointer", fontFamily: SANS,
+            fontSize: 11, letterSpacing: "0.12em",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.6)",
+            float: "right",
+          }}
+        >
+          <span style={{
+            width: 6, height: 6, background: MINT, borderRadius: "50%", flexShrink: 0,
+            animation: "pulse-dot 2s ease-in-out infinite",
+          }} />
+          DID YOU KNOW
+        </button>
+      )}
+
+      {/* Expanded card */}
+      {open && (
+        <div style={{
+          border: `1px solid ${BORD}`,
+          padding: "18px",
+          background: "#0c0c0c",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.7)",
+          position: "relative",
+        }}>
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <p style={{
+              fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
+              textTransform: "uppercase", color: DIM, margin: 0,
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <span style={{
+                display: "inline-block", width: 6, height: 6,
+                background: MINT, borderRadius: "50%",
+                animation: "pulse-dot 2s ease-in-out infinite",
+              }} />
+              Did you know
+            </p>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              style={{
+                background: "none", border: "none", color: DIM,
+                cursor: "pointer", fontFamily: SANS, fontSize: 14,
+                lineHeight: 1, padding: 0,
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Fact */}
+          <div style={{ opacity: fade ? 1 : 0, transition: "opacity 0.4s ease" }}>
+            <span style={{ fontSize: 22, display: "block", marginBottom: 8 }}>{fact.flag}</span>
+            <p style={{ fontFamily: SANS, fontSize: 13, color: FG, lineHeight: 1.6, margin: 0 }}>
+              {fact.text}
+            </p>
+          </div>
+
+          {/* Progress pips */}
+          <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+            {FUN_FACTS.map((_, i) => (
+              <div key={i} style={{
+                width: i === idx ? 14 : 4, height: 3,
+                background: i === idx ? MINT : BORD,
+                transition: "all 0.4s ease",
+              }} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1096,30 +1136,25 @@ export default function PassportPowerClient() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", gap: 32, alignItems: "flex-start", marginBottom: 40 }}>
-          <div style={{ flex: "1 1 0" }}>
-            <p style={{
-              fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
-              textTransform: "uppercase", color: DIM, marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span style={{ color: MINT, fontSize: 8 }}>●</span>
-              Passport Power · Henley Index 2026 Q2 (17 June 2026)
-            </p>
-            <h1 style={{
-              fontFamily: HEAD, fontSize: "clamp(32px, 5vw, 64px)", fontWeight: 800,
-              letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
-            } as React.CSSProperties}>
-              The world&apos;s<br />
-              <span style={{ color: MINT }}>strongest passports.</span>
-            </h1>
-            <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
-              Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
-            </p>
-          </div>
-          <div style={{ flex: "0 0 280px", minWidth: 0 }}>
-            <FactsTicker />
-          </div>
+        <div style={{ marginBottom: 40 }}>
+          <p style={{
+            fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
+            textTransform: "uppercase", color: DIM, marginBottom: 16,
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ color: MINT, fontSize: 8 }}>●</span>
+            Passport Power · Henley Index 2026 Q2 (17 June 2026)
+          </p>
+          <h1 style={{
+            fontFamily: HEAD, fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 800,
+            letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
+          } as React.CSSProperties}>
+            The world&apos;s<br />
+            <span style={{ color: MINT }}>strongest passports.</span>
+          </h1>
+          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
+            Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
+          </p>
         </div>
 
         {/* Podium — [Japan] [Singapore] [UAE] */}
