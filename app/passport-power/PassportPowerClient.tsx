@@ -563,11 +563,12 @@ function HeroCard({ passport, position, onSelect }: {
 // ─── Share button ────────────────────────────────────────────────────────────
 function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer: string; holders: string; pct: string } }) {
   const [copied, setCopied] = useState(false);
-  const text = `My ${passport.name} passport ranks #${passport.rank} globally (${passport.score}/${MAX_SCORE} destinations). Rarer than ${rarity.rarer} of the world. via origio.co`;
+  const color = tierColor(passport.score);
+  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · Rarer than ${rarity.rarer} of the world.\norigio.co/passport-power`;
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     });
   };
   return (
@@ -575,23 +576,75 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
       <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
         Share
       </p>
-      <div style={{ background: SURF, border: `1px solid ${BORD}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-        <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: 0, lineHeight: 1.5, flex: 1 }}>{text}</p>
-        <button
-          type="button"
-          onClick={copy}
-          style={{
-            background: copied ? MINT : "transparent",
-            border: `1px solid ${copied ? MINT : BORD}`,
-            color: copied ? BG : FG,
-            fontFamily: SANS, fontSize: 11, fontWeight: 700,
-            padding: "8px 14px", cursor: "pointer", flexShrink: 0,
-            letterSpacing: "0.1em", transition: "all 0.15s",
-          }}
-        >
-          {copied ? "COPIED" : "COPY"}
-        </button>
+
+      {/* Card preview — this is what gets shared */}
+      <div style={{
+        background: "#080808",
+        border: `1px solid ${color}`,
+        padding: "20px",
+        marginBottom: 8,
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Subtle glow */}
+        <div style={{
+          position: "absolute", top: -40, right: -40,
+          width: 120, height: 120,
+          background: `radial-gradient(circle, ${color}20, transparent 70%)`,
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <p style={{ fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
+              origio.co · passport power
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <span style={{ fontSize: 22 }}>{passport.flag}</span>
+              <p style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: 0 }}>
+                {passport.name.toUpperCase()}
+              </p>
+            </div>
+            <p style={{ fontFamily: HEAD, fontSize: 13, color, margin: "0 0 6px", letterSpacing: "0.06em" }}>
+              RANK #{passport.rank} · {tierLabel(passport.score)}
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: 0, lineHeight: 1.5 }}>
+              Rarer than <span style={{ color: FG, fontWeight: 600 }}>{rarity.rarer}</span> of the world
+            </p>
+          </div>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <p style={{ fontFamily: HEAD, fontSize: 40, fontWeight: 800, letterSpacing: "-0.04em", color, margin: 0, lineHeight: 1 }}>
+              {passport.score}
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 9, color: DIM, margin: "4px 0 0", letterSpacing: "0.1em" }}>
+              DESTINATIONS
+            </p>
+          </div>
+        </div>
+
+        {/* Bar */}
+        <div style={{ height: 2, background: BORD, marginTop: 16 }}>
+          <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
+        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={copy}
+        style={{
+          width: "100%",
+          background: copied ? color : "transparent",
+          border: `1px solid ${copied ? color : BORD}`,
+          color: copied ? BG : FG,
+          fontFamily: SANS, fontSize: 11, fontWeight: 700,
+          padding: "11px 0", cursor: "pointer",
+          letterSpacing: "0.14em", textTransform: "uppercase",
+          transition: "all 0.2s",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+        }}
+      >
+        {copied ? "✓ Copied to clipboard" : "Copy share text"}
+      </button>
     </div>
   );
 }
