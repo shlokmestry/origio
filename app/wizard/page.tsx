@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
 import { JOB_ROLES } from "@/types";
@@ -301,14 +301,15 @@ function SearchableSelect({ value, onChange, options, placeholder }: {
 // ── Main ───────────────────────────────────────────────────────────────────
 export default function WizardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep]     = useState(0);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({ priorities: [], languages: [], dealBreakers: [] });
 
   // dual-passport intro state (step 0)
-  const [hasDualPassport, setHasDualPassport] = useState<boolean | null>(null);
-  const [introPassport, setIntroPassport] = useState('');
+  const [hasDualPassport, setHasDualPassport] = useState<boolean | null>(() => searchParams?.get('passport') ? false : null);
+  const [introPassport, setIntroPassport] = useState(() => searchParams?.get('passport') || '');
   const [introSecondPassport, setIntroSecondPassport] = useState('');
   const [introPassportSearch, setIntroPassportSearch] = useState('');
   const [introSecondPassportSearch, setIntroSecondPassportSearch] = useState('');
