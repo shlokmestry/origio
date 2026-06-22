@@ -919,6 +919,109 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
   );
 }
 
+// ─── Fun facts (verified Henley historical data) ──────────────────────────────
+const FUN_FACTS = [
+  { flag: "🇸🇬", text: "Singapore was ranked #38 in 2006. Today it's #1 — the biggest climb in Henley history." },
+  { flag: "🇦🇪", text: "The UAE passport gained 107 places in 10 years (2014→2024), the fastest rise ever recorded." },
+  { flag: "🇺🇸", text: "The US passport peaked at #1 in 2014. It has since dropped to #10 — losing 6 places since 2020." },
+  { flag: "🇦🇫", text: "Afghan passport holders can visit only 15 countries visa-free — fewer than any other passport on Earth." },
+  { flag: "🇯🇵", text: "Japan held the #1 spot every year from 2018 to 2023 — a 6-year reign no other passport has matched." },
+  { flag: "🇩🇪", text: "Germany's passport has ranked in the top 5 every single year since the Henley Index began in 2006." },
+  { flag: "🇲🇨", text: "Monaco has a population of just 36,000 yet its passport unlocks 177 destinations — more than Russia or China." },
+  { flag: "🇨🇳", text: "China's passport score jumped from 44 in 2015 to 83 in 2026, nearly doubling in a decade." },
+  { flag: "🇬🇧", text: "Post-Brexit, UK passport holders lost visa-free access to EU countries for work — its Schengen privileges remain for tourism only." },
+  { flag: "🇰🇷", text: "South Korea's passport has risen 40 places since 2006, now tied #2 alongside Japan and UAE." },
+  { flag: "🇻🇦", text: "Vatican City issues fewer than 800 passports total — yet it unlocks 152 destinations worldwide." },
+  { flag: "🇱🇮", text: "Liechtenstein has a population of just 38,000 but its citizens enjoy visa-free access to 181 destinations." },
+  { flag: "🇸🇦", text: "Saudi Arabia gained 30+ passport ranking places between 2018 and 2026, driven by Vision 2030 diplomacy." },
+  { flag: "🌍", text: "The gap between the strongest and weakest passport is 169 destinations — Singapore (192) vs Afghanistan (23)." },
+  { flag: "🇳🇬", text: "Nigeria's passport score has remained under 50 for 15 years, limiting travel for Africa's most populous nation." },
+  { flag: "🇧🇷", text: "Brazil and Argentina both rank above India and China despite smaller economies — Latin America punches above its weight." },
+  { flag: "🇲🇾", text: "Malaysia's passport ranks #7 globally — stronger than the USA, Canada, and Australia." },
+  { flag: "🌐", text: "Only 6 passports score 180+ — giving their holders access to 90%+ of the world without advance visas." },
+  { flag: "🇵🇹", text: "Portugal's Golden Visa program created one of the most sought-after paths to an EU passport for investors." },
+  { flag: "🇷🇺", text: "Russia's passport has lost 20+ places since 2022 due to sanctions and restricted airspace agreements." },
+];
+
+function FactsTicker() {
+  const [idx, setIdx]     = useState(() => Math.floor(Math.random() * FUN_FACTS.length));
+  const [fade, setFade]   = useState(true);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % FUN_FACTS.length);
+        setFade(true);
+      }, 400);
+    }, 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  const fact = FUN_FACTS[idx];
+
+  return (
+    <div style={{
+      border: `1px solid ${BORD}`,
+      padding: "20px",
+      background: SURF,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      minHeight: 160,
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Label */}
+      <p style={{
+        fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
+        textTransform: "uppercase", color: DIM, margin: "0 0 14px",
+        display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <span style={{
+          display: "inline-block", width: 6, height: 6,
+          background: MINT, borderRadius: "50%",
+          animation: "pulse-dot 2s ease-in-out infinite",
+        }} />
+        Did you know
+      </p>
+
+      {/* Fact */}
+      <div style={{
+        flex: 1,
+        opacity: fade ? 1 : 0,
+        transition: "opacity 0.4s ease",
+      }}>
+        <span style={{ fontSize: 24, display: "block", marginBottom: 10 }}>{fact.flag}</span>
+        <p style={{
+          fontFamily: SANS, fontSize: 13, color: FG,
+          lineHeight: 1.6, margin: 0,
+        }}>
+          {fact.text}
+        </p>
+      </div>
+
+      {/* Progress dots */}
+      <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
+        {FUN_FACTS.map((_, i) => (
+          <div key={i} style={{
+            width: i === idx ? 16 : 4, height: 4,
+            background: i === idx ? MINT : BORD,
+            transition: "all 0.4s ease",
+          }} />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PassportPowerClient() {
   const [selected, setSelected] = useState<Passport | null>(null);
@@ -943,25 +1046,30 @@ export default function PassportPowerClient() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 40 }}>
-          <p style={{
-            fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
-            textTransform: "uppercase", color: DIM, marginBottom: 16,
-            display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <span style={{ color: MINT, fontSize: 8 }}>●</span>
-            Passport Power · Henley Index 2026 Q2 (17 June 2026)
-          </p>
-          <h1 style={{
-            fontFamily: HEAD, fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 800,
-            letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
-          } as React.CSSProperties}>
-            The world&apos;s<br />
-            <span style={{ color: MINT }}>strongest passports.</span>
-          </h1>
-          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
-            Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
-          </p>
+        <div style={{ display: "flex", gap: 32, alignItems: "flex-start", marginBottom: 40 }}>
+          <div style={{ flex: "1 1 0" }}>
+            <p style={{
+              fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
+              textTransform: "uppercase", color: DIM, marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{ color: MINT, fontSize: 8 }}>●</span>
+              Passport Power · Henley Index 2026 Q2 (17 June 2026)
+            </p>
+            <h1 style={{
+              fontFamily: HEAD, fontSize: "clamp(32px, 5vw, 64px)", fontWeight: 800,
+              letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
+            } as React.CSSProperties}>
+              The world&apos;s<br />
+              <span style={{ color: MINT }}>strongest passports.</span>
+            </h1>
+            <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
+              Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
+            </p>
+          </div>
+          <div style={{ flex: "0 0 280px", minWidth: 0 }}>
+            <FactsTicker />
+          </div>
         </div>
 
         {/* Podium — [Japan] [Singapore] [UAE] */}
