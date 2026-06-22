@@ -1088,6 +1088,47 @@ const FUN_FACTS = [
   { flag: "🇷🇺", text: "Russia's passport has lost 20+ places since 2022 due to sanctions and restricted airspace agreements." },
 ];
 
+function FactsTickerInline() {
+  const [idx, setIdx]   = useState(() => Math.floor(Math.random() * FUN_FACTS.length));
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => { setIdx(i => (i + 1) % FUN_FACTS.length); setFade(true); }, 400);
+    }, 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  const fact = FUN_FACTS[idx];
+
+  return (
+    <div style={{
+      border: `1px solid ${BORD}`, padding: "18px",
+      background: "#0c0c0c", height: "100%", boxSizing: "border-box",
+      display: "flex", flexDirection: "column", gap: 12,
+    }}>
+      <style>{`@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
+      <p style={{
+        fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase",
+        color: DIM, margin: 0, display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <span style={{ width: 6, height: 6, background: MINT, borderRadius: "50%", display: "inline-block", animation: "pulse-dot 2s ease-in-out infinite" }} />
+        Did you know
+      </p>
+      <div style={{ flex: 1, opacity: fade ? 1 : 0, transition: "opacity 0.4s ease" }}>
+        <span style={{ fontSize: 22, display: "block", marginBottom: 8 }}>{fact.flag}</span>
+        <p style={{ fontFamily: SANS, fontSize: 13, color: FG, lineHeight: 1.6, margin: 0 }}>{fact.text}</p>
+      </div>
+      <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+        {FUN_FACTS.map((_, i) => (
+          <div key={i} style={{ width: i === idx ? 14 : 4, height: 3, background: i === idx ? MINT : BORD, transition: "all 0.4s ease" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function FactsTicker() {
   const [idx, setIdx]       = useState(() => Math.floor(Math.random() * FUN_FACTS.length));
   const [fade, setFade]     = useState(true);
@@ -1235,25 +1276,30 @@ function PassportPowerInner() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 40 }}>
-          <p style={{
-            fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
-            textTransform: "uppercase", color: DIM, marginBottom: 16,
-            display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <span style={{ color: MINT, fontSize: 8 }}>●</span>
-            Passport Power · Henley Index 2026 Q2 (17 June 2026)
-          </p>
-          <h1 style={{
-            fontFamily: HEAD, fontSize: "clamp(36px, 6vw, 72px)", fontWeight: 800,
-            letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
-          } as React.CSSProperties}>
-            The world&apos;s<br />
-            <span style={{ color: MINT }}>strongest passports.</span>
-          </h1>
-          <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
-            Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
-          </p>
+        <div style={{ display: "flex", gap: 32, alignItems: "stretch", marginBottom: 40 }}>
+          <div style={{ flex: "1 1 0", minWidth: 0 }}>
+            <p style={{
+              fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
+              textTransform: "uppercase", color: DIM, marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{ color: MINT, fontSize: 8 }}>●</span>
+              Passport Power · Henley Index 2026 Q2 (17 June 2026)
+            </p>
+            <h1 style={{
+              fontFamily: HEAD, fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 800,
+              letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
+            } as React.CSSProperties}>
+              The world&apos;s<br />
+              <span style={{ color: MINT }}>strongest passports.</span>
+            </h1>
+            <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
+              Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
+            </p>
+          </div>
+          <div style={{ flex: "0 0 260px", minWidth: 0 }}>
+            <FactsTickerInline />
+          </div>
         </div>
 
         {/* Podium — [Japan] [Singapore] [UAE] */}
@@ -1370,8 +1416,6 @@ function PassportPowerInner() {
       </div>
 
       {selected && <PassportModal passport={selected} onClose={handleClose} />}
-
-      <FactsTicker />
 
       <Footer />
     </div>
