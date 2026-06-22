@@ -1290,11 +1290,11 @@ function PassportPowerInner() {
               fontFamily: HEAD, fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 800,
               letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
             } as React.CSSProperties}>
-              The world&apos;s<br />
-              <span style={{ color: MINT }}>strongest passports.</span>
+              Not all passports<br />
+              <span style={{ color: MINT }}>are equal.</span>
             </h1>
             <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
-              Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
+              192 destinations or 23. One number determines where you can go, live, and build. See where yours stands.
             </p>
           </div>
           <div style={{ position: "absolute", top: 0, right: "min(calc(450px - 50vw), 0px)", width: 260 }}>
