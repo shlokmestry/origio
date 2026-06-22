@@ -1276,8 +1276,8 @@ function PassportPowerInner() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", gap: 32, alignItems: "stretch", marginBottom: 40 }}>
-          <div style={{ flex: "0 1 auto", maxWidth: "58%", minWidth: 0 }}>
+        <div style={{ position: "relative", marginBottom: 40, minHeight: 200 }}>
+          <div style={{ maxWidth: "58%", minWidth: 0 }}>
             <p style={{
               fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
               textTransform: "uppercase", color: DIM, marginBottom: 16,
@@ -1297,7 +1297,7 @@ function PassportPowerInner() {
               Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
             </p>
           </div>
-          <div style={{ flex: "0 0 260px", minWidth: 0, marginLeft: "auto" }}>
+          <div style={{ position: "absolute", top: 0, right: 0, width: 260 }}>
             <FactsTickerInline />
           </div>
         </div>
