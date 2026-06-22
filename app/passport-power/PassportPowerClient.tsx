@@ -1371,6 +1371,8 @@ function PassportPowerInner() {
 
       {selected && <PassportModal passport={selected} onClose={handleClose} />}
 
+      <FactsTicker />
+
       <Footer />
     </div>
   );
