@@ -339,10 +339,11 @@ const MAX_SCORE = 192;
 function getRarity(pop: number) {
   const share    = (pop / WORLD_POP) * 100;
   const rarerNum = 100 - share;
-  const rarer    = rarerNum >= 99.9 ? "99.9%+" : rarerNum >= 99 ? `${rarerNum.toFixed(1)}%` : `${Math.round(rarerNum)}%`;
-  const pct      = share < 0.1 ? "<0.1%" : share < 1 ? `${share.toFixed(2)}%` : `${share.toFixed(1)}%`;
+  // Always show 1 decimal for >99%, 2 decimals for <1%
+  const rarer    = rarerNum >= 99.95 ? "99.9%+" : rarerNum >= 99 ? `${rarerNum.toFixed(1)}%` : `${rarerNum.toFixed(1)}%`;
+  const pct      = share < 0.01 ? "<0.01%" : share < 1 ? `${share.toFixed(2)}%` : `${share.toFixed(1)}%`;
   const holders  = pop >= 1000 ? `${(pop/1000).toFixed(1)}B` : pop >= 1 ? `${pop % 1 === 0 ? pop : pop.toFixed(1)}M` : `${(pop*1000).toFixed(0)}K`;
-  return { rarer, pct, holders };
+  return { rarer, pct, holders, sharePct: share };
 }
 
 function tierColor(score: number) {
@@ -820,19 +821,20 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
             Rarer than {rarity.rarer}
           </p>
           <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "0 0 14px" }}>of the world&apos;s population hold this passport</p>
-          {/* Dot grid visualisation — 100 dots, highlighted = share */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 14 }}>
-            {Array.from({ length: 100 }).map((_, i) => {
-              const shareNum = parseFloat(rarity.pct.replace(/[^0-9.]/g, "")) || 0.01;
-              const lit = i < Math.max(1, Math.round(shareNum));
-              return (
-                <div key={i} style={{
-                  width: 6, height: 6,
-                  background: lit ? color : BORD,
-                  opacity: lit ? 1 : 0.4,
-                }} />
-              );
-            })}
+          {/* Population bar — accurate to actual share */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ height: 6, background: BORD, position: "relative", marginBottom: 6 }}>
+              <div style={{
+                position: "absolute", left: 0, top: 0, height: "100%",
+                background: color,
+                width: `${Math.max(0.5, rarity.sharePct)}%`,
+                minWidth: 3,
+                transition: "width 0.6s ease",
+              }} />
+            </div>
+            <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: 0 }}>
+              <span style={{ color: FG }}>{rarity.pct}</span> of the world · every other person on Earth holds a different passport
+            </p>
           </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[
