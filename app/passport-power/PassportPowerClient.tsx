@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { FlagIcon } from "@/components/FlagIcon";
+import { slugToIso } from "@/lib/flagCodes";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const BG   = "#0a0a0a";
@@ -557,7 +560,11 @@ function HeroCard({ passport, position, onSelect }: {
         </div>
 
         {/* Flag + name */}
-        <span style={{ fontSize: flagSize, display: "block", marginBottom: 8 }}>{passport.flag}</span>
+        <div style={{ marginBottom: 8 }}>
+          {slugToIso(passport.slug)
+            ? <FlagIcon code={slugToIso(passport.slug)!} size={isCenter ? "lg" : "md"} />
+            : <span style={{ fontSize: flagSize }}>{passport.flag}</span>}
+        </div>
         <p style={{
           fontFamily: HEAD, fontSize: isCenter ? 20 : 15, fontWeight: 800,
           letterSpacing: "-0.02em", color: FG, margin: "0 0 16px", lineHeight: 1,
@@ -621,12 +628,12 @@ function HeroCard({ passport, position, onSelect }: {
 }
 
 // ─── Share button ────────────────────────────────────────────────────────────
-function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer: string; holders: string; pct: string } }) {
+function ShareButton({ passport, rarity }: { passport: Passport; rarity: ReturnType<typeof getRarity> }) {
   const [copied, setCopied] = useState(false);
   const color = tierColor(passport.score);
-  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · ${rarity.rarityLabel} — ${rarity.holders} holders worldwide.\nfindorigio.com/passport-power`;
+  const url = `https://findorigio.com/passport-power/${passport.slug}`;
   const copy = () => {
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
@@ -660,7 +667,9 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
               findorigio.com · passport power
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <span style={{ fontSize: 22 }}>{passport.flag}</span>
+              {slugToIso(passport.slug)
+                ? <FlagIcon code={slugToIso(passport.slug)!} size="md" />
+                : <span style={{ fontSize: 22 }}>{passport.flag}</span>}
               <p style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: 0 }}>
                 {passport.name.toUpperCase()}
               </p>
@@ -669,7 +678,8 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
               RANK #{passport.rank} · {tierLabel(passport.score)}
             </p>
             <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: 0, lineHeight: 1.5 }}>
-              Rarer than <span style={{ color: FG, fontWeight: 600 }}>{rarity.rarer}</span> of the world
+              <span style={{ color: rarity.rarityColor, fontWeight: 600 }}>{rarity.rarityLabel}</span>
+              {" · "}{rarity.holders} holders
             </p>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -703,7 +713,7 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         }}
       >
-        {copied ? "✓ Copied to clipboard" : "Copy share text"}
+        {copied ? "✓ Link copied!" : "Copy link"}
       </button>
     </div>
   );
@@ -798,7 +808,9 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
-          <span style={{ fontSize: 38 }}>{passport.flag}</span>
+          {slugToIso(passport.slug)
+            ? <FlagIcon code={slugToIso(passport.slug)!} size="lg" />
+            : <span style={{ fontSize: 38 }}>{passport.flag}</span>}
           <div>
             <p style={{ fontFamily: HEAD, fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: FG, margin: 0, lineHeight: 1 }}>
               {passport.name.toUpperCase()}
@@ -964,7 +976,9 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
                   padding: "12px 14px", border: `1px solid ${BORD}`,
                   background: SURF, display: "flex", flexDirection: "column", gap: 6,
                 }}>
-                  <span style={{ fontSize: 20, lineHeight: 1 }}>{peer.flag}</span>
+                  {slugToIso(peer.slug)
+                    ? <FlagIcon code={slugToIso(peer.slug)!} size="sm" />
+                    : <span style={{ fontSize: 20 }}>{peer.flag}</span>}
                   <span style={{ fontFamily: SANS, fontSize: 12, color: FG, lineHeight: 1.2 }}>{peer.name}</span>
                   <span style={{ fontFamily: HEAD, fontSize: 16, fontWeight: 700, color: tierColor(peer.score), letterSpacing: "-0.02em" }}>{peer.score}</span>
                 </div>
@@ -1027,7 +1041,11 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
       <span style={{ fontFamily: HEAD, fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: "0.06em" }}>
         #{passport.rank}
       </span>
-      <span style={{ fontSize: 20, lineHeight: 1 }}>{passport.flag}</span>
+      <span style={{ lineHeight: 1 }}>
+        {slugToIso(passport.slug)
+          ? <FlagIcon code={slugToIso(passport.slug)!} size="sm" />
+          : <span style={{ fontSize: 20 }}>{passport.flag}</span>}
+      </span>
       <span style={{ fontFamily: SANS, fontSize: 14, color: FG }}>{passport.name}</span>
       <div style={{ textAlign: "right" }}>
         <span style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 700, letterSpacing: "-0.02em", color, display: "block" }}>
@@ -1190,8 +1208,12 @@ function FactsTicker() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function PassportPowerClient() {
-  const [selected, setSelected] = useState<Passport | null>(null);
+function PassportPowerInner() {
+  const searchParams = useSearchParams();
+  const [selected, setSelected] = useState<Passport | null>(() => {
+    const slug = searchParams.get("passport");
+    return slug ? (ALL_PASSPORTS.find(p => p.slug === slug) ?? null) : null;
+  });
   const [listSearch, setListSearch] = useState("");
   const [listGrouped, setListGrouped] = useState(false);
 
@@ -1351,5 +1373,13 @@ export default function PassportPowerClient() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function PassportPowerClient() {
+  return (
+    <Suspense>
+      <PassportPowerInner />
+    </Suspense>
   );
 }
