@@ -422,34 +422,36 @@ function HeroCard({ passport, position, onSelect }: {
 
   return (
     <>
-      {isCenter && (
-        <style>{`
-          @keyframes electric-border {
-            0%   { box-shadow: 0 0 4px ${MINT}30, 3px 3px 0 ${MINT}; border-color: ${MINT}60; }
-            20%  { box-shadow: 0 0 14px ${MINT}80, 0 0 28px ${MINT}40, 4px 4px 0 ${MINT}; border-color: ${MINT}; }
-            22%  { box-shadow: 0 0 4px ${MINT}20, 3px 3px 0 ${MINT}; border-color: ${MINT}50; }
-            40%  { box-shadow: 0 0 18px ${MINT}90, 0 0 36px ${MINT}50, 4px 4px 0 ${MINT}; border-color: ${MINT}; }
-            42%  { box-shadow: 0 0 4px ${MINT}30, 3px 3px 0 ${MINT}; border-color: ${MINT}60; }
-            100% { box-shadow: 0 0 4px ${MINT}30, 3px 3px 0 ${MINT}; border-color: ${MINT}60; }
-          }
-          @keyframes bolt-tl {
-            0%,60%  { opacity: 0; }
-            65%  { opacity: 1; filter: brightness(2.5); }
-            70%  { opacity: 0.3; filter: brightness(1); }
-            75%  { opacity: 1; filter: brightness(3); }
-            82%  { opacity: 0; }
-            100% { opacity: 0; }
-          }
-          @keyframes bolt-tr {
-            0%,63%  { opacity: 0; }
-            68%  { opacity: 1; filter: brightness(2.5); }
-            73%  { opacity: 0.3; filter: brightness(1); }
-            78%  { opacity: 1; filter: brightness(3); }
-            85%  { opacity: 0; }
-            100% { opacity: 0; }
-          }
-        `}</style>
-      )}
+      <style>{`
+        @keyframes electric-border {
+          0%   { box-shadow: 0 0 6px ${GOLD}40, 4px 4px 0 ${GOLD}; border-color: ${GOLD}70; }
+          20%  { box-shadow: 0 0 20px ${GOLD}90, 0 0 40px ${GOLD}50, 5px 5px 0 ${GOLD}; border-color: ${GOLD}; }
+          22%  { box-shadow: 0 0 6px ${GOLD}30, 4px 4px 0 ${GOLD}; border-color: ${GOLD}60; }
+          40%  { box-shadow: 0 0 28px ${GOLD}ff, 0 0 56px ${GOLD}60, 5px 5px 0 ${GOLD}; border-color: ${GOLD}; }
+          42%  { box-shadow: 0 0 6px ${GOLD}40, 4px 4px 0 ${GOLD}; border-color: ${GOLD}70; }
+          100% { box-shadow: 0 0 6px ${GOLD}40, 4px 4px 0 ${GOLD}; border-color: ${GOLD}70; }
+        }
+        @keyframes bolt-tl {
+          0%,60%  { opacity: 0; }
+          65%  { opacity: 1; filter: brightness(2.5); }
+          70%  { opacity: 0.3; filter: brightness(1); }
+          75%  { opacity: 1; filter: brightness(3); }
+          82%  { opacity: 0; }
+          100% { opacity: 0; }
+        }
+        @keyframes bolt-tr {
+          0%,63%  { opacity: 0; }
+          68%  { opacity: 1; filter: brightness(2.5); }
+          73%  { opacity: 0.3; filter: brightness(1); }
+          78%  { opacity: 1; filter: brightness(3); }
+          85%  { opacity: 0; }
+          100% { opacity: 0; }
+        }
+        @keyframes gold-shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+      `}</style>
 
       <button
         type="button"
@@ -457,9 +459,9 @@ function HeroCard({ passport, position, onSelect }: {
         style={{
           flex,
           display: "block",
-          background: SURF,
-          border: `1px solid ${isCenter ? MINT + "60" : color}`,
-          boxShadow: isCenter ? undefined : `3px 3px 0 ${color}`,
+          background: isCenter ? "#0e0c08" : SURF,
+          border: `1px solid ${color}${isCenter ? "" : "99"}`,
+          boxShadow: isCenter ? undefined : `3px 3px 0 ${color}60`,
           animation: isCenter ? "electric-border 5s ease-in-out infinite" : undefined,
           padding: pad,
           minHeight: minH,
@@ -473,25 +475,27 @@ function HeroCard({ passport, position, onSelect }: {
           alignSelf: "flex-end",
         }}
       >
+        {/* Gold radial glow behind Singapore */}
+        {isCenter && (
+          <div style={{
+            position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)",
+            width: 280, height: 280,
+            background: `radial-gradient(circle, ${GOLD}18 0%, transparent 70%)`,
+            pointerEvents: "none",
+          }} />
+        )}
+
         {/* Lightning bolts — only on center card */}
         {isCenter && (
           <>
-            <div style={{
-              position: "absolute", top: 10, left: 10,
-              pointerEvents: "none",
-              animation: "bolt-tl 5s ease-out infinite",
-            }}>
-              <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
-                <path d="M7 0L0 11h5l-1 9 8-12H7l1-8z" fill={MINT} />
+            <div style={{ position: "absolute", top: 10, left: 10, pointerEvents: "none", animation: "bolt-tl 5s ease-out infinite" }}>
+              <svg width="14" height="22" viewBox="0 0 12 20" fill="none">
+                <path d="M7 0L0 11h5l-1 9 8-12H7l1-8z" fill={GOLD} />
               </svg>
             </div>
-            <div style={{
-              position: "absolute", top: 10, right: 10,
-              pointerEvents: "none",
-              animation: "bolt-tr 5s ease-out infinite",
-            }}>
-              <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
-                <path d="M7 0L0 11h5l-1 9 8-12H7l1-8z" fill={MINT} />
+            <div style={{ position: "absolute", top: 10, right: 10, pointerEvents: "none", animation: "bolt-tr 5s ease-out infinite" }}>
+              <svg width="14" height="22" viewBox="0 0 12 20" fill="none">
+                <path d="M7 0L0 11h5l-1 9 8-12H7l1-8z" fill={GOLD} />
               </svg>
             </div>
           </>
@@ -501,17 +505,21 @@ function HeroCard({ passport, position, onSelect }: {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <span style={{
             fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em",
-            textTransform: "uppercase", color,
-            border: `1px solid ${color}`, padding: "3px 8px",
+            textTransform: "uppercase",
+            color: isCenter ? BG : color,
+            background: isCenter ? GOLD : "transparent",
+            border: `1px solid ${color}`,
+            padding: "3px 8px",
+            fontWeight: isCenter ? 700 : 400,
           }}>
-            RANK #{passport.rank}
+            {isCenter ? "⚡ RANK #1 · WORLD'S BEST" : `RANK #${passport.rank}`}
           </span>
         </div>
 
         {/* Flag + name */}
         <span style={{ fontSize: flagSize, display: "block", marginBottom: 8 }}>{passport.flag}</span>
         <p style={{
-          fontFamily: HEAD, fontSize: isCenter ? 18 : 15, fontWeight: 800,
+          fontFamily: HEAD, fontSize: isCenter ? 20 : 15, fontWeight: 800,
           letterSpacing: "-0.02em", color: FG, margin: "0 0 16px", lineHeight: 1,
         }}>
           {passport.name.toUpperCase()}
@@ -520,9 +528,16 @@ function HeroCard({ passport, position, onSelect }: {
         {/* Score */}
         <p style={{
           fontFamily: HEAD, fontSize: scoreFSize, fontWeight: 800,
-          letterSpacing: "-0.04em", color, margin: 0, lineHeight: 1,
+          letterSpacing: "-0.04em", margin: 0, lineHeight: 1,
           fontVariantNumeric: "tabular-nums",
           display: "flex", alignItems: "baseline", gap: 4,
+          ...(isCenter ? {
+            background: `linear-gradient(90deg, ${GOLD}, #fffbe6, ${GOLD}cc, #f0c040, ${GOLD})`,
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "gold-shimmer 3s linear infinite",
+          } : { color }),
         } as React.CSSProperties}>
           {count}
         </p>
