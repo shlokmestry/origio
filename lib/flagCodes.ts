@@ -202,8 +202,6 @@ export const SLUG_TO_ISO: Record<string, string> = {
   'honduras': 'hn',
   'el-salvador': 'sv',
   'guatemala': 'gt',
-  'nigeria': 'ng',
-  'south-africa': 'za',
 }
 
 /** Get ISO alpha-2 code from a country slug, or undefined if not mapped */
