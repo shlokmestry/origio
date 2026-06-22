@@ -828,18 +828,15 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
             <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
               Similar passports
             </p>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 20 }}>
               {peers.map(peer => (
                 <div key={peer.slug} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "6px 12px", border: `1px solid ${BORD}`,
-                  background: SURF,
+                  padding: "12px 14px", border: `1px solid ${BORD}`,
+                  background: SURF, display: "flex", flexDirection: "column", gap: 6,
                 }}>
-                  <span style={{ fontSize: 14 }}>{peer.flag}</span>
-                  <div>
-                    <span style={{ fontFamily: SANS, fontSize: 11, color: FG, display: "block" }}>{peer.name}</span>
-                    <span style={{ fontFamily: HEAD, fontSize: 10, color: tierColor(peer.score) }}>{peer.score}</span>
-                  </div>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{peer.flag}</span>
+                  <span style={{ fontFamily: SANS, fontSize: 12, color: FG, lineHeight: 1.2 }}>{peer.name}</span>
+                  <span style={{ fontFamily: HEAD, fontSize: 16, fontWeight: 700, color: tierColor(peer.score), letterSpacing: "-0.02em" }}>{peer.score}</span>
                 </div>
               ))}
             </div>
