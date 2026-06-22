@@ -346,9 +346,12 @@ function getRarity(pop: number) {
   return { rarer, pct, holders, sharePct: share };
 }
 
+const GOLD   = "#D4AF37";
+const SILVER = "#A8AAAD";
+
 function tierColor(score: number) {
-  if (score >= 180) return MINT;
-  if (score >= 140) return "#a3e635";
+  if (score >= 180) return GOLD;
+  if (score >= 140) return SILVER;
   if (score >= 100) return "#facc15";
   return "#ef4444";
 }
@@ -406,7 +409,7 @@ function HeroCard({ passport, position, onSelect }: {
   position: 1 | 2 | 3;
   onSelect: (p: Passport) => void;
 }) {
-  const color  = MINT; // all top cards use MINT
+  const color  = tierColor(passport.score);
   const count  = useCountUp(passport.score, position === 1 ? 0 : position === 2 ? 200 : 400);
   const rarity = getRarity(passport.population);
   const isCenter = position === 1;
@@ -1212,8 +1215,8 @@ export default function PassportPowerClient() {
 
           {listGrouped ? (
             ([
-              { tier: 1 as const, label: "ELITE",   range: "180+",    min: 180, max: 999, tc: MINT       },
-              { tier: 2 as const, label: "STRONG",  range: "140–179", min: 140, max: 179, tc: "#a3e635"  },
+              { tier: 1 as const, label: "ELITE",   range: "180+",    min: 180, max: 999, tc: GOLD       },
+              { tier: 2 as const, label: "STRONG",  range: "140–179", min: 140, max: 179, tc: SILVER     },
               { tier: 3 as const, label: "AVERAGE", range: "100–139", min: 100, max: 139, tc: "#facc15"  },
               { tier: 4 as const, label: "WEAK",    range: "<100",    min: 0,   max: 99,  tc: "#ef4444"  },
             ]).map(({ tier, label, range, min, max, tc }) => {
