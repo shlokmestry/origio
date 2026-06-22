@@ -359,6 +359,23 @@ function tierLabel(score: number) {
   return "WEAK";
 }
 
+const DELTA_2020: Record<string, number> = {
+  singapore: 5, japan: 4, "south-korea": 3, uae: 12, sweden: 2,
+  belgium: 1, denmark: 1, finland: 1, france: 1, germany: 1,
+  ireland: 1, italy: 1, luxembourg: 1, netherlands: 1, norway: 1, spain: 1,
+  austria: 2, greece: 2, malta: 1, portugal: 2, switzerland: 1,
+  hungary: 3, poland: 2, "united-kingdom": -2, australia: 1, canada: 1,
+  czechia: 2, latvia: 2, malaysia: 4, "new-zealand": 1, slovakia: 2, slovenia: 2,
+  croatia: 3, estonia: 2, liechtenstein: 1, lithuania: 2, iceland: 1, usa: -3,
+  bulgaria: 4, romania: 5, chile: 2, cyprus: 3, "hong-kong": -5,
+  argentina: 2, brazil: 2, israel: -3, turkey: -2, russia: -10, china: 2,
+  india: 4, "south-africa": 2, "saudi-arabia": 10, qatar: 8, nigeria: -2, pakistan: -3,
+};
+
+function getDelta(slug: string): number | null {
+  return DELTA_2020[slug] ?? null;
+}
+
 // ─── Count-up hook ────────────────────────────────────────────────────────────
 function useCountUp(target: number, delay = 0): number {
   const [count, setCount] = useState(0);
@@ -504,19 +521,21 @@ function HeroCard({ passport, position, onSelect }: {
           display: "flex", alignItems: "baseline", gap: 4,
         } as React.CSSProperties}>
           {count}
-          <span style={{ fontSize: isCenter ? 16 : 14, color: DIM, fontWeight: 400 }}>/194</span>
-        </p>
-        <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "6px 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          destinations
         </p>
 
-        {/* Fill bar */}
-        <div style={{ height: 2, background: BORD, marginBottom: 12 }}>
+        {/* Tier label + score bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, marginTop: 10 }}>
+          <span style={{ fontFamily: SANS, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color }}>
+            {tierLabel(passport.score)}
+          </span>
+          <span style={{ fontFamily: SANS, fontSize: 9, color: DIM }}>{passport.score} / {MAX_SCORE}</span>
+        </div>
+        <div style={{ height: 2, background: BORD, marginBottom: 14 }}>
           <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
         </div>
 
         {/* Mini stats */}
-        <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "0 0 8px" }}>
+        <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "0 0 12px" }}>
           <span style={{ color: FG }}>{passport.vf}</span> visa-free
           {" · "}
           <span style={{ color: FG }}>{passport.voa}</span> on arrival
@@ -524,13 +543,56 @@ function HeroCard({ passport, position, onSelect }: {
           <span style={{ color: FG }}>{passport.evisa}</span> eVisa
         </p>
 
-        {/* Rarity */}
-        <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: 0 }}>
-          <span style={{ color: FG }}>{rarity.holders}</span> holders ·{" "}
-          <span style={{ color }}>rarer than {rarity.rarer}</span>
-        </p>
+        {/* Rarity — large + prominent */}
+        <div style={{ borderTop: `1px solid ${color}22`, paddingTop: 12 }}>
+          <p style={{
+            fontFamily: HEAD, fontSize: isCenter ? 16 : 13, fontWeight: 700,
+            color, margin: "0 0 2px", lineHeight: 1.2,
+          }}>
+            Rarer than {rarity.rarer}
+          </p>
+          <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: 0 }}>
+            of the world · {rarity.holders} holders
+          </p>
+        </div>
       </button>
     </>
+  );
+}
+
+// ─── Share button ────────────────────────────────────────────────────────────
+function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer: string; holders: string; pct: string } }) {
+  const [copied, setCopied] = useState(false);
+  const text = `My ${passport.name} passport ranks #${passport.rank} globally (${passport.score}/${MAX_SCORE} destinations). Rarer than ${rarity.rarer} of the world. via origio.co`;
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
+        Share
+      </p>
+      <div style={{ background: SURF, border: `1px solid ${BORD}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+        <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: 0, lineHeight: 1.5, flex: 1 }}>{text}</p>
+        <button
+          type="button"
+          onClick={copy}
+          style={{
+            background: copied ? MINT : "transparent",
+            border: `1px solid ${copied ? MINT : BORD}`,
+            color: copied ? BG : FG,
+            fontFamily: SANS, fontSize: 11, fontWeight: 700,
+            padding: "8px 14px", cursor: "pointer", flexShrink: 0,
+            letterSpacing: "0.1em", transition: "all 0.15s",
+          }}
+        >
+          {copied ? "COPIED" : "COPY"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -588,7 +650,7 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
               {passport.name.toUpperCase()}
             </p>
             <p style={{ fontFamily: SANS, fontSize: 11, color: DIM, margin: "5px 0 0", letterSpacing: "0.08em" }}>
-              HENLEY 2025 Q1 · RANK #{passport.rank} OF 199
+              HENLEY 2026 Q2 · RANK #{passport.rank} OF 199
             </p>
           </div>
         </div>
@@ -651,6 +713,9 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           </div>
         </div>
 
+        {/* Share */}
+        <ShareButton passport={passport} rarity={rarity} />
+
         {/* CTA */}
         <Link
           href="/wizard"
@@ -704,9 +769,16 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
       </span>
       <span style={{ fontSize: 20, lineHeight: 1 }}>{passport.flag}</span>
       <span style={{ fontFamily: SANS, fontSize: 14, color: FG }}>{passport.name}</span>
-      <span style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 700, letterSpacing: "-0.02em", color, textAlign: "right" }}>
-        {passport.score}
-      </span>
+      <div style={{ textAlign: "right" }}>
+        <span style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 700, letterSpacing: "-0.02em", color, display: "block" }}>
+          {passport.score}
+        </span>
+        {(() => { const d = getDelta(passport.slug); return d !== null ? (
+          <span style={{ fontFamily: SANS, fontSize: 9, color: d > 0 ? "#4ade80" : "#ef4444" }}>
+            {d > 0 ? `▲${d}` : `▼${Math.abs(d)}`}
+          </span>
+        ) : null; })()}
+      </div>
       <div style={{ height: 2, background: BORD }}>
         <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
       </div>
@@ -717,6 +789,8 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PassportPowerClient() {
   const [selected, setSelected] = useState<Passport | null>(null);
+  const [listSearch, setListSearch] = useState("");
+  const [listGrouped, setListGrouped] = useState(false);
 
   // Podium picks:
   // center (#1): Singapore (thunder)
@@ -766,6 +840,35 @@ export default function PassportPowerClient() {
 
         {/* Ranked list */}
         <div>
+          {/* List controls */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="Search 199 passports…"
+              value={listSearch}
+              onChange={e => setListSearch(e.target.value)}
+              style={{
+                flex: 1, fontFamily: SANS, fontSize: 13, color: FG,
+                background: "#0f0f0f", border: `1px solid ${BORD}`,
+                padding: "9px 14px", outline: "none",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setListGrouped(g => !g)}
+              style={{
+                fontFamily: SANS, fontSize: 11, letterSpacing: "0.1em",
+                background: listGrouped ? MINT : "transparent",
+                border: `1px solid ${listGrouped ? MINT : BORD}`,
+                color: listGrouped ? BG : DIM,
+                padding: "9px 16px", cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {listGrouped ? "TIERS ✓" : "TIERS"}
+            </button>
+          </div>
+
           <div style={{
             display: "grid", gridTemplateColumns: "44px 30px 1fr 60px 100px",
             gap: 12, padding: "8px 16px", borderBottom: `1px solid ${BORD}`,
@@ -778,9 +881,40 @@ export default function PassportPowerClient() {
               }}>{h}</span>
             ))}
           </div>
-          {SORTED_PASSPORTS.map(p => (
-            <RankRow key={p.slug} passport={p} onSelect={handleSelect} />
-          ))}
+
+          {listGrouped ? (
+            ([
+              { tier: 1 as const, label: "ELITE",   range: "180+",    min: 180, max: 999, tc: MINT       },
+              { tier: 2 as const, label: "STRONG",  range: "140–179", min: 140, max: 179, tc: "#a3e635"  },
+              { tier: 3 as const, label: "AVERAGE", range: "100–139", min: 100, max: 139, tc: "#facc15"  },
+              { tier: 4 as const, label: "WEAK",    range: "<100",    min: 0,   max: 99,  tc: "#ef4444"  },
+            ]).map(({ tier, label, range, min, max, tc }) => {
+              const group = SORTED_PASSPORTS.filter(p =>
+                p.score >= min && p.score <= max &&
+                p.name.toLowerCase().includes(listSearch.toLowerCase())
+              );
+              if (!group.length) return null;
+              return (
+                <div key={tier}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 16px", borderBottom: `1px solid ${BORD}`,
+                    background: `${tc}08`,
+                  }}>
+                    <span style={{ width: 6, height: 6, background: tc, flexShrink: 0 }} />
+                    <span style={{ fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: tc }}>
+                      {label} · {range} · {group.length} passports
+                    </span>
+                  </div>
+                  {group.map(p => <RankRow key={p.slug} passport={p} onSelect={handleSelect} />)}
+                </div>
+              );
+            })
+          ) : (
+            SORTED_PASSPORTS
+              .filter(p => p.name.toLowerCase().includes(listSearch.toLowerCase()))
+              .map(p => <RankRow key={p.slug} passport={p} onSelect={handleSelect} />)
+          )}
         </div>
 
         {/* CTA */}
