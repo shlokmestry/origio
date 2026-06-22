@@ -596,10 +596,51 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
   );
 }
 
+// ─── Notable visa-free destinations per passport ──────────────────────────────
+const NOTABLE_VF: Record<string, string[]> = {
+  singapore: ["USA", "China", "Russia", "Brazil", "South Africa"],
+  japan: ["USA", "China", "Russia", "Brazil", "India"],
+  "south-korea": ["USA", "China", "Russia", "Brazil", "India"],
+  uae: ["USA", "UK", "Russia", "China", "Brazil"],
+  sweden: ["USA", "Brazil", "Russia", "South Africa", "Japan"],
+  germany: ["USA", "Brazil", "Russia", "China", "India"],
+  france: ["USA", "Brazil", "Russia", "China", "Japan"],
+  "united-kingdom": ["USA", "Brazil", "Russia", "South Africa", "Japan"],
+  usa: ["UK", "EU", "Japan", "Australia", "Brazil"],
+  australia: ["UK", "EU", "Japan", "USA", "Brazil"],
+  canada: ["UK", "EU", "Japan", "USA", "Brazil"],
+  india: ["Nepal", "Bhutan", "Maldives", "Indonesia", "Mauritius"],
+  china: ["Thailand", "Malaysia", "Serbia", "Maldives", "Morocco"],
+  russia: ["Turkey", "Thailand", "Vietnam", "Egypt", "UAE"],
+  nigeria: ["Benin", "Ghana", "Kenya", "Senegal", "Malaysia"],
+  pakistan: ["Malaysia", "Nepal", "Indonesia", "Turkey", "Bangladesh"],
+  brazil: ["EU", "USA", "Russia", "Japan", "South Africa"],
+  mexico: ["EU", "UK", "Japan", "Brazil", "Argentina"],
+  turkey: ["EU", "Russia", "Japan", "Brazil", "South Africa"],
+  "south-africa": ["Kenya", "Mozambique", "Namibia", "Zimbabwe", "Malaysia"],
+};
+const DEFAULT_NOTABLE = ["Thailand", "Malaysia", "Turkey", "Morocco", "Kenya"];
+
+function getPeers(p: Passport): Passport[] {
+  return SORTED_PASSPORTS
+    .filter(x => x.slug !== p.slug && Math.abs(x.score - p.score) <= 2)
+    .slice(0, 4);
+}
+
+function getPercentile(score: number): number {
+  const below = SORTED_PASSPORTS.filter(p => p.score < score).length;
+  return Math.round((below / SORTED_PASSPORTS.length) * 100);
+}
+
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function PassportModal({ passport, onClose }: { passport: Passport; onClose: () => void }) {
   const rarity  = getRarity(passport.population);
   const color   = tierColor(passport.score);
+  const percentile = getPercentile(passport.score);
+  const peers   = getPeers(passport);
+  const notable = NOTABLE_VF[passport.slug] || DEFAULT_NOTABLE;
+  const worldPct = Math.round((passport.vf / 195) * 100);
+  const delta   = getDelta(passport.slug);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -655,17 +696,43 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           </div>
         </div>
 
-        {/* Tier + score */}
+        {/* Tier + percentile bar */}
         <div style={{ padding: "14px 16px", border: `1px solid ${color}`, background: `${color}12`, marginBottom: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <span style={{ fontFamily: HEAD, fontSize: 12, letterSpacing: "0.12em", color }}>{tierLabel(passport.score)}</span>
-            <span style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", color: FG }}>
-              {passport.score}
-              <span style={{ fontSize: 12, color: DIM, fontWeight: 400 }}> / {MAX_SCORE}</span>
-            </span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div>
+              <span style={{ fontFamily: HEAD, fontSize: 13, letterSpacing: "0.12em", color, display: "block" }}>
+                {tierLabel(passport.score)}
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 10, color: DIM }}>
+                Top {100 - percentile}% of all passports
+              </span>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontFamily: HEAD, fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: FG, display: "block", lineHeight: 1 }}>
+                {passport.score}
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 10, color: DIM }}>{worldPct}% of the world</span>
+            </div>
           </div>
-          <div style={{ height: 3, background: BORD }}>
-            <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
+          {/* Percentile spectrum — weakest (23) to strongest (192) */}
+          <div style={{ position: "relative", height: 6, background: BORD, marginBottom: 6 }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, height: "100%",
+              background: `linear-gradient(90deg, #ef4444, #facc15 40%, #a3e635 70%, ${MINT})`,
+              width: "100%", opacity: 0.3,
+            }} />
+            <div style={{
+              position: "absolute",
+              left: `${((passport.score - 23) / (MAX_SCORE - 23)) * 100}%`,
+              top: "50%", transform: "translate(-50%, -50%)",
+              width: 10, height: 10,
+              background: color, border: `2px solid ${BG}`,
+              borderRadius: "50%",
+            }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ fontFamily: SANS, fontSize: 9, color: "#333" }}>23 · Weakest</span>
+            <span style={{ fontFamily: SANS, fontSize: 9, color: "#333" }}>192 · Strongest</span>
           </div>
         </div>
 
@@ -696,22 +763,88 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           Passport rarity
         </p>
         <div style={{ background: SURF, border: `1px solid ${BORD}`, padding: "16px", marginBottom: 20 }}>
-          <p style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: MINT, margin: "0 0 12px", lineHeight: 1.2 }}>
-            Rarer than {rarity.rarer} of the world.
+          <p style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", color, margin: "0 0 6px", lineHeight: 1 }}>
+            Rarer than {rarity.rarer}
           </p>
+          <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "0 0 14px" }}>of the world&apos;s population hold this passport</p>
+          {/* Dot grid visualisation — 100 dots, highlighted = share */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 14 }}>
+            {Array.from({ length: 100 }).map((_, i) => {
+              const shareNum = parseFloat(rarity.pct.replace(/[^0-9.]/g, "")) || 0.01;
+              const lit = i < Math.max(1, Math.round(shareNum));
+              return (
+                <div key={i} style={{
+                  width: 6, height: 6,
+                  background: lit ? color : BORD,
+                  opacity: lit ? 1 : 0.4,
+                }} />
+              );
+            })}
+          </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[
-              { val: rarity.holders,    label: "Holders"      },
-              { val: rarity.pct,        label: "Of world pop" },
-              { val: `#${passport.rank}`, label: "Global rank" },
+              { val: rarity.holders,      label: "Holders"      },
+              { val: rarity.pct,          label: "Of world pop" },
+              { val: `#${passport.rank}`, label: "Global rank"  },
             ].map(s => (
               <div key={s.label}>
-                <p style={{ fontFamily: HEAD, fontSize: 20, fontWeight: 700, color: FG, margin: 0, lineHeight: 1 }}>{s.val}</p>
+                <p style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 700, color: FG, margin: 0, lineHeight: 1 }}>{s.val}</p>
                 <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: "4px 0 0", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</p>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Momentum */}
+        {delta !== null && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: `1px solid ${BORD}`, marginBottom: 20, background: `${delta > 0 ? "#4ade80" : "#ef4444"}08` }}>
+            <span style={{ fontSize: 16 }}>{delta > 0 ? "📈" : "📉"}</span>
+            <p style={{ fontFamily: SANS, fontSize: 12, color: FG, margin: 0 }}>
+              {delta > 0 ? `Gained ${delta} places` : `Lost ${Math.abs(delta)} places`} since 2020
+              <span style={{ color: DIM }}> — {delta >= 5 ? "one of the fastest rising passports" : delta <= -5 ? "significant decline" : "steady movement"}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Notable visa-free */}
+        <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
+          Notable visa-free access
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+          {notable.map(dest => (
+            <span key={dest} style={{
+              fontFamily: SANS, fontSize: 11, color: FG,
+              padding: "5px 10px", border: `1px solid ${BORD}`,
+              background: SURF,
+            }}>
+              ✓ {dest}
+            </span>
+          ))}
+        </div>
+
+        {/* Peer passports */}
+        {peers.length > 0 && (
+          <>
+            <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
+              Similar passports
+            </p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+              {peers.map(peer => (
+                <div key={peer.slug} style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", border: `1px solid ${BORD}`,
+                  background: SURF,
+                }}>
+                  <span style={{ fontSize: 14 }}>{peer.flag}</span>
+                  <div>
+                    <span style={{ fontFamily: SANS, fontSize: 11, color: FG, display: "block" }}>{peer.name}</span>
+                    <span style={{ fontFamily: HEAD, fontSize: 10, color: tierColor(peer.score) }}>{peer.score}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Share */}
         <ShareButton passport={passport} rarity={rarity} />
