@@ -311,11 +311,6 @@ export const ALL_PASSPORTS: Passport[] = [
 ];
 
 // Sort by score desc then name asc
-const SORTED_PASSPORTS = [...ALL_PASSPORTS].sort((a, b) =>
-  b.score !== a.score ? b.score - a.score : a.name.localeCompare(b.name)
-);
-
-
 export const SORTED_PASSPORTS = [...ALL_PASSPORTS].sort((a, b) =>
   b.score !== a.score ? b.score - a.score : a.name.localeCompare(b.name)
 );
