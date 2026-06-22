@@ -339,11 +339,51 @@ const MAX_SCORE = 192;
 function getRarity(pop: number) {
   const share    = (pop / WORLD_POP) * 100;
   const rarerNum = 100 - share;
-  // Always show 1 decimal for >99%, 2 decimals for <1%
-  const rarer    = rarerNum >= 99.95 ? "99.9%+" : rarerNum >= 99 ? `${rarerNum.toFixed(1)}%` : `${rarerNum.toFixed(1)}%`;
   const pct      = share < 0.01 ? "<0.01%" : share < 1 ? `${share.toFixed(2)}%` : `${share.toFixed(1)}%`;
-  const holders  = pop >= 1000 ? `${(pop/1000).toFixed(1)}B` : pop >= 1 ? `${pop % 1 === 0 ? pop : pop.toFixed(1)}M` : `${(pop*1000).toFixed(0)}K`;
-  return { rarer, pct, holders, sharePct: share };
+
+  // Holders formatted precisely
+  const holders  = pop >= 1000
+    ? `${(pop / 1000).toFixed(1)}B`
+    : pop >= 1
+    ? `${pop % 1 === 0 ? pop : pop.toFixed(1)}M`
+    : pop >= 0.001
+    ? `${(pop * 1000).toFixed(0)}K`
+    : `~${Math.round(pop * 1_000_000).toLocaleString()}`;
+
+  // Rarity tier based on honest population share
+  let rarityTier: "ultra-rare" | "rare" | "uncommon" | "common" | "very-common";
+  let rarityLabel: string;
+  let rarityDesc: string;
+  let rarityColor: string;
+
+  if (share < 0.1) {
+    rarityTier  = "ultra-rare";
+    rarityLabel = "Ultra Rare";
+    rarityDesc  = `Only ${holders} people in the world hold this passport`;
+    rarityColor = "#D4AF37"; // gold
+  } else if (share < 0.5) {
+    rarityTier  = "rare";
+    rarityLabel = "Rare";
+    rarityDesc  = `${holders} holders — just ${pct} of the world's population`;
+    rarityColor = "#a3e635";
+  } else if (share < 2) {
+    rarityTier  = "uncommon";
+    rarityLabel = "Uncommon";
+    rarityDesc  = `${holders} holders — ${pct} of the world`;
+    rarityColor = "#facc15";
+  } else if (share < 8) {
+    rarityTier  = "common";
+    rarityLabel = "Common";
+    rarityDesc  = `${holders} holders — a widely-held passport at ${pct} of the world`;
+    rarityColor = "#fb923c";
+  } else {
+    rarityTier  = "very-common";
+    rarityLabel = "Very Common";
+    rarityDesc  = `${holders} holders — one of the most common passports on Earth (${pct} of all people)`;
+    rarityColor = "#ef4444";
+  }
+
+  return { pct, holders, sharePct: share, rarerNum, rarityTier, rarityLabel, rarityDesc, rarityColor };
 }
 
 const GOLD   = "#D4AF37";
@@ -565,13 +605,14 @@ function HeroCard({ passport, position, onSelect }: {
         {/* Rarity — large + prominent */}
         <div style={{ borderTop: `1px solid ${color}22`, paddingTop: 12 }}>
           <p style={{
-            fontFamily: HEAD, fontSize: isCenter ? 16 : 13, fontWeight: 700,
-            color, margin: "0 0 2px", lineHeight: 1.2,
+            fontFamily: HEAD, fontSize: isCenter ? 13 : 11, fontWeight: 700,
+            color: rarity.rarityColor, margin: "0 0 4px", lineHeight: 1.2,
+            letterSpacing: "0.06em", textTransform: "uppercase",
           }}>
-            Rarer than {rarity.rarer}
+            {rarity.rarityLabel}
           </p>
-          <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: 0 }}>
-            of the world · {rarity.holders} holders
+          <p style={{ fontFamily: SANS, fontSize: isCenter ? 12 : 10, color: FG, margin: 0, lineHeight: 1.5 }}>
+            {rarity.rarityDesc}
           </p>
         </div>
       </button>
@@ -583,7 +624,7 @@ function HeroCard({ passport, position, onSelect }: {
 function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer: string; holders: string; pct: string } }) {
   const [copied, setCopied] = useState(false);
   const color = tierColor(passport.score);
-  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · Rarer than ${rarity.rarer} of the world.\nfindorigio.com/passport-power`;
+  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · ${rarity.rarityLabel} — ${rarity.holders} holders worldwide.\nfindorigio.com/passport-power`;
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -835,26 +876,42 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           Passport rarity
         </p>
         <div style={{ background: SURF, border: `1px solid ${BORD}`, padding: "16px", marginBottom: 20 }}>
-          <p style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", color, margin: "0 0 6px", lineHeight: 1 }}>
-            Rarer than {rarity.rarer}
+          {/* Rarity tier badge */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <span style={{
+              fontFamily: SANS, fontSize: 9, fontWeight: 700, letterSpacing: "0.2em",
+              textTransform: "uppercase", color: rarity.rarityColor,
+              border: `1px solid ${rarity.rarityColor}`, padding: "2px 8px",
+            }}>
+              {rarity.rarityLabel}
+            </span>
+          </div>
+
+          {/* Main rarity description */}
+          <p style={{ fontFamily: HEAD, fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: rarity.rarityColor, margin: "0 0 4px", lineHeight: 1.2 }}>
+            {rarity.rarityDesc}
           </p>
-          <p style={{ fontFamily: SANS, fontSize: 12, color: DIM, margin: "0 0 14px" }}>of the world&apos;s population hold this passport</p>
-          {/* Population bar — accurate to actual share */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ height: 6, background: BORD, position: "relative", marginBottom: 6 }}>
+
+          {/* Population bar */}
+          <div style={{ margin: "14px 0 14px" }}>
+            <div style={{ height: 5, background: BORD, position: "relative", marginBottom: 6 }}>
               <div style={{
                 position: "absolute", left: 0, top: 0, height: "100%",
-                background: color,
-                width: `${Math.max(0.5, rarity.sharePct)}%`,
+                background: rarity.rarityColor,
+                width: `${Math.max(0.4, Math.min(100, rarity.sharePct))}%`,
                 minWidth: 3,
                 transition: "width 0.6s ease",
               }} />
             </div>
-            <p style={{ fontFamily: SANS, fontSize: 10, color: DIM, margin: 0 }}>
-              <span style={{ color: FG }}>{rarity.pct}</span> of the world · every other person on Earth holds a different passport
-            </p>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: SANS, fontSize: 10, color: DIM }}>
+                <span style={{ color: FG }}>{rarity.pct}</span> of 8 billion people
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 10, color: DIM }}>100%</span>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", borderTop: `1px solid ${BORD}`, paddingTop: 12 }}>
             {[
               { val: rarity.holders,      label: "Holders"      },
               { val: rarity.pct,          label: "Of world pop" },
