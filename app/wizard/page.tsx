@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles, Check } from "lucide-react";
 import Link from "next/link";
@@ -299,7 +299,7 @@ function SearchableSelect({ value, onChange, options, placeholder }: {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
-export default function WizardPage() {
+function WizardPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep]     = useState(0);
@@ -1126,5 +1126,13 @@ export default function WizardPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function WizardPage() {
+  return (
+    <Suspense>
+      <WizardPageInner />
+    </Suspense>
   );
 }
