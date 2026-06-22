@@ -564,7 +564,7 @@ function HeroCard({ passport, position, onSelect }: {
 function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer: string; holders: string; pct: string } }) {
   const [copied, setCopied] = useState(false);
   const color = tierColor(passport.score);
-  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · Rarer than ${rarity.rarer} of the world.\norigio.co/passport-power`;
+  const text = `${passport.flag} My ${passport.name} passport ranks #${passport.rank} globally.\n${passport.score} destinations · Rarer than ${rarity.rarer} of the world.\nfindorigio.com/passport-power`;
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -597,7 +597,7 @@ function ShareButton({ passport, rarity }: { passport: Passport; rarity: { rarer
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <p style={{ fontFamily: SANS, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
-              origio.co · passport power
+              findorigio.com · passport power
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
               <span style={{ fontSize: 22 }}>{passport.flag}</span>
