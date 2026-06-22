@@ -1297,7 +1297,7 @@ function PassportPowerInner() {
               Ranked by visa-free access across 199 countries. Click any passport for the full breakdown.
             </p>
           </div>
-          <div style={{ position: "absolute", top: 0, right: 0, width: 260 }}>
+          <div style={{ position: "absolute", top: 0, right: "min(calc(450px - 50vw), 0px)", width: 260 }}>
             <FactsTickerInline />
           </div>
         </div>
