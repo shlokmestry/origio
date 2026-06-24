@@ -2,15 +2,25 @@ import type { Metadata } from "next";
 import PassportPowerClient from "./PassportPowerClient";
 
 export const metadata: Metadata = {
-  title: "Passport Power",
+  title: "Global Passport Index — Origio",
   description:
-    "How powerful is your passport — and how rare? See your visa-free score, global rank, and how few people share your travel document.",
+    "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
+  alternates: {
+    canonical: "https://findorigio.com/passport-power",
+  },
   openGraph: {
-    title: "Passport Power — Origio",
+    title: "Global Passport Index — Origio",
     description:
-      "See your visa-free score, global rank, and how rare your passport really is.",
+      "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
     url: "https://findorigio.com/passport-power",
     siteName: "Origio",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Global Passport Index — Origio",
+    description:
+      "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
   },
 };
 
