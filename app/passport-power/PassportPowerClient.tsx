@@ -1278,14 +1278,6 @@ function PassportPowerInner() {
         {/* Header */}
         <div style={{ position: "relative", marginBottom: 40, minHeight: 200 }}>
           <div style={{ maxWidth: "58%", minWidth: 0 }}>
-            <p style={{
-              fontFamily: SANS, fontSize: 11, letterSpacing: "0.22em",
-              textTransform: "uppercase", color: DIM, marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span style={{ color: MINT, fontSize: 8 }}>●</span>
-              Passport Power · Henley Index 2026 Q2 (17 June 2026)
-            </p>
             <h1 style={{
               fontFamily: HEAD, fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 800,
               letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
