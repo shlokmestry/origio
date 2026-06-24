@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { ALL_PASSPORTS } from "./passport-power/data";
 
 const BASE = "https://findorigio.com";
 const NOW = new Date().toISOString();
@@ -45,6 +46,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...BLOG_SLUGS.map(slug => ({
       url: `${BASE}/blog/${slug}`,
+      lastModified: NOW,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+    { url: `${BASE}/passport-power`, lastModified: NOW, changeFrequency: "weekly", priority: 0.9 },
+    ...ALL_PASSPORTS.map(p => ({
+      url: `${BASE}/passport-power/${p.slug}`,
       lastModified: NOW,
       changeFrequency: "monthly" as const,
       priority: 0.7,

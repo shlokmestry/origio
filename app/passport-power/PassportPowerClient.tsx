@@ -1067,7 +1067,7 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
 // ─── Fun facts (verified Henley historical data) ──────────────────────────────
 const FUN_FACTS = [
   { flag: "🇸🇬", text: "Singapore was ranked #38 in 2006. Today it's #1 — the single biggest climb in Henley Index history." },
-  { flag: "🇦🇪", text: "The UAE passport unlocked 107 additional destinations between 2014 and 2024 — the fastest destination expansion ever recorded." },
+  { flag: "🇦🇪", text: "The UAE passport went from 73 destinations in 2014 to 188 in 2026 — adding over 100 countries in just 12 years through active visa diplomacy." },
   { flag: "🇺🇸", text: "The US passport peaked at #1 in 2014. It has since slipped to #10, overtaken by several European and Asian nations." },
   { flag: "🇦🇫", text: "Afghan passport holders can visit only 15 countries visa-free — the lowest visa-free count of any passport on the Henley Index." },
   { flag: "🇯🇵", text: "Japan held the #1 spot every year from 2018 to 2023 — a 6-year reign no other passport has matched." },
@@ -1078,14 +1078,14 @@ const FUN_FACTS = [
   { flag: "🇰🇷", text: "South Korea's passport has risen 40 places since 2006, now tied #2 alongside Japan and the UAE." },
   { flag: "🇻🇦", text: "Vatican City issues passports only to cardinals, diplomats and senior officials — fewer than 800 exist worldwide." },
   { flag: "🇱🇮", text: "Liechtenstein has a population of just 38,000 but its citizens enjoy visa-free access to 181 destinations worldwide." },
-  { flag: "🇸🇦", text: "Saudi Arabia gained 30+ ranking places between 2018 and 2026, driven by Vision 2030 bilateral agreements." },
+  { flag: "🇸🇦", text: "Saudi Arabia climbed nearly 20 ranking places between 2018 and 2026, driven by Vision 2030 bilateral visa agreements." },
   { flag: "🌍", text: "The gap between the strongest and weakest passport is 169 destinations — Singapore (192) vs Afghanistan (23)." },
   { flag: "🇳🇬", text: "Nigeria's passport score has remained under 50 for 15 consecutive years — among the most travel-restricted in sub-Saharan Africa." },
   { flag: "🇧🇷", text: "Brazil and Argentina both rank above India and China in passport strength — Latin America punches above its weight." },
   { flag: "🇲🇾", text: "Malaysia's passport ranks #7 globally — tied with Canada and Australia, yet still ahead of the USA at #10." },
   { flag: "🌐", text: "38 passports score 180 or higher on the Henley Index. All of them belong to European, East Asian, or Oceanic nations." },
   { flag: "🇵🇹", text: "Portugal's Golden Visa real estate route — once Europe's most popular residency-by-investment path — was closed in October 2023." },
-  { flag: "🇷🇺", text: "Russia's passport has lost 20+ ranking places since 2022, hit by sanctions, airspace closures and cancelled bilateral agreements." },
+  { flag: "🇷🇺", text: "Since 2022, multiple countries suspended visa-free agreements with Russia — shrinking practical access for Russian passport holders beyond what the Henley score reflects." },
 ];
 
 function FactsTickerInline() {
