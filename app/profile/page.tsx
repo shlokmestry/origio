@@ -553,8 +553,8 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* Other matches */}
-                {wizardResult.top_countries.slice(1).map((c, i) => {
+                {/* Other matches — top 3 only */}
+                {wizardResult.top_countries.slice(1, 3).map((c, i) => {
                   const pct = capPercent(c.matchPercent ?? 0)
                   return (
                     <div key={c.slug} className="flex items-center gap-3" style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
