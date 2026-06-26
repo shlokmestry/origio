@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CountryPanel from "@/components/CountryPanel";
 import SalaryCalculatorSection from "@/components/SalaryCalculatorSection";
+import CountryComparisonSection from "@/components/CountryComparisonSection";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
@@ -511,7 +512,10 @@ export default function Home() {
       {/* ── SECTION 2: SALARY CALCULATOR TEASER ── */}
       <SalaryCalculatorSection />
 
-      {/* ── SECTION 3: COUNTRIES HERO ── */}
+      {/* ── SECTION 3: COUNTRY COMPARISON ── */}
+      <CountryComparisonSection />
+
+      {/* ── SECTION 4: COUNTRIES HERO ── */}
       <section
         ref={heroRef}
         style={{
