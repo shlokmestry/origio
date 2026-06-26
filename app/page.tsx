@@ -506,16 +506,7 @@ export default function Home() {
     <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
 
-      {/* ── SECTION 1: CITIES ATLAS ── */}
-      <CitiesSection />
-
-      {/* ── SECTION 2: SALARY CALCULATOR TEASER ── */}
-      <SalaryCalculatorSection />
-
-      {/* ── SECTION 3: COUNTRY COMPARISON ── */}
-      <CountryComparisonSection />
-
-      {/* ── SECTION 4: COUNTRIES HERO ── */}
+      {/* ── SECTION 1: COUNTRIES HERO ── */}
       <section
         ref={heroRef}
         style={{
@@ -636,6 +627,15 @@ export default function Home() {
           </button>
         </div>
       </section>
+
+      {/* ── SECTION 2: CITIES ATLAS ── */}
+      <CitiesSection />
+
+      {/* ── SECTION 3: SALARY CALCULATOR TEASER ── */}
+      <SalaryCalculatorSection />
+
+      {/* ── SECTION 4: COUNTRY COMPARISON ── */}
+      <CountryComparisonSection />
 
       <Footer />
       {overlays}
