@@ -116,6 +116,14 @@ const PAIRS = [
 export default function CountryComparisonSection() {
   const [idx, setIdx]         = useState(0)
   const [visible, setVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -152,136 +160,118 @@ export default function CountryComparisonSection() {
           transition: 'opacity 0.38s ease',
         }}
       >
-        {/* Country names row */}
-        <div style={{
-          display:        'grid',
-          gridTemplateColumns: '1fr 1px 1fr',
-          alignItems:     'center',
-          gap:            0,
-          position:       'relative',
-          minHeight:      'clamp(140px, 18vw, 220px)',
-        }}>
-          {/* Country A */}
-          <div style={{
-            display:       'flex',
-            flexDirection: 'column',
-            alignItems:    'flex-end',
-            paddingRight:  'clamp(32px, 5vw, 72px)',
-            gap:           12,
-          }}>
-            <FlagIcon code={pair.a.code} size="lg" />
-            <h2 style={{
-              fontFamily:    'Cabinet Grotesk, sans-serif',
-              fontWeight:    800,
-              fontSize:      'clamp(32px, 5.5vw, 76px)',
-              letterSpacing: '-0.03em',
-              lineHeight:    0.95,
-              color:         '#ffffff',
-              margin:        0,
-              textAlign:     'right',
-              whiteSpace:    'pre-line',
-            }}>
-              {pair.a.name}
-            </h2>
-          </div>
+        {/* Country names row — stacks vertically on mobile */}
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {/* Country A */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <FlagIcon code={pair.a.code} size="md" />
+              <h2 style={{
+                fontFamily: 'Cabinet Grotesk, sans-serif', fontWeight: 800,
+                fontSize: 'clamp(28px, 8vw, 40px)', letterSpacing: '-0.03em',
+                lineHeight: 0.95, color: '#ffffff', margin: 0,
+              }}>
+                {pair.a.name.replace('\n', ' ')}
+              </h2>
+            </div>
 
-          {/* Divider with floating stat chips */}
-          <div style={{ position: 'relative', alignSelf: 'stretch', display: 'flex', justifyContent: 'center' }}>
-            <div style={{
-              width:      1,
-              background: 'rgba(255,255,255,0.12)',
-              height:     '100%',
-              position:   'absolute',
-              left:       '50%',
-              transform:  'translateX(-50%)',
-            }} />
-            {/* Stat chips */}
-            <div style={{
-              position:       'absolute',
-              top:            '50%',
-              left:           '50%',
-              transform:      'translate(-50%, -50%)',
-              display:        'flex',
-              flexDirection:  'column',
-              gap:            8,
-              alignItems:     'center',
-            }}>
+            {/* Stat chips row on mobile */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {pair.stats.map((s, i) => (
                 <div key={i} style={{
-                  display:       'flex',
-                  flexDirection: 'column',
-                  alignItems:    'center',
-                  gap:           2,
-                  background:    '#0e0f17',
-                  border:        `1px solid ${s.good ? 'rgba(0,255,213,0.2)' : 'rgba(255,80,80,0.15)'}`,
-                  padding:       '4px 10px',
-                  whiteSpace:    'nowrap',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: '#0e0f17',
+                  border: `1px solid ${s.good ? 'rgba(0,255,213,0.2)' : 'rgba(255,80,80,0.15)'}`,
+                  padding: '6px 12px',
                 }}>
-                  <span style={{
-                    fontFamily:    'Satoshi, monospace',
-                    fontSize:      'clamp(11px, 1.4vw, 15px)',
-                    fontWeight:    700,
-                    color:         s.good ? '#00ffd5' : 'rgba(255,100,100,0.85)',
-                    letterSpacing: '-0.01em',
-                  }}>
+                  <span style={{ fontFamily: 'Satoshi, monospace', fontSize: 13, fontWeight: 700, color: s.good ? '#00ffd5' : 'rgba(255,100,100,0.85)' }}>
                     {s.value}
                   </span>
-                  <span style={{
-                    fontFamily:    'Satoshi, sans-serif',
-                    fontSize:      8,
-                    fontWeight:    600,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color:         'rgba(255,255,255,0.28)',
-                  }}>
+                  <span style={{ fontFamily: 'Satoshi, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
                     {s.label}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Country B */}
-          <div style={{
-            display:       'flex',
-            flexDirection: 'column',
-            alignItems:    'flex-start',
-            paddingLeft:   'clamp(32px, 5vw, 72px)',
-            gap:           12,
-          }}>
-            <FlagIcon code={pair.b.code} size="lg" />
-            <h2 style={{
-              fontFamily:    'Cabinet Grotesk, sans-serif',
-              fontWeight:    800,
-              fontSize:      'clamp(32px, 5.5vw, 76px)',
-              letterSpacing: '-0.03em',
-              lineHeight:    0.95,
-              color:         'rgba(255,255,255,0.28)',
-              margin:        0,
-              whiteSpace:    'pre-line',
-            }}>
-              {pair.b.name}
-            </h2>
+            {/* Country B */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <FlagIcon code={pair.b.code} size="md" />
+              <h2 style={{
+                fontFamily: 'Cabinet Grotesk, sans-serif', fontWeight: 800,
+                fontSize: 'clamp(28px, 8vw, 40px)', letterSpacing: '-0.03em',
+                lineHeight: 0.95, color: 'rgba(255,255,255,0.3)', margin: 0,
+              }}>
+                {pair.b.name.replace('\n', ' ')}
+              </h2>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1px 1fr',
+            alignItems: 'center', gap: 0, position: 'relative',
+            minHeight: 'clamp(140px, 18vw, 220px)',
+          }}>
+            {/* Country A */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingRight: 'clamp(32px, 5vw, 72px)', gap: 12 }}>
+              <FlagIcon code={pair.a.code} size="lg" />
+              <h2 style={{
+                fontFamily: 'Cabinet Grotesk, sans-serif', fontWeight: 800,
+                fontSize: 'clamp(32px, 5.5vw, 76px)', letterSpacing: '-0.03em',
+                lineHeight: 0.95, color: '#ffffff', margin: 0,
+                textAlign: 'right', whiteSpace: 'pre-line',
+              }}>
+                {pair.a.name}
+              </h2>
+            </div>
+
+            {/* Divider with floating stat chips */}
+            <div style={{ position: 'relative', alignSelf: 'stretch', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: 1, background: 'rgba(255,255,255,0.12)', height: '100%', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }} />
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                {pair.stats.map((s, i) => (
+                  <div key={i} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                    background: '#0e0f17',
+                    border: `1px solid ${s.good ? 'rgba(0,255,213,0.2)' : 'rgba(255,80,80,0.15)'}`,
+                    padding: '4px 10px', whiteSpace: 'nowrap',
+                  }}>
+                    <span style={{ fontFamily: 'Satoshi, monospace', fontSize: 'clamp(11px, 1.4vw, 15px)', fontWeight: 700, color: s.good ? '#00ffd5' : 'rgba(255,100,100,0.85)', letterSpacing: '-0.01em' }}>
+                      {s.value}
+                    </span>
+                    <span style={{ fontFamily: 'Satoshi, sans-serif', fontSize: 9, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Country B */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingLeft: 'clamp(32px, 5vw, 72px)', gap: 12 }}>
+              <FlagIcon code={pair.b.code} size="lg" />
+              <h2 style={{
+                fontFamily: 'Cabinet Grotesk, sans-serif', fontWeight: 800,
+                fontSize: 'clamp(32px, 5.5vw, 76px)', letterSpacing: '-0.03em',
+                lineHeight: 0.95, color: 'rgba(255,255,255,0.28)', margin: 0, whiteSpace: 'pre-line',
+              }}>
+                {pair.b.name}
+              </h2>
+            </div>
+          </div>
+        )}
 
         {/* Editorial line + CTA */}
         <div style={{
-          display:        'flex',
-          justifyContent: 'space-between',
-          alignItems:     'center',
-          marginTop:      'clamp(28px, 4vh, 48px)',
-          flexWrap:       'wrap',
-          gap:            20,
+          display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center',
+          marginTop: 'clamp(24px, 4vh, 48px)', gap: 16,
         }}>
           <p style={{
-            fontFamily:  'Satoshi, sans-serif',
-            fontStyle:   'italic',
-            fontSize:    'clamp(13px, 1.5vw, 17px)',
-            fontWeight:  400,
-            color:       'rgba(255,255,255,0.42)',
-            margin:      0,
-            maxWidth:    520,
+            fontFamily: 'Satoshi, sans-serif', fontStyle: 'italic',
+            fontSize: isMobile ? 14 : 'clamp(13px, 1.5vw, 17px)',
+            fontWeight: 400, color: 'rgba(255,255,255,0.42)', margin: 0,
+            maxWidth: 520,
           }}>
             '{pair.editorial}'
           </p>
@@ -289,29 +279,17 @@ export default function CountryComparisonSection() {
           <Link
             href="/compare"
             style={{
-              display:        'inline-flex',
-              alignItems:     'center',
-              gap:            8,
-              padding:        '10px 20px',
-              border:         '1px solid rgba(255,255,255,0.18)',
-              fontFamily:     'Satoshi, sans-serif',
-              fontSize:       11,
-              fontWeight:     700,
-              letterSpacing:  '0.14em',
-              textTransform:  'uppercase',
-              color:          'rgba(255,255,255,0.55)',
-              textDecoration: 'none',
-              transition:     'border-color 0.15s, color 0.15s',
-              whiteSpace:     'nowrap',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '12px 20px',
+              border: '1px solid rgba(255,255,255,0.18)',
+              fontFamily: 'Satoshi, sans-serif', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.55)', textDecoration: 'none',
+              transition: 'border-color 0.15s, color 0.15s',
+              alignSelf: isMobile ? 'flex-start' : 'auto',
             }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = '#00ffd5'
-              ;(e.currentTarget as HTMLElement).style.color = '#00ffd5'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.18)'
-              ;(e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'
-            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#00ffd5'; (e.currentTarget as HTMLElement).style.color = '#00ffd5' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.18)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)' }}
           >
             COMPARE COUNTRIES →
           </Link>

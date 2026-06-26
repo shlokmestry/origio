@@ -104,6 +104,13 @@ const FEATURE_CITIES = [
 // ─── Cities Atlas section ─────────────────────────────────────────────────────
 function CitiesSection() {
   const { ref, inView } = useInView(0.08);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   return (
     <section
@@ -136,8 +143,8 @@ function CitiesSection() {
       {/* ── Cards grid ── */}
       <div style={{
         display:             "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gridTemplateRows:    "1fr auto",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+        gridTemplateRows:    isMobile ? "auto" : "1fr auto",
         gap:                 12,
         maxWidth:            1200,
         margin:              "0 auto",
@@ -145,9 +152,9 @@ function CitiesSection() {
         transform:           inView ? "none" : "translateY(24px)",
         transition:          "opacity 0.7s ease 120ms, transform 0.7s ease 120ms",
       }}>
-        {/* Large city card — spans 2 rows */}
-        <div style={{ gridRow: "1 / 3" }}>
-          <CityCard city={FEATURE_CITIES[0]} large />
+        {/* Large city card — spans 2 rows on desktop only */}
+        <div style={{ gridRow: isMobile ? "auto" : "1 / 3" }}>
+          <CityCard city={FEATURE_CITIES[0]} large={!isMobile} />
         </div>
 
         {/* Smaller city card */}

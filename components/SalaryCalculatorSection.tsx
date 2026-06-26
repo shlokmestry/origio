@@ -197,6 +197,14 @@ export default function SalaryCalculatorSection() {
   const hasEnteredView = useRef(false)
   const [pairIndex, setPairIndex] = useState(0)
   const [visible, setVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const pair = PAIRS[pairIndex]
 
@@ -261,7 +269,7 @@ export default function SalaryCalculatorSection() {
       style={{
         width: '100%',
         background: '#0a0a0a',
-        padding: '100px 48px',
+        padding: isMobile ? '60px 20px' : '100px 48px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -270,10 +278,10 @@ export default function SalaryCalculatorSection() {
       <div style={{ width: '100%', maxWidth: 960 }}>
 
         {/* Header row: headline + pair dots */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
           <h2 style={{
             fontFamily: 'var(--font-heading), Helvetica Neue, Arial, sans-serif',
-            fontSize: 'clamp(52px, 7vw, 88px)',
+            fontSize: isMobile ? 'clamp(40px, 11vw, 56px)' : 'clamp(52px, 7vw, 88px)',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '-0.03em',
@@ -285,7 +293,7 @@ export default function SalaryCalculatorSection() {
           </h2>
 
           {/* Dot indicators */}
-          <div style={{ display: 'flex', gap: 6, paddingBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 6, paddingBottom: isMobile ? 0 : 8 }}>
             {PAIRS.map((_, i) => (
               <div key={i} style={{
                 width: i === pairIndex ? 20 : 6,
@@ -336,17 +344,17 @@ export default function SalaryCalculatorSection() {
             </div>
           </div>
 
-          {/* Three columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {/* Three columns → single column on mobile */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr' }}>
 
             {/* Gross */}
-            <div style={{ padding: '24px 24px 22px', borderRight: '1px solid #1a1a1a' }}>
+            <div style={{ padding: isMobile ? '18px 16px' : '24px 24px 22px', borderRight: isMobile ? 'none' : '1px solid #1a1a1a', borderBottom: isMobile ? '1px solid #1a1a1a' : 'none' }}>
               <span style={{ display: 'block', fontFamily: 'monospace', fontSize: 10, color: '#555', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 Gross Salary
               </span>
               <span
                 id="odo-gross"
-                style={{ display: 'flex', fontFamily: 'monospace', fontSize: 'clamp(16px, 2.2vw, 24px)', color: '#f0f0e8', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
+                style={{ display: 'flex', fontFamily: 'monospace', fontSize: isMobile ? 18 : 'clamp(16px, 2.2vw, 24px)', color: '#f0f0e8', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
               >
                 {pair.featured.grossLabel}
               </span>
@@ -354,13 +362,13 @@ export default function SalaryCalculatorSection() {
             </div>
 
             {/* Net */}
-            <div style={{ padding: '24px 24px 22px', borderRight: '1px solid #1a1a1a' }}>
+            <div style={{ padding: isMobile ? '18px 16px' : '24px 24px 22px', borderRight: isMobile ? 'none' : '1px solid #1a1a1a', borderBottom: isMobile ? '1px solid #1a1a1a' : 'none' }}>
               <span style={{ display: 'block', fontFamily: 'monospace', fontSize: 10, color: '#555', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 Net Take-Home
               </span>
               <span
                 id="odo-net"
-                style={{ display: 'flex', fontFamily: 'monospace', fontSize: 'clamp(16px, 2.2vw, 24px)', color: '#00ffd5', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
+                style={{ display: 'flex', fontFamily: 'monospace', fontSize: isMobile ? 18 : 'clamp(16px, 2.2vw, 24px)', color: '#00ffd5', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
               >
                 {pair.featured.netLabel}
               </span>
@@ -368,13 +376,13 @@ export default function SalaryCalculatorSection() {
             </div>
 
             {/* VS */}
-            <div style={{ padding: '24px 24px 22px' }}>
+            <div style={{ padding: isMobile ? '18px 16px' : '24px 24px 22px' }}>
               <span style={{ display: 'block', fontFamily: 'monospace', fontSize: 10, color: '#555', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 {pair.vs.label}
               </span>
               <span
                 id="odo-vs"
-                style={{ display: 'flex', fontFamily: 'monospace', fontSize: 'clamp(16px, 2.2vw, 24px)', color: '#f0f0e8', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
+                style={{ display: 'flex', fontFamily: 'monospace', fontSize: isMobile ? 18 : 'clamp(16px, 2.2vw, 24px)', color: '#f0f0e8', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 8 }}
               >
                 {pair.vs.netLabel}
               </span>
