@@ -276,8 +276,10 @@ export default function CompareCitiesClient({ allCities }: Props) {
     setIsolated(prev => prev === key ? null : key)
   }, [])
 
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+
   const submitEmail = useCallback(async () => {
-    if (!emailVal.includes('@') || picks.length < 2) return
+    if (!isValidEmail(emailVal) || picks.length < 2) return
     setEmailState('loading')
     try {
       const shareUrl = typeof window !== 'undefined' ? window.location.href : 'https://findorigio.com/cities/compare'
@@ -716,7 +718,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                 <button
                   type="button"
                   onClick={submitEmail}
-                  disabled={emailState === 'loading' || !emailVal.includes('@')}
+                  disabled={emailState === 'loading' || !isValidEmail(emailVal)}
                   style={{
                     background: '#00ffd5',
                     color: '#0a0a0a',
@@ -728,7 +730,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                     padding: '10px 20px',
                     cursor: emailState === 'loading' ? 'wait' : 'pointer',
                     fontFamily: 'sans-serif',
-                    opacity: !emailVal.includes('@') ? 0.4 : 1,
+                    opacity: !isValidEmail(emailVal) ? 0.4 : 1,
                   }}
                 >
                   {emailState === 'loading' ? '...' : 'Send →'}

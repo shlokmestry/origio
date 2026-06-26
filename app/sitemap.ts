@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { createClient } from "@supabase/supabase-js";
 import { ALL_PASSPORTS } from "./passport-power/data";
 
 const BASE = "https://findorigio.com";
@@ -12,18 +13,14 @@ const COUNTRY_SLUGS = [
   "sweden","switzerland","uae","united-kingdom","usa",
 ];
 
-const ROLE_SLUGS = [
-  "software-engineers","product-managers","designers",
-  "nurses","teachers","accountants","marketing-managers",
-];
-
 const BLOG_SLUGS = [
   "software-engineer-salary-germany",
   "us-h1b-visa-guide",
   "cost-of-living-dublin-vs-berlin",
 ];
 
-const CITY_SLUGS = [
+// Fallback list used if the DB query fails
+const CITY_SLUGS_FALLBACK = [
   "amsterdam","athens","auckland","bali","bangalore","bangkok","barcelona",
   "belgrade","berlin","brussels","bucharest","budapest","buenos-aires",
   "cape-town","chiang-mai","copenhagen","da-nang","dubai","dublin",
@@ -35,7 +32,23 @@ const CITY_SLUGS = [
   "san-francisco","austin","madrid","taipei","nairobi",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+async function getCitySlugs(): Promise<string[]> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data, error } = await supabase.from("cities").select("slug").limit(500);
+    if (error || !data?.length) return CITY_SLUGS_FALLBACK;
+    return data.map((c: { slug: string }) => c.slug);
+  } catch {
+    return CITY_SLUGS_FALLBACK;
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const citySlugs = await getCitySlugs();
+
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/wizard`, lastModified: NOW, changeFrequency: "monthly", priority: 0.9 },
@@ -46,7 +59,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/salary-calculator`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/about`, lastModified: NOW, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/faq`, lastModified: NOW, changeFrequency: "monthly", priority: 0.5 },
-    ...CITY_SLUGS.map(slug => ({
+    { url: `${BASE}/pro`, lastModified: NOW, changeFrequency: "monthly", priority: 0.6 },
+    ...citySlugs.map(slug => ({
       url: `${BASE}/city/${slug}`,
       lastModified: NOW,
       changeFrequency: "weekly" as const,
@@ -57,12 +71,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: NOW,
       changeFrequency: "monthly" as const,
       priority: 0.8,
-    })),
-    ...ROLE_SLUGS.map(slug => ({
-      url: `${BASE}/best-countries-for/${slug}`,
-      lastModified: NOW,
-      changeFrequency: "monthly" as const,
-      priority: 0.9,
     })),
     ...BLOG_SLUGS.map(slug => ({
       url: `${BASE}/blog/${slug}`,

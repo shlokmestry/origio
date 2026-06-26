@@ -585,7 +585,11 @@ export default function CityPageClient({ city }: Props) {
   );
   // Hottest 3 months to highlight (index of peak temp month)
   const peakMonth = isSouthern ? 0 : 6;
-  const summerMonths = new Set([peakMonth, (peakMonth + 1) % 12, (peakMonth + 11) % 12]);
+  const summerMonths = new Set([
+    (peakMonth - 1 + 12) % 12, // month before peak
+    peakMonth,                   // peak month
+    (peakMonth + 1) % 12,        // month after peak
+  ]);
 
   return (
     <div className="city-page">

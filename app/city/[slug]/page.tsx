@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import CityPageClient from "./CityPageClient";
 
 const supabase = createClient(
@@ -123,20 +124,25 @@ interface Props {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { slug } = await props.params;
-  const city = await getCityData(slug);
-
-  return {
-    title: `${city.name} — Cost of Living, Rent & Expat Guide ${new Date().getFullYear()} · Origio`,
-    description: `Cost of living in ${city.name}, ${city.country_name}: rent, groceries, salaries, healthcare, nightlife and visa routes. Real data for expats and remote workers.`,
-    keywords: [`cost of living ${city.name}`, `rent in ${city.name}`, `expat guide ${city.name}`, `move to ${city.name}`, `${city.name} salaries`, `living in ${city.name}`, `${city.country_name} expat`],
-    openGraph: {
-      title: `${city.name} — Cost of Living & Expat Guide · Origio`,
-      description: `Rent, groceries, salaries, healthcare and visa routes in ${city.name}. Real numbers for professionals considering a move.`,
-      images: city.cover_image_url
-        ? [{ url: city.cover_image_url, width: 1200, height: 630, alt: city.name }]
-        : [],
-    },
-  };
+  try {
+    const city = await getCityData(slug);
+    return {
+      title: `${city.name} — Cost of Living, Rent & Expat Guide ${new Date().getFullYear()} · Origio`,
+      description: `Cost of living in ${city.name}, ${city.country_name}: rent, groceries, salaries, healthcare, nightlife and visa routes. Real data for expats and remote workers.`,
+      keywords: [`cost of living ${city.name}`, `rent in ${city.name}`, `expat guide ${city.name}`, `move to ${city.name}`, `${city.name} salaries`, `living in ${city.name}`, `${city.country_name} expat`],
+      openGraph: {
+        title: `${city.name} — Cost of Living & Expat Guide · Origio`,
+        description: `Rent, groceries, salaries, healthcare and visa routes in ${city.name}. Real numbers for professionals considering a move.`,
+        images: city.cover_image_url
+          ? [{ url: city.cover_image_url, width: 1200, height: 630, alt: city.name }]
+          : [],
+      },
+    };
+  } catch {
+    return {
+      title: "City not found · Origio",
+    };
+  }
 }
 
 export async function generateStaticParams() {
@@ -148,6 +154,10 @@ export const revalidate = 3600;
 
 export default async function CityPage(props: Props) {
   const { slug } = await props.params;
-  const city = await getCityData(slug);
-  return <CityPageClient city={city} />;
+  try {
+    const city = await getCityData(slug);
+    return <CityPageClient city={city} />;
+  } catch {
+    notFound();
+  }
 }

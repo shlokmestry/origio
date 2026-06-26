@@ -424,6 +424,7 @@ export default function Home() {
   const [selectedRole, setSelectedRole]         = useState<JobRole>("softwareEngineer");
   const [highlightedSlugs, setHighlightedSlugs] = useState<string[]>([]);
   const [savedSlugs, setSavedSlugs]             = useState<string[]>([]);
+  const [countriesError, setCountriesError]     = useState(false);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -434,7 +435,10 @@ export default function Home() {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch("/api/countries").then(r => r.json()).then(d => setAllCountries(d)).catch(console.error);
+    fetch("/api/countries")
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => setAllCountries(Array.isArray(d) ? d : []))
+      .catch(() => setCountriesError(true));
   }, []);
 
   useEffect(() => {
@@ -512,6 +516,24 @@ export default function Home() {
   return (
     <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
       <Nav countries={globeCountries} onCountrySelect={handleCountrySelect} />
+
+      {countriesError && (
+        <div style={{
+          position: "fixed", top: 72, left: "50%", transform: "translateX(-50%)",
+          zIndex: 90, background: "#1a0a0a", border: "1px solid #4a1a1a",
+          color: "#f87171", fontFamily: "Satoshi, sans-serif",
+          fontSize: 13, padding: "10px 20px", borderRadius: 4,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ fontSize: 16 }}>⚠</span>
+          Country data failed to load — some features may be unavailable.{" "}
+          <button
+            onClick={() => { fetchedRef.current = false; setCountriesError(false);
+              fetch("/api/countries").then(r => r.json()).then(d => setAllCountries(Array.isArray(d) ? d : [])).catch(() => setCountriesError(true)); }}
+            style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", textDecoration: "underline", fontSize: 13, fontFamily: "inherit", padding: 0 }}
+          >Retry</button>
+        </div>
+      )}
 
       {/* ── SECTION 1: COUNTRIES HERO ── */}
       <section

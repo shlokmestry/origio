@@ -341,7 +341,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            style={{ background: "none", border: "1px solid #2a2a2a", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ background: "none", border: "1px solid #2a2a2a", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "14px", display: "flex", alignItems: "center", justifyContent: "center", minWidth: 48, minHeight: 48 }}
             aria-label="Close menu"
           >
             <X size={16} />
