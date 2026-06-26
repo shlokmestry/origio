@@ -425,7 +425,7 @@ export default function ProfilePage() {
         )}
 
         {/* ── CARDS GRID ── */}
-        <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+        <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', alignItems: 'start' }}>
 
           {/* Passport Card */}
           {profile?.passport_slug && (
