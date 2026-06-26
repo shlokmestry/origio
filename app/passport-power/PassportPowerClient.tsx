@@ -787,7 +787,7 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           background: "#0f0f0f",
           border: `1px solid ${color}`,
           boxShadow: `4px 4px 0 ${color}`,
-          width: "100%", maxWidth: 520,
+          width: "100%", maxWidth: 680,
           maxHeight: "88vh", overflowY: "auto",
           padding: "32px",
           position: "relative",
