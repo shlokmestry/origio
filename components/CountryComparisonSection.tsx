@@ -4,57 +4,112 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FlagIcon } from '@/components/FlagIcon'
 
-// Stat diffs: Country A vs Country B (positive = A has advantage)
+// Stat diffs: Country A vs Country B
+// Costs from app city data (Numbeo-sourced), tax from salary-calculator TAX_DATA
 const PAIRS = [
   {
+    // Dubai rent €2,200 vs Berlin €1,350 → Dubai 63% more expensive
+    // UAE 0% income tax vs Germany ~40% effective for senior SE
+    // Dubai internet ~200 Mbps, Berlin ~95 Mbps
     a: { code: 'ae', name: 'UNITED ARAB\nEMIRATES' },
     b: { code: 'de', name: 'GERMANY' },
     stats: [
-      { label: 'INCOME TAX',    value: '−42pp',  good: true },
-      { label: 'MONTHLY COST',  value: '−5%',    good: true },
-      { label: 'INTERNET',      value: '+130%',  good: true },
+      { label: 'INCOME TAX',   value: '−40pp', good: true },
+      { label: 'INTERNET',     value: '+111%', good: true },
+      { label: 'MONTHLY COST', value: '+63%',  good: false },
     ],
-    editorial: 'Zero tax in Dubai. Germany takes 42% of every paycheck.',
+    editorial: 'Dubai keeps your full salary. Berlin keeps 40% of it.',
   },
   {
+    // Tallinn rent €840 vs Amsterdam €1,950 → EE 57% cheaper
+    // Estonia 20% flat tax vs Netherlands ~42% effective → −22pp
+    // Both excellent internet, EE ~160 Mbps vs NL ~130 Mbps → EE +23%
     a: { code: 'ee', name: 'ESTONIA' },
     b: { code: 'nl', name: 'NETHERLANDS' },
     stats: [
-      { label: 'MONTHLY COST',  value: '−50%',  good: true },
-      { label: 'INCOME TAX',    value: '−29pp', good: true },
-      { label: 'INTERNET',      value: '−6%',   good: false },
+      { label: 'MONTHLY COST', value: '−57%',  good: true },
+      { label: 'INCOME TAX',   value: '−22pp', good: true },
+      { label: 'INTERNET',     value: '+23%',  good: true },
     ],
-    editorial: 'Estonia. Half the cost, half the tax, same fibre.',
+    editorial: 'Estonia. Lower cost, lower tax, faster internet. Still EU.',
   },
   {
+    // Tbilisi rent €630 vs Paris €1,800 → GE 65% cheaper
+    // Georgia 20% flat + 2% SS = 22% vs France ~30% income tax + 22% SS = ~52% → −30pp
+    // Georgia good internet vs France excellent → GE ~80 Mbps vs FR ~200 Mbps
     a: { code: 'ge', name: 'GEORGIA' },
     b: { code: 'fr', name: 'FRANCE' },
     stats: [
-      { label: 'MONTHLY COST',  value: '−68%',  good: true },
-      { label: 'INCOME TAX',    value: '−21pp', good: true },
-      { label: 'INTERNET',      value: '−61%',  good: false },
+      { label: 'MONTHLY COST',  value: '−65%',  good: true },
+      { label: 'TAX BURDEN',    value: '−30pp', good: true },
+      { label: 'INTERNET',      value: '−60%',  good: false },
     ],
-    editorial: 'Georgia costs 68% less. You keep 20% more of your salary.',
+    editorial: "Georgia costs 65% less than Paris. Your bank account will notice.",
   },
   {
+    // Bangkok rent €580 vs London €2,600 → TH 78% cheaper
+    // Thailand effective ~12% income tax vs UK ~40% → −28pp
+    // Bangkok excellent internet ~200 Mbps vs London ~120 Mbps → +67%
     a: { code: 'th', name: 'THAILAND' },
     b: { code: 'gb', name: 'UNITED\nKINGDOM' },
     stats: [
-      { label: 'MONTHLY COST',  value: '−65%',  good: true },
-      { label: 'INCOME TAX',    value: '−30pp', good: true },
-      { label: 'INTERNET',      value: '−12%',  good: false },
+      { label: 'MONTHLY COST', value: '−78%',  good: true },
+      { label: 'INCOME TAX',   value: '−28pp', good: true },
+      { label: 'INTERNET',     value: '+67%',  good: true },
     ],
-    editorial: 'Thailand. 65% cheaper to live, 30% cheaper to earn.',
+    editorial: 'Bangkok. 78% cheaper than London. Same Netflix, better weather.',
   },
   {
+    // Singapore rent €2,580 vs Copenhagen €1,700 → SG 52% more expensive
+    // Singapore effective ~18% vs Denmark effective ~52% → −34pp
+    // Singapore ~256 Mbps vs Denmark ~160 Mbps → +60%
     a: { code: 'sg', name: 'SINGAPORE' },
-    b: { code: 'be', name: 'BELGIUM' },
+    b: { code: 'dk', name: 'DENMARK' },
     stats: [
-      { label: 'INCOME TAX',    value: '−35pp', good: true },
-      { label: 'INTERNET',      value: '+133%', good: true },
-      { label: 'MONTHLY COST',  value: '+3%',   good: false },
+      { label: 'INCOME TAX',   value: '−34pp', good: true },
+      { label: 'INTERNET',     value: '+60%',  good: true },
+      { label: 'MONTHLY COST', value: '+52%',  good: false },
     ],
-    editorial: 'Singapore costs the same as Belgium. You keep 35% more.',
+    editorial: 'Singapore taxes you 34% less than Denmark. The rent is the price.',
+  },
+  {
+    // Lisbon rent €1,200 vs Zurich €2,500 → PT 52% cheaper
+    // Portugal ~28% effective vs Switzerland ~23% federal+cantonal ~31% effective → −3pp (minimal)
+    // Both excellent internet, similar speeds
+    a: { code: 'pt', name: 'PORTUGAL' },
+    b: { code: 'ch', name: 'SWITZERLAND' },
+    stats: [
+      { label: 'MONTHLY COST', value: '−52%',  good: true },
+      { label: 'INCOME TAX',   value: '−3pp',  good: true },
+      { label: 'INTERNET',     value: '−5%',   good: false },
+    ],
+    editorial: 'Lisbon. Half the cost of Zurich with nearly the same tax rate.',
+  },
+  {
+    // Warsaw rent €900 vs Stockholm €1,600 → PL 44% cheaper
+    // Poland 12-32% income tax, effective ~18% vs Sweden ~32% effective → −14pp
+    // Warsaw excellent internet ~180 Mbps vs Stockholm ~170 Mbps → +6%
+    a: { code: 'pl', name: 'POLAND' },
+    b: { code: 'se', name: 'SWEDEN' },
+    stats: [
+      { label: 'MONTHLY COST', value: '−44%',  good: true },
+      { label: 'INCOME TAX',   value: '−14pp', good: true },
+      { label: 'INTERNET',     value: '+6%',   good: true },
+    ],
+    editorial: 'Warsaw costs 44% less than Stockholm. EU passport, same timezone.',
+  },
+  {
+    // Buenos Aires rent €490 vs New York €3,500 → AR 86% cheaper
+    // Argentina effective ~25% vs US ~28% federal effective → −3pp (minimal)
+    // Buenos Aires good internet vs NY excellent → −40%
+    a: { code: 'ar', name: 'ARGENTINA' },
+    b: { code: 'us', name: 'UNITED\nSTATES' },
+    stats: [
+      { label: 'MONTHLY COST', value: '−86%',  good: true },
+      { label: 'INCOME TAX',   value: '−3pp',  good: true },
+      { label: 'INTERNET',     value: '−40%',  good: false },
+    ],
+    editorial: 'Buenos Aires. 86% cheaper than New York. Same remote job.',
   },
 ]
 
@@ -69,7 +124,7 @@ export default function CountryComparisonSection() {
         setIdx(i => (i + 1) % PAIRS.length)
         setVisible(true)
       }, 380)
-    }, 8000)
+    }, 5000)
     return () => clearInterval(timer)
   }, [])
 
@@ -88,20 +143,6 @@ export default function CountryComparisonSection() {
         overflow:      'hidden',
       }}
     >
-      {/* Section label */}
-      <p style={{
-        fontFamily:    'Satoshi, sans-serif',
-        fontSize:      10,
-        fontWeight:    700,
-        letterSpacing: '0.22em',
-        textTransform: 'uppercase',
-        color:         'rgba(255,255,255,0.22)',
-        margin:        '0 0 clamp(40px, 6vh, 64px)',
-        textAlign:     'center',
-      }}>
-        THE SPLIT.
-      </p>
-
       {/* Main comparison area */}
       <div
         style={{
