@@ -3,10 +3,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Globe from "@/components/Globe";
 import CountryPanel from "@/components/CountryPanel";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import SalaryCalculatorSection from "@/components/SalaryCalculatorSection";
 import { supabase } from "@/lib/supabase";
 import { CountryWithData, GlobeCountry, JobRole } from "@/types";
 
@@ -424,42 +424,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SECTION 2: GLOBE ── */}
-      <section
-        className="globe-section"
-        style={{
-          width:      "100%",
-          height:     "100svh",
-          minHeight:  480,
-          position:   "relative",
-          background: "#0a0a0a",
-        }}
-        aria-label="Interactive globe"
-      >
-        <p style={{
-          position:      "absolute",
-          top:           16,
-          left:          20,
-          zIndex:        10,
-          fontSize:      9,
-          fontFamily:    "Satoshi, sans-serif",
-          color:         "rgba(255,255,255,0.18)",
-          textTransform: "uppercase",
-          letterSpacing: "0.3em",
-          pointerEvents: "none",
-        }}>
-          Drag · click a country
-        </p>
-        <div style={{ position: "absolute", inset: 0, touchAction: "none", zIndex: 5 }}>
-          <Globe
-            countries={globeCountries}
-            onCountrySelect={handleCountrySelect}
-            selectedSlug={selectedSlug}
-            highlightedSlugs={highlightedSlugs}
-            savedSlugs={savedSlugs}
-          />
-        </div>
-      </section>
+      {/* ── SECTION 2: SALARY CALCULATOR TEASER ── */}
+      <SalaryCalculatorSection />
 
       {/* ── SECTION 3: CITIES TEASER ── */}
       <CitiesSection />
