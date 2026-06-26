@@ -301,6 +301,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
             </button>
           )}
           <Link href="/cities"            className="nav-link-item">Cities</Link>
+          <Link href="/passport-power"    className="nav-link-item">Passports</Link>
           <Link href="/salary-calculator" className="nav-link-item">Calculator</Link>
           <Link href="/blog"              className="nav-link-item">Blog</Link>
           <Link href="/about"             className="nav-link-item">About</Link>
@@ -359,6 +360,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           )}
           <Link href="/wizard"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
           <Link href="/cities"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Cities</Link>
+          <Link href="/passport-power"    className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Passports</Link>
           <Link href="/compare"           className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
           <Link href="/salary-calculator" className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Calculator</Link>
           <Link href="/blog"              className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
