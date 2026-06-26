@@ -789,7 +789,7 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
           boxShadow: `4px 4px 0 ${color}`,
           width: "100%", maxWidth: 680,
           maxHeight: "88vh", overflowY: "auto",
-          padding: "32px",
+          padding: "clamp(16px, 4vw, 32px)",
           position: "relative",
         }}
       >
@@ -865,7 +865,7 @@ function PassportModal({ passport, onClose }: { passport: Passport; onClose: () 
         <p style={{ fontFamily: SANS, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: DIM, margin: "0 0 10px" }}>
           Access breakdown
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 2, marginBottom: 20 }}>
           {[
             { label: "Visa-free",       value: passport.vf,    sub: "No application", c: MINT      },
             { label: "Visa on arrival", value: passport.voa,   sub: "At the border",  c: "#a3e635" },
@@ -1015,11 +1015,21 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
   const [hov, setHov] = useState(false);
 
   return (
+    <>
+      <style>{`
+        @media (max-width: 480px) {
+          .rank-row { grid-template-columns: 36px 26px 1fr 52px !important; }
+          .rank-row-access { display: none !important; }
+          .rank-list-header { grid-template-columns: 36px 26px 1fr 52px !important; }
+          .rank-list-access-col { display: none !important; }
+        }
+      `}</style>
     <button
       type="button"
       onClick={() => onSelect(passport)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      className="rank-row"
       style={{
         display: "grid",
         gridTemplateColumns: "44px 30px 1fr 60px 100px",
@@ -1057,10 +1067,11 @@ function RankRow({ passport, onSelect }: { passport: Passport; onSelect: (p: Pas
           </span>
         ) : null; })()}
       </div>
-      <div style={{ height: 2, background: BORD }}>
+      <div className="rank-row-access" style={{ height: 2, background: BORD }}>
         <div style={{ height: "100%", background: color, width: `${(passport.score / MAX_SCORE) * 100}%` }} />
       </div>
     </button>
+    </>
   );
 }
 
@@ -1154,11 +1165,16 @@ function FactsTicker() {
       right: 24,
       zIndex: 9000,
       width: 280,
-    }}>
+    }}
+    className="facts-ticker-float"
+    >
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
+        }
+        @media (max-width: 640px) {
+          .facts-ticker-float { display: none !important; }
         }
       `}</style>
 
@@ -1257,6 +1273,13 @@ function PassportPowerInner() {
   });
   const [listSearch, setListSearch] = useState("");
   const [listGrouped, setListGrouped] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Podium picks:
   // center (#1): Singapore (thunder)
@@ -1273,33 +1296,54 @@ function PassportPowerInner() {
     <div style={{ minHeight: "100vh", background: BG, color: FG, fontFamily: SANS }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "88px 24px 0" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "72px 16px 0" : "88px 24px 0" }}>
 
         {/* Header */}
-        <div style={{ position: "relative", marginBottom: 40, minHeight: 200 }}>
-          <div style={{ maxWidth: "58%", minWidth: 0 }}>
+        {isMobile ? (
+          <div style={{ marginBottom: 28 }}>
             <h1 style={{
-              fontFamily: HEAD, fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 800,
-              letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
+              fontFamily: HEAD, fontSize: "clamp(32px, 9vw, 52px)", fontWeight: 800,
+              letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 14px",
             } as React.CSSProperties}>
               Not all passports<br />
               <span style={{ color: MINT }}>are equal.</span>
             </h1>
-            <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
-              192 destinations or 23. One number determines where you can go, live, and build. See where yours stands.
+            <p style={{ fontFamily: SANS, fontSize: 13, color: DIM, lineHeight: 1.7, margin: 0 }}>
+              192 destinations or 23. One number determines where you can go, live, and build.
             </p>
           </div>
-          <div style={{ position: "absolute", top: 0, right: "min(calc(450px - 50vw), 0px)", width: 260 }}>
-            <FactsTickerInline />
+        ) : (
+          <div style={{ position: "relative", marginBottom: 40, minHeight: 200 }}>
+            <div style={{ maxWidth: "58%", minWidth: 0 }}>
+              <h1 style={{
+                fontFamily: HEAD, fontSize: "clamp(36px, 5vw, 68px)", fontWeight: 800,
+                letterSpacing: "-0.03em", lineHeight: 0.95, color: FG, margin: "0 0 16px",
+              } as React.CSSProperties}>
+                Not all passports<br />
+                <span style={{ color: MINT }}>are equal.</span>
+              </h1>
+              <p style={{ fontFamily: SANS, fontSize: 14, color: DIM, lineHeight: 1.7, margin: 0 }}>
+                192 destinations or 23. One number determines where you can go, live, and build. See where yours stands.
+              </p>
+            </div>
+            <div style={{ position: "absolute", top: 0, right: "min(calc(450px - 50vw), 0px)", width: 260 }}>
+              <FactsTickerInline />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Podium — [Japan] [Singapore] [UAE] */}
-        <div style={{ display: "flex", gap: 2, marginBottom: 36, alignItems: "flex-end" }}>
-          <HeroCard passport={top2} position={2} onSelect={handleSelect} />
-          <HeroCard passport={top1} position={1} onSelect={handleSelect} />
-          <HeroCard passport={top3} position={3} onSelect={handleSelect} />
-        </div>
+        {isMobile ? (
+          <div style={{ marginBottom: 28 }}>
+            <HeroCard passport={top1} position={1} onSelect={handleSelect} />
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 2, marginBottom: 36, alignItems: "flex-end" }}>
+            <HeroCard passport={top2} position={2} onSelect={handleSelect} />
+            <HeroCard passport={top1} position={1} onSelect={handleSelect} />
+            <HeroCard passport={top3} position={3} onSelect={handleSelect} />
+          </div>
+        )}
 
         {/* Ranked list */}
         <div>
@@ -1332,12 +1376,12 @@ function PassportPowerInner() {
             </button>
           </div>
 
-          <div style={{
+          <div className="rank-list-header" style={{
             display: "grid", gridTemplateColumns: "44px 30px 1fr 60px 100px",
             gap: 12, padding: "8px 16px", borderBottom: `1px solid ${BORD}`,
           }}>
             {["RANK", "", "COUNTRY", "SCORE", "ACCESS"].map((h, i) => (
-              <span key={i} style={{
+              <span key={i} className={i === 4 ? "rank-list-access-col" : ""} style={{
                 fontFamily: SANS, fontSize: 9, letterSpacing: "0.16em",
                 textTransform: "uppercase", color: DIM,
                 textAlign: i === 3 ? "right" : "left",
