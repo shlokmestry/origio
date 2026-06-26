@@ -73,7 +73,7 @@ async function getCitiesForCompare(): Promise<CityData[]> {
 }
 
 export const metadata: Metadata = {
-  title: 'Compare Cities — The Math on Paper · Origio',
+  title: 'City vs City — Compare Cost of Living · Origio',
   description:
     'Compare up to four cities side by side. Rent, groceries, dining, gym, coworking, transport — the real monthly cost of moving.',
   openGraph: {

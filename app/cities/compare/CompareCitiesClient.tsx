@@ -482,8 +482,8 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Heading */}
         <div className={styles.mathHead}>
-          <span className={styles.mathSolid}>The </span>
-          <span className={styles.mathOutline}>Math</span>
+          <span className={styles.mathSolid}>City </span>
+          <span className={styles.mathOutline}>vs City</span>
         </div>
 
         {/* Sub */}
