@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Footer from "@/components/Footer";
+import BlogImage from "@/components/BlogImage";
 
 export const revalidate = 600;
 
@@ -224,8 +225,7 @@ export default async function BlogPostPage({ params }: Props) {
             width: "100%", aspectRatio: "16/9", overflow: "hidden",
             background: "#1a1a1a", marginBottom: 8, border: "1px solid #2a2a2a",
           }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.cover_image_url} alt={post.title}
+            <BlogImage src={post.cover_image_url} alt={post.title}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         )}
@@ -264,8 +264,7 @@ export default async function BlogPostPage({ params }: Props) {
                   }} className="related-card">
                     {r.cover_image_url && (
                       <div style={{ aspectRatio: "16/9", background: "#1a1a1a" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={r.cover_image_url} alt={r.title}
+                        <BlogImage src={r.cover_image_url} alt={r.title}
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                       </div>
                     )}

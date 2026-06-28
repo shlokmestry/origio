@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
+import BlogImage from "@/components/BlogImage";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
@@ -122,17 +123,12 @@ export default async function BlogPage() {
                 overflow: "hidden",
                 background: "#1a1a1a",
               }}>
-                {featured.cover_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={featured.cover_image_url}
-                    alt={featured.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }}
-                    className="blog-cover-img"
-                  />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #1a1a1a, #0f0f0f)" }} />
-                )}
+                <BlogImage
+                  src={featured.cover_image_url ?? ""}
+                  alt={featured.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }}
+                  className="blog-cover-img"
+                />
               </div>
 
               {/* Meta */}
@@ -264,17 +260,12 @@ export default async function BlogPage() {
                   background: "#1a1a1a",
                   marginBottom: 20,
                 }}>
-                  {post.cover_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.cover_image_url}
-                      alt={post.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.45s ease" }}
-                      className="blog-cover-img"
-                    />
-                  ) : (
-                    <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #1a1a1a, #0f0f0f)" }} />
-                  )}
+                  <BlogImage
+                    src={post.cover_image_url ?? ""}
+                    alt={post.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.45s ease" }}
+                    className="blog-cover-img"
+                  />
                 </div>
 
                 {/* Category eyebrow */}
