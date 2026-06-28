@@ -24,7 +24,7 @@ const SANS  = "'Satoshi', system-ui, sans-serif"
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 const PRO_FEATURES = [
-  { title: 'All 45 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
+  { title: 'All 48 countries ranked',    desc: 'Your full personalised ranking, not just the top 3.' },
   { title: 'Full personalised report',   desc: 'Salary, take-home after tax, costs, visa path — specific to you.' },
   { title: 'Salary calculator',          desc: 'Real take-home after tax in any country, for your salary.' },
   { title: 'Visa checklist',             desc: 'Every document, in order, with official links — country-specific.' },

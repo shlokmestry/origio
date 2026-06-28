@@ -52,6 +52,8 @@ const PASSPORT_STRENGTH: Record<string, 1 | 2 | 3 | 4> = {
   "philippines": 3, "indonesia": 3, "vietnam": 3, "thailand": 3,
   // Tier 4 — most restricted
   "nigeria": 4, "pakistan": 4, "ghana": 4,
+  // Additions
+  "kenya": 3, "taiwan": 2,
 };
 
 export function getPassportStrength(slug: string): 1 | 2 | 3 | 4 {

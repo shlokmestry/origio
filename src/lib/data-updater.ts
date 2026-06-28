@@ -139,7 +139,7 @@ interface RunStats {
 }
 
 // ── Country configuration ─────────────────────────────────────────────────────
-// 45 countries — slugs must match countries.slug in DB exactly.
+// 48 countries — slugs must match countries.slug in DB exactly.
 
 const COUNTRIES: CountryConfig[] = [
   { slug: 'argentina',      currency: 'ARS', wbCode: 'ARG', numbeoCity: 'Buenos Aires',    visaDifficulty: 4, wikiTitle: 'Argentina' },
