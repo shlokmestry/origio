@@ -19,6 +19,8 @@ const TO_EUR: Record<string, number> = {
   ZAR: 0.050,             // South African Rand — Cape Town
   GEL: 0.34,              // Georgian Lari — Tbilisi
   VND: 0.000037,          // Vietnamese Dong — Da Nang
+  TWD: 0.028,             // Taiwan Dollar — Taipei
+  KES: 0.0072,            // Kenyan Shilling — Nairobi (city uses USD in DB)
   ARS: 0.00092,           // Argentine Peso (kept for reference; BA rows use USD)
 }
 
@@ -71,7 +73,7 @@ async function getCitiesForCompare(): Promise<CityData[]> {
 }
 
 export const metadata: Metadata = {
-  title: 'Compare Cities — The Math on Paper · Origio',
+  title: 'City vs City — Compare Cost of Living · Origio',
   description:
     'Compare up to four cities side by side. Rent, groceries, dining, gym, coworking, transport — the real monthly cost of moving.',
   openGraph: {

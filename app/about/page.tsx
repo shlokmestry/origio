@@ -104,7 +104,7 @@ function NewspaperSpoof() {
     },
     {
       them: "Reddit thread: 'should I move to Portugal?' — 340 opinions, zero data",
-      us: "45 countries ranked by your actual priorities, not strangers' vibes",
+      us: "60 cities · 45 countries ranked by your actual priorities, not strangers' vibes",
     },
     {
       them: "Government visa website lists requirements. Does not mention 14-month wait.",

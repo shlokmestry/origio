@@ -362,6 +362,7 @@ export default function ComparePageClient() {
   const [cmpEmailVal, setCmpEmailVal] = useState('');
   const [cmpEmailState, setCmpEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [isPro, setIsPro] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [passportCtx, setPassportCtx] = useState<{ tier: 1|2|3|4; rawTier: 1|2|3|4; upgraded: boolean; hasDual: boolean } | null>(null);
   // FIX: start true so we never render a black screen while checking
   const [proChecked, setProChecked] = useState(true);
@@ -370,6 +371,7 @@ export default function ComparePageClient() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user && session.access_token) {
+        setIsLoggedIn(true);
         const { createClient } = await import('@supabase/supabase-js')
         const authedClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -797,8 +799,8 @@ export default function ComparePageClient() {
         </div>
       )}
 
-      {/* ── EMAIL CAPTURE ── */}
-      {countryA && countryB && (
+      {/* ── EMAIL CAPTURE — hidden for logged-in users ── */}
+      {countryA && countryB && !isLoggedIn && (
         <div style={{
           maxWidth: 1100, margin: '32px auto 0', padding: '0 32px',
         }}>

@@ -218,6 +218,12 @@
 }
 
 /* ── PICK STRIP ── */
+.pickSeoLine {
+  font-size: 12px;
+  color: rgba(240,240,232,0.38);
+  letter-spacing: 0.02em;
+  margin: 0 0 4px;
+}
 .pickStrip {
   display: flex;
   flex-direction: column;

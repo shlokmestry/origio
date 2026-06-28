@@ -28,8 +28,9 @@ const CITY_REGION: Record<string, string> = {
   auckland:'Asia & Oceania', seoul:'Asia & Oceania',
   bangkok:'Asia & Oceania', 'chiang-mai':'Asia & Oceania', bali:'Asia & Oceania',
   'kuala-lumpur':'Asia & Oceania', 'da-nang':'Asia & Oceania', 'ho-chi-minh-city':'Asia & Oceania',
-  bangalore:'Asia & Oceania',
+  bangalore:'Asia & Oceania', taipei:'Asia & Oceania',
   dubai:'Middle East & Africa', 'abu-dhabi':'Middle East & Africa', 'cape-town':'Middle East & Africa',
+  nairobi:'Middle East & Africa',
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -275,8 +276,10 @@ export default function CompareCitiesClient({ allCities }: Props) {
     setIsolated(prev => prev === key ? null : key)
   }, [])
 
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+
   const submitEmail = useCallback(async () => {
-    if (!emailVal.includes('@') || picks.length < 2) return
+    if (!isValidEmail(emailVal) || picks.length < 2) return
     setEmailState('loading')
     try {
       const shareUrl = typeof window !== 'undefined' ? window.location.href : 'https://findorigio.com/cities/compare'
@@ -479,8 +482,8 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Heading */}
         <div className={styles.mathHead}>
-          <span className={styles.mathSolid}>The </span>
-          <span className={styles.mathOutline}>Math</span>
+          <span className={styles.mathSolid}>City </span>
+          <span className={styles.mathOutline}>vs City</span>
         </div>
 
         {/* Sub */}
@@ -495,6 +498,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
         {/* Pick strip */}
         <section className={styles.pickStrip}>
+          <p className={styles.pickSeoLine}>
+            Compare rent, groceries, utilities across 60 cities. Pick up to 4.
+          </p>
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>
               <span className={styles.pickLblArr}>→</span> Pick cities
@@ -712,7 +718,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                 <button
                   type="button"
                   onClick={submitEmail}
-                  disabled={emailState === 'loading' || !emailVal.includes('@')}
+                  disabled={emailState === 'loading' || !isValidEmail(emailVal)}
                   style={{
                     background: '#00ffd5',
                     color: '#0a0a0a',
@@ -724,7 +730,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                     padding: '10px 20px',
                     cursor: emailState === 'loading' ? 'wait' : 'pointer',
                     fontFamily: 'sans-serif',
-                    opacity: !emailVal.includes('@') ? 0.4 : 1,
+                    opacity: !isValidEmail(emailVal) ? 0.4 : 1,
                   }}
                 >
                   {emailState === 'loading' ? '...' : 'Send →'}

@@ -301,6 +301,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
             </button>
           )}
           <Link href="/cities"            className="nav-link-item">Cities</Link>
+          <Link href="/passport-power"    className="nav-link-item">Passport Power</Link>
           <Link href="/salary-calculator" className="nav-link-item">Calculator</Link>
           <Link href="/blog"              className="nav-link-item">Blog</Link>
           <Link href="/about"             className="nav-link-item">About</Link>
@@ -340,7 +341,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            style={{ background: "none", border: "1px solid #2a2a2a", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ background: "none", border: "1px solid #2a2a2a", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "14px", display: "flex", alignItems: "center", justifyContent: "center", minWidth: 48, minHeight: 48 }}
             aria-label="Close menu"
           >
             <X size={16} />
@@ -359,6 +360,7 @@ export default function Nav({ countries = [], onCountrySelect }: NavProps) {
           )}
           <Link href="/wizard"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Find My Country</Link>
           <Link href="/cities"            className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Cities</Link>
+          <Link href="/passport-power"    className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Passport Power</Link>
           <Link href="/compare"           className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
           <Link href="/salary-calculator" className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Calculator</Link>
           <Link href="/blog"              className="mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
