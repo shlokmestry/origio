@@ -471,7 +471,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
     // Default
     return <>Living in {dear} costs {fGap}/mo more than {cheap}. Over a year, that&rsquo;s <span className={styles.strike}>{strikeLabel}</span> — {fYearGap} you&rsquo;re not spending.</>
-  }, [verdict, currency, strikeLabel, styles])
+  }, [verdict, currency, strikeLabel])
 
   return (
     <div className={styles.page}>
@@ -499,7 +499,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Pick strip */}
         <section className={styles.pickStrip}>
           <p className={styles.pickSeoLine}>
-            Compare rent, groceries, utilities across 66 cities. Pick up to 4.
+            Compare rent, groceries, utilities across {allCities.length} cities. Pick up to 4.
           </p>
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>

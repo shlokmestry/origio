@@ -7,16 +7,16 @@ export const revalidate = 3600
 
 export const metadata = {
   title: 'Cities ~ Cost of Living, Salaries & Expat Guides · Origio',
-  description: 'Compare rent, salaries, climate and visa routes across 60 global cities. Real data for professionals considering a move abroad.',
+  description: 'Compare rent, salaries, climate and visa routes across 78 global cities. Real data for professionals considering a move abroad.',
   openGraph: {
     title: 'Cities · Origio — Cost of Living & Expat Guides',
-    description: 'Compare rent, salaries, healthcare, nightlife and visa routes across 60 global cities. Real data for professionals considering a move abroad.',
+    description: 'Compare rent, salaries, healthcare, nightlife and visa routes across 78 global cities. Real data for professionals considering a move abroad.',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Cities · Origio — Cost of Living & Expat Guides',
-    description: 'Compare rent, salaries, healthcare and visa routes across 60 global cities.',
+    description: 'Compare rent, salaries, healthcare and visa routes across 78 global cities.',
   },
   keywords: ['cost of living', 'expat guide', 'rent abroad', 'remote work cities', 'digital nomad', 'city comparison', 'move abroad', 'salaries abroad'],
 }
