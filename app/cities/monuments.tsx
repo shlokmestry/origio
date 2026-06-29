@@ -63,18 +63,85 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
     </svg>
   ),
 
-  dublin: ( // Ha'penny Bridge — iron arch with suspension rods
+  dublin: ( // Ha'penny Bridge — bigger arch, fewer rods
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
-      <path d="M18 94 Q100 34 182 94" strokeWidth="1.8"/>
-      <line x1="18" y1="94" x2="182" y2="94" strokeWidth="1.8"/>
-      <line x1="18" y1="88" x2="18" y2="110" strokeWidth="1.8"/>
-      <line x1="182" y1="88" x2="182" y2="110" strokeWidth="1.8"/>
-      <line x1="44" y1="94" x2="40" y2="62" strokeWidth="1.1"/>
-      <line x1="68" y1="94" x2="62" y2="50" strokeWidth="1.1"/>
-      <line x1="100" y1="94" x2="100" y2="44" strokeWidth="1.1"/>
-      <line x1="132" y1="94" x2="138" y2="50" strokeWidth="1.1"/>
-      <line x1="156" y1="94" x2="160" y2="62" strokeWidth="1.1"/>
+      <path d="M20 92 Q100 26 180 92" strokeWidth="1.8"/>
+      <line x1="20" y1="92" x2="180" y2="92" strokeWidth="1.8"/>
+      <line x1="20" y1="86" x2="20" y2="110" strokeWidth="1.8"/>
+      <line x1="180" y1="86" x2="180" y2="110" strokeWidth="1.8"/>
+      <line x1="48" y1="92" x2="44" y2="60" strokeWidth="1.1"/>
+      <line x1="76" y1="92" x2="70" y2="44" strokeWidth="1.1"/>
+      <line x1="100" y1="92" x2="100" y2="36" strokeWidth="1.1"/>
+      <line x1="124" y1="92" x2="130" y2="44" strokeWidth="1.1"/>
+      <line x1="152" y1="92" x2="156" y2="60" strokeWidth="1.1"/>
       <line x1="8" y1="110" x2="192" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  edinburgh: ( // Edinburgh Castle — fortress on volcanic rock
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M26 110 Q54 88 74 86 Q88 72 112 74 Q134 76 174 110" strokeWidth="1.8"/>
+      <rect x="70" y="44" width="52" height="36" strokeWidth="1.8"/>
+      <rect x="58" y="56" width="18" height="24" strokeWidth="1.1"/>
+      <rect x="122" y="54" width="16" height="26" strokeWidth="1.1"/>
+      <line x1="70" y1="44" x2="74" y2="34" strokeWidth="1.1"/>
+      <line x1="84" y1="44" x2="84" y2="34" strokeWidth="1.1"/>
+      <line x1="96" y1="44" x2="94" y2="34" strokeWidth="1.1"/>
+      <line x1="108" y1="44" x2="108" y2="34" strokeWidth="1.1"/>
+      <line x1="122" y1="44" x2="126" y2="34" strokeWidth="1.1"/>
+      <rect x="88" y="58" width="16" height="22" strokeWidth="1.1"/>
+      <line x1="12" y1="110" x2="188" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  manchester: ( // Worker bee + mill skyline
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="42" y="70" width="20" height="40" strokeWidth="1.1"/>
+      <rect x="66" y="56" width="24" height="54" strokeWidth="1.8"/>
+      <rect x="94" y="48" width="14" height="62" strokeWidth="1.1"/>
+      <rect x="112" y="64" width="28" height="46" strokeWidth="1.8"/>
+      <line x1="70" y1="56" x2="70" y2="30" strokeWidth="1.1"/>
+      <line x1="82" y1="56" x2="82" y2="24" strokeWidth="1.8"/>
+      <ellipse cx="130" cy="36" rx="14" ry="10" strokeWidth="1.8"/>
+      <circle cx="130" cy="24" r="5" strokeWidth="1.1"/>
+      <line x1="122" y1="34" x2="114" y2="24" strokeWidth="1.1"/>
+      <line x1="138" y1="34" x2="146" y2="24" strokeWidth="1.1"/>
+      <line x1="124" y1="42" x2="136" y2="42" strokeWidth="1.1"/>
+      <line x1="126" y1="30" x2="126" y2="44" strokeWidth="1.1"/>
+      <line x1="134" y1="30" x2="134" y2="44" strokeWidth="1.1"/>
+      <line x1="24" y1="110" x2="176" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  bristol: ( // Clifton Suspension Bridge — twin towers + suspended deck
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="54" y1="26" x2="54" y2="92" strokeWidth="1.8"/>
+      <line x1="146" y1="26" x2="146" y2="92" strokeWidth="1.8"/>
+      <path d="M18 72 Q54 38 100 50 Q146 38 182 72" strokeWidth="1.8"/>
+      <line x1="18" y1="92" x2="182" y2="92" strokeWidth="1.8"/>
+      {[30,46,54,70,86,100,114,130,146,154,170].map(x => {
+        const cx = 100, sag = 28, dx = (x - cx) / 100
+        const y = Math.round(50 + sag * dx * dx)
+        return <line key={x} x1={x} y1={Math.min(y, 92)} x2={x} y2="92" strokeWidth="1.1"/>
+      })}
+      <line x1="8" y1="110" x2="192" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  glasgow: ( // Finnieston Crane — giant cantilever dock crane
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="58" y1="30" x2="58" y2="110" strokeWidth="1.8"/>
+      <line x1="58" y1="30" x2="136" y2="30" strokeWidth="1.8"/>
+      <line x1="136" y1="30" x2="168" y2="52" strokeWidth="1.8"/>
+      <line x1="58" y1="42" x2="132" y2="42" strokeWidth="1.1"/>
+      <line x1="72" y1="30" x2="94" y2="66" strokeWidth="1.1"/>
+      <line x1="90" y1="30" x2="108" y2="60" strokeWidth="1.1"/>
+      <line x1="108" y1="30" x2="124" y2="54" strokeWidth="1.1"/>
+      <line x1="136" y1="30" x2="136" y2="94" strokeWidth="1.1"/>
+      <line x1="136" y1="58" x2="152" y2="58" strokeWidth="1.1"/>
+      <line x1="152" y1="58" x2="152" y2="92" strokeWidth="1.1"/>
+      <rect x="46" y="94" width="24" height="16" strokeWidth="1.1"/>
+      <line x1="24" y1="110" x2="176" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
 
@@ -378,18 +445,18 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
     </svg>
   ),
 
-  brussels: ( // Atomium — nine iron atom spheres
+  brussels: ( // Atomium — reduced cluster, bolder read
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
-      <circle cx="100" cy="24" r="17" strokeWidth="1.8"/>
-      <circle cx="54" cy="62" r="14" strokeWidth="1.8"/>
-      <circle cx="146" cy="62" r="14" strokeWidth="1.8"/>
-      <circle cx="70" cy="94" r="13" strokeWidth="1.1"/>
-      <circle cx="130" cy="94" r="13" strokeWidth="1.1"/>
-      <line x1="100" y1="41" x2="100" y2="110" strokeWidth="1.8"/>
-      <line x1="84" y1="34" x2="67" y2="50" strokeWidth="1.1"/>
-      <line x1="116" y1="34" x2="133" y2="50" strokeWidth="1.1"/>
-      <line x1="66" y1="76" x2="72" y2="83" strokeWidth="1.1"/>
-      <line x1="134" y1="76" x2="128" y2="83" strokeWidth="1.1"/>
+      <circle cx="100" cy="24" r="16" strokeWidth="1.8"/>
+      <circle cx="62" cy="58" r="13" strokeWidth="1.8"/>
+      <circle cx="138" cy="58" r="13" strokeWidth="1.8"/>
+      <circle cx="78" cy="92" r="12" strokeWidth="1.1"/>
+      <circle cx="122" cy="92" r="12" strokeWidth="1.1"/>
+      <line x1="100" y1="40" x2="100" y2="110" strokeWidth="1.8"/>
+      <line x1="88" y1="36" x2="71" y2="49" strokeWidth="1.1"/>
+      <line x1="112" y1="36" x2="129" y2="49" strokeWidth="1.1"/>
+      <line x1="70" y1="70" x2="82" y2="82" strokeWidth="1.1"/>
+      <line x1="130" y1="70" x2="118" y2="82" strokeWidth="1.1"/>
       <line x1="30" y1="110" x2="170" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
@@ -501,19 +568,48 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
     </svg>
   ),
 
-  austin: ( // Texas State Capitol — dome + classical wings
+  utrecht: ( // Dom Tower — narrow Gothic belfry
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
-      <line x1="100" y1="6" x2="100" y2="22" strokeWidth="1.8"/>
-      <path d="M78 42 Q100 16 122 42" strokeWidth="1.8"/>
-      <line x1="78" y1="42" x2="122" y2="42" strokeWidth="1.1"/>
-      <rect x="70" y="42" width="60" height="22" strokeWidth="1.1"/>
-      <rect x="48" y="64" width="104" height="46" strokeWidth="1.8"/>
-      <line x1="48" y1="80" x2="152" y2="80" strokeWidth="1.1"/>
-      <line x1="48" y1="96" x2="152" y2="96" strokeWidth="1.1"/>
-      {[64,82,100,118,136].map(x => (
-        <line key={x} x1={x} y1="64" x2={x} y2="110" strokeWidth="1.1"/>
-      ))}
+      <rect x="82" y="36" width="36" height="74" strokeWidth="1.8"/>
+      <polygon points="82,36 100,18 118,36" strokeWidth="1.8"/>
+      <line x1="100" y1="18" x2="100" y2="8" strokeWidth="1.1"/>
+      <line x1="90" y1="48" x2="110" y2="48" strokeWidth="1.1"/>
+      <line x1="90" y1="62" x2="110" y2="62" strokeWidth="1.1"/>
+      <line x1="90" y1="76" x2="110" y2="76" strokeWidth="1.1"/>
+      <rect x="88" y="84" width="24" height="26" strokeWidth="1.1"/>
+      <line x1="66" y1="110" x2="134" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  austin: ( // Congress bridge + bat arc
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M40 38 Q52 28 64 38 Q76 22 88 38 Q100 26 112 38 Q124 22 136 38 Q148 28 160 38" strokeWidth="1.1"/>
+      <line x1="24" y1="74" x2="176" y2="74" strokeWidth="1.8"/>
+      <line x1="34" y1="74" x2="28" y2="96" strokeWidth="1.8"/>
+      <line x1="64" y1="74" x2="58" y2="96" strokeWidth="1.1"/>
+      <line x1="94" y1="74" x2="88" y2="96" strokeWidth="1.1"/>
+      <line x1="124" y1="74" x2="118" y2="96" strokeWidth="1.1"/>
+      <line x1="154" y1="74" x2="148" y2="96" strokeWidth="1.8"/>
+      <line x1="46" y1="96" x2="40" y2="74" strokeWidth="1.8"/>
+      <line x1="76" y1="96" x2="70" y2="74" strokeWidth="1.1"/>
+      <line x1="106" y1="96" x2="100" y2="74" strokeWidth="1.1"/>
+      <line x1="136" y1="96" x2="130" y2="74" strokeWidth="1.1"/>
+      <line x1="166" y1="96" x2="160" y2="74" strokeWidth="1.8"/>
+      <line x1="20" y1="96" x2="180" y2="96" strokeWidth="1.8"/>
       <line x1="30" y1="110" x2="170" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  calgary: ( // Calgary Tower — pod + flared legs
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="100" y1="8" x2="100" y2="110" strokeWidth="1.1"/>
+      <ellipse cx="100" cy="48" rx="20" ry="12" strokeWidth="1.8"/>
+      <ellipse cx="100" cy="42" rx="12" ry="7" strokeWidth="1.1"/>
+      <line x1="100" y1="60" x2="100" y2="110" strokeWidth="1.8"/>
+      <line x1="90" y1="72" x2="82" y2="100" strokeWidth="1.8"/>
+      <line x1="110" y1="72" x2="118" y2="100" strokeWidth="1.8"/>
+      <line x1="82" y1="100" x2="118" y2="100" strokeWidth="1.8"/>
+      <line x1="62" y1="110" x2="138" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
 
@@ -681,17 +777,28 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
     </svg>
   ),
 
-  kyoto: ( // Kinkaku-ji — three-story golden pavilion
+  kyoto: ( // Torii gate — cleaner, more iconic
     <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
-      <rect x="60" y="62" width="80" height="16" strokeWidth="1.8"/>
-      <path d="M54 62 Q100 50 146 62" strokeWidth="1.1"/>
-      <rect x="68" y="46" width="64" height="18" strokeWidth="1.8"/>
-      <path d="M62 46 Q100 36 138 46" strokeWidth="1.1"/>
-      <rect x="76" y="32" width="48" height="16" strokeWidth="1.1"/>
-      <polygon points="76,32 100,14 124,32" strokeWidth="1.8"/>
-      <line x1="100" y1="14" x2="100" y2="6" strokeWidth="1.1"/>
-      <rect x="84" y="78" width="32" height="32" strokeWidth="1.1"/>
+      <line x1="62" y1="26" x2="62" y2="110" strokeWidth="1.8"/>
+      <line x1="138" y1="26" x2="138" y2="110" strokeWidth="1.8"/>
+      <line x1="46" y1="34" x2="154" y2="34" strokeWidth="1.8"/>
+      <line x1="54" y1="46" x2="146" y2="46" strokeWidth="1.1"/>
+      <line x1="76" y1="46" x2="76" y2="110" strokeWidth="1.1"/>
+      <line x1="124" y1="46" x2="124" y2="110" strokeWidth="1.1"/>
+      <path d="M70 92 Q100 78 130 92" strokeWidth="1.1"/>
       <line x1="34" y1="110" x2="166" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  fukuoka: ( // Fukuoka Tower — tapering glass triangle
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M100 10 L62 110 L138 110 Z" strokeWidth="1.8"/>
+      <line x1="100" y1="10" x2="100" y2="110" strokeWidth="1.1"/>
+      <line x1="86" y1="46" x2="114" y2="46" strokeWidth="1.1"/>
+      <line x1="78" y1="66" x2="122" y2="66" strokeWidth="1.1"/>
+      <line x1="70" y1="86" x2="130" y2="86" strokeWidth="1.1"/>
+      <rect x="88" y="58" width="24" height="18" strokeWidth="1.1"/>
+      <line x1="48" y1="110" x2="152" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
 
@@ -729,6 +836,17 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
       <line x1="18" y1="86" x2="182" y2="86" strokeWidth="1.1"/>
       <line x1="18" y1="100" x2="182" y2="100" strokeWidth="1.1"/>
       <line x1="6" y1="110" x2="194" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  perth: ( // Bell Tower — leaning sail-like frame
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M74 110 L94 18 L122 110" strokeWidth="1.8"/>
+      <path d="M94 18 Q120 26 140 54 Q128 78 122 110" strokeWidth="1.8"/>
+      <line x1="88" y1="48" x2="126" y2="48" strokeWidth="1.1"/>
+      <line x1="84" y1="68" x2="128" y2="68" strokeWidth="1.1"/>
+      <rect x="98" y="58" width="16" height="18" strokeWidth="1.1"/>
+      <line x1="56" y1="110" x2="146" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
 

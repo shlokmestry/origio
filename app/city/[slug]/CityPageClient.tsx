@@ -578,15 +578,19 @@ export default function CityPageClient({ city }: Props) {
     ? Math.round((selectedProfSalary * (1 - d.income_tax_rate_mid)) / 12)
     : nav.scene3.profTakeHome;
 
+  const isSeededEstimate = d?.data_sources?.includes("Origio city expansion seed") ?? false;
   const freshnessStatus = useMemo(() => {
     if (!d?.last_verified) return null;
+    if (isSeededEstimate) {
+      return { cls: "old", label: "Estimated data — not source-verified city by city" };
+    }
     const verified = new Date(d.last_verified);
     if (isNaN(verified.getTime())) return null;
     const monthsAgo = (Date.now() - verified.getTime()) / (1000 * 60 * 60 * 24 * 30);
     if (monthsAgo < 4)  return { cls: "fresh", label: "Data verified recently" };
     if (monthsAgo < 10) return { cls: "stale", label: "Data may be slightly dated" };
     return { cls: "old", label: "Data overdue for verification" };
-  }, [d?.last_verified]);
+  }, [d?.last_verified, isSeededEstimate]);
   const verifiedLabel = d?.last_verified
     ? new Date(d.last_verified).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
@@ -1364,7 +1368,7 @@ export default function CityPageClient({ city }: Props) {
               <span className={`freshness-dot ${freshnessStatus.cls}`} />
               <span className="freshness-text">
                 <strong>{freshnessStatus.label}</strong>
-                {" — "}last verified <strong>{verifiedLabel}</strong>
+                {" — "}{isSeededEstimate ? "seeded" : "last verified"} <strong>{verifiedLabel}</strong>
               </span>
             </div>
           )}
@@ -1393,8 +1397,8 @@ export default function CityPageClient({ city }: Props) {
             <h2 className="dossier-title">The <span style={{ fontStyle: "normal" }}>dossier.</span></h2>
             <p className="dossier-intro">
               Every number in this dispatch, in one place.
-              {d?.last_verified && ` Verified ${new Date(d.last_verified).toLocaleDateString("en-US", { year: "numeric", month: "long" })}.`}
-              {d?.data_sources && ` Sources: ${d.data_sources.replace(/\bNumbero\b/gi, "local cost surveys").replace(/\bNumbeo\b/gi, "local cost surveys")}.`}
+              {d?.last_verified && `${isSeededEstimate ? " Estimated" : " Verified"} ${new Date(d.last_verified).toLocaleDateString("en-US", { year: "numeric", month: "long" })}.`}
+              {d?.data_sources && ` ${isSeededEstimate ? "Method" : "Sources"}: ${d.data_sources.replace(/\bNumbero\b/gi, "local cost surveys").replace(/\bNumbeo\b/gi, "local cost surveys")}.`}
             </p>
           </div>
 
