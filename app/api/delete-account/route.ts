@@ -48,11 +48,16 @@ export async function DELETE(request: Request): Promise<Response> {
   Sentry.addBreadcrumb({ category: 'account', message: 'Account deletion initiated', level: 'info' })
 
   // Delete all user data then auth user — do this FIRST before the email
-  await Promise.all([
+  const deletionResults = await Promise.all([
     adminClient.from('saved_countries').delete().eq('user_id', user.id),
     adminClient.from('wizard_results').delete().eq('user_id', user.id),
     adminClient.from('profiles').delete().eq('id', user.id),
   ])
+  const deletionError = deletionResults.find(result => result.error)?.error
+  if (deletionError) {
+    Sentry.captureException(deletionError, { tags: { route: 'delete-account', phase: 'data-delete' } })
+    return NextResponse.json({ error: 'Deletion failed' }, { status: 500 })
+  }
 
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
   if (deleteError) {

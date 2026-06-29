@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, CheckCircle } from "lucide-react";
 import { CountryMatch, WizardAnswers, TO_USD, getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
-import { JOB_ROLES } from "@/types";
+import { CountryWithData, JOB_ROLES } from "@/types";
 import { getVisaLabel } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
@@ -35,6 +35,14 @@ function visa(d: number) {
   return getVisaLabel(d);
 }
 
+type StoredMatch = {
+  slug: string;
+  name: string;
+  flagEmoji: string;
+  matchPercent: number;
+  reasons?: string[];
+}
+
 function ReportSuccessInner() {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
@@ -43,13 +51,18 @@ function ReportSuccessInner() {
   const [error, setError]     = useState<string | null>(null);
   const [matches, setMatches] = useState<CountryMatch[]>([]);
   const [answers, setAnswers] = useState<Partial<WizardAnswers>>({});
+  const [resultId, setResultId] = useState<string | null>(null);
 
   // Verify payment
   useEffect(() => {
     if (!sessionId) { setError("No session found."); return; }
     supabase.auth.getSession().then(({ data: { session: authSession } }) => {
+      if (!authSession?.access_token) {
+        setError("Sign in required to view paid report.");
+        return;
+      }
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authSession?.access_token) headers["Authorization"] = `Bearer ${authSession.access_token}`;
+      headers["Authorization"] = `Bearer ${authSession.access_token}`;
       fetch("/api/verify-payment", {
         method: "POST",
         headers,
@@ -57,25 +70,55 @@ function ReportSuccessInner() {
       })
         .then(r => r.json())
         .then(d => {
-          if (d.paid) setVerified(true);
+          if (d.paid && d.type === "report" && typeof d.resultId === "string") {
+            setResultId(d.resultId);
+            setVerified(true);
+          }
+          else if (d.paid && d.type === "pro") setError("This session unlocked Pro, not a one-off report.");
           else setError("Payment not confirmed. Contact support.");
         })
         .catch(() => setError("Could not verify payment."));
     });
   }, [sessionId]);
 
-  // Load wizard results from sessionStorage
+  // Load purchased report from Supabase
   useEffect(() => {
-    try {
-      const m = sessionStorage.getItem("wizardMatches");
-      const a = sessionStorage.getItem("wizardAnswers");
-      if (m) setMatches(JSON.parse(m).slice(0, 5));
-      if (a) setAnswers(JSON.parse(a));
-    } catch { /* ignore */ }
-  }, []);
+    if (!verified || !resultId) return;
+    supabase.auth.getSession().then(async ({ data: { session: authSession } }) => {
+      if (!authSession?.access_token) {
+        setError("Sign in required to load report.");
+        return;
+      }
+      const res = await fetch(`/api/report-data?resultId=${encodeURIComponent(resultId)}&sessionId=${encodeURIComponent(sessionId ?? "")}`, {
+        headers: { Authorization: `Bearer ${authSession.access_token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Could not load report.");
+        return
+      }
+      if (Array.isArray(data.matches)) {
+        const countriesRes = await fetch("/api/countries")
+        const countries = countriesRes.ok ? await countriesRes.json() as CountryWithData[] : []
+        const reconstructed = (data.matches as StoredMatch[])
+          .map((item) => {
+            const country = countries.find((entry) => entry.slug === item.slug)
+            if (!country) return null
+            return {
+              country,
+              matchScore: item.matchPercent,
+              matchPercent: item.matchPercent,
+              reasons: item.reasons ?? [],
+            }
+          })
+          .filter((item): item is CountryMatch => item !== null)
+        setMatches(reconstructed.slice(0, 5))
+      }
+      if (data.answers && typeof data.answers === "object") setAnswers(data.answers)
+    }).catch(() => setError("Could not load report."));
+  }, [verified, resultId, sessionId]);
 
   const handleDownload = () => {
-    // Use browser print dialog — works everywhere, user can save as PDF
     window.print();
   };
 
@@ -121,14 +164,14 @@ function ReportSuccessInner() {
         {/* Download button */}
         <div style={{ marginBottom: 28, textAlign: "center" }}>
           <button onClick={handleDownload}
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: MINT, color: BG, border: "none", borderRadius: 100, padding: "13px 28px", fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em" }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: MINT, color: BG, border: "none", borderRadius: 0, padding: "13px 28px", fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: "0.06em", boxShadow: "3px 3px 0 #00c9a9" }}>
             <Download size={14} /> Save as PDF
           </button>
           <p style={{ fontSize: 11, color: DIM, marginTop: 8 }}>Saves as an image. Use your browser's Print to save as PDF.</p>
         </div>
 
         {/* Report */}
-        <div id="origio-report" style={{ background: "#0d0d0d", border: `1px solid ${LINE}`, borderRadius: 16, overflow: "hidden", padding: 40 }}>
+        <div id="origio-report" style={{ background: "#0d0d0d", border: `1px solid ${LINE}`, borderRadius: 0, overflow: "hidden", padding: 40, boxShadow: "3px 3px 0 #1a1a1a" }}>
 
           {/* Cover */}
           <div style={{ marginBottom: 36, paddingBottom: 28, borderBottom: `1px solid ${LINE}` }}>
@@ -160,7 +203,6 @@ function ReportSuccessInner() {
             const currency = m.country.currency;
             const salaryRaw = jobRole ? d[jobRole.salaryKey] as number : d.salarySoftwareEngineer;
             const salaryUSD = toUSD(salaryRaw, currency);
-            const rentUSD   = toUSD(d.costRentCityCentre, currency);
             const rankColor = i === 0 ? MINT : i === 1 ? "#facc15" : i === 2 ? "#a78bfa" : DIM;
 
             return (

@@ -19,6 +19,7 @@ import { getVisaLabel } from "@/lib/utils";
 import { getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -774,7 +775,7 @@ export default function ComparePageClient() {
                 style={{ borderRadius: 100 }}
               >
                 <Star className="w-3.5 h-3.5" fill="currentColor" />
-                Get Pro · €4.99
+                Get Pro · {PRO_PRICE_EUR_DISPLAY}
               </Link>
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { Sparkles, Lock } from 'lucide-react'
+import { PRO_PRICE_EUR_DISPLAY } from '@/lib/pricing'
 
 const PRO_FEATURES = [
   'Unlimited Find My Country',
@@ -17,10 +18,10 @@ export default function UpgradeBanner({ compact = false }: { compact?: boolean }
         <h3 className="font-heading text-base font-extrabold text-text-primary uppercase tracking-tight mb-1">
           Origio Pro feature
         </h3>
-        <p className="text-xs text-text-muted mb-4">Upgrade for €4.99 ~ one time, no subscription.</p>
+        <p className="text-xs text-text-muted mb-4">Upgrade for {PRO_PRICE_EUR_DISPLAY} ~ one time, no subscription.</p>
         <Link href="/pro" className="cta-button px-6 py-2.5 text-xs font-bold inline-flex items-center gap-2 uppercase tracking-wide">
           <Sparkles className="w-3.5 h-3.5" />
-          Upgrade to Pro ~ €4.99
+          Upgrade to Pro ~ {PRO_PRICE_EUR_DISPLAY}
         </Link>
       </div>
     )
@@ -40,7 +41,7 @@ export default function UpgradeBanner({ compact = false }: { compact?: boolean }
         </div>
         <Link href="/pro" className="cta-button px-5 py-2.5 text-xs font-bold inline-flex items-center gap-2 uppercase flex-shrink-0">
           <Sparkles className="w-3 h-3" />
-          €4.99 one-time
+          {PRO_PRICE_EUR_DISPLAY} one-time
         </Link>
       </div>
     </div>

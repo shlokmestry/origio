@@ -3,6 +3,7 @@
 import Footer from "@/components/Footer";
 import { useState } from "react";
 import Nav from "@/components/Nav";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 const faqs = [
   {
@@ -27,15 +28,15 @@ const faqs = [
     items: [
       { q: "How does Find My Country work?", a: "Find My Country asks 8 questions about your priorities, job role, budget, and preferences. Each country is scored across multiple dimensions — salary, cost of living, safety, visa ease, and more — weighted by your answers." },
       { q: "What does the job offer flow do?", a: "If you already have a job offer, Find My Country skips the priorities, city vibe, and rent budget steps since those are less relevant when you have a fixed destination in mind." },
-      { q: "Why do free users only see the top 3 results?", a: "The top 3 matches are free forever. Signed-in users can see their full top 10. Upgrade to Pro for unlimited runs and deeper country reports." },
+      { q: "What do free users get?", a: "Free users get their top 3 matches, plus the full country ranking. Pro unlocks the working tools: deeper reports, compare, take-home pay, and unlimited runs." },
     ],
   },
   {
     category: "Account & Pro",
     items: [
       { q: "Do I need an account to use Origio?", a: "No. The globe, country pages, compare tool, and Find My Country top 3 results are all free without an account." },
-      { q: "What does the Pro plan include?", a: "Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of €4.99 — no subscription, ever." },
-      { q: "Is this really a one-time payment?", a: "Yes. Pay €4.99 once and access Pro forever. No subscription, no hidden fees, no recurring charges." },
+      { q: "What does the Pro plan include?", a: `Pro includes unlimited Find My Country runs, full country deep-dives, side-by-side country comparison, saved country matches, visa route details, and priority updates. One-time payment of ${PRO_PRICE_EUR_DISPLAY} — no subscription, ever.` },
+      { q: "Is this really a one-time payment?", a: `Yes. Pay ${PRO_PRICE_EUR_DISPLAY} once and access Pro forever. No subscription, no hidden fees, no recurring charges.` },
       { q: "What payment methods are accepted?", a: "All major credit and debit cards via Stripe. Safe and secure." },
       { q: "Can I get a refund?", a: "If you have an issue, contact us and we'll sort it out." },
     ],

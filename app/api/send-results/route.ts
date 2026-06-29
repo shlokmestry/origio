@@ -3,6 +3,7 @@ import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { isValidEmail } from '@/lib/utils'
+import { PRO_PRICE_EUR_DISPLAY } from '@/lib/pricing'
 import * as Sentry from '@sentry/nextjs'
 
 function escapeHtml(s: string): string {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
       from: 'Origio <hello@findorigio.com>',
       to: email,
       subject: 'Your top 3 matches are ready',
-      text: `Here are your top matches:\n\n${countryLines}\n\nSee all 48 countries ranked → https://findorigio.com/pro\n\nSalary after tax · Visa checklist · 3-country compare\n\nOrigio`,
+      text: `Here are your top matches:\n\n${countryLines}\n\nUnlock compare, salary after tax, and deeper reports → https://findorigio.com/pro\n\nSalary after tax · Visa checklist · 3-country compare\n\nOrigio`,
       html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#0a0a0a;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;">
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:32px 0;border-top:1px solid #2a2a2a;"></td></tr>
       <tr><td style="padding:0 0 12px 0;">
         <a href="https://findorigio.com/pro" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 28px;text-decoration:none;font-family:sans-serif;">
-          Unlock all countries &mdash; &euro;4.99 forever
+          Unlock compare &amp; full tools &mdash; ${escapeHtml(PRO_PRICE_EUR_DISPLAY)} forever
         </a>
       </td></tr>
       <tr><td>

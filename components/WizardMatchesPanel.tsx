@@ -8,6 +8,7 @@ import { CountryMatch } from "@/lib/wizard";
 import { useRouter } from "next/navigation";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 interface WizardMatchesPanelProps {
   matches: CountryMatch[];
@@ -133,9 +134,9 @@ export default function WizardMatchesPanel({
         <div className="border-2 border-[#2a2a2a] p-5 text-center mt-4" style={{ boxShadow: "4px 4px 0 #2a2a2a" }}>
           <Sparkles className="w-5 h-5 text-accent mx-auto mb-2" />
           <p className="font-heading font-bold text-text-primary text-sm uppercase mb-1">See all rankings</p>
-          <p className="text-xs text-text-muted mb-4">Upgrade to Pro to unlock all 48 countries ranked for you.</p>
+          <p className="text-xs text-text-muted mb-4">Upgrade to Pro for compare, deeper reports, salary after tax, and unlimited runs.</p>
           <a href="/pro" className="cta-button w-full py-2.5 text-xs font-bold block text-center uppercase tracking-wide">
-            Upgrade to Pro ~ €4.99
+            Upgrade to Pro ~ {PRO_PRICE_EUR_DISPLAY}
           </a>
         </div>
 

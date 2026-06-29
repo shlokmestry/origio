@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rate-limit'
+import { PRO_PRICE_CENTS } from '@/lib/pricing'
 import * as Sentry from "@sentry/nextjs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -43,7 +44,7 @@ export async function POST(request: Request): Promise<Response> {
               name: 'Origio Pro',
               description: 'Lifetime access to all Pro features',
             },
-            unit_amount: 500,
+            unit_amount: PRO_PRICE_CENTS,
           },
           quantity: 1,
         },
@@ -51,7 +52,7 @@ export async function POST(request: Request): Promise<Response> {
       mode: 'payment',
       success_url: `${appUrl}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pro?cancelled=true`,
-      metadata: { user_id: user.id },
+      metadata: { user_id: user.id, type: 'pro' },
       client_reference_id: user.id,
     })
 

@@ -16,6 +16,7 @@ import type { User } from "@supabase/supabase-js";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
 import { WeightingModal } from "./WeightingPanel";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const SERIF = "'Cabinet Grotesk', sans-serif";
@@ -552,15 +553,30 @@ export default function WizardResultsPage() {
   const handleReportCheckout = async () => {
     setReportLoading(true);
     try {
-      const body: Record<string, string> = {};
-      if (user?.email) body.email = user.email;
+      if (!user) {
+        router.push('/signin?next=/wizard/results');
+        setReportLoading(false);
+        return;
+      }
+      if (!shareId) {
+        console.error("[checkout-report]", "missing result id");
+        setReportLoading(false);
+        return;
+      }
       const { data: { session: checkoutSession } } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (checkoutSession?.access_token) headers["Authorization"] = `Bearer ${checkoutSession.access_token}`;
+      if (!checkoutSession?.access_token) {
+        router.push('/signin?next=/wizard/results');
+        setReportLoading(false);
+        return;
+      }
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${checkoutSession.access_token}`,
+      };
       const res = await fetch("/api/checkout-report", {
         method: "POST",
         headers,
-        body: JSON.stringify(body),
+        body: JSON.stringify({ resultId: shareId }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) { window.location.href = data.url; return; }
@@ -1045,7 +1061,7 @@ export default function WizardResultsPage() {
               }}
                 onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #00aa90"; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "3px 3px 0 #00aa90"; }}>
-                Unlock Pro — €4.99 <ArrowRight size={13} />
+                Unlock Pro — {PRO_PRICE_EUR_DISPLAY} <ArrowRight size={13} />
               </Link>
             </div>
           )}

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+import { PRO_PRICE_EUR_DISPLAY } from '@/lib/pricing'
 
 const FEATURES = [
   {
@@ -58,7 +59,7 @@ const FEATURES = [
 const FAQS = [
   {
     q: 'Is this really a one-time payment?',
-    a: '€4.99 once. Pro forever. No subscription, no renewal, no surprise charges.',
+    a: `${PRO_PRICE_EUR_DISPLAY} once. Pro forever. No subscription, no renewal, no surprise charges.`,
   },
   {
     q: 'What does Pro actually give me?',
@@ -235,7 +236,7 @@ function ProPageInner() {
                 color: '#f0f0e8',
                 letterSpacing: '-0.04em',
                 lineHeight: 1,
-              }}>€4.99</span>
+              }}>{PRO_PRICE_EUR_DISPLAY}</span>
               <span style={{
                 fontSize: 18,
                 color: '#888880',

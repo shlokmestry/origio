@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { FlagIcon } from '@/components/FlagIcon'
 import { slugToIso } from '@/lib/flagCodes'
+import { PRO_PRICE_EUR_DISPLAY } from '@/lib/pricing'
 
 type SavedCountry = {
   id: string
@@ -415,7 +416,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 20, color: '#fff', marginBottom: 3 }}>Upgrade to Origio Pro</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 48 countries · €4.99 one-time</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Unlimited matches · Full rankings · All 48 countries · {PRO_PRICE_EUR_DISPLAY} one-time</p>
               </div>
             </div>
             <a href="/pro" style={{ fontSize: 13, fontWeight: 700, color: '#00ffd5', textDecoration: 'underline', textUnderlineOffset: 3, whiteSpace: 'nowrap' }}>

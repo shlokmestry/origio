@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rate-limit'
-import { isValidEmail } from '@/lib/utils'
 
 const ALLOWED_ORIGINS = ['https://findorigio.com', 'https://www.findorigio.com']
 
@@ -28,33 +27,54 @@ export async function POST(request: Request): Promise<Response> {
   }
   const origin = requestOrigin ?? ALLOWED_ORIGINS[0]
 
-  let customerEmail: string | undefined
-  let userId: string | undefined
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const token = authHeader.replace('Bearer ', '')
+
   try {
     const body = await request.json()
-    if (typeof body.email === 'string' && isValidEmail(body.email)) customerEmail = body.email
-
-    const authHeader = request.headers.get('Authorization')
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '')
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-      const { data: { user } } = await supabase.auth.getUser(token)
-      if (user) userId = user.id
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user || !user.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-  } catch { /* ignore */ }
 
-  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (profile?.is_pro) {
+      return NextResponse.json({ error: 'Pro users already have full report access.' }, { status: 409 })
+    }
+
+    if (!body.resultId || typeof body.resultId !== 'string') {
+      return NextResponse.json({ error: 'Missing resultId' }, { status: 400 })
+    }
+
+    const { data: result } = await supabase
+      .from('wizard_results')
+      .select('id')
+      .eq('id', body.resultId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!result) {
+      return NextResponse.json({ error: 'Result not found' }, { status: 404 })
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: process.env.STRIPE_REPORT_PRICE_ID!, quantity: 1 }],
-      ...(customerEmail ? { customer_email: customerEmail } : {}),
+      customer_email: user.email,
       success_url: `${origin}/report/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/wizard/results`,
-      metadata: { type: 'report', ...(userId ? { user_id: userId } : {}) },
-      ...(customerEmail ? {} : { billing_address_collection: 'auto' }),
+      metadata: { type: 'report', user_id: user.id, result_id: result.id },
     })
     return NextResponse.json({ url: session.url })
   } catch (err) {

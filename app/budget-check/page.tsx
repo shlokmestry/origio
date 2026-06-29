@@ -11,6 +11,7 @@ import { TO_USD } from "@/lib/wizard";
 import { CountryWithData } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 const MONO  = "'Cabinet Grotesk', 'Satoshi', sans-serif";
 const SANS  = "'Satoshi', system-ui, sans-serif";
@@ -279,7 +280,7 @@ export default function BudgetCheckPage() {
                   display: "inline-flex", alignItems: "center", gap: 8,
                   boxShadow: "3px 3px 0 #00aa90",
                 }}>
-                  Get Pro — €4.99
+                  Get Pro — {PRO_PRICE_EUR_DISPLAY}
                 </Link>
               </div>
             )}

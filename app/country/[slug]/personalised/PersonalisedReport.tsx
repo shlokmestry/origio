@@ -13,6 +13,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -1153,7 +1154,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
           <div style={{ background: S.card, border: `1px solid ${S.border}`, borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', borderBottom: `1px solid ${S.border}` }}>
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: S.dim }}>22 more countries · ranked for you</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: S.dimmer }}>Pro · €4.99</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: S.dimmer }}>Pro · {PRO_PRICE_EUR_DISPLAY}</span>
             </div>
 
             {isPro ? (
@@ -1206,7 +1207,7 @@ export default function PersonalisedReport({ country, allCountries }: Props) {
             {!isPro && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '20px 22px', background: 'rgba(255,255,255,0.03)', borderTop: `1px solid ${S.borderMd}`, flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontFamily: S.serif, fontSize: 20, color: '#fff', marginBottom: 3 }}>See all 45 — €4.99 once</div>
+                  <div style={{ fontFamily: S.serif, fontSize: 20, color: '#fff', marginBottom: 3 }}>See all 45 — {PRO_PRICE_EUR_DISPLAY} once</div>
                   <div style={{ fontSize: 12, color: S.dim }}>Full ranking · salary calculator · visa checklist · 3-country compare</div>
                 </div>
                 <Link href="/pro"

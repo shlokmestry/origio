@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { Lock, Sparkles, UserPlus } from "lucide-react";
+import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
 
 interface QuizGateProps {
   type: "anon" | "free";
@@ -105,7 +106,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
               You've used all your free runs
             </h1>
             <p className="text-sm text-[#888880] leading-relaxed">
-              Upgrade to Pro for unlimited quiz runs, all 48 countries ranked, full salary breakdown, and more.
+              Upgrade to Pro for unlimited quiz runs, deeper reports, compare tools, and full salary breakdown.
             </p>
           </div>
         </div>
@@ -117,7 +118,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
             style={{ boxShadow: "3px 3px 0 #00ffd5" }}
           >
             <Sparkles className="w-4 h-4" />
-            Upgrade to Pro — €4.99 once
+            Upgrade to Pro — {PRO_PRICE_EUR_DISPLAY} once
           </Link>
           <Link
             href="/"

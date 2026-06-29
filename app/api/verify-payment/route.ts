@@ -12,6 +12,8 @@ import Stripe from 'stripe'
 import { rateLimit } from '@/lib/rate-limit'
 import * as Sentry from '@sentry/nextjs'
 
+type CheckoutType = 'pro' | 'report'
+
 export async function POST(request: Request): Promise<Response> {
   // Validate Content-Type
   const contentType = request.headers.get('content-type') ?? ''
@@ -57,13 +59,6 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 })
   }
 
-  // Idempotency: if already Pro, no need to re-process
-  const { data: existing } = await adminSupabase
-    .from('profiles').select('is_pro').eq('id', user.id).maybeSingle()
-  if (existing?.is_pro) {
-    return NextResponse.json({ paid: true, pro: true })
-  }
-
   // Retrieve the Stripe checkout session
   let session: Stripe.Checkout.Session
   try {
@@ -88,6 +83,30 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  const checkoutType = session.metadata?.type as CheckoutType | undefined
+  if (checkoutType !== 'pro' && checkoutType !== 'report') {
+    Sentry.captureMessage('verify-payment: missing_or_invalid_checkout_type', {
+      level: 'error',
+      extra: { sessionId, sessionUserId, checkoutType },
+    })
+    return NextResponse.json({ error: 'Invalid checkout session' }, { status: 400 })
+  }
+
+  if (checkoutType === 'report') {
+    const resultId = session.metadata?.result_id
+    if (!resultId) {
+      return NextResponse.json({ error: 'Missing result reference' }, { status: 400 })
+    }
+    return NextResponse.json({ paid: true, type: 'report', pro: false, resultId })
+  }
+
+  // Idempotency: if already Pro, no need to re-process
+  const { data: existing } = await adminSupabase
+    .from('profiles').select('is_pro').eq('id', user.id).maybeSingle()
+  if (existing?.is_pro) {
+    return NextResponse.json({ paid: true, type: 'pro', pro: true })
+  }
+
   // Payment confirmed — grant pro
   const { error: updateError } = await adminSupabase
     .from('profiles')
@@ -103,5 +122,5 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   console.log(`✅ Pro granted via verify-payment for user …${user.id.slice(-6)}`)
-  return NextResponse.json({ paid: true, pro: true })
+  return NextResponse.json({ paid: true, type: 'pro', pro: true })
 }
