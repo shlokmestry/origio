@@ -251,6 +251,32 @@ const SALARY_MULTIPLIERS: Record<string, number> = {
   salary_chef:                      1.00,
 };
 
+// ── Market overrides ─────────────────────────────────────────────────────────
+// Country pages use a single representative city/country row. For a few launch-
+// critical countries we pin known market values so the weekly refresh does not
+// drift materially below current central-market rates.
+
+const COUNTRY_MARKET_OVERRIDES: Record<string, Partial<UpdatePayload>> = {
+  australia: {
+    cost_rent_city_centre: 3000,
+  },
+  canada: {
+    salary_software_engineer: 120000,
+  },
+  ireland: {
+    cost_rent_city_centre: 2700,
+  },
+  singapore: {
+    cost_rent_city_centre: 3500,
+  },
+  'united-kingdom': {
+    cost_rent_city_centre: 2800,
+  },
+  usa: {
+    cost_rent_city_centre: 3300,
+  },
+};
+
 // ── HTTP helpers ──────────────────────────────────────────────────────────────
 
 function fetchJson(url: string): Promise<unknown> {
@@ -824,6 +850,13 @@ async function main(): Promise<void> {
       if (qolData.healthcareIndex !== null) {
         payload.score_healthcare = r2(qolData.healthcareIndex / 10);
         sourceNotes.push(`healthcare(raw=${qolData.healthcareIndex}→${payload.score_healthcare})`);
+      }
+
+      // ── launch-critical country overrides ─────────────────────────────
+      const marketOverrides = COUNTRY_MARKET_OVERRIDES[country.slug];
+      if (marketOverrides) {
+        Object.assign(payload, marketOverrides);
+        sourceNotes.push(`market_override=${Object.keys(marketOverrides).join(',')}`);
       }
 
       // ── visa_routes: static reference, validated ───────────────────────
