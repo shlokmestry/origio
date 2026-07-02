@@ -764,6 +764,13 @@
 @media (max-width: 760px) {
   .raceHead, .raceSub, .pickStrip, .race,
   .verdict, .actions, .bureau, .folioStrip { padding-left: 20px; padding-right: 20px; }
+  .mathHead {
+    padding: 10px 20px 0;
+    display: block;
+    font-size: clamp(44px, 18vw, 92px);
+    line-height: 0.9;
+  }
+  .mathSolid, .mathOutline { display: block; }
   .scale, .raceRow { grid-template-columns: 1fr; gap: 14px; }
   .rrL { gap: 10px; }
   .rrR { text-align: left; align-items: flex-start; }
@@ -774,6 +781,17 @@
   .annotRow { display: none; }
   .selectedBar { position: static; flex-direction: column; }
   .selectedBarL, .selectedBarR { width: 100%; flex-wrap: wrap; }
+  .selectedPills {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .selectedPill {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+  }
+  .pickCap { margin-left: 0; }
   .pickHeader { flex-direction: column; align-items: stretch; }
   .pickTools { min-width: 0; max-width: none; }
   .pickGroup { align-items: flex-start; }
@@ -783,7 +801,12 @@
   .raceHead, .raceSub, .pickStrip, .race,
   .verdict, .actions, .bureau, .folioStrip { padding-left: 16px; padding-right: 16px; }
   .folio { padding-top: 0; }
+  .mathHead {
+    padding: 6px 16px 0;
+    font-size: clamp(34px, 17vw, 64px);
+  }
   .raceSub { grid-template-columns: 1fr; gap: 16px; }
+  .raceSubL { font-size: 15px; line-height: 1.35; }
   .raceSubR { text-align: left; }
   .verdict { grid-template-columns: 1fr; gap: 24px; padding: 28px 16px 20px; }
   .actions { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -791,8 +814,26 @@
   .spacer { display: none; }
   .pickChip { min-height: 44px; }
   .selectedPill { min-height: 40px; }
+  .selectedPills { grid-template-columns: 1fr; }
+  .selectedBarR {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .pickCap {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
   .rrRank { font-size: 28px; min-width: 28px; }
+  .rrName { font-size: 22px; }
+  .rrTotal { font-size: 34px; }
   /* Legend action buttons: scroll horizontally instead of overflowing */
   .legendRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-  .legendAction, .legendActionGhost { min-height: 36px; padding: 4px 10px; font-size: 9px; flex-shrink: 0; }
+  .legendAction, .legendActionGhost {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 9px;
+    flex-shrink: 0;
+    justify-content: center;
+  }
 }
