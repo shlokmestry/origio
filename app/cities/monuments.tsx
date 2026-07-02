@@ -1057,6 +1057,176 @@ export const MONUMENTS: Record<string, React.ReactNode> = {
       <line x1="4" y1="110" x2="196" y2="110" strokeWidth="1.8"/>
     </svg>
   ),
+
+  cork: ( // Shandon Bells — clock tower
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="80" y="28" width="40" height="82" strokeWidth="1.8"/>
+      <rect x="74" y="20" width="52" height="12" strokeWidth="1.1"/>
+      <polygon points="80,28 100,10 120,28" strokeWidth="1.8"/>
+      <circle cx="100" cy="52" r="10" strokeWidth="1.1"/>
+      <line x1="100" y1="42" x2="100" y2="52" strokeWidth="1.1"/>
+      <line x1="100" y1="52" x2="107" y2="56" strokeWidth="1.1"/>
+      <rect x="90" y="82" width="20" height="28" strokeWidth="1.1"/>
+      <line x1="62" y1="110" x2="138" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  rotterdam: ( // Erasmus Bridge — asymmetrical pylon
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="112" y1="16" x2="92" y2="110" strokeWidth="1.8"/>
+      <line x1="16" y1="88" x2="184" y2="88" strokeWidth="1.8"/>
+      <line x1="72" y1="88" x2="104" y2="34" strokeWidth="1.1"/>
+      <line x1="86" y1="88" x2="108" y2="48" strokeWidth="1.1"/>
+      <line x1="100" y1="88" x2="111" y2="62" strokeWidth="1.1"/>
+      <line x1="8" y1="110" x2="192" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  'the-hague': ( // Binnenhof / Ridderzaal — steep civic hall
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <polygon points="54,110 54,52 100,20 146,52 146,110" strokeWidth="1.8"/>
+      <line x1="100" y1="20" x2="100" y2="110" strokeWidth="1.1"/>
+      <rect x="68" y="64" width="16" height="26" strokeWidth="1.1"/>
+      <rect x="116" y="64" width="16" height="26" strokeWidth="1.1"/>
+      <rect x="90" y="74" width="20" height="36" strokeWidth="1.1"/>
+      <line x1="42" y1="110" x2="158" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  eindhoven: ( // Evoluon — saucer dome
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <ellipse cx="100" cy="48" rx="44" ry="16" strokeWidth="1.8"/>
+      <path d="M62 48 Q100 24 138 48" strokeWidth="1.1"/>
+      <path d="M70 54 Q100 70 130 54" strokeWidth="1.1"/>
+      <line x1="100" y1="64" x2="100" y2="100" strokeWidth="1.8"/>
+      <path d="M84 100 Q100 90 116 100" strokeWidth="1.8"/>
+      <line x1="60" y1="110" x2="140" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  cologne: ( // Cathedral — twin Gothic spires
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <polygon points="56,110 56,44 72,18 88,44 88,110" strokeWidth="1.8"/>
+      <polygon points="112,110 112,44 128,18 144,44 144,110" strokeWidth="1.8"/>
+      <line x1="72" y1="18" x2="72" y2="8" strokeWidth="1.1"/>
+      <line x1="128" y1="18" x2="128" y2="8" strokeWidth="1.1"/>
+      <rect x="88" y="58" width="24" height="52" strokeWidth="1.8"/>
+      <path d="M94 110 L94 82 Q100 74 106 82 L106 110" strokeWidth="1.1"/>
+      <line x1="38" y1="110" x2="162" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  frankfurt: ( // Bank skyline — taper tower + cluster
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="34" y="72" width="20" height="38" strokeWidth="1.1"/>
+      <rect x="58" y="56" width="24" height="54" strokeWidth="1.8"/>
+      <polygon points="94,110 94,40 100,20 106,40 106,110" strokeWidth="1.8"/>
+      <line x1="88" y1="54" x2="112" y2="54" strokeWidth="1.1"/>
+      <line x1="86" y1="72" x2="114" y2="72" strokeWidth="1.1"/>
+      <rect x="118" y="48" width="18" height="62" strokeWidth="1.1"/>
+      <rect x="140" y="64" width="24" height="46" strokeWidth="1.8"/>
+      <line x1="20" y1="110" x2="180" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  hamburg: ( // Elbphilharmonie — wave roof over brick base
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="38" y="68" width="124" height="42" strokeWidth="1.8"/>
+      <path d="M38 68 Q54 44 70 68 Q86 44 102 68 Q118 44 134 68 Q148 48 162 68" strokeWidth="1.8"/>
+      <line x1="38" y1="82" x2="162" y2="82" strokeWidth="1.1"/>
+      <line x1="58" y1="82" x2="58" y2="110" strokeWidth="1.1"/>
+      <line x1="82" y1="82" x2="82" y2="110" strokeWidth="1.1"/>
+      <line x1="106" y1="82" x2="106" y2="110" strokeWidth="1.1"/>
+      <line x1="130" y1="82" x2="130" y2="110" strokeWidth="1.1"/>
+      <line x1="22" y1="110" x2="178" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  seville: ( // Giralda — layered belfry tower
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <rect x="82" y="20" width="36" height="90" strokeWidth="1.8"/>
+      <rect x="76" y="14" width="48" height="10" strokeWidth="1.1"/>
+      <line x1="100" y1="14" x2="100" y2="6" strokeWidth="1.1"/>
+      <line x1="90" y1="38" x2="110" y2="38" strokeWidth="1.1"/>
+      <line x1="90" y1="54" x2="110" y2="54" strokeWidth="1.1"/>
+      <line x1="90" y1="70" x2="110" y2="70" strokeWidth="1.1"/>
+      <rect x="88" y="82" width="24" height="28" strokeWidth="1.1"/>
+      <line x1="66" y1="110" x2="134" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  bilbao: ( // Guggenheim — layered metal curves
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M34 98 Q54 56 90 74 Q114 30 154 64 Q138 90 166 98" strokeWidth="1.8"/>
+      <path d="M56 98 Q74 70 98 82" strokeWidth="1.1"/>
+      <path d="M92 82 Q112 62 138 72" strokeWidth="1.1"/>
+      <path d="M112 98 Q124 78 146 84" strokeWidth="1.1"/>
+      <line x1="22" y1="110" x2="178" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  valencia: ( // Hemisfèric — eye-shaped shell
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <path d="M34 86 Q100 28 166 86" strokeWidth="1.8"/>
+      <path d="M46 86 Q100 54 154 86" strokeWidth="1.1"/>
+      <path d="M68 86 Q100 62 132 86" strokeWidth="1.1"/>
+      <line x1="28" y1="96" x2="172" y2="96" strokeWidth="1.8"/>
+      <line x1="18" y1="110" x2="182" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  florence: ( // Duomo — vast dome with lantern
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="100" y1="12" x2="100" y2="22" strokeWidth="1.1"/>
+      <path d="M60 78 Q100 18 140 78" strokeWidth="1.8"/>
+      <path d="M72 78 Q100 34 128 78" strokeWidth="1.1"/>
+      <line x1="80" y1="32" x2="80" y2="78" strokeWidth="1.1"/>
+      <line x1="100" y1="22" x2="100" y2="78" strokeWidth="1.1"/>
+      <line x1="120" y1="32" x2="120" y2="78" strokeWidth="1.1"/>
+      <rect x="58" y="78" width="84" height="32" strokeWidth="1.8"/>
+      <line x1="42" y1="110" x2="158" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  montreal: ( // Biosphere — geodesic dome
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <ellipse cx="100" cy="58" rx="42" ry="34" strokeWidth="1.8"/>
+      <line x1="100" y1="24" x2="100" y2="92" strokeWidth="1.1"/>
+      <line x1="72" y1="34" x2="128" y2="82" strokeWidth="1.1"/>
+      <line x1="128" y1="34" x2="72" y2="82" strokeWidth="1.1"/>
+      <line x1="60" y1="58" x2="140" y2="58" strokeWidth="1.1"/>
+      <rect x="74" y="92" width="52" height="18" strokeWidth="1.1"/>
+      <line x1="42" y1="110" x2="158" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  funchal: ( // Monte cable car — cabin over hillside
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="28" y1="32" x2="172" y2="18" strokeWidth="1.8"/>
+      <line x1="104" y1="24" x2="104" y2="42" strokeWidth="1.1"/>
+      <rect x="86" y="42" width="36" height="28" rx="2" strokeWidth="1.8"/>
+      <line x1="98" y1="42" x2="98" y2="70" strokeWidth="1.1"/>
+      <line x1="110" y1="42" x2="110" y2="70" strokeWidth="1.1"/>
+      <path d="M26 110 Q70 82 104 84 Q142 76 176 110" strokeWidth="1.8"/>
+      <line x1="12" y1="110" x2="188" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
+
+  brisbane: ( // Story Bridge — cantilever truss
+    <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg" {...S}>
+      <line x1="24" y1="84" x2="176" y2="84" strokeWidth="1.8"/>
+      <line x1="44" y1="84" x2="44" y2="58" strokeWidth="1.8"/>
+      <line x1="156" y1="84" x2="156" y2="58" strokeWidth="1.8"/>
+      <path d="M44 58 L70 40 L130 40 L156 58" strokeWidth="1.8"/>
+      <line x1="56" y1="58" x2="70" y2="40" strokeWidth="1.1"/>
+      <line x1="72" y1="58" x2="84" y2="40" strokeWidth="1.1"/>
+      <line x1="88" y1="58" x2="98" y2="40" strokeWidth="1.1"/>
+      <line x1="102" y1="40" x2="112" y2="58" strokeWidth="1.1"/>
+      <line x1="116" y1="40" x2="128" y2="58" strokeWidth="1.1"/>
+      <line x1="132" y1="40" x2="144" y2="58" strokeWidth="1.1"/>
+      <line x1="12" y1="110" x2="188" y2="110" strokeWidth="1.8"/>
+    </svg>
+  ),
 }
 
 export function CityMonument({ slug, stroke = '#f0f0e8', size = 120 }: { slug: string; stroke?: string; size?: number }) {

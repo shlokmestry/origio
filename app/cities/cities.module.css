@@ -1289,7 +1289,7 @@
   color: inherit;
   overflow: hidden;
   transition: background 0.18s;
-  min-height: 280px;
+  min-height: 292px;
 }
 .monumentCard:hover {
   background: #111;
@@ -1318,8 +1318,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 32px 16px 8px;
-  min-height: 140px;
+  padding: 38px 20px 0;
+  min-height: 128px;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0px,
@@ -1330,46 +1330,47 @@
 }
 .mcIllustration svg {
   width: 100%;
-  max-width: 210px;
+  max-width: 172px;
   height: auto;
-  opacity: 0.82;
+  opacity: 0.58;
   transition: opacity 0.25s, filter 0.25s;
 }
 .mcBody {
-  padding: 12px 16px 14px;
+  padding: 14px 16px 16px;
   border-top: 1px solid var(--c-rule);
 }
 .mcFlag {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .mcName {
   font-family: 'Cabinet Grotesk', 'Inter', sans-serif;
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 21px;
+  font-weight: 900;
+  text-transform: uppercase;
   color: var(--c-ink);
-  margin: 0 0 2px;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  margin: 0 0 3px;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 .mcCountry {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-dimmer);
   font-family: 'Inter', sans-serif;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 .mcStats {
   display: flex;
-  gap: 14px;
-  margin-bottom: 8px;
+  gap: 18px;
+  margin-bottom: 10px;
 }
 .mcStat {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 .mcStatV {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: #00ffd5;
   font-family: 'Inter', sans-serif;
 }
@@ -1418,10 +1419,11 @@
 }
 @media (max-width: 640px) {
   .monumentGrid { grid-template-columns: repeat(2, 1fr); }
-  .mcIllustration { min-height: 110px; padding: 24px 12px 6px; }
-  .monumentCard { min-height: 220px; }
+  .mcIllustration { min-height: 104px; padding: 28px 14px 0; }
+  .monumentCard { min-height: 236px; }
+  .mcName { font-size: 18px; }
 }
 @media (max-width: 380px) {
   .monumentGrid { grid-template-columns: 1fr 1fr; gap: 1px; }
-  .mcName { font-size: 14px; }
+  .mcName { font-size: 16px; }
 }
