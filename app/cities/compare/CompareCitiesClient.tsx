@@ -116,6 +116,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
   const [linkCopied, setLinkCopied] = useState(false)
   const [emailVal, setEmailVal] = useState('')
   const [emailState, setEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
+  const [citySearch, setCitySearch] = useState('')
 
   // Sync state → URL (client-only — window not available on server)
   useEffect(() => {
@@ -186,6 +187,17 @@ export default function CompareCitiesClient({ allCities }: Props) {
     })
     return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
   }, [indexed])
+
+  const filteredPickerCities = useMemo(() => {
+    const q = citySearch.trim().toLowerCase()
+    if (!q) return allCities
+    return allCities.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.country.toLowerCase().includes(q) ||
+      c.slug.toLowerCase().includes(q) ||
+      CITY_REGION[c.slug]?.toLowerCase().includes(q)
+    )
+  }, [allCities, citySearch])
 
   const strikeLabel = useMemo(() => {
     if (!verdict) return 'a small inheritance'
@@ -303,6 +315,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     setSelected(defaultSlugs)
     setCurrency('eur')
     setIsolated(null)
+    setCitySearch('')
   }, [defaultSlugs])
 
   const copyTable = useCallback(() => {
@@ -489,7 +502,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Pick up to four cities. Numbers in{' '}
+            Choose up to four cities. Compare actual monthly spend, not postcard vibes. Currency{' '}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>
@@ -499,19 +512,87 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Pick strip */}
         <section className={styles.pickStrip}>
           <p className={styles.pickSeoLine}>
-            Compare rent, groceries, utilities across {allCities.length} cities. Pick up to 4.
+            Compare rent, groceries, utilities and daily burn across {allCities.length} cities.
           </p>
+          <div className={styles.selectedBar}>
+            <div className={styles.selectedBarL}>
+              <span className={styles.pickLbl}>
+                <span className={styles.pickLblArr}>→</span> Selected cities
+              </span>
+              <div className={styles.selectedPills}>
+                {picks.map(c => {
+                  const minReached = selected.length <= 2
+                  return (
+                    <button
+                      key={c.slug}
+                      type="button"
+                      className={styles.selectedPill}
+                      disabled={minReached}
+                      onClick={() => toggleCity(c.slug)}
+                    >
+                      {CITY_SLUG_TO_ISO[c.slug] ? <FlagIcon code={CITY_SLUG_TO_ISO[c.slug]} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flag}</span>}
+                      {c.name}
+                      <span className={styles.selectedPillX}>×</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div className={styles.selectedBarR}>
+              <span className={styles.pickCap}>
+                <span className={styles.pickCapNum}>{selected.length}</span> of 4 selected
+              </span>
+              <button type="button" className={styles.legendAction} onClick={copyLink}>
+                {linkCopied ? '✓ Link copied' : '↗ Share'}
+              </button>
+              <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>
+                ↻ Clear all
+              </button>
+            </div>
+          </div>
+
+          {verdict && (
+            <div className={styles.summaryStrip}>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Cheapest</span>
+                <strong>{verdict.cheapest.c.name}</strong>
+                <span>{fmt(verdict.cheapest.total, currency)} / mo</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Biggest gap</span>
+                <strong>{fmt(verdict.gap, currency)} / mo</strong>
+                <span>{fmt(verdict.yearGap, currency)} / year</span>
+              </div>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryLabel}>Main swing factor</span>
+                <strong>{verdict.bigRow.label}</strong>
+                <span>{fmt(Math.abs(verdict.bigDelta), currency)}</span>
+              </div>
+            </div>
+          )}
+
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>
-              <span className={styles.pickLblArr}>→</span> Pick cities
+              <span className={styles.pickLblArr}>→</span> City picker
             </span>
-            <span className={styles.pickCap}>
-              <span className={styles.pickCapNum}>{selected.length}</span> of 4 selected
-            </span>
+            <div className={styles.pickTools}>
+              <input
+                type="text"
+                value={citySearch}
+                onChange={e => setCitySearch(e.target.value)}
+                className={styles.pickSearch}
+                placeholder="Search city or country"
+              />
+              {citySearch && (
+                <button type="button" className={styles.pickSearchClear} onClick={() => setCitySearch('')}>
+                  ×
+                </button>
+              )}
+            </div>
           </div>
           <div className={styles.pickGroups}>
             {REGION_ORDER.map(region => {
-              const regionCities = allCities.filter(c => CITY_REGION[c.slug] === region)
+              const regionCities = filteredPickerCities.filter(c => CITY_REGION[c.slug] === region)
               if (!regionCities.length) return null
               return (
                 <div key={region} className={styles.pickGroup}>
@@ -543,7 +624,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
           {/* Legend + actions */}
           <div className={styles.legendRow}>
             <span className={styles.legendLbl}>
-              <span className={styles.legendLblArr}>↳</span> Categories · click to isolate
+              <span className={styles.legendLblArr}>↳</span> Show only
             </span>
             {COST_ROWS.map(r => (
               <button
@@ -561,17 +642,11 @@ export default function CompareCitiesClient({ allCities }: Props) {
               </button>
             ))}
             <span className={styles.legendSpacer} />
-            <button type="button" className={styles.legendAction} onClick={copyLink}>
-              {linkCopied ? '✓ Link copied' : '↗ Share'}
-            </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={copyTable}>
               {copied ? '✓ Copied' : '⬇ Copy data'}
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={downloadCSV}>
               ↓ CSV
-            </button>
-            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>
-              ↻ Reset
             </button>
           </div>
         </section>

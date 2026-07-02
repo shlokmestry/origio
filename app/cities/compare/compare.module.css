@@ -163,7 +163,7 @@
   display: grid;
   grid-template-columns: minmax(0,1fr) auto;
   gap: 40px; align-items: end;
-  padding: 26px 56px 30px;
+  padding: 12px 56px 20px;
   border-bottom: 1px solid var(--paperRule);
 }
 .raceSubL {
@@ -203,13 +203,13 @@
 
 /* ── MATH HEADING ── */
 .mathHead {
-  padding: 40px 56px 0;
+  padding: 18px 56px 0;
   display: flex;
   align-items: baseline;
   line-height: 0.88;
   letter-spacing: -0.03em;
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-size: clamp(80px, 18vw, 220px);
+  font-size: clamp(54px, 12vw, 148px);
 }
 .mathSolid { color: #f0f0e8; }
 .mathOutline {
@@ -227,18 +227,113 @@
 .pickStrip {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 22px 56px 24px;
+  gap: 14px;
+  padding: 18px 56px 20px;
   border-bottom: 2px solid var(--paperInk);
   background: var(--paper2);
 }
+.selectedBar {
+  position: sticky;
+  top: 78px;
+  z-index: 12;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 14px;
+  background: rgba(10,10,10,0.92);
+  border: 1px solid var(--paperRule);
+  backdrop-filter: blur(10px);
+}
+.selectedBarL, .selectedBarR {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.selectedBarR { margin-left: auto; align-items: center; }
+.selectedPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.selectedPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  background: var(--paperInk);
+  border: 1px solid var(--paperInk);
+  color: var(--paper);
+  font-family: 'Satoshi', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.selectedPill:disabled { opacity: 0.7; cursor: not-allowed; }
+.selectedPillX { font-size: 12px; line-height: 1; opacity: 0.55; }
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #0d0d0d;
+  border: 1px solid var(--paperRule);
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  color: rgba(240,240,232,0.65);
+}
+.summaryCard strong {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--paperInk);
+}
+.summaryLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amberD);
+}
 .pickHeader {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.pickTools { position: relative; min-width: 280px; max-width: 360px; width: 100%; }
+.pickSearch {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid rgba(240,240,232,0.18);
+  color: var(--paperInk);
+  padding: 11px 34px 11px 12px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.pickSearch::placeholder { color: rgba(240,240,232,0.36); }
+.pickSearchClear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(240,240,232,0.5);
+  font-size: 18px;
+  cursor: pointer;
 }
 .pickGroups {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .pickGroup {
   display: flex;
@@ -275,7 +370,7 @@
   color: rgba(240,240,232,0.7);
   background: transparent;
   border: 1px solid rgba(240,240,232,0.18);
-  padding: 7px 12px; cursor: pointer;
+  padding: 8px 12px; cursor: pointer;
   transition: all 0.15s;
   display: inline-flex; align-items: center; gap: 7px;
 }
@@ -301,7 +396,7 @@
 }
 
 /* Legend */
-.legendRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+.legendRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; padding-top: 4px; }
 .legendLbl {
   font-family: 'Satoshi', sans-serif;
   font-size: 10px; font-weight: 700;
@@ -348,7 +443,7 @@
 .legendActionGhost:hover { background: transparent; color: var(--paperInk); border-color: var(--paperInk); }
 
 /* ── RACE SECTION ── */
-.race { padding: 36px 56px 24px; position: relative; }
+.race { padding: 24px 56px 24px; position: relative; }
 
 /* Scale ruler */
 .scale {
@@ -546,7 +641,7 @@
 
 /* ── VERDICT ── */
 .verdict {
-  padding: 56px 56px 24px;
+  padding: 40px 56px 24px;
   border-top: 2px solid var(--paperInk);
   background: var(--paper2);
   display: grid;
@@ -664,6 +759,7 @@
   .rrRank { font-size: 48px; min-width: 44px; }
   .rrName { font-size: 26px; }
   .verdict { grid-template-columns: 1fr; gap: 32px; }
+  .summaryStrip { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
   .raceHead, .raceSub, .pickStrip, .race,
@@ -676,6 +772,12 @@
   .rrRank { font-size: 40px; min-width: 40px; }
   .scaleL, .scaleR { display: none; }
   .annotRow { display: none; }
+  .selectedBar { position: static; flex-direction: column; }
+  .selectedBarL, .selectedBarR { width: 100%; flex-wrap: wrap; }
+  .pickHeader { flex-direction: column; align-items: stretch; }
+  .pickTools { min-width: 0; max-width: none; }
+  .pickGroup { align-items: flex-start; }
+  .pickGroupLabel { width: 100%; }
 }
 @media (max-width: 480px) {
   .raceHead, .raceSub, .pickStrip, .race,
@@ -688,6 +790,7 @@
   .actBtn { text-align: center; width: 100%; }
   .spacer { display: none; }
   .pickChip { min-height: 44px; }
+  .selectedPill { min-height: 40px; }
   .rrRank { font-size: 28px; min-width: 28px; }
   /* Legend action buttons: scroll horizontally instead of overflowing */
   .legendRow { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
