@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import styles from "@/app/cities/compare/compare.module.css";
@@ -14,7 +15,34 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CompareHubPage() {
+type CompareHubPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function CompareHubPage({ searchParams }: CompareHubPageProps) {
+  const params = searchParams ? await searchParams : {};
+  const hasLegacyCountryCompare =
+    firstParam(params.countries) ||
+    firstParam(params.a) ||
+    firstParam(params.b) ||
+    firstParam(params.c);
+
+  if (hasLegacyCountryCompare) {
+    const nextParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach(v => nextParams.append(key, v));
+      } else if (value) {
+        nextParams.set(key, value);
+      }
+    });
+    redirect(`/compare/countries?${nextParams.toString()}`);
+  }
+
   return (
     <div className={styles.page}>
       <Nav countries={[]} />

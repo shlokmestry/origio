@@ -10,6 +10,7 @@ import { FlagIcon } from '@/components/FlagIcon'
 import { CITY_SLUG_TO_ISO } from '@/lib/flagCodes'
 import { useAuth } from '@/lib/AuthProvider'
 import RankedBarChart, { type RankedEntity } from '@/components/RankedBarChart'
+import CompareScrollReset from '@/app/compare/CompareScrollReset'
 
 const REGION_ORDER = ['Europe', 'Asia & Oceania', 'Americas', 'Middle East & Africa']
 const CITY_REGION: Record<string, string> = {
@@ -267,6 +268,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
   return (
     <div className={styles.page}>
+      <CompareScrollReset />
 
       <Nav countries={[]} onCountrySelect={() => {}} />
 

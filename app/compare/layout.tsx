@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import CompareScrollReset from "./CompareScrollReset";
 
 export const metadata: Metadata = {
   title: "Compare ~ Countries & Cities",
@@ -6,5 +7,10 @@ export const metadata: Metadata = {
 };
 
 export default function CompareLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <CompareScrollReset />
+      {children}
+    </>
+  );
 }
