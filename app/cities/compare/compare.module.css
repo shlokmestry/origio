@@ -76,13 +76,28 @@
   position: relative;
   min-height: 100vh;
   background-image:
-    repeating-linear-gradient(0deg, rgba(240,240,232,0.028) 0 1px, transparent 1px 28px),
     radial-gradient(ellipse 80% 60% at 90% 0%, rgba(214,138,58,0.08), transparent 60%),
     radial-gradient(ellipse 60% 50% at 0% 100%, rgba(0,255,213,0.05), transparent 60%);
-  background-size: 100% 28px, 100% 100%, 100% 100%;
-  animation: gridDriftDown 18s linear infinite;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+}
+.folio::before {
+  content: '';
+  position: absolute;
+  inset: -28px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(240,240,232,0.045) 0 1px,
+    transparent 1px 28px
+  );
+  animation: gridDriftDown 2.8s linear infinite;
+  will-change: transform;
+}
+.folio > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Registration marks */
@@ -931,13 +946,13 @@
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes gridDriftDown {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: 0 28px, 0 0, 0 0; }
+  from { transform: translateY(0); }
+  to { transform: translateY(28px); }
 }
 .fu { animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .folio { animation: none; }
+  .folio::before { animation: none; }
 }
 
 /* ── RESPONSIVE ── */
