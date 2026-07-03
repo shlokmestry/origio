@@ -9,12 +9,14 @@ import RankedBarChart, { type RankedCostRow, type RankedEntity } from "@/compone
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
 import { CountryWithData } from "@/types";
+import { useAuth } from "@/lib/AuthProvider";
 import styles from "@/app/cities/compare/compare.module.css";
 
 type CostKey = "rent" | "groc" | "dine" | "util" | "gym" | "cowork" | "transport";
 type CurrencyKey = "eur" | "usd" | "gbp" | "jpy";
 
-const COUNTRY_MAX = 4;
+const FREE_COUNTRY_MAX = 4;
+const PRO_COUNTRY_MAX = 8;
 const REGION_ORDER = ["Europe", "Asia", "Americas", "Middle East & Africa", "Oceania"];
 
 const TO_EUR: Record<string, number> = {
@@ -84,6 +86,9 @@ function toRankedCountry(country: CountryWithData): RankedEntity<CostKey> {
 
 export default function ComparePageClient() {
   const searchParams = useSearchParams();
+  const { isPro, loading, isProLoading } = useAuth();
+  const authPending = loading || isProLoading;
+  const countryMax = isPro ? PRO_COUNTRY_MAX : FREE_COUNTRY_MAX;
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [currency, setCurrency] = useState<CurrencyKey>("eur");
@@ -106,7 +111,7 @@ export default function ComparePageClient() {
           : [];
         const defaults = ["portugal", "germany", "austria"].filter(s => valid.includes(s));
         const seeded = [...slugs, ...defaults].filter((s, i, a) => a.indexOf(s) === i);
-        setSelected(seeded.slice(0, COUNTRY_MAX));
+        setSelected(seeded.slice(0, PRO_COUNTRY_MAX));
       })
       .catch(console.error);
   }, [searchParams]);
@@ -132,9 +137,19 @@ export default function ComparePageClient() {
     if (iso && COST_ROWS.some(r => r.key === iso)) setIsolated(iso as CostKey);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (authPending) return;
+    setSelected(prev => prev.length > countryMax ? prev.slice(0, countryMax) : prev);
+  }, [countryMax, authPending]);
+
+  const visibleSelected = useMemo(
+    () => authPending && !isPro ? selected.slice(0, FREE_COUNTRY_MAX) : selected,
+    [authPending, isPro, selected]
+  );
+
   const picks = useMemo(
-    () => selected.map(s => allCountries.find(c => c.slug === s)).filter(Boolean) as CountryWithData[],
-    [selected, allCountries]
+    () => visibleSelected.map(s => allCountries.find(c => c.slug === s)).filter(Boolean) as CountryWithData[],
+    [visibleSelected, allCountries]
   );
 
   const rankedCountries = useMemo(() => picks.map(toRankedCountry), [picks]);
@@ -170,10 +185,10 @@ export default function ComparePageClient() {
         if (prev.length <= 2) return prev;
         return prev.filter(s => s !== slug);
       }
-      if (prev.length >= COUNTRY_MAX) return prev;
+      if (prev.length >= countryMax) return prev;
       return [...prev, slug];
     });
-  }, []);
+  }, [countryMax]);
 
   const nextCurrency = useCallback(() => {
     setCurrency(prev => CURR_CYCLE[(CURR_CYCLE.indexOf(prev) + 1) % CURR_CYCLE.length]);
@@ -240,7 +255,7 @@ export default function ComparePageClient() {
 
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Choose up to four countries. Compare monthly burn first. Salary, tax and visa still decide the final move. Currency{" "}
+            Choose up to {countryMax} countries. Compare monthly burn first. Salary, tax and visa still decide the final move. Currency{" "}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>
@@ -259,7 +274,7 @@ export default function ComparePageClient() {
               <span className={styles.pickLbl}><span className={styles.pickLblArr}>→</span> Selected countries</span>
               <div className={styles.selectedPills}>
                 {picks.map(c => {
-                  const minReached = selected.length <= 2;
+                  const minReached = visibleSelected.length <= 2;
                   return (
                     <button
                       key={c.slug}
@@ -277,7 +292,7 @@ export default function ComparePageClient() {
               </div>
             </div>
             <div className={styles.selectedBarR}>
-              <span className={styles.pickCap}><span className={styles.pickCapNum}>{selected.length}</span> of {COUNTRY_MAX} selected</span>
+              <span className={styles.pickCap}><span className={styles.pickCapNum}>{visibleSelected.length}</span> of {countryMax} selected</span>
               <button type="button" className={styles.legendAction} onClick={copyLink}>{linkCopied ? "✓ Link copied" : "↗ Share"}</button>
               <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>↻ Clear all</button>
             </div>
@@ -309,8 +324,8 @@ export default function ComparePageClient() {
                   <div className={styles.pickGroupCities}>
                     {regionCountries.map(c => {
                       const isOn = selected.includes(c.slug);
-                      const atMax = selected.length >= COUNTRY_MAX && !isOn;
-                      const minReached = selected.length <= 2 && isOn;
+                      const atMax = selected.length >= countryMax && !isOn;
+                      const minReached = visibleSelected.length <= 2 && isOn;
                       return (
                         <button
                           key={c.slug}
