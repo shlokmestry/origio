@@ -299,6 +299,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
           <p className={styles.pickSeoLine}>
             Compare rent, groceries, utilities and daily burn across {allCities.length} cities.
           </p>
+          <p className={styles.pickSeoLine}>
+            Stored city rows, normalized to {currency.toUpperCase()}. Estimates, not live quotes.
+          </p>
           <div className={styles.selectedBar}>
             <div className={styles.selectedBarL}>
               <span className={styles.pickLbl}>

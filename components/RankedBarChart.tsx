@@ -79,6 +79,10 @@ export default function RankedBarChart<K extends string = string>({
 
   const minT = indexed.length ? indexed[0].total : 0
   const maxT = indexed.length ? indexed[indexed.length - 1].total : 0
+  const isolatedRow = isolated ? costRows.find(r => r.key === isolated) : null
+  const hasIsolatedData = isolatedRow
+    ? entities.some(c => c.costs[isolatedRow.key] != null)
+    : true
 
   const verdict = useMemo(() => {
     if (indexed.length < 2) return null
@@ -96,7 +100,8 @@ export default function RankedBarChart<K extends string = string>({
         bigRow = r
       }
     })
-    return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
+    const tied = Math.abs(gap) < 1
+    return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta, tied }
   }, [indexed, costRows])
 
   const renderRow = (c: RankedEntity<K>, total: number, rank: number) => {
@@ -105,7 +110,6 @@ export default function RankedBarChart<K extends string = string>({
     const isoVal = isolated ? (c.costs[isolated] ?? 0) : total
     const widthPct = scaleMax > 0 ? (isoVal / scaleMax) * 100 : 0
     const visibleRows = isolated ? costRows.filter(r => r.key === isolated) : costRows
-    const isolatedRow = isolated ? costRows.find(r => r.key === isolated) : null
 
     let deltaEl: React.ReactNode
     if (isolatedRow) {
@@ -185,6 +189,11 @@ export default function RankedBarChart<K extends string = string>({
               {emptyLabel}
               <span>— or three, or four —</span>
             </div>
+          ) : !hasIsolatedData && isolatedRow ? (
+            <div className={styles.raceEmpty}>
+              No {isolatedRow.label.toLowerCase()} data for selected {verdictNoun}s yet.
+              <span>Source-backed rows only. No fake zeroes.</span>
+            </div>
           ) : indexed.map(({ c, total }, rank) => renderRow(c, total, rank))}
         </div>
       </section>
@@ -194,12 +203,17 @@ export default function RankedBarChart<K extends string = string>({
           <div className={styles.verdictEyebrow}>→ The Verdict</div>
           <p className={styles.verdictText}>
             {verdict ? (
-              <>
-                <span className={styles.amberText}>{verdict.dearest.c.name}</span> costs +{verdict.gapPct}% more than{' '}
-                <span className={styles.amberText}>{verdict.cheapest.c.name}</span> every month. That&rsquo;s{' '}
-                <span className={styles.amberText}>{formatMoney(verdict.yearGap)}/year</span> — or pick{' '}
-                <span className={styles.amberText}>{verdict.cheapest.c.name}</span>.
-              </>
+              verdict.tied ? (
+                <>
+                  Cost-only verdict: selected {verdictNoun}s are effectively tied on shown monthly costs.
+                </>
+              ) : (
+                <>
+                  Cost-only verdict: <span className={styles.amberText}>{verdict.dearest.c.name}</span> is +{verdict.gapPct}% above{' '}
+                  <span className={styles.amberText}>{verdict.cheapest.c.name}</span>. That&rsquo;s{' '}
+                  <span className={styles.amberText}>{formatMoney(verdict.yearGap)}/year</span> before salary, tax, visa and lifestyle tradeoffs.
+                </>
+              )
             ) : (
               <>Pick two {verdictNoun}s to see what a month really costs.</>
             )}
@@ -210,11 +224,11 @@ export default function RankedBarChart<K extends string = string>({
           {verdict ? (
             <>
               <div className={`${styles.vrCard} ${styles.vrCardCheap}`}>
-                <div className={styles.vrLbl}>→ Best deal</div>
+                <div className={styles.vrLbl}>→ Lowest shown cost</div>
                 <div className={styles.vrBody}>
                   <span className={styles.it}>{verdict.cheapest.c.name}</span> ·{' '}
                   <span className={`${styles.vrBig} ${styles.vrBigCheap}`}>{formatMoney(verdict.cheapest.total)}</span><br />
-                  a month, all-in.
+                  a month, shown rows only.
                 </div>
               </div>
               <div className={`${styles.vrCard} ${styles.vrCardDear}`}>
@@ -228,9 +242,15 @@ export default function RankedBarChart<K extends string = string>({
               <div className={styles.vrCard}>
                 <div className={styles.vrLbl}>→ Biggest gap · single line</div>
                 <div className={styles.vrBody}>
-                  <span className={styles.it}>{verdict.bigRow.label}</span> ·{' '}
-                  <span className={styles.vrBig}>{formatMoney(Math.abs(verdict.bigDelta))}</span><br />
-                  between №1 and last.
+                  {Math.abs(verdict.bigDelta) > 0 ? (
+                    <>
+                      <span className={styles.it}>{verdict.bigRow.label}</span> ·{' '}
+                      <span className={styles.vrBig}>{formatMoney(Math.abs(verdict.bigDelta))}</span><br />
+                      between №1 and last.
+                    </>
+                  ) : (
+                    <>No material line-item gap.</>
+                  )}
                 </div>
               </div>
             </>

@@ -69,7 +69,7 @@ export default function CompareHubPage() {
                 </div>
               ))}
             </div>
-            <p>Compare actual monthly cost across rent, food, utilities, transport and coworking.</p>
+            <p>Compare estimated monthly cost across rent, food, utilities, transport and coworking.</p>
             <span className={styles.compareHubButton}>Compare Cities</span>
           </Link>
         </section>

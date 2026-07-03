@@ -705,6 +705,7 @@
   font-size: clamp(28px, 3vw, 40px);
   line-height: 0.92; letter-spacing: -0.024em;
   color: var(--paperInk); margin-bottom: 6px;
+  overflow-wrap: anywhere;
 }
 .rrMeta {
   display: block;
@@ -1010,6 +1011,22 @@
   .raceHead, .raceSub, .pickStrip, .race, .compareToggleWrap,
   .verdict, .actions, .bureau, .folioStrip { padding-left: 16px; padding-right: 16px; }
   .compareHubHero, .compareHubGrid { padding-left: 16px; padding-right: 16px; }
+  .compareHubHero { padding-top: 44px; }
+  .compareHubTitle { font-size: clamp(44px, 16vw, 64px); }
+  .compareHubSub { font-size: 17px; }
+  .compareHubCard { min-height: auto; padding: 20px; }
+  .comparePreviewTable,
+  .comparePreviewBars { padding: 12px; }
+  .comparePreviewRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .comparePreviewRow em { text-align: left; }
+  .comparePreviewBarRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-size: 20px;
+  }
   .folio { padding-top: 0; }
   .mathHead {
     padding: 6px 16px 0;

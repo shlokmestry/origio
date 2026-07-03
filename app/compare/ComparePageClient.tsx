@@ -251,6 +251,9 @@ export default function ComparePageClient() {
           <p className={styles.pickSeoLine}>
             Compare rent, groceries, utilities, transport and eating out across {allCountries.length} countries.
           </p>
+          <p className={styles.pickSeoLine}>
+            Stored country data, normalized to {currency.toUpperCase()}. Dining = 20 meals/month. Estimates, not live quotes.
+          </p>
           <div className={styles.selectedBar}>
             <div className={styles.selectedBarL}>
               <span className={styles.pickLbl}><span className={styles.pickLblArr}>→</span> Selected countries</span>
