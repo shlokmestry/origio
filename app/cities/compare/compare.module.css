@@ -81,20 +81,6 @@
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
-.folio::before {
-  content: '';
-  position: absolute;
-  inset: -28px 0 0;
-  z-index: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(240,240,232,0.045) 0 1px,
-    transparent 1px 28px
-  );
-  animation: gridDriftDown 2.8s linear infinite;
-  will-change: transform;
-}
 .folio > * {
   position: relative;
   z-index: 1;
@@ -269,6 +255,20 @@
 
 /* ── COMPARE HUB ── */
 .compareHub { padding-bottom: 70px; }
+.compareHub::before {
+  content: '';
+  position: absolute;
+  inset: -28px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(240,240,232,0.045) 0 1px,
+    transparent 1px 28px
+  );
+  animation: gridDriftDown 2.8s linear infinite;
+  will-change: transform;
+}
 .compareHubHero {
   padding: 64px 56px 28px;
   max-width: 1040px;
@@ -953,7 +953,7 @@
 .fu { animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .folio::before { animation: none; }
+  .compareHub::before { animation: none; }
 }
 
 /* ── RESPONSIVE ── */
