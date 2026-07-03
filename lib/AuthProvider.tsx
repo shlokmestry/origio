@@ -8,9 +8,10 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   isPro: boolean
+  isProLoading: boolean
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, isPro: false })
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, isPro: false, isProLoading: true })
 
 async function fetchIsPro(userId: string, accessToken: string): Promise<boolean> {
   try {
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser]       = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPro, setIsPro]     = useState(false)
+  const [isProLoading, setIsProLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -50,10 +52,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       if (currentUser && session?.access_token) {
         Sentry.setUser({ id: currentUser.id, email: currentUser.email })
-        fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
+        setIsProLoading(true)
+        fetchIsPro(currentUser.id, session.access_token).then(pro => {
+          if (!cancelled) setIsPro(pro)
+        }).finally(() => {
+          if (!cancelled) setIsProLoading(false)
+        })
+      } else {
+        setIsPro(false)
+        setIsProLoading(false)
       }
     }).catch(() => {
-      if (!cancelled) setLoading(false)
+      if (!cancelled) {
+        setLoading(false)
+        setIsProLoading(false)
+      }
     })
 
     // Step 2: onAuthStateChange handles subsequent changes (sign-in, sign-out,
@@ -64,15 +77,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser)
       if (currentUser && session?.access_token) {
         Sentry.setUser({ id: currentUser.id, email: currentUser.email })
-        fetchIsPro(currentUser.id, session.access_token).then(pro => { if (!cancelled) setIsPro(pro) })
+        setIsProLoading(true)
+        fetchIsPro(currentUser.id, session.access_token).then(pro => {
+          if (!cancelled) setIsPro(pro)
+        }).finally(() => {
+          if (!cancelled) setIsProLoading(false)
+        })
       } else {
         Sentry.setUser(null)
         setIsPro(false)
+        setIsProLoading(false)
       }
     })
 
     // Safety net: 5s max before we unblock regardless
-    const safetyTimer = setTimeout(() => { if (!cancelled) setLoading(false) }, 5000)
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) {
+        setLoading(false)
+        setIsProLoading(false)
+      }
+    }, 5000)
 
     return () => {
       cancelled = true
@@ -82,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, isPro }}>
+    <AuthContext.Provider value={{ user, loading, isPro, isProLoading }}>
       {children}
     </AuthContext.Provider>
   )

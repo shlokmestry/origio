@@ -75,10 +75,10 @@ async function getCitiesForCompare(): Promise<CityData[]> {
 export const metadata: Metadata = {
   title: 'City vs City — Compare Cost of Living · Origio',
   description:
-    'Compare up to four cities side by side. Rent, groceries, dining, gym, coworking, transport — the real monthly cost of moving.',
+    'Compare cities side by side. Rent, groceries, dining, gym, coworking, transport — the real monthly cost of moving.',
   openGraph: {
     title: 'Compare Cities · Origio',
-    description: 'The real monthly cost of living, side by side for up to four cities.',
+    description: 'The real monthly cost of living, side by side.',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
 }

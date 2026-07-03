@@ -90,8 +90,8 @@ interface Props { allCities: CityData[] }
 
 export default function CompareCitiesClient({ allCities }: Props) {
   const searchParams = useSearchParams()
-  const { isPro, loading } = useAuth()
-  const ledgerMax = isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
+  const { isPro, loading, isProLoading } = useAuth()
+  const ledgerMax = loading || isProLoading ? PRO_LEDGER_MAX : isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
 
   const defaultSlugs = useMemo(() => {
     const live = allCities.map(c => c.slug)
@@ -135,9 +135,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
   }, [selected, currency, isolated])
 
   useEffect(() => {
-    if (loading) return
+    if (loading || isProLoading) return
     setSelected(prev => prev.length > ledgerMax ? prev.slice(0, ledgerMax) : prev)
-  }, [ledgerMax, loading])
+  }, [ledgerMax, loading, isProLoading])
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
