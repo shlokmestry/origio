@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function CompareHubPage() {
   return (
     <div className={styles.page}>
-      <Nav countries={[]} onCountrySelect={() => {}} />
+      <Nav countries={[]} />
       <main className={`${styles.folio} ${styles.compareHub}`} style={{ paddingTop: 90 }}>
         <section className={styles.compareHubHero}>
           <p className={styles.compareHubKicker}>SIDE BY SIDE</p>
