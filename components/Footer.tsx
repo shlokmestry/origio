@@ -6,7 +6,8 @@ export default function Footer() {
       heading: "Product",
       links: [
         { href: "/wizard",  label: "Find My Country" },
-        { href: "/compare", label: "Compare Countries" },
+        { href: "/compare", label: "Compare" },
+        { href: "/compare/countries", label: "Compare Countries" },
         { href: "/cities",  label: "Find My City" },
         { href: "/cities/compare", label: "Compare Cities" },
         { href: "/pro",     label: "Origio Pro" },

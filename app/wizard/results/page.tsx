@@ -608,7 +608,7 @@ export default function WizardResultsPage() {
   const jobRoleDef      = JOB_ROLES.find(r => r.key === answers.jobRole);
   const visibleMatches  = matches;
   const effectiveTotal  = matches.length || (totalMatchCount || 0);
-  const compareHref     = matches.length >= 3 ? `/compare?a=${matches[0].country.slug}&b=${matches[1].country.slug}&c=${matches[2].country.slug}` : "/compare";
+  const compareHref     = matches.length >= 3 ? `/compare/countries?countries=${matches[0].country.slug},${matches[1].country.slug},${matches[2].country.slug}` : "/compare/countries";
   const matchSlugs      = matches.map(m => m.country.slug);
   const excludedCountries = matches.length > 0 ? computeExcluded(matchSlugs, answers, allCountries) : [];
 
