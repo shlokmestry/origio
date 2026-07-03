@@ -8,6 +8,7 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { CITY_SLUG_TO_ISO } from '@/lib/flagCodes'
+import { useAuth } from '@/lib/AuthProvider'
 
 const REGION_ORDER = ['Europe', 'Asia & Oceania', 'Americas', 'Middle East & Africa']
 const CITY_REGION: Record<string, string> = {
@@ -48,7 +49,8 @@ export interface CityData {
   costs: Record<CostKey, number | null>
 }
 
-const LEDGER_MAX = 4
+const FREE_LEDGER_MAX = 4
+const PRO_LEDGER_MAX = 8
 
 const COST_ROWS: { key: CostKey; label: string; hint: string; color: string }[] = [
   { key:'rent',      label:'Rent',      hint:'1BR centre',  color:'#a8651e' },
@@ -88,6 +90,8 @@ interface Props { allCities: CityData[] }
 
 export default function CompareCitiesClient({ allCities }: Props) {
   const searchParams = useSearchParams()
+  const { isPro, loading } = useAuth()
+  const ledgerMax = isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
 
   const defaultSlugs = useMemo(() => {
     const live = allCities.map(c => c.slug)
@@ -99,7 +103,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
     const fromUrl = searchParams.get('cities')
     if (fromUrl && fromUrl.length <= 200) {
       const slugs = fromUrl.split(',').filter(s => /^[a-z0-9-]+$/.test(s) && allCities.some(c => c.slug === s))
-      if (slugs.length >= 2) return slugs.slice(0, LEDGER_MAX)
+      if (slugs.length >= 2) return slugs.slice(0, PRO_LEDGER_MAX)
     }
     return defaultSlugs
   })
@@ -129,6 +133,11 @@ export default function CompareCitiesClient({ allCities }: Props) {
     else url.searchParams.delete('iso')
     window.history.replaceState(null, '', url.toString())
   }, [selected, currency, isolated])
+
+  useEffect(() => {
+    if (loading) return
+    setSelected(prev => prev.length > ledgerMax ? prev.slice(0, ledgerMax) : prev)
+  }, [ledgerMax, loading])
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
@@ -275,10 +284,10 @@ export default function CompareCitiesClient({ allCities }: Props) {
         if (prev.length <= 2) return prev
         return prev.filter(s => s !== slug)
       }
-      if (prev.length >= LEDGER_MAX) return prev
+      if (prev.length >= ledgerMax) return prev
       return [...prev, slug]
     })
-  }, [])
+  }, [ledgerMax])
 
   const nextCurrency = useCallback(() => {
     setCurrency(prev => CURR_CYCLE[(CURR_CYCLE.indexOf(prev) + 1) % CURR_CYCLE.length])
@@ -502,7 +511,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Choose up to four cities. Compare actual monthly spend, not postcard vibes. Currency{' '}
+            Choose up to {ledgerMax} cities. Compare actual monthly spend, not postcard vibes. Currency{' '}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>
@@ -540,7 +549,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             </div>
             <div className={styles.selectedBarR}>
               <span className={styles.pickCap}>
-                <span className={styles.pickCapNum}>{selected.length}</span> of 4 selected
+                <span className={styles.pickCapNum}>{selected.length}</span> of {ledgerMax} selected
               </span>
               <button type="button" className={styles.legendAction} onClick={copyLink}>
                 {linkCopied ? '✓ Link copied' : '↗ Share'}
@@ -600,7 +609,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                   <div className={styles.pickGroupCities}>
                     {regionCities.map(c => {
                       const isOn = selected.includes(c.slug)
-                      const atMax = selected.length >= LEDGER_MAX && !isOn
+                      const atMax = selected.length >= ledgerMax && !isOn
                       const minReached = selected.length <= 2 && isOn
                       return (
                         <button
