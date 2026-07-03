@@ -91,7 +91,8 @@ interface Props { allCities: CityData[] }
 export default function CompareCitiesClient({ allCities }: Props) {
   const searchParams = useSearchParams()
   const { isPro, loading, isProLoading } = useAuth()
-  const ledgerMax = loading || isProLoading ? PRO_LEDGER_MAX : isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
+  const authPending = loading || isProLoading
+  const ledgerMax = isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
 
   const defaultSlugs = useMemo(() => {
     const live = allCities.map(c => c.slug)
@@ -135,15 +136,20 @@ export default function CompareCitiesClient({ allCities }: Props) {
   }, [selected, currency, isolated])
 
   useEffect(() => {
-    if (loading || isProLoading) return
+    if (authPending) return
     setSelected(prev => prev.length > ledgerMax ? prev.slice(0, ledgerMax) : prev)
-  }, [ledgerMax, loading, isProLoading])
+  }, [ledgerMax, authPending])
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
+  const visibleSelected = useMemo(
+    () => authPending && !isPro ? selected.slice(0, FREE_LEDGER_MAX) : selected,
+    [authPending, isPro, selected]
+  )
+
   const picks = useMemo(
-    () => selected.map(s => allCities.find(c => c.slug === s)).filter(Boolean) as CityData[],
-    [selected, allCities]
+    () => visibleSelected.map(s => allCities.find(c => c.slug === s)).filter(Boolean) as CityData[],
+    [visibleSelected, allCities]
   )
 
   const totals = useMemo(
@@ -530,7 +536,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
               </span>
               <div className={styles.selectedPills}>
                 {picks.map(c => {
-                  const minReached = selected.length <= 2
+                  const minReached = visibleSelected.length <= 2
                   return (
                     <button
                       key={c.slug}
@@ -549,7 +555,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             </div>
             <div className={styles.selectedBarR}>
               <span className={styles.pickCap}>
-                <span className={styles.pickCapNum}>{selected.length}</span> of {ledgerMax} selected
+                <span className={styles.pickCapNum}>{visibleSelected.length}</span> of {ledgerMax} selected
               </span>
               <button type="button" className={styles.legendAction} onClick={copyLink}>
                 {linkCopied ? '✓ Link copied' : '↗ Share'}
@@ -610,7 +616,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
                     {regionCities.map(c => {
                       const isOn = selected.includes(c.slug)
                       const atMax = selected.length >= ledgerMax && !isOn
-                      const minReached = selected.length <= 2 && isOn
+                      const minReached = visibleSelected.length <= 2 && isOn
                       return (
                         <button
                           key={c.slug}
