@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import styles from './compare.module.css'
@@ -9,6 +9,8 @@ import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { CITY_SLUG_TO_ISO } from '@/lib/flagCodes'
 import { useAuth } from '@/lib/AuthProvider'
+import RankedBarChart, { type RankedEntity } from '@/components/RankedBarChart'
+import CompareScrollReset from '@/app/compare/CompareScrollReset'
 
 const REGION_ORDER = ['Europe', 'Asia & Oceania', 'Americas', 'Middle East & Africa']
 const CITY_REGION: Record<string, string> = {
@@ -76,12 +78,6 @@ function fmtCompact(n: number, currency: CurrencyKey): string {
   const v = Math.round(n * RATES[currency])
   if (v >= 1000) return SYMBOL[currency] + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
   return SYMBOL[currency] + v
-}
-
-function niceMax(v: number): number {
-  if (v <= 2000) return Math.ceil(v / 500) * 500
-  if (v <= 6000) return Math.ceil(v / 1000) * 1000
-  return Math.ceil(v / 2000) * 2000
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -157,51 +153,18 @@ export default function CompareCitiesClient({ allCities }: Props) {
     [picks]
   )
 
-  const indexed = useMemo(
-    () => picks
-      .map((c, i) => ({ c, total: totals[i] }))
-      .sort((a, b) => a.total - b.total),
-    [picks, totals]
+  const rankedEntities = useMemo<RankedEntity<CostKey>[]>(
+    () => picks.map(c => ({
+      slug: c.slug,
+      code: c.code,
+      name: c.name,
+      meta: c.country,
+      flag: c.flag,
+      iso: CITY_SLUG_TO_ISO[c.slug],
+      costs: c.costs,
+    })),
+    [picks]
   )
-
-  const isoTotals = useMemo(
-    () => picks.map(c => isolated ? (c.costs[isolated] ?? 0) : totals[picks.indexOf(c)]),
-    [picks, isolated, totals]
-  )
-
-  const scaleMax = useMemo(
-    () => niceMax(isoTotals.length ? Math.max(...isoTotals) : 5000),
-    [isoTotals]
-  )
-
-  const minT = indexed.length ? indexed[0].total : 0
-  const maxT = indexed.length ? indexed[indexed.length - 1].total : 0
-
-  // Scale ticks (0..5)
-  const scaleTicks = useMemo(() => {
-    const TICKS = 5
-    return Array.from({ length: TICKS + 1 }, (_, i) => ({
-      pct: (i / TICKS) * 100,
-      label: i === 0 ? '0' : fmtCompact((scaleMax * i) / TICKS, currency),
-    }))
-  }, [scaleMax, currency])
-
-  // Verdict
-  const verdict = useMemo(() => {
-    if (indexed.length < 2) return null
-    const cheapest = indexed[0]
-    const dearest  = indexed[indexed.length - 1]
-    const gap = dearest.total - cheapest.total
-    const gapPct = Math.round((dearest.total / cheapest.total - 1) * 100)
-    const yearGap = gap * 12
-    let bigRow = COST_ROWS[0]
-    let bigDelta = 0
-    COST_ROWS.forEach(r => {
-      const d = (dearest.c.costs[r.key] ?? 0) - (cheapest.c.costs[r.key] ?? 0)
-      if (Math.abs(d) > Math.abs(bigDelta)) { bigDelta = d; bigRow = r }
-    })
-    return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta }
-  }, [indexed])
 
   const filteredPickerCities = useMemo(() => {
     const q = citySearch.trim().toLowerCase()
@@ -213,74 +176,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
       CITY_REGION[c.slug]?.toLowerCase().includes(q)
     )
   }, [allCities, citySearch])
-
-  const strikeLabel = useMemo(() => {
-    if (!verdict) return 'a small inheritance'
-    const d = verdict.dearest.c.slug
-    const c = verdict.cheapest.c.slug
-    const pair = [d, c].sort().join('|')
-    const pairLabels: Record<string, string> = {
-      // Original pairs
-      'lisbon|london':           "your landlord's third holiday home",
-      'lisbon|new-york':         "a year of therapy for living in New York",
-      'lisbon|singapore':        "a condo in the country you left",
-      'london|new-york':         "the deposit on a studio neither of you can afford",
-      'london|tokyo':            "what London charges just for the postcode",
-      'dubai|london':            "the tax you didn't pay living in Dubai",
-      'berlin|new-york':         "a sabbatical, a motorbike, and change",
-      'berlin|london':           "six months of Berlin rent, paid twice",
-      'amsterdam|new-york':      "a boat house. a real one.",
-      'barcelona|london':        "a long weekend every single month",
-      'dubai|singapore':         "a business class round-trip, twelve times",
-      'sydney|tokyo':            "a plot twist",
-      'toronto|new-york':        "your Canadian healthcare, in cash",
-      // New city pairs
-      'bangkok|london':          "six flights to Bangkok and back",
-      'bangkok|new-york':        "a year in Bangkok. Twice.",
-      'bangkok|singapore':       "what Singapore charges for the school district",
-      'bangkok|tokyo':           "all the ramen you'll ever need",
-      'chiang-mai|london':       "twelve months in Chiang Mai, with spending money",
-      'chiang-mai|new-york':     "a down payment. On the Chiang Mai apartment.",
-      'chiang-mai|lisbon':       "already the cheapest city on this list",
-      'bali|london':             "a villa with a pool. For the year.",
-      'bali|singapore':          "what Singapore charges for a parking space",
-      'bali|new-york':           "the therapy you need to afford New York",
-      'medellin|london':         "eleven months of Medellín rent",
-      'medellin|barcelona':      "the difference is the eternal spring",
-      'medellin|lisbon':         "a flight home every month and still cheaper",
-      'mexico-city|new-york':    "a year of guac. Legal, unlimited.",
-      'mexico-city|london':      "what London charges for the accent",
-      'mexico-city|berlin':      "the tacos you didn't eat in Berlin",
-      'kuala-lumpur|singapore':  "Singapore's postcode, without Singapore's rent",
-      'kuala-lumpur|london':     "a long stay hotel in London. One month.",
-      'cape-town|london':        "a flight to Cape Town. And back. Many times.",
-      'cape-town|amsterdam':     "Table Mountain isn't in the price",
-      'malaga|london':           "300 days of Málaga sun you're not getting in London",
-      'malaga|berlin':           "the Beckham Law working exactly as intended",
-      'malaga|barcelona':        "beach, cheaper rent, and the same visa",
-      'tbilisi|london':          "a year of wine. Georgian wine.",
-      'tbilisi|lisbon':          "what Lisbon costs. Visa-free, no application.",
-      'tbilisi|berlin':          "the sulphur bath budget for a decade",
-      'buenos-aires|london':     "the steak budget. For life.",
-      'buenos-aires|new-york':   "Palermo vs. the other Palermo. Yours is cheaper.",
-      'buenos-aires|barcelona':  "European architecture at South American prices",
-      'tallinn|london':          "a medieval old town. Medieval prices it is not, but closer.",
-      'tallinn|amsterdam':       "the e-residency application fee. Many times over.",
-      'da-nang|london':          "a beach, a bowl of pho, and most of your rent back",
-      'da-nang|bali':            "Da Nang is what Bali was before everyone found Bali",
-      'da-nang|singapore':       "eleven months of Da Nang for one month of Singapore",
-    }
-    if (pairLabels[pair]) return pairLabels[pair]
-    const y = verdict.yearGap
-    if (y < 3000)  return 'a decent holiday'
-    if (y < 6000)  return "a gym membership you'd actually use"
-    if (y < 10000) return 'a return business class ticket'
-    if (y < 15000) return 'a used car, running'
-    if (y < 20000) return 'a semester abroad'
-    if (y < 30000) return 'a small inheritance'
-    if (y < 50000) return 'a down payment deposit'
-    return 'a year off, honestly'
-  }, [verdict])
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -371,142 +266,19 @@ export default function CompareCitiesClient({ allCities }: Props) {
     URL.revokeObjectURL(a.href)
   }, [picks, currency])
 
-  // ── Render helpers ────────────────────────────────────────────────────────
-
-  function renderRaceRow(c: CityData, total: number, rank: number) {
-    const isCheap = total === minT && minT !== maxT
-    const isDear  = total === maxT && minT !== maxT && picks.length >= 3
-    const isoVal  = isolated ? (c.costs[isolated] ?? 0) : total
-    const widthPct = scaleMax > 0 ? (isoVal / scaleMax) * 100 : 0
-
-    const rowCls = [
-      styles.raceRow,
-      isCheap ? styles.isCheap : '',
-      isDear  ? styles.isDear  : '',
-    ].filter(Boolean).join(' ')
-
-    // Segments: when isolated, only the isolated seg; otherwise all
-    const visibleRows = isolated
-      ? COST_ROWS.filter(r => r.key === isolated)
-      : COST_ROWS
-
-    // Delta text
-    let deltaEl: React.ReactNode
-    if (isolated) {
-      deltaEl = `only ${COST_ROWS.find(r => r.key === isolated)!.label.toLowerCase()}`
-    } else if (isCheap) {
-      deltaEl = <span className={styles.deltaDown}>↓ baseline · cheapest</span>
-    } else if (total === minT) {
-      deltaEl = <span className={styles.deltaBase}>— baseline —</span>
-    } else {
-      const overPct = Math.round((total / minT - 1) * 100)
-      const overAbs = fmt(total - minT, currency)
-      deltaEl = <span className={styles.deltaUp}>+{overPct}% · {overAbs}/mo over №1</span>
-    }
-
-    return (
-      <div key={c.slug} className={rowCls}>
-
-        {/* Left: rank + city */}
-        <div className={styles.rrL}>
-          <span className={styles.rrRank}>№{rank + 1}</span>
-          <div className={styles.rrId}>
-            {CITY_SLUG_TO_ISO[c.slug] ? <FlagIcon code={CITY_SLUG_TO_ISO[c.slug]} size="sm" className={styles.rrFlag} /> : <span className={styles.rrFlag}>{c.flag}</span>}
-            <span className={styles.rrName}>{c.name}</span>
-            <span className={styles.rrMeta}>{c.country} · {c.code}</span>
-          </div>
-        </div>
-
-        {/* Centre: bar */}
-        <div className={styles.rrTrack}>
-          <div className={styles.rrBar} style={{ width: `${widthPct.toFixed(2)}%` }}>
-            {visibleRows
-              .filter(r => (c.costs[r.key] ?? 0) > 0)
-              .map(r => {
-                const v = c.costs[r.key] ?? 0
-                const pct = total > 0 ? v / total : 0
-                const showLbl = pct > 0.13 || !!isolated
-                const showVal = pct > 0.18 || !!isolated
-                return (
-                  <div
-                    key={r.key}
-                    className={[styles.rrSeg, isolated === r.key ? styles.rrSegLit : ''].filter(Boolean).join(' ')}
-                    style={{ flexGrow: v, background: r.color }}
-                  >
-                    {showLbl && <span className={styles.rrSegLbl}>{r.label}</span>}
-                    {showVal && <span className={styles.rrSegVal}>{fmt(v, currency)}</span>}
-                    <span className={styles.rrSegTip}>{r.label} · {fmt(v, currency)} / mo</span>
-                  </div>
-                )
-              })}
-          </div>
-        </div>
-
-        {/* Right: total + delta */}
-        <div className={styles.rrR}>
-          <span className={styles.rrTotal}>
-            {fmt(isolated ? (c.costs[isolated] ?? 0) : total, currency)}
-          </span>
-          <span className={styles.rrDelta}>{deltaEl}</span>
-        </div>
-      </div>
-    )
-  }
-
-  // Build race list with inter-row annotations
-  const raceElements = useMemo(() => {
-    if (picks.length < 2) return null
-    const els: React.ReactNode[] = []
-
-    indexed.forEach(({ c, total }, rank) => {
-      els.push(renderRaceRow(c, total, rank))
-
-    })
-
-    return els
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indexed, isolated, currency, minT, maxT, picks.length, scaleMax])
-
-  // Verdict sentence — scenario-aware
-  const verdictSentence = useMemo((): React.ReactNode => {
-    if (!verdict) return 'Pick two cities to see what a month really costs.'
-    const { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta } = verdict
-    const cheap = <strong><span className={styles.amberText}>{cheapest.c.name}</span></strong>
-    const dear  = <strong><span className={styles.amberText}>{dearest.c.name}</span></strong>
-    const fGap      = <span className={styles.amberText}>{fmt(gap, currency)}</span>
-    const fYearGap  = <span className={styles.amberText}>{fmt(yearGap, currency)}</span>
-    const fBigDelta = <span className={styles.amberText}>{fmt(Math.abs(bigDelta), currency)}</span>
-
-    // Scenario 1: nearly equal
-    if (gapPct < 12) {
-      return <>{dear} and {cheap} cost almost the same — {fGap}/mo apart. Pick on vibes.</>
-    }
-
-    // Scenario 2: rent dominates
-    if (bigRow.key === 'rent' && Math.abs(bigDelta) > gap * 0.65) {
-      return <>The gap is mostly rent. {dear} charges {fBigDelta}/mo more for a 1BR than {cheap}. Everything else is close.</>
-    }
-
-    // Scenario 3: enormous gap
-    if (gapPct > 85) {
-      return <>{dear} costs +{gapPct}% more than {cheap} every month. That&rsquo;s {fYearGap}/year — or just move to {cheap}.</>
-    }
-
-    // Scenario 4: non-rent category drives it
-    if (bigRow.key !== 'rent') {
-      return <>Surprisingly, {bigRow.label.toLowerCase()} is the main gap. {dear} spends {fBigDelta}/mo more on it than {cheap}.</>
-    }
-
-    // Default
-    return <>Living in {dear} costs {fGap}/mo more than {cheap}. Over a year, that&rsquo;s <span className={styles.strike}>{strikeLabel}</span> — {fYearGap} you&rsquo;re not spending.</>
-  }, [verdict, currency, strikeLabel])
-
   return (
     <div className={styles.page}>
+      <CompareScrollReset />
 
       <Nav countries={[]} onCountrySelect={() => {}} />
 
       <main className={styles.folio} style={{ paddingTop: 80 }}>
+        <div className={styles.compareToggleWrap}>
+          <div className={styles.compareToggle}>
+            <Link href="/compare/countries" className={styles.compareToggleItem}>Compare Countries</Link>
+            <Link href="/compare/cities" className={`${styles.compareToggleItem} ${styles.compareToggleItemActive}`}>Compare Cities</Link>
+          </div>
+        </div>
 
         {/* Heading */}
         <div className={styles.mathHead}>
@@ -517,7 +289,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Choose up to {ledgerMax} cities. Compare actual monthly spend, not postcard vibes. Currency{' '}
+            Choose up to {ledgerMax} cities. Compare estimated monthly spend, not postcard vibes. Currency{' '}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>
@@ -528,6 +300,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
         <section className={styles.pickStrip}>
           <p className={styles.pickSeoLine}>
             Compare rent, groceries, utilities and daily burn across {allCities.length} cities.
+          </p>
+          <p className={styles.pickSeoLine}>
+            Stored city rows, normalized to {currency.toUpperCase()}. Estimates, not live quotes.
           </p>
           <div className={styles.selectedBar}>
             <div className={styles.selectedBarL}>
@@ -565,26 +340,6 @@ export default function CompareCitiesClient({ allCities }: Props) {
               </button>
             </div>
           </div>
-
-          {verdict && (
-            <div className={styles.summaryStrip}>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Cheapest</span>
-                <strong>{verdict.cheapest.c.name}</strong>
-                <span>{fmt(verdict.cheapest.total, currency)} / mo</span>
-              </div>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Biggest gap</span>
-                <strong>{fmt(verdict.gap, currency)} / mo</strong>
-                <span>{fmt(verdict.yearGap, currency)} / year</span>
-              </div>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Main swing factor</span>
-                <strong>{verdict.bigRow.label}</strong>
-                <span>{fmt(Math.abs(verdict.bigDelta), currency)}</span>
-              </div>
-            </div>
-          )}
 
           <div className={styles.pickHeader}>
             <span className={styles.pickLbl}>
@@ -666,85 +421,16 @@ export default function CompareCitiesClient({ allCities }: Props) {
           </div>
         </section>
 
-        {/* Race section */}
-        <section className={styles.race}>
-          {/* Scale ruler */}
-          <div className={styles.scale}>
-            <div className={styles.scaleL}>Scale · linear · {currency.toUpperCase()}/mo</div>
-            <div className={styles.scaleTrack}>
-              {scaleTicks.map((t, i) => (
-                <Fragment key={i}>
-                  <span
-                    className={`${styles.scaleTick} ${styles.scaleTickMajor}`}
-                    style={{ left: `${t.pct}%` }}
-                  />
-                  <span
-                    className={styles.scaleLabel}
-                    style={{ left: `${t.pct}%` }}
-                  >
-                    {t.label}
-                  </span>
-                </Fragment>
-              ))}
-            </div>
-            <div className={styles.scaleR}>→ steeper</div>
-          </div>
-
-          {/* Race list */}
-          <div className={styles.raceList}>
-            {picks.length < 2 ? (
-              <div className={styles.raceEmpty}>
-                Pick at least two cities above.
-                <span>— or three, or four —</span>
-              </div>
-            ) : raceElements}
-          </div>
-        </section>
-
-        {/* Verdict */}
-        <section className={styles.verdict}>
-          <div>
-            <div className={styles.verdictEyebrow}>→ The Verdict</div>
-            <p className={styles.verdictText}>{verdictSentence}</p>
-          </div>
-
-          <div className={styles.verdictR}>
-            {verdict ? (
-              <>
-                <div className={`${styles.vrCard} ${styles.vrCardCheap}`}>
-                  <div className={styles.vrLbl}>→ Best deal</div>
-                  <div className={styles.vrBody}>
-                    <span className={styles.it}>{verdict.cheapest.c.name}</span> ·{' '}
-                    <span className={`${styles.vrBig} ${styles.vrBigCheap}`}>
-                      {fmt(verdict.cheapest.total, currency)}
-                    </span><br />
-                    a month, all-in.
-                  </div>
-                </div>
-                <div className={`${styles.vrCard} ${styles.vrCardDear}`}>
-                  <div className={styles.vrLbl}>→ Steepest</div>
-                  <div className={styles.vrBody}>
-                    <span className={styles.it}>{verdict.dearest.c.name}</span> ·{' '}
-                    <span className={`${styles.vrBig} ${styles.vrBigDear}`}>
-                      +{verdict.gapPct}%
-                    </span><br />
-                    over №1 every month.
-                  </div>
-                </div>
-                <div className={styles.vrCard}>
-                  <div className={styles.vrLbl}>→ Biggest gap · single line</div>
-                  <div className={styles.vrBody}>
-                    <span className={styles.it}>{verdict.bigRow.label}</span> ·{' '}
-                    <span className={styles.vrBig}>
-                      {fmt(Math.abs(verdict.bigDelta), currency)}
-                    </span><br />
-                    between №1 and last.
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </section>
+        <RankedBarChart
+          entities={rankedEntities}
+          costRows={COST_ROWS}
+          isolated={isolated}
+          currencyLabel={currency.toUpperCase()}
+          formatMoney={(n) => fmt(n, currency)}
+          formatCompact={(n) => fmtCompact(n, currency)}
+          emptyLabel="Pick at least two cities above."
+          verdictNoun="city"
+        />
 
 
         {/* Email capture */}

@@ -352,7 +352,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
           {/* ── COMPARE BANNER ── */}
           <Link href="/cities/compare" className={styles.cmpBanner}>
-            <span className={styles.cmpBannerL}>Compare cities · rent · groceries · gym · transit — up to 4 side by side</span>
+            <span className={styles.cmpBannerL}>Compare cities · rent · groceries · gym · transit — 4 free, 8 with Pro</span>
             <span className={styles.cmpBannerR}>Open the ledger →</span>
           </Link>
 

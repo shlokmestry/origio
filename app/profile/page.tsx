@@ -569,7 +569,7 @@ export default function ProfilePage() {
                     What if I changed my priorities? →
                   </button>
                   {wizardResult.top_countries.length >= 2 && (
-                    <a href={`/compare?a=${wizardResult.top_countries[0].slug}&b=${wizardResult.top_countries[1].slug}`}
+                    <a href={`/compare/countries?countries=${wizardResult.top_countries[0].slug},${wizardResult.top_countries[1].slug}`}
                       style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', letterSpacing: '0.04em' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00ffd5'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'}>

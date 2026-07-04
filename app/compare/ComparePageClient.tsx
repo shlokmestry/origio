@@ -1,454 +1,177 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
-import {
-  ArrowRightLeft, Lock, Star, ChevronDown,
-  Code2, Bot, BarChart2, Cloud, GitBranch, Shield, LayoutDashboard, PenTool, Palette,
-  Stethoscope, Heart, Smile, Pill, Activity, Brain, Microscope,
-  TrendingUp, Receipt, Scale, Building, HardHat, Leaf, Plane,
-  BookOpen, Users, BarChart, Megaphone, Package, Zap, ChefHat,
-  type LucideIcon,
-} from "lucide-react";
-import { CountryWithData, JobRole, JOB_ROLES } from "@/types";
-import { supabase } from "@/lib/supabase";
-import Footer from "@/components/Footer";
-import Nav from "@/components/Nav";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getVisaLabel } from "@/lib/utils";
-import { getPassportStrength, PASSPORT_TIER_LABEL, resolveEffectivePassports } from "@/lib/wizard";
+import { useSearchParams } from "next/navigation";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+import RankedBarChart, { type RankedCostRow, type RankedEntity } from "@/components/RankedBarChart";
 import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
-import { PRO_PRICE_EUR_DISPLAY } from "@/lib/pricing";
+import { CountryWithData } from "@/types";
+import { useAuth } from "@/lib/AuthProvider";
+import styles from "@/app/cities/compare/compare.module.css";
 
-// ── constants ─────────────────────────────────────────────────────────────────
+type CostKey = "rent" | "groc" | "dine" | "util" | "gym" | "cowork" | "transport";
+type CurrencyKey = "eur" | "usd" | "gbp" | "jpy";
 
-const COL_A = "#4de6cc";
-const COL_B = "#f0c84a";
-const COL_C = "#c4b5fd";
+const FREE_COUNTRY_MAX = 4;
+const PRO_COUNTRY_MAX = 8;
+const REGION_ORDER = ["Europe", "Asia", "Americas", "Middle East & Africa", "Oceania"];
 
-const LABEL_W = 200; // px — label column width, shared everywhere
-
-// ── role → lucide icon map ────────────────────────────────────────────────────
-const ROLE_ICONS: Record<string, LucideIcon> = {
-  softwareEngineer: Code2, aiMlEngineer: Bot, dataScientist: BarChart2,
-  cloudArchitect: Cloud, devOps: GitBranch, cybersecurity: Shield,
-  productManager: LayoutDashboard, uxDesigner: PenTool, graphicDesigner: Palette,
-  doctor: Stethoscope, nurse: Heart, dentist: Smile, pharmacist: Pill,
-  physiotherapist: Activity, psychologist: Brain, biomedicalEngineer: Microscope,
-  financialAnalyst: TrendingUp, accountant: Receipt, lawyer: Scale,
-  architect: Building, civilEngineer: HardHat, renewableEnergyEngineer: Leaf,
-  pilot: Plane, teacher: BookOpen, hrManager: Users, salesManager: BarChart,
-  marketingManager: Megaphone, supplyChainManager: Package, electrician: Zap, chef: ChefHat,
+const TO_EUR: Record<string, number> = {
+  EUR: 1, GBP: 1.18, USD: 0.93, AED: 0.25, JPY: 0.0062,
+  SGD: 0.70, AUD: 0.60, CAD: 0.68, THB: 0.027, MXN: 0.048,
+  PLN: 0.23, CZK: 0.041, HUF: 0.0026, RON: 0.20, BGN: 0.51,
+  HRK: 0.13, RSD: 0.0085, TRY: 0.031, BRL: 0.18, COP: 0.00023,
+  IDR: 0.000058, MYR: 0.20, ZAR: 0.050, GEL: 0.34, VND: 0.000037,
+  TWD: 0.028, KES: 0.0072, ARS: 0.00092, CHF: 1.05, NOK: 0.086,
+  SEK: 0.089, DKK: 0.134, NZD: 0.55, KRW: 0.00067, INR: 0.011,
 };
 
-// ── RoleDropdown ──────────────────────────────────────────────────────────────
-function RoleDropdown({ value, onChange }: { value: JobRole; onChange: (r: JobRole) => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const current = JOB_ROLES.find(r => r.key === value)!;
-  const Icon = ROLE_ICONS[value] ?? Code2;
+const RATES: Record<CurrencyKey, number> = { eur: 1, usd: 1.07, gbp: 0.85, jpy: 165 };
+const SYMBOL: Record<CurrencyKey, string> = { eur: "€", usd: "$", gbp: "£", jpy: "¥" };
+const CURR_LABEL: Record<CurrencyKey, string> = { eur: "EUR €", usd: "USD $", gbp: "GBP £", jpy: "JPY ¥" };
+const CURR_CYCLE: CurrencyKey[] = ["eur", "usd", "gbp", "jpy"];
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+const COST_ROWS: RankedCostRow<CostKey>[] = [
+  { key: "rent", label: "Rent", color: "#a8651e" },
+  { key: "groc", label: "Groceries", color: "#5f6d2d" },
+  { key: "dine", label: "Dining", color: "#1f5a4d" },
+  { key: "util", label: "Utilities", color: "#3b485c" },
+  { key: "gym", label: "Gym", color: "#6f3e6b" },
+  { key: "cowork", label: "Coworking", color: "#a04c2a" },
+  { key: "transport", label: "Transit", color: "#b03c4e" },
+];
 
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-3 py-2 bg-[#111114] border border-white/[0.1] hover:border-white/20 transition-colors text-left"
-        style={{ minHeight: 36 }}
-      >
-        <Icon className="w-3.5 h-3.5 shrink-0 text-white/50" />
-        <span className="flex-1 truncate text-white text-[13px] font-semibold">{current.label}</span>
-        <ChevronDown className="w-3 h-3 shrink-0 text-white/30" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s" }} />
-      </button>
-      {open && (
-        <div
-          className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#111114] border border-white/[0.12] overflow-y-auto"
-          style={{ maxHeight: 320 }}
-        >
-          {JOB_ROLES.map(r => {
-            const RIcon = ROLE_ICONS[r.key] ?? Code2;
-            const active = r.key === value;
-            return (
-              <button
-                key={r.key}
-                onClick={() => { onChange(r.key); setOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.05] transition-colors"
-                style={{ background: active ? "rgba(255,255,255,0.06)" : undefined }}
-              >
-                <RIcon className="w-3.5 h-3.5 shrink-0" style={{ color: active ? "#4de6cc" : "rgba(255,255,255,0.4)" }} />
-                <span className="text-[12px]" style={{ color: active ? "#fff" : "rgba(255,255,255,0.7)" }}>{r.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+function fmt(n: number, currency: CurrencyKey): string {
+  return SYMBOL[currency] + Math.round(n * RATES[currency]).toLocaleString();
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-// ── ChevronDown SVG ───────────────────────────────────────────────────────────
-
-const Chevron = () => (
-  <svg
-    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30"
-    viewBox="0 0 10 6" fill="none" stroke="currentColor"
-    strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-  >
-    <path d="M1 1l4 4 4-4" />
-  </svg>
-);
-
-// ── shared select className ───────────────────────────────────────────────────
-
-const SEL = [
-  "appearance-none w-full truncate",
-  "bg-[#111114] border border-white/[0.1]",
-  "text-white text-[13px] font-semibold",
-  "outline-none cursor-pointer",
-  "px-3 py-2 pr-8",
-  "hover:border-white/20 focus:border-white/25 transition-colors",
-].join(" ");
-
-// ── ValCell ───────────────────────────────────────────────────────────────────
-
-function ValCell({
-  formatted,
-  isBest,
-  isWorst,
-  color,
-  pct,
-  showBar,
-  locked,
-}: {
-  formatted?: string;
-  isBest: boolean;
-  isWorst: boolean;
-  color: string;
-  pct: number;
-  showBar: boolean;
-  locked?: boolean;
-}) {
-  const baseClass = "border-l border-white/[0.05] flex flex-col justify-center px-6";
-  const MIN_H = 80;
-
-  if (locked) {
-    return (
-      <div className={baseClass + " items-center"} style={{ minHeight: MIN_H }}>
-        <div className="w-7 h-7 flex items-center justify-center border border-white/[0.12] bg-white/[0.04]">
-          <Lock className="w-3 h-3 text-white/30" />
-        </div>
-      </div>
-    );
-  }
-
-  const valColor = isBest ? color : isWorst ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.82)";
-
-  return (
-    <div
-      className={baseClass}
-      style={{
-        minHeight: MIN_H,
-        background: isBest ? "rgba(255,255,255,0.016)" : undefined,
-      }}
-    >
-      {/* number */}
-      <div
-        style={{
-          fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
-          fontSize: 22,
-          lineHeight: 1,
-          color: valColor,
-          marginBottom: 4,
-        }}
-      >
-        {formatted}
-      </div>
-
-      {/* best pill or spacer */}
-      {isBest ? (
-        <span
-          style={{
-            display: "inline-block",
-            fontSize: 8,
-            fontWeight: 900,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            color,
-            border: `1px solid ${color}55`,
-            padding: "2px 6px",
-            marginBottom: 6,
-            width: "fit-content",
-          }}
-        >
-          best
-        </span>
-      ) : (
-        <div style={{ height: 20 }} />
-      )}
-
-      {/* mini bar */}
-      {showBar && (
-        <div style={{ height: 1, width: 56, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-          <div
-            style={{
-              height: "100%",
-              width: `${pct}%`,
-              background: isBest ? color : "rgba(255,255,255,0.1)",
-              transition: "width 0.4s ease",
-            }}
-          />
-        </div>
-      )}
-    </div>
-  );
+function fmtCompact(n: number, currency: CurrencyKey): string {
+  const v = Math.round(n * RATES[currency]);
+  if (v >= 1000) return SYMBOL[currency] + (v / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return SYMBOL[currency] + v;
 }
 
-// ── MetricRow ─────────────────────────────────────────────────────────────────
-
-function MetricRow({
-  label,
-  values,
-  format,
-  higherIsBetter,
-  isPro,
-  showBar,
-}: {
-  label: string;
-  values: (number | null)[];
-  format: (v: number) => string;
-  higherIsBetter: boolean;
-  isPro: boolean;
-  showBar?: boolean;
-}) {
-  const defined = values.filter((v): v is number => v !== null);
-  const best = defined.length ? (higherIsBetter ? Math.max(...defined) : Math.min(...defined)) : 0;
-  const worst =
-    defined.length > 1 ? (higherIsBetter ? Math.min(...defined) : Math.max(...defined)) : best;
-  const maxV = Math.max(...defined.map(Math.abs), 1);
-
-  const gridCols = `${LABEL_W}px repeat(3, 1fr)`;
-
-  return (
-    <div className="grid border-b border-white/[0.04] last:border-b-0" style={{ gridTemplateColumns: gridCols }}>
-      {/* label */}
-      <div
-        className="cmp-metric-label border-r border-white/[0.05] flex items-center px-5"
-        style={{ minHeight: 80, width: LABEL_W }}
-      >
-        <span className="text-[11px] font-medium text-white/40 leading-snug">{label}</span>
-      </div>
-
-      {/* col A */}
-      {(() => {
-        const val = values[0];
-        if (val === null) return <div className="border-l border-white/[0.05]" />;
-        const isBest = val === best && defined.length > 1;
-        const isWorst = val === worst && defined.length > 1 && best !== worst;
-        return (
-          <ValCell
-            formatted={format(val)}
-            isBest={isBest} isWorst={isWorst} color={COL_A}
-            pct={Math.round((Math.abs(val) / maxV) * 100)}
-            showBar={showBar ?? false}
-          />
-        );
-      })()}
-
-      {/* col B */}
-      {(() => {
-        const val = values[1];
-        if (val === null) return <div className="border-l border-white/[0.05]" />;
-        const isBest = val === best && defined.length > 1;
-        const isWorst = val === worst && defined.length > 1 && best !== worst;
-        return (
-          <ValCell
-            formatted={format(val)}
-            isBest={isBest} isWorst={isWorst} color={COL_B}
-            pct={Math.round((Math.abs(val) / maxV) * 100)}
-            showBar={showBar ?? false}
-          />
-        );
-      })()}
-
-      {/* col C — locked or real */}
-      {isPro ? (() => {
-        const val = values[2];
-        if (val === null) return <div className="border-l border-white/[0.05]" />;
-        const isBest = val === best && defined.length > 1;
-        const isWorst = val === worst && defined.length > 1 && best !== worst;
-        return (
-          <ValCell
-            formatted={format(val)}
-            isBest={isBest} isWorst={isWorst} color={COL_C}
-            pct={Math.round((Math.abs(val) / maxV) * 100)}
-            showBar={showBar ?? false}
-          />
-        );
-      })() : (
-        <ValCell formatted="" isBest={false} isWorst={false} color={COL_C} pct={0} showBar={false} locked />
-      )}
-    </div>
-  );
+function regionFor(country: CountryWithData): string {
+  if (country.continent === "Europe") return "Europe";
+  if (country.continent === "Asia") return "Asia";
+  if (country.continent === "North America" || country.continent === "South America") return "Americas";
+  if (country.continent === "Oceania") return "Oceania";
+  return "Middle East & Africa";
 }
 
-// ── SectionRow ────────────────────────────────────────────────────────────────
-
-function SectionRow({ label, isPro }: { label: string; isPro: boolean }) {
-  return (
-    <div
-      className="grid border-b border-white/[0.05]"
-      style={{
-        gridTemplateColumns: `${LABEL_W}px repeat(3, 1fr)`,
-        background: "rgba(255,255,255,0.016)",
-      }}
-    >
-      <div className="col-span-full px-5 py-2.5">
-        <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/35">{label}</span>
-      </div>
-    </div>
-  );
+function toRankedCountry(country: CountryWithData): RankedEntity<CostKey> {
+  const rate = TO_EUR[country.currency] ?? 1;
+  const toEur = (n: number) => Math.round(n * rate);
+  return {
+    slug: country.slug,
+    code: country.currency,
+    name: country.name,
+    meta: country.continent,
+    flag: country.flagEmoji,
+    iso: slugToIso(country.slug),
+    costs: {
+      rent: toEur(country.data.costRentCityCentre),
+      groc: toEur(country.data.costGroceriesMonthly),
+      dine: toEur(country.data.costEatingOut * 20),
+      util: toEur(country.data.costUtilitiesMonthly),
+      gym: null,
+      cowork: null,
+      transport: toEur(country.data.costTransportMonthly),
+    },
+  };
 }
-
-// ── VisaCard ──────────────────────────────────────────────────────────────────
-
-function VisaCard({ country, color }: { country: CountryWithData; color: string }) {
-  return (
-    <div className="border border-white/[0.07] bg-[#0d0d10] p-6">
-      <div className="flex items-center gap-3 mb-3">
-        {slugToIso(country.slug) ? <FlagIcon code={slugToIso(country.slug)!} size="sm" /> : <span className="text-xl leading-none">{country.flagEmoji}</span>}
-        <span className="text-[11px] font-black uppercase tracking-[0.1em]" style={{ color }}>
-          {country.name}
-        </span>
-      </div>
-      <p className="text-[12px] font-medium text-white/40 leading-[1.7] mb-4">{country.data.visaNotes}</p>
-      {country.data.visaPopularRoutes?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {country.data.visaPopularRoutes.map((r: string) => (
-            <span
-              key={r}
-              className="text-[9px] font-black px-2.5 py-1 border uppercase tracking-[0.1em]"
-              style={{ color, borderColor: color + "40" }}
-            >
-              {r}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function ComparePageClient() {
   const searchParams = useSearchParams();
-  const pathname = usePathname();
-
+  const { isPro, loading, isProLoading } = useAuth();
+  const authPending = loading || isProLoading;
+  const countryMax = isPro ? PRO_COUNTRY_MAX : FREE_COUNTRY_MAX;
   const [allCountries, setAllCountries] = useState<CountryWithData[]>([]);
-  const [slugA, setSlugA] = useState<string | null>(null);
-  const [slugB, setSlugB] = useState<string | null>(null);
-  const [slugC, setSlugC] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<JobRole>("softwareEngineer");
-  const [cmpEmailVal, setCmpEmailVal] = useState('');
-  const [cmpEmailState, setCmpEmailState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
-  const [isPro, setIsPro] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [passportCtx, setPassportCtx] = useState<{ tier: 1|2|3|4; rawTier: 1|2|3|4; upgraded: boolean; hasDual: boolean } | null>(null);
-  // FIX: start true so we never render a black screen while checking
-  const [proChecked, setProChecked] = useState(true);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [currency, setCurrency] = useState<CurrencyKey>("eur");
+  const [isolated, setIsolated] = useState<CostKey | null>(null);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  // FIX: re-run on pathname change so soft nav works
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user && session.access_token) {
-        setIsLoggedIn(true);
-        const { createClient } = await import('@supabase/supabase-js')
-        const authedClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
-        )
-        const { data } = await authedClient
-          .from("profiles")
-          .select("is_pro, passport_slug, second_passport_slug")
-          .eq("id", session.user.id)
-          .single();
-        setIsPro(data?.is_pro ?? false);
-        // build passport context for visa-adjusted display
-        if (data?.passport_slug) {
-          const { primary, secondary } = resolveEffectivePassports(data.passport_slug, data.second_passport_slug ?? undefined);
-          const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
-          const rawTier = getPassportStrength(data.passport_slug);
-          setPassportCtx({ tier, rawTier, upgraded: !!secondary && tier < rawTier, hasDual: !!data.second_passport_slug });
-        } else {
-          // fallback: try sessionStorage answers
-          try {
-            const raw = sessionStorage.getItem("wizardAnswers");
-            if (raw) {
-              const a = JSON.parse(raw);
-              if (a?.passport) {
-                const { primary, secondary } = resolveEffectivePassports(a.passport.toLowerCase(), (a.secondPassport ?? "").toLowerCase() || undefined);
-                const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
-                setPassportCtx({ tier, rawTier: getPassportStrength(a.passport.toLowerCase()), upgraded: !!secondary && tier < getPassportStrength(a.passport.toLowerCase()), hasDual: !!a.secondPassport });
-              }
-            }
-          } catch { /* ignore */ }
-        }
-      } else {
-        setIsPro(false);
-        // anon: try sessionStorage for passport context
-        try {
-          const raw = sessionStorage.getItem("wizardAnswers");
-          if (raw) {
-            const a = JSON.parse(raw);
-            if (a?.passport) {
-              const { primary, secondary } = resolveEffectivePassports(a.passport.toLowerCase(), (a.secondPassport ?? "").toLowerCase() || undefined);
-              const tier = Math.min(getPassportStrength(primary), secondary ? getPassportStrength(secondary) : 4) as 1|2|3|4;
-              setPassportCtx({ tier, rawTier: getPassportStrength(a.passport.toLowerCase()), upgraded: !!secondary && tier < getPassportStrength(a.passport.toLowerCase()), hasDual: !!a.secondPassport });
-            }
-          }
-        } catch { /* ignore */ }
-      }
-      setProChecked(true);
-    });
-  }, [pathname]); // re-check on every nav
-
-  // FIX: removed fetchedRef so countries re-fetch on soft nav
   useEffect(() => {
     fetch("/api/countries")
-      .then((r) => r.json())
+      .then(r => r.json())
       .then((data: CountryWithData[]) => {
         setAllCountries(data);
-        const valid = data.map((c) => c.slug);
-        const pA = searchParams.get("a");
-        const pB = searchParams.get("b");
-        const pC = searchParams.get("c");
-        setSlugA(pA && valid.includes(pA) ? pA : "portugal");
-        setSlugB(pB && valid.includes(pB) ? pB : "germany");
-        setSlugC(pC && valid.includes(pC) ? pC : valid[2] ?? null);
+        const valid = data.map(c => c.slug);
+        const fromCountries = searchParams.get("countries");
+        const fromOld = [searchParams.get("a"), searchParams.get("b"), searchParams.get("c")].filter(Boolean).join(",");
+        const raw = fromCountries || fromOld;
+        const slugs = raw
+          ? raw.split(",").filter(s => /^[a-z0-9-]+$/.test(s) && valid.includes(s))
+          : [];
+        const defaults = ["portugal", "germany", "austria"].filter(s => valid.includes(s));
+        const seeded = [...slugs, ...defaults].filter((s, i, a) => a.indexOf(s) === i);
+        setSelected(seeded.slice(0, PRO_COUNTRY_MAX));
       })
       .catch(console.error);
-  }, [pathname, searchParams]); // re-fetch on every nav
+  }, [searchParams]);
 
-  const countryA = allCountries.find((c) => c.slug === slugA) ?? null;
-  const countryB = allCountries.find((c) => c.slug === slugB) ?? null;
-  const countryC = allCountries.find((c) => c.slug === slugC) ?? null;
-  const role = JOB_ROLES.find((r) => r.key === selectedRole) ?? JOB_ROLES[0];
+  useEffect(() => {
+    if (typeof window === "undefined" || selected.length < 2) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("countries", selected.join(","));
+    url.searchParams.delete("a");
+    url.searchParams.delete("b");
+    url.searchParams.delete("c");
+    if (currency !== "eur") url.searchParams.set("currency", currency);
+    else url.searchParams.delete("currency");
+    if (isolated) url.searchParams.set("iso", isolated);
+    else url.searchParams.delete("iso");
+    window.history.replaceState(null, "", url.toString());
+  }, [selected, currency, isolated]);
 
-  const globeCountries = allCountries.map((c) => ({
-    slug: c.slug, name: c.name, flagEmoji: c.flagEmoji,
-    lat: c.lat, lng: c.lng, moveScore: c.data.moveScore,
+  useEffect(() => {
+    const c = searchParams.get("currency");
+    if (CURR_CYCLE.includes(c as CurrencyKey)) setCurrency(c as CurrencyKey);
+    const iso = searchParams.get("iso");
+    if (iso && COST_ROWS.some(r => r.key === iso)) setIsolated(iso as CostKey);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (authPending) return;
+    setSelected(prev => prev.length > countryMax ? prev.slice(0, countryMax) : prev);
+  }, [countryMax, authPending]);
+
+  const visibleSelected = useMemo(
+    () => authPending && !isPro ? selected.slice(0, FREE_COUNTRY_MAX) : selected,
+    [authPending, isPro, selected]
+  );
+
+  const picks = useMemo(
+    () => visibleSelected.map(s => allCountries.find(c => c.slug === s)).filter(Boolean) as CountryWithData[],
+    [visibleSelected, allCountries]
+  );
+
+  const rankedCountries = useMemo(() => picks.map(toRankedCountry), [picks]);
+
+  const filteredCountries = useMemo(() => {
+    const q = countrySearch.trim().toLowerCase();
+    if (!q) return allCountries;
+    return allCountries.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.slug.toLowerCase().includes(q) ||
+      c.continent.toLowerCase().includes(q) ||
+      c.currency.toLowerCase().includes(q)
+    );
+  }, [allCountries, countrySearch]);
+
+  const globeCountries = allCountries.map(c => ({
+    slug: c.slug,
+    name: c.name,
+    flagEmoji: c.flagEmoji,
+    lat: c.lat,
+    lng: c.lng,
+    moveScore: c.data.moveScore,
     salarySoftwareEngineer: c.data.salarySoftwareEngineer,
     costRentCityCentre: c.data.costRentCityCentre,
     scoreQualityOfLife: c.data.scoreQualityOfLife,
@@ -456,425 +179,208 @@ export default function ComparePageClient() {
     incomeTaxRateMid: c.data.incomeTaxRateMid,
   }));
 
-  const g = (c: CountryWithData | null, k: string): number | null =>
-    c ? ((c.data as unknown as Record<string, unknown>)[k] as number) ?? null : null;
+  const toggleCountry = useCallback((slug: string) => {
+    setSelected(prev => {
+      if (prev.includes(slug)) {
+        if (prev.length <= 2) return prev;
+        return prev.filter(s => s !== slug);
+      }
+      if (prev.length >= countryMax) return prev;
+      return [...prev, slug];
+    });
+  }, [countryMax]);
 
-  const trio = (k: string): (number | null)[] => [
-    g(countryA, k),
-    g(countryB, k),
-    isPro ? g(countryC, k) : null,
-  ];
+  const nextCurrency = useCallback(() => {
+    setCurrency(prev => CURR_CYCLE[(CURR_CYCLE.indexOf(prev) + 1) % CURR_CYCLE.length]);
+  }, []);
 
-  const TABLE_GRID = `${LABEL_W}px repeat(3, 1fr)`;
+  const reset = useCallback(() => {
+    const valid = allCountries.map(c => c.slug);
+    setSelected(["portugal", "germany", "austria"].filter(s => valid.includes(s)));
+    setCurrency("eur");
+    setIsolated(null);
+    setCountrySearch("");
+  }, [allCountries]);
 
-  // FIX: removed black-screen guard — render shell immediately, data fills in
+  const copyLink = useCallback(() => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    navigator.clipboard.writeText(url).catch(() => {});
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 1600);
+  }, []);
+
+  const copyTable = useCallback(() => {
+    if (rankedCountries.length < 2) return;
+    const lines = [["Category", ...rankedCountries.map(p => p.name)].join("\t")];
+    COST_ROWS.forEach(r => {
+      lines.push([r.label, ...rankedCountries.map(p => p.costs[r.key] == null ? "—" : fmt(p.costs[r.key]!, currency))].join("\t"));
+    });
+    lines.push(["TOTAL / MO", ...rankedCountries.map(p => fmt(COST_ROWS.reduce((s, r) => s + (p.costs[r.key] ?? 0), 0), currency))].join("\t"));
+    navigator.clipboard.writeText(lines.join("\n")).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  }, [rankedCountries, currency]);
+
+  const downloadCSV = useCallback(() => {
+    if (rankedCountries.length < 2) return;
+    const rows = [['Category', ...rankedCountries.map(p => p.name)].map(v => `"${v}"`).join(",")];
+    COST_ROWS.forEach(r => {
+      rows.push([r.label, ...rankedCountries.map(p => p.costs[r.key] == null ? "" : fmt(p.costs[r.key]!, currency))].map(v => `"${v}"`).join(","));
+    });
+    rows.push(["TOTAL / MO", ...rankedCountries.map(p => fmt(COST_ROWS.reduce((s, r) => s + (p.costs[r.key] ?? 0), 0), currency))].map(v => `"${v}"`).join(","));
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `origio-country-compare-${rankedCountries.map(p => p.slug).join("-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [rankedCountries, currency]);
+
   return (
-    <div className="min-h-screen bg-[#050508] text-white flex flex-col" style={{ fontFamily: "Satoshi, sans-serif" }}>
-      <style>{`
-        @media (max-width: 700px) {
-          .cmp-selectors-grid { grid-template-columns: 1fr 1fr !important; }
-          .cmp-table-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-          .cmp-table-inner { min-width: 480px; }
-          .cmp-col-header { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-          .cmp-col-header::-webkit-scrollbar { display: none; }
-          .cmp-col-header-inner { min-width: 480px; }
-          .cmp-visa-grid   { grid-template-columns: 1fr !important; }
-          .cmp-page-header { padding: 100px 20px 24px !important; }
-          .cmp-table-wrap  { padding: 20px 16px 40px !important; }
-          .cmp-header-label { width: 100px !important; min-width: 100px !important; }
-          .cmp-metric-label { width: 100px !important; min-width: 100px !important; max-width: 100px !important; font-size: 9px !important; }
-          .cmp-section-label { padding-left: 100px !important; }
-        }
-        @media (max-width: 480px) {
-          .cmp-selectors-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-      <Nav countries={globeCountries} onCountrySelect={() => {}} />
+    <div className={styles.page}>
+      <Nav countries={globeCountries} onCountrySelect={toggleCountry} />
 
-      {/* ── PAGE HEADER ── */}
-      <div className="border-b border-white/[0.07]">
-        <div className="cmp-page-header max-w-[1100px] mx-auto px-8 pt-28 pb-10">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
-            Side by Side
+      <main className={styles.folio} style={{ paddingTop: 80 }}>
+        <div className={styles.compareToggleWrap}>
+          <div className={styles.compareToggle}>
+            <Link href="/compare/countries" className={`${styles.compareToggleItem} ${styles.compareToggleItemActive}`}>Compare Countries</Link>
+            <Link href="/compare/cities" className={styles.compareToggleItem}>Compare Cities</Link>
+          </div>
+        </div>
+
+        <div className={styles.mathHead}>
+          <span className={styles.mathSolid}>Country </span>
+          <span className={styles.mathOutline}>vs Country</span>
+        </div>
+
+        <section className={`${styles.raceSub} ${styles.fu}`}>
+          <div className={styles.raceSubL}>
+            Choose up to {countryMax} countries. Compare monthly burn first. Salary, tax and visa still decide the final move. Currency{" "}
+            <button type="button" className={styles.currToggle} onClick={nextCurrency}>
+              {CURR_LABEL[currency]} ⇄
+            </button>
+          </div>
+        </section>
+
+        <section className={styles.pickStrip}>
+          <p className={styles.pickSeoLine}>
+            Compare rent, groceries, utilities, transport and eating out across {allCountries.length} countries.
           </p>
-          <h1
-            style={{
-              fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)",
-              fontSize: "clamp(44px, 5.5vw, 68px)",
-              fontWeight: 400,
-              lineHeight: 1,
-              color: "#fff",
-              marginBottom: 12,
-            }}
-          >
-            Compare
-          </h1>
-          <p className="text-[14px] font-medium text-white/40 leading-relaxed max-w-lg mb-10">
-            Stack countries against each other across salary, cost of living, tax, and visa difficulty.
+          <p className={styles.pickSeoLine}>
+            Stored country data, normalized to {currency.toUpperCase()}. Dining = 20 meals/month. Estimates, not live quotes.
           </p>
-
-          {/* ── SELECTORS CARD ── */}
-          <div className="bg-[#0d0d10] border border-white/[0.09] p-5 mb-0">
-            <div
-              className="cmp-selectors-grid grid gap-4 mb-4"
-              style={{
-                gridTemplateColumns: isPro
-                  ? "1fr 1fr 1fr 1fr"
-                  : "1fr 1fr 1fr",
-              }}
-            >
-              {/* Role */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Role</span>
-                <RoleDropdown value={selectedRole} onChange={setSelectedRole} />
-              </div>
-
-              {/* Country A */}
-              <div className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: COL_A }} />
-                  Country A
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex-1 min-w-0">
-                    <select
-                      value={slugA ?? ""}
-                      onChange={(e) => setSlugA(e.target.value)}
-                      className={SEL}
+          <div className={styles.selectedBar}>
+            <div className={styles.selectedBarL}>
+              <span className={styles.pickLbl}><span className={styles.pickLblArr}>→</span> Selected countries</span>
+              <div className={styles.selectedPills}>
+                {picks.map(c => {
+                  const minReached = visibleSelected.length <= 2;
+                  return (
+                    <button
+                      key={c.slug}
+                      type="button"
+                      className={styles.selectedPill}
+                      disabled={minReached}
+                      onClick={() => toggleCountry(c.slug)}
                     >
-                      {allCountries.map((c) => (
-                        <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>
-                      ))}
-                    </select>
-                    <Chevron />
-                  </div>
-                  <button
-                    onClick={() => { const t = slugA; setSlugA(slugB); setSlugB(t); }}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.08] transition-colors"
-                    title="Swap A ↔ B"
-                  >
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-white/35" />
-                  </button>
-                </div>
+                      {slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flagEmoji}</span>}
+                      {c.name}
+                      <span className={styles.selectedPillX}>×</span>
+                    </button>
+                  );
+                })}
               </div>
-
-              {/* Country B */}
-              <div className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: COL_B }} />
-                  Country B
-                </span>
-                <div className="relative">
-                  <select
-                    value={slugB ?? ""}
-                    onChange={(e) => setSlugB(e.target.value)}
-                    className={SEL}
-                  >
-                    {allCountries.map((c) => (
-                      <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>
-                    ))}
-                  </select>
-                  <Chevron />
-                </div>
-              </div>
-
-              {/* Country C — pro only */}
-              {isPro ? (
-                <div className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: COL_C }} />
-                    Country C
-                  </span>
-                  <div className="relative">
-                    <select
-                      value={slugC ?? ""}
-                      onChange={(e) => setSlugC(e.target.value)}
-                      className={SEL}
-                    >
-                      {allCountries.map((c) => (
-                        <option key={c.slug} value={c.slug}>{c.flagEmoji} {c.name}</option>
-                      ))}
-                    </select>
-                    <Chevron />
-                  </div>
-                </div>
-              ) : null}
             </div>
+            <div className={styles.selectedBarR}>
+              <span className={styles.pickCap}><span className={styles.pickCapNum}>{visibleSelected.length}</span> of {countryMax} selected</span>
+              <button type="button" className={styles.legendAction} onClick={copyLink}>{linkCopied ? "✓ Link copied" : "↗ Share"}</button>
+              <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={reset}>↻ Clear all</button>
+            </div>
+          </div>
 
-            {/* Row 2: Pro CTA */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/[0.07]">
-              {!isPro ? (
-                <>
-                  <p className="text-[11px] text-white/35 font-medium">
-                    Add a third country with Pro.
-                  </p>
-                  <Link
-                    href="/pro"
-                    className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
-                    style={{ borderRadius: 100 }}
-                  >
-                    <Star className="w-3.5 h-3.5" fill="currentColor" />
-                    Unlock Pro
-                  </Link>
-                </>
-              ) : (
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                  <Star className="w-3 h-3" /> Pro active
-                </div>
+          <div className={styles.pickHeader}>
+            <span className={styles.pickLbl}><span className={styles.pickLblArr}>→</span> Country picker</span>
+            <div className={styles.pickTools}>
+              <input
+                type="text"
+                value={countrySearch}
+                onChange={e => setCountrySearch(e.target.value)}
+                className={styles.pickSearch}
+                placeholder="Search country or region"
+              />
+              {countrySearch && (
+                <button type="button" className={styles.pickSearchClear} onClick={() => setCountrySearch("")}>×</button>
               )}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── STICKY COL HEADERS ── */}
-      {countryA && countryB && (
-        <div className="sticky top-0 z-20 border-b border-white/[0.1] bg-[#050508]">
-          <div className="max-w-[1100px] mx-auto px-4 md:px-8 cmp-col-header">
-            <div className="cmp-col-header-inner" style={{ display: "grid", gridTemplateColumns: TABLE_GRID }}>
-              <div className="cmp-header-label" style={{ minHeight: 72, width: LABEL_W }} />
-
-              {/* Country A header */}
-              <div className="border-l border-white/[0.05] px-6 py-4">
-                <div style={{ marginBottom: 6 }}>{slugToIso(countryA.slug) ? <FlagIcon code={slugToIso(countryA.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryA.flagEmoji}</span>}</div>
-                <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_A }}>
-                  {countryA.name}
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", marginTop: 2 }}>
-                  {countryA.currency}
-                </div>
-              </div>
-
-              {/* Country B header */}
-              <div className="border-l border-white/[0.05] px-6 py-4">
-                <div style={{ marginBottom: 6 }}>{slugToIso(countryB.slug) ? <FlagIcon code={slugToIso(countryB.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryB.flagEmoji}</span>}</div>
-                <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_B }}>
-                  {countryB.name}
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", marginTop: 2 }}>
-                  {countryB.currency}
-                </div>
-              </div>
-
-              {/* Country C header */}
-              {isPro && countryC ? (
-                <div className="border-l border-white/[0.05] px-6 py-4">
-                  <div style={{ marginBottom: 6 }}>{slugToIso(countryC.slug) ? <FlagIcon code={slugToIso(countryC.slug)!} size="md" /> : <span style={{ fontSize: 26, lineHeight: 1 }}>{countryC.flagEmoji}</span>}</div>
-                  <div style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.07em", color: COL_C }}>
-                    {countryC.name}
-                  </div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", marginTop: 2 }}>
-                    {countryC.currency}
+          <div className={styles.pickGroups}>
+            {REGION_ORDER.map(region => {
+              const regionCountries = filteredCountries.filter(c => regionFor(c) === region);
+              if (!regionCountries.length) return null;
+              return (
+                <div key={region} className={styles.pickGroup}>
+                  <span className={styles.pickGroupLabel}>{region}</span>
+                  <div className={styles.pickGroupCities}>
+                    {regionCountries.map(c => {
+                      const isOn = selected.includes(c.slug);
+                      const atMax = selected.length >= countryMax && !isOn;
+                      const minReached = visibleSelected.length <= 2 && isOn;
+                      return (
+                        <button
+                          key={c.slug}
+                          type="button"
+                          className={`${styles.pickChip}${isOn ? " " + styles.pickChipOn : ""}`}
+                          disabled={atMax || minReached}
+                          onClick={() => toggleCountry(c.slug)}
+                        >
+                          {slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" className={styles.chFlag} /> : <span className={styles.chFlag}>{c.flagEmoji}</span>}
+                          {c.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : (
-                <div className="border-l border-white/[0.05] flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-2 opacity-25">
-                    <Lock className="w-4 h-4 text-white/50" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── TABLE ── */}
-      {countryA && countryB && (
-        <div className="cmp-table-wrap max-w-[1100px] mx-auto px-8 py-10 flex-1 w-full">
-          <div className="cmp-table-outer">
-            <div className="cmp-table-inner border border-white/[0.07] overflow-hidden">
-
-            <SectionRow label="Salary" isPro={isPro} />
-            <MetricRow
-              label={role.label} isPro={isPro} higherIsBetter showBar
-              format={(v) => v.toLocaleString()}
-              values={[g(countryA, role.salaryKey), g(countryB, role.salaryKey), isPro ? g(countryC, role.salaryKey) : null]}
-            />
-
-            <SectionRow label="Cost of Living" isPro={isPro} />
-            <MetricRow label="Rent · city centre" isPro={isPro} higherIsBetter={false} format={(v) => v.toLocaleString() + "/mo"} values={trio("costRentCityCentre")} />
-            <MetricRow label="Groceries" isPro={isPro} higherIsBetter={false} format={(v) => v.toLocaleString() + "/mo"} values={trio("costGroceriesMonthly")} />
-            <MetricRow label="Transport" isPro={isPro} higherIsBetter={false} format={(v) => v.toLocaleString() + "/mo"} values={trio("costTransportMonthly")} />
-            <MetricRow label="Utilities" isPro={isPro} higherIsBetter={false} format={(v) => v.toLocaleString() + "/mo"} values={trio("costUtilitiesMonthly")} />
-            <MetricRow label="Eating out" isPro={isPro} higherIsBetter={false} format={(v) => v.toLocaleString() + "/meal"} values={trio("costEatingOut")} />
-
-            <SectionRow label="Tax" isPro={isPro} />
-            <MetricRow label="Income tax (mid-bracket)" isPro={isPro} higherIsBetter={false} format={(v) => v + "%"} values={trio("incomeTaxRateMid")} />
-            <MetricRow label="Social security" isPro={isPro} higherIsBetter={false} format={(v) => v + "%"} values={trio("socialSecurityRate")} />
-
-            <SectionRow label="Quality of Life" isPro={isPro} />
-            <MetricRow label="Overall" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreQualityOfLife")} />
-            <MetricRow label="Healthcare" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreHealthcare")} />
-            <MetricRow label="Safety" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreSafety")} />
-            <MetricRow label="Internet speed" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("scoreInternetSpeed")} />
-
-            <SectionRow label="Visa" isPro={isPro} />
-            {passportCtx && (
-              <div style={{ display: "grid", gridTemplateColumns: TABLE_GRID, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ width: LABEL_W }} />
-                <div className="col-span-3 px-4 py-2 flex items-center gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#00ffd5] border border-[#00ffd5]/30 px-2 py-0.5">
-                    Tier {passportCtx.tier} passport
-                  </span>
-                  <span className="text-[10px] text-white/30">{PASSPORT_TIER_LABEL[passportCtx.tier].split("—")[1]?.trim()}</span>
-                  {passportCtx.upgraded && <span className="text-[10px] text-yellow-400/60">↑ upgraded via second passport</span>}
-                </div>
-              </div>
-            )}
-            <MetricRow label="Difficulty" isPro={isPro} higherIsBetter={false} format={(v) => `${getVisaLabel(v)} · ${v}/5`} values={trio("visaDifficulty")} />
-            <MetricRow label="Move score" isPro={isPro} higherIsBetter showBar format={(v) => v + "/10"} values={trio("moveScore")} />
-          </div>
+              );
+            })}
           </div>
 
-          {/* ── VISA NOTES ── */}
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35 mt-10 mb-4">
-            Visa Notes
-          </p>
-          <div className="cmp-visa-grid grid grid-cols-3 gap-3">
-            <VisaCard country={countryA} color={COL_A} />
-            <VisaCard country={countryB} color={COL_B} />
-            {isPro && countryC ? (
-              <VisaCard country={countryC} color={COL_C} />
-            ) : (
-              <div className="border border-dashed border-white/[0.07] flex flex-col items-center justify-center gap-3 p-6 text-center">
-                <Lock className="w-4 h-4 text-white/20" />
-                <p className="text-[11px] font-medium text-white/25">
-                  Pro unlocks a third country visa breakdown
-                </p>
-                <Link
-                  href="/pro"
-                  className="text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-                >
-                  Get Pro →
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* ── PRO BANNER ── */}
-          {!isPro && (
-            <div className="mt-6 flex items-center gap-5 flex-wrap bg-[#0d0d10] border border-white/[0.07] px-6 py-5">
-              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-white/[0.12] bg-white/[0.04] text-lg leading-none">
-                ✦
-              </div>
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-[18px] font-normal text-white mb-1"
-                  style={{ fontFamily: "var(--font-heading, 'Cabinet Grotesk', sans-serif)" }}
-                >
-                  Add a third country
-                </p>
-                <p className="text-[12px] font-medium text-white/40 leading-relaxed">
-                  Pro unlocks a third column, full visa checklists, cost-of-living breakdowns, and salary percentile data.
-                </p>
-              </div>
-              <Link
-                href="/pro"
-                className="flex items-center gap-2 bg-white text-[#0a0a0a] px-5 py-2.5 text-[12px] font-bold tracking-wide whitespace-nowrap hover:bg-white/90 transition-colors"
-                style={{ borderRadius: 100 }}
+          <div className={styles.legendRow}>
+            <span className={styles.legendLbl}><span className={styles.legendLblArr}>↳</span> Show only</span>
+            {COST_ROWS.map(r => (
+              <button
+                key={r.key}
+                type="button"
+                className={[
+                  styles.legendKey,
+                  isolated === r.key ? styles.legendKeyOn : "",
+                  isolated && isolated !== r.key ? styles.legendKeyDim : "",
+                ].filter(Boolean).join(" ")}
+                onClick={() => setIsolated(prev => prev === r.key ? null : r.key)}
               >
-                <Star className="w-3.5 h-3.5" fill="currentColor" />
-                Get Pro · {PRO_PRICE_EUR_DISPLAY}
-              </Link>
-            </div>
-          )}
-
-          {/* ── BOTTOM LINKS ── */}
-          <div className="mt-10 pt-8 border-t border-white/[0.07] flex flex-wrap gap-6">
-            {[
-              { c: countryA, col: COL_A },
-              { c: countryB, col: COL_B },
-              ...(isPro && countryC ? [{ c: countryC, col: COL_C }] : []),
-            ].map(({ c, col }) => (
-              <Link
-                key={c.slug}
-                href={`/country/${c.slug}`}
-                className="text-[11px] font-bold uppercase tracking-widest hover:opacity-60 transition-opacity"
-                style={{ color: col }}
-              >
-{slugToIso(c.slug) ? <FlagIcon code={slugToIso(c.slug)!} size="sm" /> : <span>{c.flagEmoji}</span>} Full {c.name} report →
-              </Link>
+                <span className={styles.lkSw} style={{ background: r.color }} />
+                {r.label}
+              </button>
             ))}
+            <span className={styles.legendSpacer} />
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={copyTable}>
+              {copied ? "✓ Copied" : "⬇ Copy data"}
+            </button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={downloadCSV}>↓ CSV</button>
           </div>
-        </div>
-      )}
+        </section>
 
-      {/* ── EMAIL CAPTURE — hidden for logged-in users ── */}
-      {countryA && countryB && !isLoggedIn && (
-        <div style={{
-          maxWidth: 1100, margin: '32px auto 0', padding: '0 32px',
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
-            background: '#111114', border: '1px solid rgba(255,255,255,0.07)',
-            padding: '20px 28px',
-          }}>
-            <div style={{ flex: '1 1 220px' }}>
-              <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 5, fontFamily: 'sans-serif' }}>→ Save this comparison</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f0e8', fontFamily: 'sans-serif' }}>Want this emailed to you?</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontFamily: 'sans-serif' }}>Full breakdown sent to your inbox. No account needed.</div>
-            </div>
-            {cmpEmailState === 'sent' ? (
-              <div style={{ fontSize: 13, color: '#00ffd5', fontWeight: 700, fontFamily: 'sans-serif' }}>✓ Sent — check your inbox.</div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8, flex: '1 1 300px', alignItems: 'stretch' }}>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={cmpEmailVal}
-                  onChange={e => setCmpEmailVal(e.target.value)}
-                  onKeyDown={async e => {
-                    if (e.key !== 'Enter' || !cmpEmailVal.includes('@') || !countryA || !countryB) return
-                    setCmpEmailState('loading')
-                    try {
-                      const countries = [
-                        { slug: countryA.slug, name: countryA.name, flag: countryA.flagEmoji ?? '', color: COL_A },
-                        { slug: countryB.slug, name: countryB.name, flag: countryB.flagEmoji ?? '', color: COL_B },
-                        ...(isPro && countryC ? [{ slug: countryC.slug, name: countryC.name, flag: countryC.flagEmoji ?? '', color: COL_C }] : []),
-                      ]
-                      const res = await fetch('/api/capture-country-comparison', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: cmpEmailVal, countries, role: JOB_ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole, shareUrl: window.location.href }),
-                      })
-                      setCmpEmailState(res.ok ? 'sent' : 'error')
-                    } catch { setCmpEmailState('error') }
-                  }}
-                  disabled={cmpEmailState === 'loading'}
-                  style={{ flex: 1, background: '#0d0d10', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0e8', fontSize: 13, padding: '10px 14px', fontFamily: 'sans-serif', outline: 'none' }}
-                />
-                <button
-                  type="button"
-                  disabled={cmpEmailState === 'loading' || !cmpEmailVal.includes('@')}
-                  onClick={async () => {
-                    if (!cmpEmailVal.includes('@') || !countryA || !countryB) return
-                    setCmpEmailState('loading')
-                    try {
-                      const countries = [
-                        { slug: countryA.slug, name: countryA.name, flag: countryA.flagEmoji ?? '', color: COL_A },
-                        { slug: countryB.slug, name: countryB.name, flag: countryB.flagEmoji ?? '', color: COL_B },
-                        ...(isPro && countryC ? [{ slug: countryC.slug, name: countryC.name, flag: countryC.flagEmoji ?? '', color: COL_C }] : []),
-                      ]
-                      const res = await fetch('/api/capture-country-comparison', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: cmpEmailVal, countries, role: JOB_ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole, shareUrl: window.location.href }),
-                      })
-                      setCmpEmailState(res.ok ? 'sent' : 'error')
-                    } catch { setCmpEmailState('error') }
-                  }}
-                  style={{ background: '#00ffd5', color: '#0a0a0a', border: 'none', fontWeight: 800, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '10px 20px', cursor: cmpEmailState === 'loading' ? 'wait' : 'pointer', fontFamily: 'sans-serif', opacity: !cmpEmailVal.includes('@') ? 0.4 : 1 }}
-                >
-                  {cmpEmailState === 'loading' ? '...' : 'Send →'}
-                </button>
-              </div>
-            )}
-            {cmpEmailState === 'error' && <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'sans-serif' }}>Something went wrong. Try again.</div>}
-          </div>
-        </div>
-      )}
-
+        <RankedBarChart
+          entities={rankedCountries}
+          costRows={COST_ROWS}
+          isolated={isolated}
+          currencyLabel={currency.toUpperCase()}
+          formatMoney={(n) => fmt(n, currency)}
+          formatCompact={(n) => fmtCompact(n, currency)}
+          emptyLabel="Pick at least two countries above."
+          verdictNoun="country"
+        />
+      </main>
       <Footer />
     </div>
   );

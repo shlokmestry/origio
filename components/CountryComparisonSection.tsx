@@ -277,7 +277,7 @@ export default function CountryComparisonSection() {
           </p>
 
           <Link
-            href="/compare"
+            href="/compare/countries"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 20px',

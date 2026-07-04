@@ -8,6 +8,15 @@ function escapeHtml(s: string): string {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+function safeShareUrl(raw: string): string {
+  try {
+    const url = new URL(raw)
+    const allowedHosts = new Set(['findorigio.com', 'www.findorigio.com'])
+    if (allowedHosts.has(url.hostname)) return url.toString()
+  } catch {}
+  return 'https://findorigio.com/cities/compare'
+}
+
 const SYM: Record<string, string> = { eur: '€', usd: '$', gbp: '£', jpy: '¥' }
 const RATES: Record<string, number> = { eur: 1, usd: 1.07, gbp: 0.85, jpy: 165 }
 
@@ -28,7 +37,7 @@ function buildHtml(cities: { name: string; country: string; total: number; sym: 
   // Savings callout: how much cheapest saves vs dearest per year
   const yearSaving = (dearest.total - cheapest.total) * 12
   const savingLine = cities.length >= 2 && yearSaving > 0
-    ? `${sym}${Math.round(yearSaving).toLocaleString()} saved per year in ${cheapest.name} vs ${dearest.name}.`
+    ? `${sym}${Math.round(yearSaving).toLocaleString()} saved per year in ${escapeHtml(cheapest.name)} vs ${escapeHtml(dearest.name)}.`
     : ''
 
   // Build a card for each city (table-cell safe)
@@ -124,7 +133,7 @@ function buildHtml(cities: { name: string; country: string; total: number; sym: 
 
       <!-- CTA -->
       <tr><td style="padding-bottom:28px;">
-        <a href="${shareUrl}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
+        <a href="${escapeHtml(safeShareUrl(shareUrl))}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
       </td></tr>
 
       <!-- Footer -->
@@ -161,7 +170,23 @@ export async function POST(req: NextRequest) {
   if (!isValidEmail(email)) {
     return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
   }
-  if (!Array.isArray(cities) || cities.length < 2) {
+  if (!Array.isArray(cities) || cities.length < 2 || cities.length > 8) {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+  }
+  if (!Object.prototype.hasOwnProperty.call(RATES, currency)) {
+    return NextResponse.json({ error: 'Invalid currency' }, { status: 400 })
+  }
+  if (cities.some(c =>
+    typeof c.slug !== 'string' ||
+    typeof c.name !== 'string' ||
+    typeof c.country !== 'string' ||
+    !/^[a-z0-9-]+$/.test(c.slug) ||
+    c.name.length > 80 ||
+    c.country.length > 80 ||
+    !Number.isFinite(c.total) ||
+    c.total < 0 ||
+    c.total > 50000
+  )) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
 

@@ -78,7 +78,7 @@ export default function CountryPanel({ country, onClose, selectedRole, onRoleCha
   const currentSalary = data[currentRole.salaryKey] as number;
 
   const handleClose = () => { setIsVisible(false); setTimeout(onClose, 300); };
-  const handleCompare = () => router.push("/compare?a=" + country.slug);
+  const handleCompare = () => router.push("/compare/countries?countries=" + country.slug);
   const handleFullReport = () => router.push("/country/" + country.slug);
 
   return (
