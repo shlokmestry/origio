@@ -7,7 +7,7 @@ import styles from "@/app/cities/compare/compare.module.css";
 
 export const metadata: Metadata = {
   title: "Compare Countries & Cities ~ Origio",
-  description: "Compare countries for relocation strategy, then compare cities for actual monthly cost.",
+  description: "Compare countries for relocation strategy, then compare cities for estimated monthly cost.",
   openGraph: {
     title: "Compare Countries & Cities — Origio",
     description: "Country first. City second. Salary, rent, tax, visa friction and monthly burn side by side.",

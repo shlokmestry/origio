@@ -238,7 +238,7 @@ export default function ComparePageClient() {
 
   return (
     <div className={styles.page}>
-      <Nav countries={globeCountries} onCountrySelect={() => {}} />
+      <Nav countries={globeCountries} onCountrySelect={toggleCountry} />
 
       <main className={styles.folio} style={{ paddingTop: 80 }}>
         <div className={styles.compareToggleWrap}>

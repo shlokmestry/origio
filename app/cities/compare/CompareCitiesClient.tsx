@@ -289,7 +289,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
         {/* Sub */}
         <section className={`${styles.raceSub} ${styles.fu}`}>
           <div className={styles.raceSubL}>
-            Choose up to {ledgerMax} cities. Compare actual monthly spend, not postcard vibes. Currency{' '}
+            Choose up to {ledgerMax} cities. Compare estimated monthly spend, not postcard vibes. Currency{' '}
             <button type="button" className={styles.currToggle} onClick={nextCurrency}>
               {CURR_LABEL[currency]} ⇄
             </button>
