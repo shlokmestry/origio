@@ -103,7 +103,7 @@ function buildHtml(cities: { name: string; country: string; total: number; sym: 
 
       <!-- City names subtitle -->
       <tr><td style="padding-bottom:24px;">
-        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${sorted.map(c => c.name).join(' · ')}</div>
+        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${sorted.map(c => escapeHtml(c.name)).join(' · ')}</div>
       </td></tr>
 
       <!-- Divider -->
