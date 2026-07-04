@@ -4,6 +4,27 @@ import { getResend } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { isValidEmail } from '@/lib/utils'
 
+function escapeHtml(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+function safeShareUrl(raw: string): string {
+  try {
+    const url = new URL(raw)
+    const allowedHosts = new Set(['findorigio.com', 'www.findorigio.com'])
+    if (allowedHosts.has(url.hostname)) return url.toString()
+  } catch {}
+  return 'https://findorigio.com/salary-calculator'
+}
+
+function isSafeText(value: unknown, max = 80): value is string {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= max && !/[\r\n<>]/.test(value)
+}
+
+function isSafeNumber(value: unknown, min = 0, max = 10_000_000): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+}
+
 function adminSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,7 +73,7 @@ function buildHtml(data: {
         <div style="font-size:24px;font-weight:900;color:#f0f0e8;line-height:1.1;font-family:Arial,sans-serif;">Your salary breakdown.</div>
       </td></tr>
       <tr><td style="padding-bottom:24px;">
-        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${data.role} · ${data.level} · ${data.countryFlag} ${data.countryName}</div>
+        <div style="font-size:13px;color:#555550;font-family:Arial,sans-serif;">${escapeHtml(data.role)} · ${escapeHtml(data.level)} · ${escapeHtml(data.countryFlag)} ${escapeHtml(data.countryName)}</div>
       </td></tr>
 
       <!-- Divider -->
@@ -65,7 +86,7 @@ function buildHtml(data: {
             <td width="49%" valign="top" style="padding:0;">
               <div style="background:#161616;border:1px solid #222222;padding:20px;">
                 <div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#555550;font-family:Arial,sans-serif;margin-bottom:10px;">Gross annual</div>
-                <div style="font-size:26px;font-weight:900;color:#f0f0e8;font-family:Arial,sans-serif;line-height:1;">${data.symbol}${Math.round(data.grossLocal).toLocaleString()}</div>
+                <div style="font-size:26px;font-weight:900;color:#f0f0e8;font-family:Arial,sans-serif;line-height:1;">${escapeHtml(data.symbol)}${Math.round(data.grossLocal).toLocaleString()}</div>
                 <div style="font-size:11px;color:#444440;font-family:Arial,sans-serif;margin-top:4px;">$${data.grossUSD.toLocaleString()} USD</div>
               </div>
             </td>
@@ -73,7 +94,7 @@ function buildHtml(data: {
             <td width="49%" valign="top" style="padding:0;">
               <div style="background:#161616;border:1px solid #1a3530;border-top:2px solid #00ffd5;padding:20px;">
                 <div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#00ffd5;font-family:Arial,sans-serif;margin-bottom:10px;">Net annual</div>
-                <div style="font-size:26px;font-weight:900;color:#00ffd5;font-family:Arial,sans-serif;line-height:1;">${data.symbol}${Math.round(data.netLocal).toLocaleString()}</div>
+                <div style="font-size:26px;font-weight:900;color:#00ffd5;font-family:Arial,sans-serif;line-height:1;">${escapeHtml(data.symbol)}${Math.round(data.netLocal).toLocaleString()}</div>
                 <div style="font-size:11px;color:#444440;font-family:Arial,sans-serif;margin-top:4px;">$${data.netUSD.toLocaleString()} USD</div>
               </div>
             </td>
@@ -97,8 +118,8 @@ function buildHtml(data: {
           </table>
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
             <tr>
-              <td style="font-size:10px;color:#666660;font-family:Arial,sans-serif;">${data.symbol}${taxed.toLocaleString()} taken</td>
-              <td align="right" style="font-size:10px;color:#00ffd5;font-family:Arial,sans-serif;">${data.symbol}${Math.round(data.netLocal).toLocaleString()} kept</td>
+              <td style="font-size:10px;color:#666660;font-family:Arial,sans-serif;">${escapeHtml(data.symbol)}${taxed.toLocaleString()} taken</td>
+              <td align="right" style="font-size:10px;color:#00ffd5;font-family:Arial,sans-serif;">${escapeHtml(data.symbol)}${Math.round(data.netLocal).toLocaleString()} kept</td>
             </tr>
           </table>
         </div>
@@ -107,7 +128,7 @@ function buildHtml(data: {
       <!-- Monthly take-home callout -->
       <tr><td style="padding-bottom:24px;">
         <div style="background:#0f1f1c;border:1px solid #1a3530;padding:12px 16px;">
-          <span style="font-size:12px;color:#00ffd5;font-family:Arial,sans-serif;">${data.symbol}${Math.round(data.netLocal / 12).toLocaleString()}/mo take-home in ${data.countryName}. That's $${Math.round(data.netUSD / 12).toLocaleString()} per month.</span>
+          <span style="font-size:12px;color:#00ffd5;font-family:Arial,sans-serif;">${escapeHtml(data.symbol)}${Math.round(data.netLocal / 12).toLocaleString()}/mo take-home in ${escapeHtml(data.countryName)}. That's $${Math.round(data.netUSD / 12).toLocaleString()} per month.</span>
         </div>
       </td></tr>
 
@@ -116,7 +137,7 @@ function buildHtml(data: {
 
       <!-- CTA -->
       <tr><td style="padding-bottom:28px;">
-        <a href="${shareUrl}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">Open calculator &rarr;</a>
+        <a href="${escapeHtml(safeShareUrl(shareUrl))}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">Open calculator &rarr;</a>
       </td></tr>
 
       <!-- Footer -->
@@ -180,6 +201,24 @@ export async function POST(req: NextRequest) {
   }
   if (email !== user.email) {
     return NextResponse.json({ error: 'Email mismatch' }, { status: 403 })
+  }
+  if (
+    !isSafeText(data.countryName) ||
+    !isSafeText(data.countryFlag, 16) ||
+    !isSafeText(data.countryCode, 8) ||
+    !isSafeText(data.role) ||
+    !isSafeText(data.level, 40) ||
+    !isSafeText(data.symbol, 4) ||
+    !isSafeText(data.currency, 8) ||
+    !isSafeNumber(data.grossLocal) ||
+    !isSafeNumber(data.netLocal) ||
+    !isSafeNumber(data.grossUSD) ||
+    !isSafeNumber(data.netUSD) ||
+    !isSafeNumber(data.effectiveRate, 0, 100) ||
+    data.netLocal > data.grossLocal ||
+    data.netUSD > data.grossUSD
+  ) {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
 
   await adminSupabase().from('salary_calc_leads').insert({

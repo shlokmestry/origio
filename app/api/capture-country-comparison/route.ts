@@ -8,6 +8,33 @@ function escapeHtml(s: string): string {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+function safeShareUrl(raw: string): string {
+  try {
+    const url = new URL(raw)
+    const allowedHosts = new Set(['findorigio.com', 'www.findorigio.com'])
+    if (allowedHosts.has(url.hostname)) return url.toString()
+  } catch {}
+  return 'https://findorigio.com/compare/countries'
+}
+
+function isValidCountry(c: unknown): c is { slug: string; name: string; flag: string; color: string } {
+  if (!c || typeof c !== 'object') return false
+  const row = c as Record<string, unknown>
+  return (
+    typeof row.slug === 'string' &&
+    /^[a-z0-9-]+$/.test(row.slug) &&
+    typeof row.name === 'string' &&
+    row.name.length > 0 &&
+    row.name.length <= 80 &&
+    !/[\r\n<>]/.test(row.name) &&
+    typeof row.flag === 'string' &&
+    row.flag.length > 0 &&
+    row.flag.length <= 16 &&
+    typeof row.color === 'string' &&
+    /^#[0-9a-fA-F]{6}$/.test(row.color)
+  )
+}
+
 function supabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,7 +104,7 @@ function buildHtml(
 
       <!-- CTA -->
       <tr><td style="padding-bottom:28px;">
-        <a href="${escapeHtml(shareUrl)}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
+        <a href="${escapeHtml(safeShareUrl(shareUrl))}" style="display:inline-block;background:#00ffd5;color:#0a0a0a;font-weight:800;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;padding:13px 26px;text-decoration:none;font-family:Arial,sans-serif;">View live comparison &rarr;</a>
       </td></tr>
 
       <!-- Footer -->
@@ -133,7 +160,10 @@ export async function POST(req: NextRequest) {
   if (email !== user.email) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
-  if (!Array.isArray(countries) || countries.length < 2) {
+  if (!Array.isArray(countries) || countries.length < 2 || countries.length > 8 || !countries.every(isValidCountry)) {
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+  }
+  if (typeof role !== 'string' || role.length > 80 || /[\r\n<>]/.test(role)) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
 
