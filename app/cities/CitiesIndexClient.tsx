@@ -188,36 +188,6 @@ const VIBE_LABELS: Record<string, string> = {
   budget:    'Budget',
 }
 
-// ── Filter chip component ─────────────────────────────────────────────────
-
-interface ChipGroupProps {
-  label: string
-  options: { val: string; label: string }[]
-  value: string
-  onChange: (v: string) => void
-}
-
-function ChipGroup({ label, options, value, onChange }: ChipGroupProps) {
-  return (
-    <div className={styles.chipGroup}>
-      <span className={styles.chipLabel}>{label}</span>
-      <div className={styles.chips}>
-        {options.map(o => (
-          <button
-            key={o.val}
-            type="button"
-            className={`${styles.chip}${value === o.val ? ' ' + styles.chipOn : ''}`}
-            onClick={() => onChange(o.val)}
-            aria-pressed={value === o.val}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────
 
 interface CitiesIndexClientProps { cities: City[] }
@@ -329,18 +299,31 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
             {/* Region chips — hidden when searching */}
             {!search && (
-              <ChipGroup
-                label="Region"
-                value={filters.region}
-                onChange={v => setFilter('region', v)}
-                options={[
-                  { val:'any',        label:'Anywhere' },
-                  { val:'europe',     label:'Europe' },
-                  { val:'asia',       label:'Asia & Pacific' },
-                  { val:'americas',   label:'Americas' },
-                  { val:'middleeast', label:'Middle East & Africa' },
-                ]}
-              />
+              <div className={styles.chipGroup}>
+                <span className={styles.chipLabel}>Region</span>
+                <div className={styles.chips}>
+                  {[
+                    { val:'any',        label:'Anywhere' },
+                    { val:'europe',     label:'Europe' },
+                    { val:'asia',       label:'Asia & Pacific' },
+                    { val:'americas',   label:'Americas' },
+                    { val:'middleeast', label:'Middle East & Africa' },
+                  ].map(o => (
+                    <button
+                      key={o.val}
+                      type="button"
+                      className={`${styles.chip}${filters.region === o.val ? ' ' + styles.chipOn : ''}`}
+                      onClick={() => setFilter('region', o.val)}
+                      aria-pressed={filters.region === o.val}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                  <Link href="/cities/compare" className={styles.compareChip}>
+                    Which city burns less cash? Compare →
+                  </Link>
+                </div>
+              </div>
             )}
             {anyFilterActive && !search && (
               <button className={styles.resetChip} onClick={resetFilters} style={{ alignSelf: 'flex-end', marginBottom: 2 }}>↺ Reset</button>
@@ -428,11 +411,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         )}
 
       </div>
-
-      <Link href="/cities/compare" className={styles.compareSticky}>
-        <span>Which city burns less cash?</span>
-        <em>Compare rent · groceries · transit →</em>
-      </Link>
 
       <Footer />
     </div>
