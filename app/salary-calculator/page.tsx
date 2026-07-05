@@ -1742,11 +1742,6 @@ export default function SalaryCalculator() {
               sub="vs all roles, USD-equivalent"
             />
             <BenchmarkRow
-              label="Purchasing power"
-              value={String(bench.pppIndex)}
-              sub="index · 100 = global median basket"
-            />
-            <BenchmarkRow
               label="Rent / take-home"
               value={isPro ? `${rentPctOfTakeHome}%` : "—%"}
               sub={isPro
@@ -1806,12 +1801,12 @@ export default function SalaryCalculator() {
       `}</style>
 
       {/* ── EMAIL CAPTURE ── */}
-      <div style={{ maxWidth: 1440, margin: '32px auto 0', paddingLeft: 'clamp(12px,3vw,24px)', paddingRight: 'clamp(12px,3vw,24px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', padding: '20px 24px' }}>
-          <div style={{ flex: '1 1 220px' }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.3)', marginBottom: 5, fontFamily: 'Satoshi, sans-serif' }}>→ Save your results</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', fontFamily: 'Satoshi, sans-serif' }}>Want this emailed to you?</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontFamily: 'Satoshi, sans-serif' }}>Full breakdown sent to your inbox. No account needed.</div>
+      <div style={{ maxWidth: 1440, margin: '18px auto 0', paddingLeft: 'clamp(12px,3vw,24px)', paddingRight: 'clamp(12px,3vw,24px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', padding: '18px 22px' }}>
+          <div style={{ flex: '1 1 260px' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.3)', marginBottom: 5, fontFamily: 'Satoshi, sans-serif' }}>→ Done calculating?</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', fontFamily: 'Satoshi, sans-serif' }}>Want this salary breakdown emailed?</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontFamily: 'Satoshi, sans-serif' }}>Take-home, tax rate, rank, rent pressure.</div>
           </div>
           {salaryEmailState === 'sent' ? (
             <div style={{ fontSize: 13, color: '#4de6cc', fontWeight: 700, fontFamily: 'Satoshi, sans-serif' }}>✓ Sent — check your inbox.</div>
@@ -1864,10 +1859,27 @@ export default function SalaryCalculator() {
                 }}
                 style={{ background: '#4de6cc', color: '#0a0a0a', border: 'none', fontWeight: 800, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase' as const, padding: '10px 20px', cursor: salaryEmailState === 'loading' ? 'wait' : 'pointer', fontFamily: 'Satoshi, sans-serif', opacity: !salaryEmailVal.includes('@') ? 0.4 : 1 }}
               >
-                {salaryEmailState === 'loading' ? '...' : 'Send →'}
+                {salaryEmailState === 'loading' ? '...' : 'Email results →'}
               </button>
             </div>
           )}
+          <Link
+            href="/cities/compare"
+            style={{
+              color: '#4de6cc',
+              border: '1px solid rgba(77,230,204,0.45)',
+              padding: '10px 16px',
+              textDecoration: 'none',
+              fontFamily: 'Satoshi, sans-serif',
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase' as const,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Compare city costs →
+          </Link>
           {salaryEmailState === 'error' && <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'Satoshi, sans-serif' }}>Something went wrong. Try again.</div>}
         </div>
       </div>
