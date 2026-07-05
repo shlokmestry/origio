@@ -10,6 +10,7 @@ import { FlagIcon } from "@/components/FlagIcon";
 import { slugToIso } from "@/lib/flagCodes";
 import { CountryWithData } from "@/types";
 import { useAuth } from "@/lib/AuthProvider";
+import { DISPLAY_RATES, FX_LAST_UPDATED, TO_EUR } from "@/lib/exchangeRates";
 import styles from "@/app/cities/compare/compare.module.css";
 
 type CostKey = "rent" | "groc" | "dine" | "util" | "gym" | "cowork" | "transport";
@@ -19,17 +20,7 @@ const FREE_COUNTRY_MAX = 4;
 const PRO_COUNTRY_MAX = 8;
 const REGION_ORDER = ["Europe", "Asia", "Americas", "Middle East & Africa", "Oceania"];
 
-const TO_EUR: Record<string, number> = {
-  EUR: 1, GBP: 1.18, USD: 0.93, AED: 0.25, JPY: 0.0062,
-  SGD: 0.70, AUD: 0.60, CAD: 0.68, THB: 0.027, MXN: 0.048,
-  PLN: 0.23, CZK: 0.041, HUF: 0.0026, RON: 0.20, BGN: 0.51,
-  HRK: 0.13, RSD: 0.0085, TRY: 0.031, BRL: 0.18, COP: 0.00023,
-  IDR: 0.000058, MYR: 0.20, ZAR: 0.050, GEL: 0.34, VND: 0.000037,
-  TWD: 0.028, KES: 0.0072, ARS: 0.00092, CHF: 1.05, NOK: 0.086,
-  SEK: 0.089, DKK: 0.134, NZD: 0.55, KRW: 0.00067, INR: 0.011,
-};
-
-const RATES: Record<CurrencyKey, number> = { eur: 1, usd: 1.07, gbp: 0.85, jpy: 165 };
+const RATES: Record<CurrencyKey, number> = DISPLAY_RATES;
 const SYMBOL: Record<CurrencyKey, string> = { eur: "€", usd: "$", gbp: "£", jpy: "¥" };
 const CURR_LABEL: Record<CurrencyKey, string> = { eur: "EUR €", usd: "USD $", gbp: "GBP £", jpy: "JPY ¥" };
 const CURR_CYCLE: CurrencyKey[] = ["eur", "usd", "gbp", "jpy"];
@@ -267,7 +258,7 @@ export default function ComparePageClient() {
             Compare rent, groceries, utilities, transport and eating out across {allCountries.length} countries.
           </p>
           <p className={styles.pickSeoLine}>
-            Stored country data, normalized to {currency.toUpperCase()}. Dining = 20 meals/month. Estimates, not live quotes.
+            Stored country data, normalized to {currency.toUpperCase()}. FX refreshed {FX_LAST_UPDATED}. Dining = 20 meals/month. Estimates, not live quotes.
           </p>
           <div className={styles.selectedBar}>
             <div className={styles.selectedBarL}>

@@ -52,21 +52,26 @@ export default function RankedBarChart<K extends string = string>({
     [entities, costRows]
   )
 
-  const indexed = useMemo(
-    () => entities
-      .map((c, i) => ({ c, total: totals[i] }))
-      .sort((a, b) => a.total - b.total),
-    [entities, totals]
-  )
-
-  const isoTotals = useMemo(
-    () => entities.map((c, i) => isolated ? (c.costs[isolated] ?? 0) : totals[i]),
+  const activeTotals = useMemo<(number | null)[]>(
+    () => entities.map((c, i) => isolated ? c.costs[isolated] : totals[i]),
     [entities, isolated, totals]
   )
 
+  const indexed = useMemo(
+    () => entities
+      .map((c, i) => ({ c, total: activeTotals[i], sortTotal: activeTotals[i] ?? Number.POSITIVE_INFINITY }))
+      .sort((a, b) => a.sortTotal - b.sortTotal),
+    [entities, activeTotals]
+  )
+
+  const comparableTotals = useMemo(
+    () => indexed.map(x => x.total).filter((n): n is number => n != null),
+    [indexed]
+  )
+
   const scaleMax = useMemo(
-    () => niceMax(isoTotals.length ? Math.max(...isoTotals) : 5000),
-    [isoTotals]
+    () => niceMax(comparableTotals.length ? Math.max(...comparableTotals) : 5000),
+    [comparableTotals]
   )
 
   const scaleTicks = useMemo(() => {
@@ -77,23 +82,25 @@ export default function RankedBarChart<K extends string = string>({
     }))
   }, [scaleMax, formatCompact])
 
-  const minT = indexed.length ? indexed[0].total : 0
-  const maxT = indexed.length ? indexed[indexed.length - 1].total : 0
+  const minT = comparableTotals.length ? comparableTotals[0] : 0
+  const maxT = comparableTotals.length ? comparableTotals[comparableTotals.length - 1] : 0
   const isolatedRow = isolated ? costRows.find(r => r.key === isolated) : null
   const hasIsolatedData = isolatedRow
     ? entities.some(c => c.costs[isolatedRow.key] != null)
     : true
 
   const verdict = useMemo(() => {
-    if (indexed.length < 2) return null
-    const cheapest = indexed[0]
-    const dearest = indexed[indexed.length - 1]
+    const comparable = indexed.filter((x): x is typeof x & { total: number } => x.total != null)
+    if (comparable.length < 2) return null
+    const cheapest = comparable[0]
+    const dearest = comparable[comparable.length - 1]
     const gap = dearest.total - cheapest.total
     const gapPct = cheapest.total > 0 ? Math.round((dearest.total / cheapest.total - 1) * 100) : 0
     const yearGap = gap * 12
     let bigRow = costRows[0]
     let bigDelta = 0
-    costRows.forEach(r => {
+    const rowsForGap = isolatedRow ? [isolatedRow] : costRows
+    rowsForGap.forEach(r => {
       const d = (dearest.c.costs[r.key] ?? 0) - (cheapest.c.costs[r.key] ?? 0)
       if (Math.abs(d) > Math.abs(bigDelta)) {
         bigDelta = d
@@ -102,17 +109,19 @@ export default function RankedBarChart<K extends string = string>({
     })
     const tied = Math.abs(gap) < 1
     return { cheapest, dearest, gap, gapPct, yearGap, bigRow, bigDelta, tied }
-  }, [indexed, costRows])
+  }, [indexed, costRows, isolatedRow])
 
-  const renderRow = (c: RankedEntity<K>, total: number, rank: number) => {
-    const isCheap = total === minT && minT !== maxT
-    const isDear = total === maxT && minT !== maxT && entities.length >= 3
-    const isoVal = isolated ? (c.costs[isolated] ?? 0) : total
-    const widthPct = scaleMax > 0 ? (isoVal / scaleMax) * 100 : 0
+  const renderRow = (c: RankedEntity<K>, total: number | null, rank: number) => {
+    const hasData = total != null
+    const isCheap = hasData && total === minT && minT !== maxT
+    const isDear = hasData && total === maxT && minT !== maxT && entities.length >= 3
+    const widthPct = hasData && scaleMax > 0 ? (total / scaleMax) * 100 : 0
     const visibleRows = isolated ? costRows.filter(r => r.key === isolated) : costRows
 
     let deltaEl: React.ReactNode
-    if (isolatedRow) {
+    if (!hasData) {
+      deltaEl = 'no data'
+    } else if (isolatedRow) {
       deltaEl = `only ${isolatedRow.label.toLowerCase()}`
     } else if (isCheap) {
       deltaEl = <span className={styles.deltaDown}>↓ baseline · cheapest</span>
@@ -141,7 +150,7 @@ export default function RankedBarChart<K extends string = string>({
               .filter(r => (c.costs[r.key] ?? 0) > 0)
               .map(r => {
                 const v = c.costs[r.key] ?? 0
-                const pct = total > 0 ? v / total : 0
+                    const pct = hasData && total > 0 ? v / total : 0
                 const showLbl = pct > 0.13 || !!isolated
                 const showVal = pct > 0.18 || !!isolated
                 return (
@@ -160,7 +169,7 @@ export default function RankedBarChart<K extends string = string>({
         </div>
 
         <div className={styles.rrR}>
-          <span className={styles.rrTotal}>{formatMoney(isolated ? (c.costs[isolated] ?? 0) : total)}</span>
+          <span className={styles.rrTotal}>{hasData ? formatMoney(total) : '—'}</span>
           <span className={styles.rrDelta}>{deltaEl}</span>
         </div>
       </div>

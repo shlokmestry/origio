@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { CITY_SLUG_TO_ISO } from '@/lib/flagCodes'
 import { useAuth } from '@/lib/AuthProvider'
+import { DISPLAY_RATES, FX_LAST_UPDATED } from '@/lib/exchangeRates'
 import RankedBarChart, { type RankedEntity } from '@/components/RankedBarChart'
 import CompareScrollReset from '@/app/compare/CompareScrollReset'
 
@@ -65,7 +66,7 @@ const COST_ROWS: { key: CostKey; label: string; hint: string; color: string }[] 
 ]
 
 type CurrencyKey = 'eur' | 'usd' | 'gbp' | 'jpy'
-const RATES:      Record<CurrencyKey, number> = { eur:1,    usd:1.07, gbp:0.85, jpy:165 }
+const RATES:      Record<CurrencyKey, number> = DISPLAY_RATES
 const SYMBOL:     Record<CurrencyKey, string> = { eur:'€',  usd:'$',  gbp:'£',  jpy:'¥' }
 const CURR_LABEL: Record<CurrencyKey, string> = { eur:'EUR €', usd:'USD $', gbp:'GBP £', jpy:'JPY ¥' }
 const CURR_CYCLE: CurrencyKey[] = ['eur', 'usd', 'gbp', 'jpy']
@@ -302,7 +303,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
             Compare rent, groceries, utilities and daily burn across {allCities.length} cities.
           </p>
           <p className={styles.pickSeoLine}>
-            Stored city rows, normalized to {currency.toUpperCase()}. Estimates, not live quotes.
+            Stored city rows, normalized to {currency.toUpperCase()}. FX refreshed {FX_LAST_UPDATED}. Estimates, not live quotes.
           </p>
           <div className={styles.selectedBar}>
             <div className={styles.selectedBarL}>
