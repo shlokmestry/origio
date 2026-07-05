@@ -849,9 +849,11 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
 }) {
   const [mounted, setMounted] = useState(false);
   const [chartMode, setChartMode] = useState<"gross" | "net">("gross");
+  const [showAllRows, setShowAllRows] = useState(false);
 
   useEffect(() => {
     setMounted(false);
+    setShowAllRows(false);
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, [role, level, selectedCountry]);
@@ -873,6 +875,14 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
       netWidthPct: (r.netUSD / maxNetUSD) * 100,
     }));
   }, [role, level]);
+
+  const visibleRows = useMemo(() => {
+    if (showAllRows) return rows;
+    const topRows = rows.slice(0, 15);
+    if (topRows.some(r => r.code === selectedCountry)) return topRows;
+    const selected = rows.find(r => r.code === selectedCountry);
+    return selected ? [...topRows, selected] : topRows;
+  }, [rows, selectedCountry, showAllRows]);
 
   return (
     <section style={{
@@ -926,8 +936,9 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
       </div>
       <div style={{ overflowX: "auto", marginLeft: -4, marginRight: -4, padding: "0 4px" }}>
         <div style={{ minWidth: 280 }}>
-          {rows.map((r, i) => {
+          {visibleRows.map((r, i) => {
             const selected = r.code === selectedCountry;
+            const topThree = i < 3;
             const widthPct = chartMode === "gross" ? r.grossWidthPct : r.netWidthPct;
             const localVal = chartMode === "gross" ? r.local : r.netLocal;
             const usdVal = chartMode === "gross" ? r.usd : r.netUSD;
@@ -938,13 +949,13 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
               <div key={r.code} style={{
                 display: "grid", gridTemplateColumns: "minmax(0, clamp(80px, 22vw, 140px)) 1fr minmax(0, clamp(70px, 18vw, 120px))",
                 alignItems: "center", gap: 14, padding: "9px 0",
-                opacity: mounted ? 1 : 0,
+                opacity: mounted ? (selected || topThree ? 1 : 0.62) : 0,
                 transform: mounted ? "translateY(0)" : "translateY(4px)",
                 transition: `opacity 280ms ease ${i * 30}ms, transform 280ms ease ${i * 30}ms`,
               }}>
                 <div style={{
-                  fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: 500,
-                  color: selected ? "#ffffff" : "rgba(255,255,255,0.55)",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: selected || topThree ? 700 : 500,
+                  color: selected ? "#ffffff" : topThree ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)",
                   display: "flex", alignItems: "center", gap: 9,
                   overflow: "hidden", minWidth: 0,
                 }}>
@@ -957,20 +968,43 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
                 }}>
                   <div style={{
                     height: "100%", width: mounted ? `${widthPct}%` : "0%",
-                    background: selected ? "#4de6cc" : "rgba(255,255,255,0.85)",
+                    background: selected ? "#4de6cc" : topThree ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.72)",
                     borderRadius: 100,
                     transition: `width 700ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 30}ms`,
                   }} />
                 </div>
                 <div style={{
-                  fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: 500,
-                  color: selected ? "#4de6cc" : "rgba(255,255,255,0.55)",
+                  fontFamily: "Satoshi, sans-serif", fontSize: 12, fontWeight: selected || topThree ? 700 : 500,
+                  color: selected ? "#4de6cc" : topThree ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)",
                   textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
                   overflow: "hidden", textOverflow: "ellipsis",
                 }}>{displayVal}</div>
               </div>
             );
           })}
+          {!showAllRows && rows.length > 15 && (
+            <button
+              type="button"
+              onClick={() => setShowAllRows(true)}
+              style={{
+                width: "100%",
+                marginTop: 12,
+                padding: "12px 0 4px",
+                background: "transparent",
+                border: "none",
+                borderTop: "1px solid rgba(255,255,255,0.07)",
+                color: "#4de6cc",
+                cursor: "pointer",
+                fontFamily: "Satoshi, sans-serif",
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+              }}
+            >
+              Show all {rows.length} countries ↓
+            </button>
+          )}
         </div>
       </div>
     </section>
