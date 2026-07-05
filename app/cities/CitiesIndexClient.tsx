@@ -257,43 +257,47 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
         {/* CITIES */}
         <section className={`${styles.step} ${styles.fu} ${styles.d2}`}>
-          <div className={styles.stepHead}>
-            <p className={styles.stepAside}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
-          </div>
-
           {/* ── SEARCH + FILTER BAR ── */}
           <div className={styles.filterBar}>
-            {/* Search input */}
-            <div className={styles.searchWrap}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: 'var(--c-dimmer)' }}>
-                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Search cities..."
-                value={search}
-                onChange={e => { setSearch(e.target.value); setFilters(DEFAULT_FILTERS) }}
-              />
-              {search && (
-                <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
-              )}
+            <div className={styles.filterTop}>
+              {/* Search input */}
+              <div className={styles.searchWrap}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: 'var(--c-dimmer)' }}>
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="Search cities..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setFilters(DEFAULT_FILTERS) }}
+                />
+                {search && (
+                  <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
+                )}
+              </div>
+              <p className={styles.resultCount}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
             </div>
 
             {/* Quick filter chips */}
             {!search && (
-              <div className={styles.quickFilters}>
-                {QUICK_FILTERS.map(qf => (
-                  <button
-                    key={qf.vibe}
-                    type="button"
-                    className={`${styles.quickChip}${filters.vibe === qf.vibe ? ' ' + styles.quickChipOn : ''}`}
-                    onClick={() => setFilter('vibe', filters.vibe === qf.vibe ? 'any' : qf.vibe)}
-                  >
-                    {qf.label}
-                  </button>
-                ))}
+              <div className={styles.filterMiddle}>
+                <div className={styles.quickFilters}>
+                  {QUICK_FILTERS.map(qf => (
+                    <button
+                      key={qf.vibe}
+                      type="button"
+                      className={`${styles.quickChip}${filters.vibe === qf.vibe ? ' ' + styles.quickChipOn : ''}`}
+                      onClick={() => setFilter('vibe', filters.vibe === qf.vibe ? 'any' : qf.vibe)}
+                    >
+                      {qf.label}
+                    </button>
+                  ))}
+                </div>
+                <Link href="/cities/compare" className={styles.compareChip}>
+                  Compare cities →
+                </Link>
               </div>
             )}
 
@@ -319,9 +323,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                       {o.label}
                     </button>
                   ))}
-                  <Link href="/cities/compare" className={styles.compareChip}>
-                    Which city burns less cash? Compare →
-                  </Link>
                 </div>
               </div>
             )}

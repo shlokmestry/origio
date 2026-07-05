@@ -598,13 +598,28 @@
 /* ── FILTER BAR ── */
 .filterBar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px 40px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
+  align-items: stretch;
   padding: 0 0 28px;
   border-bottom: 1px solid var(--c-rule);
   margin-bottom: 0;
-  align-content: flex-start;
+}
+.filterTop,
+.filterMiddle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.resultCount {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 9px;
+  color: var(--c-dimmer);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin: 0;
 }
 .chipGroup {
   display: flex;
@@ -654,6 +669,7 @@
   border: 1px solid rgba(0,255,213,0.55);
   padding: 6px 12px;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
 .compareChip:hover {
@@ -1200,7 +1216,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 .quickChip {
   font-size: 11px;
@@ -1226,8 +1242,12 @@
 
 /* ── Mobile: quick filters + coming soon ── */
 @media (max-width: 760px) {
+  .filterTop,
+  .filterMiddle { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .resultCount { align-self: flex-end; }
   .quickFilters { gap: 6px; }
   .quickChip { font-size: 10px; padding: 8px 10px; min-height: 40px; }
+  .compareChip { align-self: flex-start; }
   .soonGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 }
 @media (max-width: 480px) {
