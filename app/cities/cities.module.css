@@ -1053,6 +1053,32 @@
 }
 .wlForm button:hover { opacity: 0.88; }
 
+/* ── END COMPARE CTA ── */
+.endCompareCta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--c-rule);
+  border-bottom: 1px solid var(--c-rule);
+  padding: 22px 0;
+  margin: 24px 0 56px;
+  color: var(--c-ink);
+  text-decoration: none;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: border-color 0.14s;
+}
+.endCompareCta:hover { border-color: rgba(0,255,213,0.55); }
+.endCompareCta span { color: var(--c-dim); }
+.endCompareCta em {
+  color: #00ffd5;
+  font-style: normal;
+}
+
 /* ── FOOTER ── */
 .footer {
   border-top: 1px solid var(--c-rule);
@@ -1178,6 +1204,7 @@
   .wlForm input, .wlForm button { font-size: 16px; } /* prevent iOS zoom */
   .filterBar { padding-bottom: 22px; }
   .compareChip { min-height: 44px; display: inline-flex; align-items: center; }
+  .endCompareCta { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
 /* ── Coming soon strip ── */

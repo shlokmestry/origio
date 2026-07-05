@@ -411,6 +411,11 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
           </section>
         )}
 
+        <Link href="/cities/compare" className={styles.endCompareCta}>
+          <span>Done browsing?</span>
+          <em>Compare your shortlist →</em>
+        </Link>
+
       </div>
 
       <Footer />
