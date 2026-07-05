@@ -283,6 +283,30 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <span className={styles.typeSolid}>Citi</span>
             <span className={styles.typeOutline}>es</span>
           </div>
+          <Link href="/cities/compare" className={styles.compareCta}>
+            <div className={styles.compareCtaCopy}>
+              <p className={styles.ccEyebrow}>City vs City</p>
+              <h3 className={styles.ccTitle}>Compare monthly burn.</h3>
+              <p className={styles.ccSub}>Rent, groceries, utilities, gym, coworking and transit. Compare 4 free. Pro compares 8.</p>
+              <span className={styles.ccButton}>Open Compare →</span>
+            </div>
+            <div className={styles.ccPreview} aria-hidden="true">
+              {[
+                ['Lisbon', '€2,005', 48],
+                ['Berlin', '€2,342', 56],
+                ['London', '€4,177', 92],
+              ].map(([city, total, width]) => (
+                <div key={city} className={styles.ccPreviewRow}>
+                  <span>{city}</span>
+                  <div className={styles.ccPreviewTrack}>
+                    <b style={{ width: `${width}%` }} />
+                    <i style={{ width: `${Number(width) * 0.26}%` }} />
+                  </div>
+                  <em>{total}</em>
+                </div>
+              ))}
+            </div>
+          </Link>
         </section>
 
         {/* CITIES */}
@@ -291,88 +315,60 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <p className={styles.stepAside}>{filtered.length} {filtered.length === 1 ? 'city' : 'cities'}</p>
           </div>
 
-          <div className={styles.cityTools}>
-            {/* ── SEARCH + FILTER BAR ── */}
-            <div className={styles.filterBar}>
-              {/* Search input */}
-              <div className={styles.searchWrap}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: 'var(--c-dimmer)' }}>
-                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                <input
-                  type="text"
-                  className={styles.searchInput}
-                  placeholder="Search cities..."
-                  value={search}
-                  onChange={e => { setSearch(e.target.value); setFilters(DEFAULT_FILTERS) }}
-                />
-                {search && (
-                  <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
-                )}
-              </div>
-
-              {/* Quick filter chips */}
-              {!search && (
-                <div className={styles.quickFilters}>
-                  {QUICK_FILTERS.map(qf => (
-                    <button
-                      key={qf.vibe}
-                      type="button"
-                      className={`${styles.quickChip}${filters.vibe === qf.vibe ? ' ' + styles.quickChipOn : ''}`}
-                      onClick={() => setFilter('vibe', filters.vibe === qf.vibe ? 'any' : qf.vibe)}
-                    >
-                      {qf.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Region chips — hidden when searching */}
-              {!search && (
-                <ChipGroup
-                  label="Region"
-                  value={filters.region}
-                  onChange={v => setFilter('region', v)}
-                  options={[
-                    { val:'any',        label:'Anywhere' },
-                    { val:'europe',     label:'Europe' },
-                    { val:'asia',       label:'Asia & Pacific' },
-                    { val:'americas',   label:'Americas' },
-                    { val:'middleeast', label:'Middle East & Africa' },
-                  ]}
-                />
-              )}
-              {anyFilterActive && !search && (
-                <button className={styles.resetChip} onClick={resetFilters} style={{ alignSelf: 'flex-end', marginBottom: 2 }}>↺ Reset</button>
+          {/* ── SEARCH + FILTER BAR ── */}
+          <div className={styles.filterBar}>
+            {/* Search input */}
+            <div className={styles.searchWrap}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: 'var(--c-dimmer)' }}>
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9.5 9.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search cities..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setFilters(DEFAULT_FILTERS) }}
+              />
+              {search && (
+                <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">×</button>
               )}
             </div>
 
-            {/* ── COMPARE CTA ── */}
-            <Link href="/cities/compare" className={styles.compareCta}>
-              <div className={styles.compareCtaCopy}>
-                <p className={styles.ccEyebrow}>City vs City</p>
-                <h3 className={styles.ccTitle}>Compare monthly burn.</h3>
-                <p className={styles.ccSub}>Rent, groceries, utilities, gym, coworking and transit. Compare 4 free. Pro compares 8.</p>
-                <span className={styles.ccButton}>Open Compare →</span>
-              </div>
-              <div className={styles.ccPreview} aria-hidden="true">
-                {[
-                  ['Lisbon', '€2,005', 48],
-                  ['Berlin', '€2,342', 56],
-                  ['London', '€4,177', 92],
-                ].map(([city, total, width]) => (
-                  <div key={city} className={styles.ccPreviewRow}>
-                    <span>{city}</span>
-                    <div className={styles.ccPreviewTrack}>
-                      <b style={{ width: `${width}%` }} />
-                      <i style={{ width: `${Number(width) * 0.26}%` }} />
-                    </div>
-                    <em>{total}</em>
-                  </div>
+            {/* Quick filter chips */}
+            {!search && (
+              <div className={styles.quickFilters}>
+                {QUICK_FILTERS.map(qf => (
+                  <button
+                    key={qf.vibe}
+                    type="button"
+                    className={`${styles.quickChip}${filters.vibe === qf.vibe ? ' ' + styles.quickChipOn : ''}`}
+                    onClick={() => setFilter('vibe', filters.vibe === qf.vibe ? 'any' : qf.vibe)}
+                  >
+                    {qf.label}
+                  </button>
                 ))}
               </div>
-            </Link>
+            )}
+
+            {/* Region chips — hidden when searching */}
+            {!search && (
+              <ChipGroup
+                label="Region"
+                value={filters.region}
+                onChange={v => setFilter('region', v)}
+                options={[
+                  { val:'any',        label:'Anywhere' },
+                  { val:'europe',     label:'Europe' },
+                  { val:'asia',       label:'Asia & Pacific' },
+                  { val:'americas',   label:'Americas' },
+                  { val:'middleeast', label:'Middle East & Africa' },
+                ]}
+              />
+            )}
+            {anyFilterActive && !search && (
+              <button className={styles.resetChip} onClick={resetFilters} style={{ alignSelf: 'flex-end', marginBottom: 2 }}>↺ Reset</button>
+            )}
           </div>
 
           {/* ── MONUMENT CARD GRID ── */}
