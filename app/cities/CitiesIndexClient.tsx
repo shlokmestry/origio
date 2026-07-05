@@ -283,30 +283,6 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
             <span className={styles.typeSolid}>Citi</span>
             <span className={styles.typeOutline}>es</span>
           </div>
-          <Link href="/cities/compare" className={styles.compareCta}>
-            <div className={styles.compareCtaCopy}>
-              <p className={styles.ccEyebrow}>City vs City</p>
-              <h3 className={styles.ccTitle}>Compare monthly burn.</h3>
-              <p className={styles.ccSub}>Rent, groceries, utilities, gym, coworking and transit. Compare 4 free. Pro compares 8.</p>
-              <span className={styles.ccButton}>Open Compare →</span>
-            </div>
-            <div className={styles.ccPreview} aria-hidden="true">
-              {[
-                ['Lisbon', '€2,005', 48],
-                ['Berlin', '€2,342', 56],
-                ['London', '€4,177', 92],
-              ].map(([city, total, width]) => (
-                <div key={city} className={styles.ccPreviewRow}>
-                  <span>{city}</span>
-                  <div className={styles.ccPreviewTrack}>
-                    <b style={{ width: `${width}%` }} />
-                    <i style={{ width: `${Number(width) * 0.26}%` }} />
-                  </div>
-                  <em>{total}</em>
-                </div>
-              ))}
-            </div>
-          </Link>
         </section>
 
         {/* CITIES */}
@@ -452,6 +428,11 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         )}
 
       </div>
+
+      <Link href="/cities/compare" className={styles.compareSticky}>
+        <span>Which city burns less cash?</span>
+        <em>Compare rent · groceries · transit →</em>
+      </Link>
 
       <Footer />
     </div>
