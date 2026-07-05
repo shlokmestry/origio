@@ -1148,41 +1148,6 @@ function HowDisclosure({ country }: { country: keyof typeof TAX_DATA }) {
   );
 }
 
-// ─── Cities CTA ───────────────────────────────────────────────────────────────
-function CitiesCTA() {
-  return (
-    <Link href="/cities" style={{ textDecoration: "none", display: "block", marginTop: 18 }}>
-      <div style={{
-        background: "#0d0d0d",
-        borderLeft: "3px solid #4de6cc",
-        border: "1px solid rgba(255,255,255,0.05)",
-        borderLeftWidth: 3,
-        borderLeftColor: "#4de6cc",
-        borderRadius: 10,
-        padding: "14px 16px",
-        cursor: "pointer",
-        transition: "background 150ms ease",
-      }}
-        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#111111"}
-        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "#0d0d0d"}
-      >
-        <div style={{
-          fontFamily: "Satoshi, sans-serif", fontSize: 13, fontWeight: 600,
-          color: "#ffffff", lineHeight: 1.35, marginBottom: 6,
-        }}>
-          Know your take-home?<br />See what it buys.
-        </div>
-        <div style={{
-          fontFamily: "Satoshi, sans-serif", fontSize: 12,
-          color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 4,
-        }}>
-          Compare rent, food &amp; lifestyle costs across 90 cities →
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 // ─── Country Compare Section ──────────────────────────────────────────────────
 function CountryCompareSection({ pinnedCountries, selectedCountry, role, level, onClear }: {
   pinnedCountries: (keyof typeof TAX_DATA)[];
@@ -1694,11 +1659,12 @@ export default function SalaryCalculator() {
                   }}>{displayGrossSym}</span>
                   <AnimatedNumber value={displayGross} format={(n) => Math.round(n).toLocaleString("en")} />
                   <span style={{
-                    fontSize: "0.22em", marginLeft: 12, color: "rgba(255,255,255,0.25)",
-                    fontFamily: "Satoshi, sans-serif", fontWeight: 500, letterSpacing: "0.02em",
+                    fontSize: "0.13em", marginLeft: 14, color: "#4de6cc",
+                    fontFamily: "Satoshi, sans-serif", fontWeight: 800, letterSpacing: "0.12em",
+                    textTransform: "uppercase",
                     alignSelf: "center",
                     transition: "color 160ms ease",
-                  }}>✏</span>
+                  }}>Edit salary</span>
                 </div>
               )}
 
@@ -1777,16 +1743,13 @@ export default function SalaryCalculator() {
             />
             <BenchmarkRow
               label="Rent / take-home"
-              value={isPro ? `${rentPctOfTakeHome}%` : "—%"}
+              value={isPro ? `${rentPctOfTakeHome}%` : "Pro"}
               sub={isPro
                 ? `${showUSD ? `$${rentMonthlyUSD.toLocaleString("en")}` : `${localSym}${bench.rentMonthly.toLocaleString("en")}`} / mo · 1-bed, major city`
-                : "Pro · requires take-home"}
+                : "Rent pressure unlocks with Pro"}
             />
 
             <HowDisclosure country={country} />
-
-            {/* Cities CTA */}
-            <CitiesCTA />
           </aside>
         </div>
       </main>
