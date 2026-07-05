@@ -1397,7 +1397,7 @@ export default function SalaryCalculator() {
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <Nav countries={[]} onCountrySelect={() => {}} />
 
-      <main className="flex-1" style={{ paddingTop: NAV_H + 24, paddingBottom: 80, paddingLeft: "clamp(12px,3vw,24px)", paddingRight: "clamp(12px,3vw,24px)" }}>
+      <main className="flex-1" style={{ paddingTop: NAV_H + 40, paddingBottom: 80, paddingLeft: "clamp(12px,3vw,24px)", paddingRight: "clamp(12px,3vw,24px)" }}>
         <div
           style={{
             maxWidth: 1440, margin: "0 auto",
