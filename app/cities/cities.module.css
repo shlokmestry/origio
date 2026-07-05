@@ -979,7 +979,7 @@
 .compareCta {
   position: absolute;
   top: 64px;
-  right: clamp(-72px, -4vw, -32px);
+  right: clamp(-132px, -7vw, -72px);
   z-index: 3;
   display: grid;
   grid-template-columns: 1fr;
