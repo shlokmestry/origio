@@ -978,7 +978,7 @@
 /* ── COMPARE CTA ── */
 .compareCta {
   position: absolute;
-  top: 64px;
+  top: 48px;
   right: clamp(-132px, -7vw, -72px);
   z-index: 3;
   display: grid;
