@@ -235,7 +235,7 @@
 }
 .stepHead {
   display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 28px; gap: 24px;
+  margin-bottom: 12px; gap: 24px;
 }
 .stepTag {
   font-family: 'Satoshi', sans-serif;
@@ -266,7 +266,8 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 9px; color: var(--c-dimmer);
   letter-spacing: 0.18em; text-transform: uppercase;
-  white-space: nowrap; padding-top: 8px;
+  white-space: nowrap; padding-top: 0;
+  margin-left: auto;
 }
 
 .manifestNumeral {
@@ -595,14 +596,23 @@
 .searchClear:hover { color: var(--c-ink); }
 
 /* ── FILTER BAR ── */
+.cityTools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 28px;
+  align-items: stretch;
+  border-bottom: 1px solid var(--c-rule);
+  padding-bottom: 28px;
+}
 .filterBar {
   display: flex;
   flex-wrap: wrap;
   gap: 24px 40px;
   align-items: flex-start;
-  padding: 20px 0 28px;
-  border-bottom: 1px solid var(--c-rule);
+  padding: 0;
+  border-bottom: none;
   margin-bottom: 0;
+  align-content: flex-start;
 }
 .chipGroup {
   display: flex;
@@ -975,16 +985,16 @@
 /* ── COMPARE CTA ── */
 .compareCta {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
-  gap: clamp(24px, 4vw, 48px);
+  grid-template-columns: 1fr;
+  gap: 20px;
   align-items: stretch;
   border: 1px solid #00ffd5;
   background: #0c0c0c;
   box-shadow: 4px 4px 0 #00ffd5;
   color: inherit;
   text-decoration: none;
-  padding: clamp(22px, 3.5vw, 40px);
-  margin: 0 0 24px;
+  padding: 24px;
+  margin: 0;
   transition: background 0.18s, transform 0.12s, box-shadow 0.12s;
 }
 .compareCta:hover {
@@ -995,7 +1005,7 @@
 .compareCtaCopy {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
 }
 .ccEyebrow {
@@ -1006,8 +1016,8 @@
 }
 .ccTitle {
   font-family: 'Cabinet Grotesk', sans-serif;
-  font-size: clamp(28px, 4vw, 54px);
-  line-height: 0.98;
+  font-size: clamp(30px, 2.6vw, 42px);
+  line-height: 1;
   letter-spacing: -0.03em;
   color: var(--c-ink);
   margin: 0;
@@ -1017,7 +1027,7 @@
   color: var(--c-dim);
   font-size: 13px;
   line-height: 1.55;
-  max-width: 460px;
+  max-width: 320px;
   margin: 14px 0 0;
 }
 .ccButton {
@@ -1034,23 +1044,23 @@
 .ccPreview {
   border: 1px solid var(--c-rule);
   background: #080808;
-  padding: clamp(16px, 2vw, 24px);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
   min-width: 0;
 }
 .ccPreviewRow {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) 72px;
+  grid-template-columns: 58px minmax(0, 1fr) 56px;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 .ccPreviewRow span,
 .ccPreviewRow em {
   font-family: 'Satoshi', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--c-ink);
   font-style: normal;
@@ -1058,6 +1068,7 @@
 .ccPreviewRow em {
   color: #00ffd5;
   text-align: right;
+  font-size: 10px;
 }
 .ccPreviewTrack {
   height: 14px;
@@ -1219,7 +1230,7 @@
   .cityCard { grid-template-columns: 40px minmax(0,1fr); }
   .ccR { grid-column: 2; border-left: none; border-top: 1px solid var(--c-rule);
     padding-left: 0; padding-top: 18px; flex-direction: row; flex-wrap: wrap; gap: 18px 28px; }
-  .compareCta { grid-template-columns: 1fr; }
+  .cityTools { grid-template-columns: 1fr; }
   .waitlist { grid-template-columns: 1fr; padding: 24px; }
 }
 @media (max-width: 560px) {
@@ -1242,6 +1253,7 @@
   .chip { min-height: 44px; display: inline-flex; align-items: center; }
   .waitlist { grid-template-columns: 1fr; padding: 20px 16px; gap: 24px; }
   .wlForm input, .wlForm button { font-size: 16px; } /* prevent iOS zoom */
+  .cityTools { padding-bottom: 22px; }
   .compareCta { padding: 20px; box-shadow: none; }
   .ccPreviewRow { grid-template-columns: 70px minmax(0, 1fr); gap: 10px; }
   .ccPreviewRow em { grid-column: 1 / -1; text-align: left; color: var(--c-dim); margin-top: -8px; }
