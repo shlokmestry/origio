@@ -5,14 +5,14 @@ import { ALL_PASSPORTS } from "./data";
 export const metadata: Metadata = {
   title: "Global Passport Index — Origio",
   description:
-    "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
+    "Compare reported passport access across 199 passports. Static snapshot; check official entry rules before travel.",
   alternates: {
     canonical: "https://findorigio.com/passport-power",
   },
   openGraph: {
     title: "Global Passport Index — Origio",
     description:
-      "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
+      "Compare reported passport access across 199 passports. Static snapshot; check official entry rules before travel.",
     url: "https://findorigio.com/passport-power",
     siteName: "Origio",
     type: "website",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Global Passport Index — Origio",
     description:
-      "192 destinations or 23. One number determines where you can go, live, and build. See where your passport ranks.",
+      "Compare reported passport access across 199 passports. Static snapshot; check official entry rules before travel.",
     images: ["https://findorigio.com/passport-power/opengraph-image"],
   },
 };
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  "name": "Global Passport Index — Henley 2026 Q2",
-  "description": "199 passports ranked by visa-free access. Based on Henley Index 2026 Q2.",
+  "name": "Global Passport Index — Origio Passport Power",
+  "description": "199 passports ranked by reported access. Static snapshot; verify final entry rules with official sources.",
   "url": "https://findorigio.com/passport-power",
   "numberOfItems": ALL_PASSPORTS.length,
   "itemListElement": ALL_PASSPORTS.slice(0, 20).map((p, i) => ({
@@ -55,7 +55,7 @@ export default function PassportPowerPage() {
     <>
       {/* Server-rendered h1 for SEO — visually hidden, client component renders the styled version */}
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
-        Not all passports are equal. Global Passport Index — 199 countries ranked by visa-free access.
+        Not all passports are equal. Global Passport Index — 199 passports ranked by reported access.
       </h1>
       <script
         type="application/ld+json"

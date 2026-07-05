@@ -1,4 +1,4 @@
-// ─── Passport data (Henley 2026 Q2 (17 June 2026)) ───────────────────────────
+// ─── Passport access snapshot ────────────────────────────────────────────────
 export type Passport = {
   rank: number; name: string; flag: string;
   score: number; vf: number; voa: number; evisa: number;

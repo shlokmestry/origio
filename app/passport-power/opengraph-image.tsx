@@ -50,7 +50,7 @@ export default function OgImage() {
             are equal.
           </span>
           <span style={{ fontSize: 22, color: "#666660", lineHeight: 1.5, maxWidth: 680 }}>
-            192 destinations or 23. One number determines where you can go, live, and build.
+            192 reported destinations or 23. Passport access changes. Check official rules before travel.
           </span>
         </div>
 

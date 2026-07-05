@@ -163,7 +163,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         <div style={{ width: 280, display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <span style={{ fontSize: 11, letterSpacing: "0.2em", color: "#333", marginBottom: 8 }}>
-              HENLEY 2026 Q2
+              ACCESS SNAPSHOT
             </span>
             <span style={{
               fontSize: 120,

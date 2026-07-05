@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     : `${(passport.population * 1000).toFixed(0)}K`;
 
   const title = `${passport.name} Passport — Rank #${passport.rank} | Passport Power`;
-  const description = `${passport.name} passport scores ${passport.score}/192 destinations. ${rarityLabel} — ${holders} holders worldwide. See the full breakdown on Origio.`;
+  const description = `${passport.name} passport scores ${passport.score}/192 reported destinations. ${rarityLabel} — ${holders} holders worldwide. Check official entry rules before travel.`;
 
   return {
     title,
