@@ -20,6 +20,10 @@ type SavedCountry = {
   country_slug: string
   created_at: string
 }
+type SavedCity = {
+  slug: string
+  name: string
+}
 type WizardResult = {
   top_countries: { slug: string; name: string; flagEmoji: string; matchPercent: number }[]
   answers: { role: string }
@@ -96,6 +100,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
+  const [savedCities, setSavedCities] = useState<SavedCity[]>([])
   const [wizardResults, setWizardResults] = useState<WizardResult[] | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [editing, setEditing] = useState(false)
@@ -117,7 +122,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { setLoading(false); setLoadError(true); return }
+    if (!user) { setLoading(false); router.replace('/signin'); return }
 
     // Reset error state in case a previous render saw user=null transiently
     setLoadError(false)
@@ -128,31 +133,35 @@ export default function ProfilePage() {
     setDisplayName(initialName)
     setEditName(initialName)
 
+    const withTimeout = <T,>(promise: PromiseLike<T>, ms = 7000): Promise<T | null> =>
+      Promise.race([
+        Promise.resolve(promise),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+      ]).catch(() => null)
+
     async function loadData() {
       try {
-        const dataPromise = Promise.all([
-          supabase.from('saved_countries')
+        const [savesRes, wizardRes, profileRes] = await Promise.all([
+          withTimeout(supabase.from('saved_countries')
             .select('id, country_slug, created_at')
             .eq('user_id', userId)
-            .order('created_at', { ascending: false }),
-          supabase.from('wizard_results')
+            .order('created_at', { ascending: false })),
+          withTimeout(supabase.from('wizard_results')
             .select('top_countries, answers, created_at')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
-            .limit(3),
-          supabase.from('profiles')
+            .limit(3)),
+          withTimeout(supabase.from('profiles')
             .select('passport_slug, second_passport_slug, job_title, onboarded, is_pro')
             .eq('id', userId)
-            .maybeSingle(),
-        ])
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 10_000)
-        )
-        const [savesRes, wizardRes, profileRes] = await Promise.race([dataPromise, timeoutPromise])
-        if (savesRes.error) console.error('saved_countries error:', savesRes.error)
-        setSavedCountries((savesRes.data as SavedCountry[]) ?? [])
-        setWizardResults((wizardRes.data as WizardResult[]) ?? null)
-        const p = profileRes.data ?? null
+            .maybeSingle()),
+        ]) as any[]
+        if (savesRes?.error) console.error('saved_countries error:', savesRes.error)
+        setSavedCountries((savesRes?.data as SavedCountry[]) ?? [])
+        if (wizardRes?.error) console.error('wizard_results error:', wizardRes.error)
+        setWizardResults((wizardRes?.data as WizardResult[]) ?? null)
+        if (profileRes?.error) console.error('profiles error:', profileRes.error)
+        const p = profileRes?.data ?? null
         setProfile(p)
         if (p) {
           setEditJobTitle(p.job_title ?? '')
@@ -161,13 +170,43 @@ export default function ProfilePage() {
           setShowSecondPassportEdit(!!p.second_passport_slug)
         }
         if (p && !p.onboarded) { setLoading(false); router.push('/onboarding'); return }
-      } catch { setLoadError(true) }
-      setLoading(false)
+      } catch {
+        setLoadError(true)
+      } finally {
+        setLoading(false)
+      }
     }
     loadData()
   // router from useRouter is stable — safe to omit from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading])
+
+  useEffect(() => {
+    const syncSavedCities = () => {
+      try {
+        const parsed = JSON.parse(window.localStorage.getItem('origio_city_shortlist') || '[]')
+        setSavedCities(Array.isArray(parsed) ? parsed.filter((x: SavedCity) => x?.slug && x?.name) : [])
+      } catch {
+        setSavedCities([])
+      }
+    }
+    syncSavedCities()
+    window.addEventListener('storage', syncSavedCities)
+    window.addEventListener('origio-shortlist-change', syncSavedCities)
+    return () => {
+      window.removeEventListener('storage', syncSavedCities)
+      window.removeEventListener('origio-shortlist-change', syncSavedCities)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!loading) return
+    const t = setTimeout(() => {
+      setLoading(false)
+      setLoadError(true)
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [loading])
 
   const openEdit = () => {
     setEditName(displayName)
@@ -670,6 +709,71 @@ export default function ProfilePage() {
                 {savedCountries.length > 6 && (
                   <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
                     +{savedCountries.length - 6} more saved
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Saved Cities */}
+          <div style={{ background: '#0d0d10', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
+            <div className="flex items-center justify-between" style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  Saved Cities
+                </span>
+                {savedCities.length > 0 && (
+                  <span className="inline-flex items-center justify-center"
+                    style={{ width: 18, height: 18, background: 'rgba(0,255,213,0.12)', borderRadius: '50%', fontSize: 10, fontWeight: 700, color: '#00ffd5' }}>
+                    {savedCities.length}
+                  </span>
+                )}
+              </div>
+              {savedCities.length >= 2 ? (
+                <Link href={`/cities/compare?cities=${savedCities.map(c => c.slug).join(',')}`} className="flex items-center gap-1.5 transition-colors"
+                  style={{ fontSize: 12, fontWeight: 600, color: '#00ffd5', textDecoration: 'none', letterSpacing: '0.04em' }}>
+                  Compare <ArrowRight className="w-3 h-3" />
+                </Link>
+              ) : (
+                <Link href="/cities" className="flex items-center gap-1.5 transition-colors"
+                  style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', letterSpacing: '0.04em' }}>
+                  Browse <ArrowRight className="w-3 h-3" />
+                </Link>
+              )}
+            </div>
+
+            {savedCities.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center" style={{ padding: '42px 24px' }}>
+                <div style={{ fontSize: 30, marginBottom: 12 }}>🏙️</div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>No saved cities yet</p>
+                <Link href="/cities"
+                  style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+                  Browse cities →
+                </Link>
+              </div>
+            ) : (
+              <>
+                {savedCities.slice(0, 8).map(c => (
+                  <div key={c.slug} className="group flex items-center gap-3 transition-colors"
+                    style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <span style={{ width: 8, height: 8, background: '#00ffd5', display: 'inline-block', flexShrink: 0 }} />
+                    <Link href={`/city/${c.slug}`}
+                      style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', textDecoration: 'none', flex: 1 }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}>
+                      {c.name}
+                    </Link>
+                    <Link href={`/cities/compare?cities=${c.slug}`}
+                      style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>
+                      Compare
+                    </Link>
+                  </div>
+                ))}
+                {savedCities.length > 8 && (
+                  <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
+                    +{savedCities.length - 8} more saved
                   </div>
                 )}
               </>
