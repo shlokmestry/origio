@@ -24,6 +24,12 @@ type SavedCity = {
   slug: string
   name: string
 }
+type SavedCityDetail = {
+  countryName: string
+  flagEmoji: string
+  currency: string
+  rentMonthly: number | null
+}
 type WizardResult = {
   top_countries: { slug: string; name: string; flagEmoji: string; matchPercent: number }[]
   answers: { role: string }
@@ -92,6 +98,29 @@ function formatSlug(slug: string) {
 }
 
 const MATCH_LABELS = ['Best Match', '2nd', '3rd', '4th', '5th']
+const CURRENCY_PREFIX: Record<string, string> = {
+  EUR: '€',
+  GBP: '£',
+  USD: '$',
+  CAD: 'CA$',
+  AUD: 'A$',
+  NZD: 'NZ$',
+  SGD: 'S$',
+  JPY: '¥',
+  KRW: '₩',
+  INR: '₹',
+  AED: 'AED ',
+  MYR: 'RM ',
+  THB: 'THB ',
+  IDR: 'IDR ',
+  BRL: 'BRL ',
+}
+
+function formatCityRent(currency: string | undefined, rent: number | null | undefined) {
+  if (rent == null) return 'Rent n/a'
+  const prefix = currency ? CURRENCY_PREFIX[currency] ?? `${currency} ` : ''
+  return `${prefix}${Math.round(rent).toLocaleString()}/mo`
+}
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -101,6 +130,7 @@ export default function ProfilePage() {
   const [loadError, setLoadError] = useState(false)
   const [savedCountries, setSavedCountries] = useState<SavedCountry[]>([])
   const [savedCities, setSavedCities] = useState<SavedCity[]>([])
+  const [savedCityDetails, setSavedCityDetails] = useState<Record<string, SavedCityDetail>>({})
   const [wizardResults, setWizardResults] = useState<WizardResult[] | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [editing, setEditing] = useState(false)
@@ -198,6 +228,42 @@ export default function ProfilePage() {
       window.removeEventListener('origio-shortlist-change', syncSavedCities)
     }
   }, [])
+
+  const savedCitySlugs = savedCities.map(c => c.slug).join(',')
+  useEffect(() => {
+    if (!savedCitySlugs) {
+      setSavedCityDetails({})
+      return
+    }
+    let active = true
+    async function loadSavedCityDetails() {
+      const slugs = savedCitySlugs.split(',').filter(Boolean)
+      const { data } = await supabase
+        .from('cities')
+        .select(`
+          slug, country_name, flag_emoji, currency,
+          city_data (
+            cost_rent_city_centre
+          )
+        `)
+        .in('slug', slugs)
+
+      if (!active) return
+      const details: Record<string, SavedCityDetail> = {}
+      ;(data ?? []).forEach((row: any) => {
+        const cityData = Array.isArray(row.city_data) ? row.city_data[0] : row.city_data
+        details[row.slug] = {
+          countryName: row.country_name ?? '',
+          flagEmoji: row.flag_emoji ?? '',
+          currency: row.currency ?? '',
+          rentMonthly: cityData?.cost_rent_city_centre ?? null,
+        }
+      })
+      setSavedCityDetails(details)
+    }
+    loadSavedCityDetails()
+    return () => { active = false }
+  }, [savedCitySlugs])
 
   useEffect(() => {
     if (!loading) return
@@ -356,10 +422,39 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen" style={{ background: '#050508', color: '#fff', fontFamily: 'Satoshi, sans-serif' }}>
+    <div className="min-h-screen profile-shell" style={{ background: '#050508', color: '#fff', fontFamily: 'Satoshi, sans-serif', scrollPaddingTop: 120 }}>
       <Nav countries={[]} onCountrySelect={() => {}} />
+      <style>{`
+        .profile-main {
+          padding-top: 132px;
+        }
+        .profile-grid {
+          grid-template-columns: repeat(auto-fit, minmax(min(430px, 100%), 1fr));
+        }
+        @media (max-width: 920px) {
+          .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 700px) {
+          .profile-main {
+            padding-top: 112px !important;
+          }
+          .profile-row {
+            align-items: flex-start !important;
+          }
+          .profile-row-actions {
+            opacity: 1 !important;
+          }
+          .profile-account-row,
+          .profile-danger-row {
+            align-items: flex-start !important;
+            flex-direction: column;
+          }
+        }
+      `}</style>
 
-      <div className="max-w-[1000px] mx-auto px-10 pt-28 pb-20" style={{ paddingLeft: 'clamp(20px, 4vw, 40px)', paddingRight: 'clamp(20px, 4vw, 40px)' }}>
+      <div className="max-w-[1000px] mx-auto px-10 pb-20 profile-main" style={{ paddingLeft: 'clamp(20px, 4vw, 40px)', paddingRight: 'clamp(20px, 4vw, 40px)' }}>
 
         {/* ── PROFILE HEADER ── */}
         <div className="flex items-start justify-between gap-6 pb-10 mb-10 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -465,7 +560,7 @@ export default function ProfilePage() {
         )}
 
         {/* ── CARDS GRID ── */}
-        <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', alignItems: 'start' }}>
+        <div className="grid gap-5 mb-5 profile-grid" style={{ alignItems: 'start' }}>
 
           {/* LEFT COLUMN: Passport + Saved Countries */}
           <div className="flex flex-col gap-5">
@@ -617,6 +712,28 @@ export default function ProfilePage() {
                   )}
                 </div>
 
+                {topMatch && (
+                  <Link href={`/cities?country=${topMatch.slug}`}
+                    className="flex items-center justify-between gap-4 transition-colors"
+                    style={{
+                      margin: '0 22px 14px',
+                      padding: '13px 14px',
+                      background: 'rgba(0,255,213,0.06)',
+                      border: '1px solid rgba(0,255,213,0.18)',
+                      color: '#00ffd5',
+                      textDecoration: 'none',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                    }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,255,213,0.1)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,255,213,0.06)'}>
+                    <span>Pick cities in {topMatch.name}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+
                 <div style={{ padding: '10px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>{wizardResult.answers?.role ? formatRole(wizardResult.answers.role) : 'Unknown'} · {formatDate(wizardResult.created_at)}</span>
                   {(wizardResults?.length ?? 0) > 1 && (
@@ -650,12 +767,14 @@ export default function ProfilePage() {
             </div>
 
             {savedCountries.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center" style={{ padding: '48px 24px' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>📌</div>
-                <p style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>No saved countries yet</p>
+              <div className="flex flex-col items-start justify-center" style={{ padding: '34px 26px', minHeight: 170 }}>
+                <p style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 24, color: '#fff', marginBottom: 8 }}>No saved countries</p>
+                <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.38)', marginBottom: 18, maxWidth: 320 }}>
+                  Save countries from reports or country pages.
+                </p>
                 <Link href="/"
-                  style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
-                  Start exploring →
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 13px', border: '1px solid rgba(255,255,255,0.14)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#fff', textDecoration: 'none' }}>
+                  Explore countries <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             ) : (
@@ -666,7 +785,7 @@ export default function ProfilePage() {
                   const showEUBadge = savedPassportCtx?.isEU && isEUCountry
                   const showDualBadge = savedPassportCtx?.hasDual && !showEUBadge && savedPassportCtx.tier <= 2
                   return (
-                    <div key={s.id} className="group flex items-center gap-3 transition-colors"
+                    <div key={s.id} className="group profile-row flex items-center gap-3 transition-colors"
                       style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
@@ -689,7 +808,7 @@ export default function ProfilePage() {
                       )}
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginRight: 8 }}>{formatDateShort(s.created_at)}</span>
                       {/* Hover actions */}
-                      <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="profile-row-actions flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a href={`/country/${s.country_slug}`}
                           style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
@@ -731,8 +850,8 @@ export default function ProfilePage() {
               </div>
               {savedCities.length >= 2 ? (
                 <Link href={`/cities/compare?cities=${savedCities.map(c => c.slug).join(',')}`} className="flex items-center gap-1.5 transition-colors"
-                  style={{ fontSize: 12, fontWeight: 600, color: '#00ffd5', textDecoration: 'none', letterSpacing: '0.04em' }}>
-                  Compare <ArrowRight className="w-3 h-3" />
+                  style={{ padding: '8px 10px', background: '#00ffd5', color: '#050508', border: '1px solid #00ffd5', fontSize: 11, fontWeight: 900, textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Compare all <ArrowRight className="w-3 h-3" />
                 </Link>
               ) : (
                 <Link href="/cities" className="flex items-center gap-1.5 transition-colors"
@@ -753,24 +872,35 @@ export default function ProfilePage() {
               </div>
             ) : (
               <>
-                {savedCities.slice(0, 8).map(c => (
-                  <div key={c.slug} className="group flex items-center gap-3 transition-colors"
+                {savedCities.slice(0, 8).map(c => {
+                  const detail = savedCityDetails[c.slug]
+                  return (
+                  <div key={c.slug} className="group profile-row flex items-center gap-3 transition-colors"
                     style={{ padding: '13px 22px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <span style={{ width: 8, height: 8, background: '#00ffd5', display: 'inline-block', flexShrink: 0 }} />
+                    <span style={{ width: 26, flexShrink: 0, fontSize: 18, lineHeight: 1 }}>{detail?.flagEmoji || '▪'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link href={`/city/${c.slug}`}
+                        style={{ display: 'block', fontSize: 14, fontWeight: 650, color: 'rgba(255,255,255,0.86)', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.86)'}>
+                        {c.name}
+                      </Link>
+                      <span style={{ display: 'block', marginTop: 2, fontSize: 11, color: 'rgba(255,255,255,0.28)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {detail?.countryName || 'Saved city'}
+                      </span>
+                    </div>
+                    <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: detail?.rentMonthly != null ? '#00ffd5' : 'rgba(255,255,255,0.24)', letterSpacing: '-0.01em' }}>
+                      {formatCityRent(detail?.currency, detail?.rentMonthly)}
+                    </span>
                     <Link href={`/city/${c.slug}`}
-                      style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', textDecoration: 'none', flex: 1 }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}>
-                      {c.name}
-                    </Link>
-                    <Link href={`/cities/compare?cities=${c.slug}`}
-                      style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', textDecoration: 'none' }}>
-                      Compare
+                      className="profile-row-actions opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ flexShrink: 0, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.42)', textDecoration: 'none' }}>
+                      View city
                     </Link>
                   </div>
-                ))}
+                )})}
                 {savedCities.length > 8 && (
                   <div style={{ padding: '12px 22px', fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em' }}>
                     +{savedCities.length - 8} more saved
@@ -824,7 +954,7 @@ export default function ProfilePage() {
           )}
 
           {/* Email + action buttons row */}
-          <div className="flex items-center justify-between gap-5 flex-wrap" style={{ padding: '18px 22px' }}>
+          <div className="profile-account-row flex items-center justify-between gap-5 flex-wrap" style={{ padding: '18px 22px' }}>
             <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>{user.email}</span>
             <div className="flex gap-2.5 flex-wrap">
               {!isGoogleUser && (
@@ -843,14 +973,21 @@ export default function ProfilePage() {
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)' }}>
                 <LogOut className="w-3 h-3" /> Sign out
               </button>
-              <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
-                className="inline-flex items-center gap-1.5 transition-all"
-                style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#f87171', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.6)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.3)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <Trash2 className="w-3 h-3" /> Delete account
-              </button>
             </div>
+          </div>
+
+          <div className="profile-danger-row flex items-center justify-between gap-5 flex-wrap" style={{ padding: '18px 22px', borderTop: '1px solid rgba(248,113,113,0.18)', background: 'rgba(248,113,113,0.025)' }}>
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#f87171', marginBottom: 6 }}>Danger zone</p>
+              <p style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.34)' }}>Deletes your account and stored results.</p>
+            </div>
+            <button onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteConfirmText('') }}
+              className="inline-flex items-center gap-1.5 transition-all"
+              style={{ background: 'transparent', border: '1px solid rgba(248,113,113,0.36)', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#f87171', cursor: 'pointer' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.65)'; (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.07)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.36)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              <Trash2 className="w-3 h-3" /> Delete account
+            </button>
           </div>
         </div>
 
