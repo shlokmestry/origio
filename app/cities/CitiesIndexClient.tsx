@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import styles from './cities.module.css'
 import { City } from '@/types'
@@ -167,6 +167,19 @@ const BEST_LINKS = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
+function normaliseCountry(value: string): string {
+  const aliases: Record<string, string> = {
+    usa: 'united states',
+    'united-states': 'united states',
+    'united states of america': 'united states',
+    uae: 'united arab emirates',
+    czechia: 'czech republic',
+    'czech-republic': 'czech republic',
+  }
+  const key = value.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim()
+  return aliases[key] ?? key
+}
+
 function splitName(name: string): [string, string] {
   const letters = name.replace(/[^A-Za-zÀ-ÿ]/g, '')
   const mid = Math.ceil(letters.length / 2)
@@ -205,6 +218,15 @@ interface CitiesIndexClientProps { cities: City[] }
 export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [search, setSearch] = useState('')
+  const [countryFilter, setCountryFilter] = useState('any')
+
+  useEffect(() => {
+    const country = new URLSearchParams(window.location.search).get('country')
+    if (!country) return
+    setCountryFilter(country)
+    setFilters(DEFAULT_FILTERS)
+    setSearch('')
+  }, [])
   const soonCities = useMemo(
     () => Object.entries(CITY_EXTRAS).filter(([, v]) => v.status === 'soon'),
     []
@@ -226,15 +248,32 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
         c.countryName.toLowerCase().includes(q)
       )
     } else {
+      if (countryFilter !== 'any') {
+        const countryKey = normaliseCountry(countryFilter)
+        list = list.filter(c =>
+          c.countrySlug === countryFilter ||
+          normaliseCountry(c.countrySlug) === countryKey ||
+          normaliseCountry(c.countryName) === countryKey
+        )
+      }
       if (filters.region !== 'any') list = list.filter(c => c.extra?.region === filters.region)
       if (filters.vibe !== 'any') list = list.filter(c => c.extra?.vibes.includes(filters.vibe as Vibe))
     }
 
     list.sort((a, b) => (b.data?.moveScore ?? 0) - (a.data?.moveScore ?? 0))
     return list
-  }, [enriched, filters, search])
+  }, [enriched, filters, search, countryFilter])
 
-  const anyFilterActive = filters.region !== 'any' || filters.vibe !== 'any'
+  const anyFilterActive = countryFilter !== 'any' || filters.region !== 'any' || filters.vibe !== 'any'
+  const selectedCountryLabel = useMemo(() => {
+    if (countryFilter === 'any') return null
+    const countryKey = normaliseCountry(countryFilter)
+    return enriched.find(c =>
+      c.countrySlug === countryFilter ||
+      normaliseCountry(c.countrySlug) === countryKey ||
+      normaliseCountry(c.countryName) === countryKey
+    )?.countryName ?? countryFilter.replace(/-/g, ' ')
+  }, [countryFilter, enriched])
 
   const setFilter = useCallback(<K extends keyof FilterState>(key: K, val: string) => {
     setFilters(prev => ({ ...prev, [key]: val }))
@@ -243,6 +282,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS)
+    setCountryFilter('any')
     setSearch('')
   }, [])
 
@@ -341,6 +381,12 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {selectedCountryLabel && !search && (
+              <div className={styles.activeScope}>
+                <span>Showing {selectedCountryLabel}</span>
+                <button type="button" onClick={() => setCountryFilter('any')}>Clear country</button>
               </div>
             )}
             {anyFilterActive && !search && (

@@ -32,6 +32,88 @@ const PANEL = "#0f0f0f";
 // ── Constants ──────────────────────────────────────────────────────────────
 const RANK_COLORS = [MINT, "#facc15", "#a78bfa"];
 
+type CitySearchItem = {
+  slug: string;
+  name: string;
+  countryName: string;
+  flagEmoji: string;
+  moveScore: number | null;
+};
+
+const COUNTRY_CITY_SHORTLIST: Record<string, string[]> = {
+  portugal: ["lisbon", "porto", "funchal"],
+  germany: ["berlin", "munich", "hamburg", "frankfurt"],
+  spain: ["barcelona", "madrid", "valencia", "malaga"],
+  "united-kingdom": ["london", "manchester", "bristol", "edinburgh"],
+  canada: ["toronto", "vancouver", "montreal", "calgary"],
+  usa: ["new-york", "miami", "austin", "san-francisco"],
+  "united-states": ["new-york", "miami", "austin", "san-francisco"],
+  netherlands: ["amsterdam", "rotterdam", "utrecht", "the-hague"],
+  italy: ["rome", "milan", "florence"],
+  australia: ["sydney", "melbourne", "brisbane", "perth"],
+  japan: ["tokyo", "osaka", "kyoto", "fukuoka"],
+  "czech-republic": ["prague"],
+  uae: ["dubai", "abu-dhabi"],
+  france: ["paris"],
+  ireland: ["dublin", "cork"],
+  belgium: ["brussels"],
+  switzerland: ["zurich"],
+  austria: ["vienna"],
+  hungary: ["budapest"],
+  romania: ["bucharest"],
+  poland: ["warsaw"],
+  sweden: ["stockholm"],
+  denmark: ["copenhagen"],
+  finland: ["helsinki"],
+  norway: ["oslo"],
+  croatia: ["split"],
+  serbia: ["belgrade"],
+  estonia: ["tallinn"],
+  georgia: ["tbilisi"],
+  cyprus: ["limassol"],
+  greece: ["athens"],
+  singapore: ["singapore"],
+  "south-korea": ["seoul"],
+  thailand: ["bangkok", "chiang-mai"],
+  vietnam: ["da-nang", "ho-chi-minh-city"],
+  malaysia: ["kuala-lumpur"],
+  indonesia: ["bali"],
+  india: ["bangalore"],
+  brazil: ["sao-paulo"],
+  mexico: ["mexico-city"],
+  argentina: ["buenos-aires"],
+  colombia: ["medellin"],
+  panama: ["panama-city"],
+  "costa-rica": ["san-jose-cr"],
+  "south-africa": ["cape-town"],
+  kenya: ["nairobi"],
+  "new-zealand": ["auckland"],
+};
+
+function normaliseCountryName(name: string): string {
+  const aliases: Record<string, string> = {
+    usa: "united states",
+    "united states of america": "united states",
+    uae: "united arab emirates",
+    czechia: "czech republic",
+  };
+  const key = name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim();
+  return aliases[key] ?? key;
+}
+
+function getCountryCities(country: CountryWithData, available: CitySearchItem[]): CitySearchItem[] {
+  const bySlug = new Map(available.map(city => [city.slug, city]));
+  const curated = (COUNTRY_CITY_SHORTLIST[country.slug] ?? [])
+    .map(slug => bySlug.get(slug))
+    .filter((city): city is CitySearchItem => Boolean(city));
+  if (curated.length > 0) return curated;
+
+  const target = normaliseCountryName(country.name);
+  return available
+    .filter(city => normaliseCountryName(city.countryName) === target)
+    .sort((a, b) => (b.moveScore ?? 0) - (a.moveScore ?? 0));
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function matchPercentColor(pct: number): string {
   if (pct >= 90) return "#4ade80";
@@ -171,6 +253,70 @@ function WhyToggle({ match, answers, jobRoleDef, rank }: {
         </div>
       )}
     </div>
+  );
+}
+
+function ResultCityBridge({ country, cities }: { country: CountryWithData; cities: CitySearchItem[] }) {
+  if (cities.length === 0) return null;
+
+  const compareCities = cities.slice(0, 4);
+  const primaryHref = compareCities.length >= 2
+    ? `/cities/compare?cities=${compareCities.map(city => city.slug).join(",")}`
+    : `/city/${compareCities[0].slug}`;
+  const primaryLabel = compareCities.length >= 2
+    ? `Compare ${country.name} cities →`
+    : `View ${compareCities[0].name} →`;
+
+  return (
+    <section style={{
+      margin: "4px 0 24px",
+      border: `1px solid rgba(0,255,213,0.28)`,
+      background: "rgba(0,255,213,0.035)",
+      boxShadow: "3px 3px 0 rgba(0,255,213,0.16)",
+      padding: "18px 20px",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 320px" }}>
+          <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, margin: "0 0 8px" }}>
+            Next step · Pick city
+          </p>
+          <p style={{ fontFamily: SERIF, fontSize: 24, lineHeight: 1.05, color: FG, margin: "0 0 8px" }}>
+            Country fit is strategy. City fit is rent.
+          </p>
+          <p style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.6, color: "rgba(240,240,232,0.58)", margin: 0 }}>
+            Compare actual monthly burn inside {country.name}: rent, groceries, transit and daily trade-offs.
+          </p>
+        </div>
+        <div style={{ flex: "0 1 320px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {compareCities.map(city => (
+            <Link key={city.slug} href={`/city/${city.slug}`} style={{
+              display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 10,
+              padding: "8px 0", borderBottom: "1px solid rgba(240,240,232,0.08)", textDecoration: "none",
+            }}>
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{city.flagEmoji}</span>
+              <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 800, color: FG }}>{city.name}</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM }}>
+                {city.moveScore != null ? `${Math.round(city.moveScore)}/10` : "City"}
+              </span>
+            </Link>
+          ))}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
+            <Link href={primaryHref} style={{
+              fontFamily: MONO, fontSize: 10, fontWeight: 900, letterSpacing: "0.16em", textTransform: "uppercase",
+              color: BG, background: MINT, textDecoration: "none", padding: "11px 14px", boxShadow: "2px 2px 0 #00aa90",
+            }}>
+              {primaryLabel}
+            </Link>
+            <Link href={`/cities?country=${country.slug}`} style={{
+              fontFamily: MONO, fontSize: 10, fontWeight: 900, letterSpacing: "0.16em", textTransform: "uppercase",
+              color: MINT, border: `1px solid rgba(0,255,213,0.35)`, textDecoration: "none", padding: "10px 13px",
+            }}>
+              Browse in {country.name} →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -445,6 +591,7 @@ export default function WizardResultsPage() {
   const [shareCopied, setShareCopied] = useState(false);
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [reanalysing, setReanalysing] = useState(false);
+  const [availableCities, setAvailableCities] = useState<CitySearchItem[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -528,6 +675,13 @@ export default function WizardResultsPage() {
     if (!authLoading) load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
+
+  useEffect(() => {
+    fetch("/api/cities-search")
+      .then(res => res.ok ? res.json() : [])
+      .then((data: CitySearchItem[]) => setAvailableCities(Array.isArray(data) ? data : []))
+      .catch(() => setAvailableCities([]));
+  }, []);
 
 
   const handleShare = async () => {
@@ -654,6 +808,7 @@ export default function WizardResultsPage() {
   const pctColor  = matchPercentColor(top.matchPercent);
   const cs        = getCurrencySymbol(top.country.currency);
   const topSalary = jobRoleDef ? top.country.data[jobRoleDef.salaryKey] as number : null;
+  const topCities = getCountryCities(top.country, availableCities);
 
   return (
     <>
@@ -811,6 +966,7 @@ export default function WizardResultsPage() {
                 ))}
               </div>
             )}
+            <ResultCityBridge country={top.country} cities={topCities} />
             {(answers.priorities ?? []).length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
                 <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#666" }}>Weighted by:</span>
