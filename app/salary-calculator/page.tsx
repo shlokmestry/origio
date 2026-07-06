@@ -21,19 +21,20 @@ const REMOTE_DATA: Record<string, { stars: number; badge: string }> = {
   ID: { stars: 3, badge: "Second Home Visa · Bali" },
 };
 
-// ─── FX rates to USD ──────────────────────────────────────────────────────────
+// ─── FX snapshot to USD ───────────────────────────────────────────────────────
+// Fixed rates keep comparisons stable. They are directional, not live FX quotes.
 const FX_TO_USD: Record<string, number> = {
   UK: 1.27,  US: 1.0,   CA: 0.74,  AU: 0.66,
   DE: 1.09,  IE: 1.09,  NL: 1.09,  SG: 0.74,
   AE: 0.27,  PT: 1.09,
-  // 2025/2026 additions
+  // newer country additions
   MX: 0.058, TH: 0.028, GR: 1.08,  CO: 0.00024,
   PA: 1.0,   KR: 0.00074, CZ: 0.044, GE: 0.37,
   VN: 0.000039, HR: 1.08, CR: 0.0019, PL: 0.25,
-  // 8 new countries
+  // expanded coverage
   EE: 1.08, CY: 1.08, HU: 0.0028, RO: 0.22,
   RS: 0.0093, ZA: 0.055, AR: 1.0, ID: 0.000067,
-  // Original 25 countries
+  // original coverage
   AT: 1.09,  BE: 1.09,  BR: 0.19,  DK: 0.145,
   FI: 1.09,  FR: 1.09,  IN: 0.012, IT: 1.09,
   JP: 0.0067, MY: 0.22, NZ: 0.61,  NO: 0.093,
@@ -191,7 +192,8 @@ const TAX_DATA = {
 
 const ALL_COUNTRY_KEYS = Object.keys(TAX_DATA) as (keyof typeof TAX_DATA)[];
 
-// ─── Salary data (median gross, local currency, 2025 market rates) ────────────
+// ─── Salary data (estimated gross, local currency) ────────────────────────────
+// Directional market estimates by role/country. Do not present as payroll-grade.
 const ROLE_SALARIES: Record<string, Record<string, number>> = {
   "Software Engineer":         { UK:75000,  US:130000, CA:110000, AU:120000, DE:72000,  IE:80000,  NL:75000,  SG:95000,  AE:280000, PT:35000,  MX:580000,   TH:1130000,  GR:35000,  CO:72000000,  PA:55000, KR:85000000,  CZ:1200000,  GE:70000,  VN:600000000,  HR:42000,  CR:28000000,  PL:180000,  AT:65000,  BE:72000,  BR:180000, DK:620000, FI:68000,  FR:52000,  IN:1800000, IT:40000,  JP:8000000,  MY:108000, NZ:110000, NO:780000, ES:42000,  SE:680000, CH:145000, EE:35000,  CY:38000,  HU:8400000,   RO:120000,  RS:2160000,   ZA:650000,  AR:24000,  ID:180000000 },
   "Product Manager":           { UK:85000,  US:145000, CA:120000, AU:130000, DE:80000,  IE:90000,  NL:85000,  SG:110000, AE:320000, PT:40000,  MX:680000,   TH:1400000,  GR:42000,  CO:90000000,  PA:65000, KR:100000000, CZ:1400000,  GE:85000,  VN:750000000,  HR:50000,  CR:35000000,  PL:210000,  AT:76000,  BE:82000,  BR:200000, DK:720000, FI:76000,  FR:62000,  IN:2200000, IT:48000,  JP:9500000,  MY:130000, NZ:120000, NO:900000, ES:50000,  SE:790000, CH:170000, EE:34000,  CY:35000,  HU:7800000,   RO:108000,  RS:2160000,   ZA:600000,  AR:20000,  ID:180000000 },
@@ -293,7 +295,7 @@ function calcCA(g: number) {
   const fed = calcBanded(Math.max(0, g - d.personalAmount), d.bands);
   const prov = g * d.provincialRate; // ~11% avg provincial
   const cpp = Math.max(0, Math.min(g, d.cpp.ceiling) - d.cpp.exemption) * d.cpp.rate;
-  const ei = Math.min(g, 63200) * 0.0166; // EI premium 2025
+  const ei = Math.min(g, 63200) * 0.0166; // simplified EI premium
   const total = fed + prov + cpp + ei;
   return { items: [{ label: "Federal Tax", v: fed }, { label: "Provincial Tax", v: prov }, { label: "CPP", v: cpp }, { label: "EI", v: ei }], total, net: g - total, rate: total / g };
 }
@@ -301,7 +303,7 @@ function calcCA(g: number) {
 function calcAU(g: number) {
   const d = TAX_DATA.AU;
   const raw = calcBanded(g, d.bands);
-  // Low Income Tax Offset (LITO) 2025
+  // Simplified Low Income Tax Offset (LITO)
   const lito = g <= 37500 ? 700 : g <= 45000 ? 700 - (g - 37500) * 0.05 : g <= 66667 ? 325 - (g - 45000) * 0.015 : 0;
   const it = Math.max(0, raw - lito);
   const med = g > d.medicareThreshold ? g * d.medicare : 0;
@@ -901,7 +903,7 @@ function ComparisonChart({ role, selectedCountry, level, showUSD }: {
           <div style={{
             fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 500,
             letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)", marginTop: 3,
-          }}>{showUSD ? "USD equivalent · ranked by USD" : "local currency · ranked by USD equivalent"}</div>
+          }}>{showUSD ? "estimated USD equivalent · ranked by USD" : "local currency · ranked by estimated USD equivalent"}</div>
         </div>
         {/* Gross / Net pill toggle */}
         <div style={{
@@ -1135,12 +1137,12 @@ function HowDisclosure({ country }: { country: keyof typeof TAX_DATA }) {
           lineHeight: 1.55, color: "rgba(255,255,255,0.45)",
         }}>
           <p style={{ margin: 0 }}>
-            Uses {d.name}&apos;s 2025/26 tax brackets plus mandatory deductions ({d.currency}).
-            Salaries reflect median market rates; Junior = 65%, Mid = 100%, Senior = 145% of median.
+            Uses published tax brackets plus simplified mandatory deductions where available ({d.currency}).
+            Salaries are directional market estimates; Junior = 65%, Mid = 100%, Senior = 145% of mid-level estimate.
           </p>
           <p style={{ margin: "8px 0 0" }}>
             Global rank compares USD-equivalent salary across all {ROLES.length} roles × {ALL_COUNTRY_KEYS.length} countries.
-            USD conversion uses approximate 2025 FX rates.
+            USD conversion uses fixed approximate FX snapshots, not live exchange rates.
           </p>
         </div>
       )}
@@ -1676,6 +1678,13 @@ export default function SalaryCalculator() {
                   {localSym}{grossLocal.toLocaleString("en")} {d.currency} at approx. {FX_TO_USD[country]} USD/unit
                 </div>
               )}
+              <div style={{
+                fontFamily: "Satoshi, sans-serif", fontSize: 11, fontWeight: 600,
+                color: "rgba(255,255,255,0.34)", marginTop: 10,
+                letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>
+                Estimated salary · simplified tax · fixed FX snapshot
+              </div>
             </div>
 
             {/* Stat tiles */}
