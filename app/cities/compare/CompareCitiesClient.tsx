@@ -267,6 +267,14 @@ export default function CompareCitiesClient({ allCities }: Props) {
     URL.revokeObjectURL(a.href)
   }, [picks, currency])
 
+  const exportPDF = useCallback(() => {
+    if (!isPro) {
+      window.location.href = '/pro'
+      return
+    }
+    window.print()
+  }, [isPro])
+
   return (
     <div className={styles.page}>
       <CompareScrollReset />
@@ -418,6 +426,9 @@ export default function CompareCitiesClient({ allCities }: Props) {
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={downloadCSV}>
               ↓ CSV
+            </button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={exportPDF}>
+              {isPro ? '↓ PDF' : 'PDF · Pro'}
             </button>
           </div>
         </section>

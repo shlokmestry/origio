@@ -628,6 +628,48 @@ function ExploreMore({ countries }: { countries: CountryWithData[] }) {
   );
 }
 
+const COUNTRY_CITY_SHORTLIST: Record<string, string[]> = {
+  portugal: ["lisbon", "porto", "funchal"],
+  germany: ["berlin", "munich", "hamburg"],
+  spain: ["barcelona", "madrid", "valencia", "malaga"],
+  "united-kingdom": ["london", "manchester", "bristol", "edinburgh"],
+  canada: ["toronto", "vancouver", "montreal", "calgary"],
+  "united-states": ["new-york", "miami", "austin", "san-francisco"],
+  netherlands: ["amsterdam", "rotterdam", "utrecht", "the-hague"],
+  italy: ["rome", "milan", "florence"],
+  australia: ["sydney", "melbourne", "brisbane", "perth"],
+  japan: ["tokyo", "osaka", "kyoto", "fukuoka"],
+};
+
+function CountryCityBridge({ country }: { country: CountryWithData }) {
+  const cities = COUNTRY_CITY_SHORTLIST[country.slug] ?? [];
+  const compareHref = cities.length
+    ? `/cities/compare?cities=${cities.join(",")}`
+    : "/cities";
+
+  return (
+    <section className="cp-city-bridge" style={{ border: `2px solid ${C.border}`, padding: "28px 32px", display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "center" }}>
+      <div>
+        <Label>Next decision</Label>
+        <h2 style={{ fontFamily: HEAD, fontSize: "clamp(34px,5vw,64px)", lineHeight: 0.95, letterSpacing: "-0.04em", margin: "18px 0 12px" }}>
+          Pick the city inside {country.name}.
+        </h2>
+        <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.6, color: "rgba(240,240,232,0.55)", margin: 0, maxWidth: 620 }}>
+          Country decides tax, visa and salary context. City decides rent, groceries, transit and daily burn.
+        </p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "stretch" }}>
+        <Link href={compareHref} style={{ fontFamily: BODY, fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: C.bg, background: C.accent, padding: "13px 16px", textDecoration: "none", textAlign: "center" }}>
+          Compare cities →
+        </Link>
+        <Link href="/cities" style={{ fontFamily: BODY, fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: C.primary, border: `1px solid ${C.border}`, padding: "13px 16px", textDecoration: "none", textAlign: "center" }}>
+          Browse cities
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 interface Props {
   country: CountryWithData;
@@ -992,6 +1034,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           .cp-salary-role { width: 100px; }
           .cp-key-stats > div { min-width: 100px; flex-shrink: 0; }
           .cp-score-rack > div { min-width: 100px !important; flex-shrink: 0; }
+          .cp-city-bridge { grid-template-columns: 1fr !important; padding: 22px 20px !important; }
         }
       `}</style>
       <Nav countries={otherCountries.map((c): GlobeCountry => ({
@@ -1032,6 +1075,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
           <KeyStats data={data} currencySymbol={currencySymbol} totalMonthlyCost={totalMonthlyCost} hasHighTaxFlag={hasHighTaxFlag} />
           <SalaryTable data={data} currencySymbol={currencySymbol} userRoleKey={userRole?.salaryKey ?? null} />
           <CostOfLiving data={data} currencySymbol={currencySymbol} totalMonthlyCost={totalMonthlyCost} rentWarning={rentWarning} userSalary={userSalary} />
+          <CountryCityBridge country={country} />
           <QualityScores data={data} />
           <Visa data={data} passportContext={passportContext} />
           <ExploreMore countries={otherCountries} />

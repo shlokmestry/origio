@@ -233,6 +233,36 @@
   padding-top: 32px;
   position: relative;
 }
+.bestRail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+  font-family: 'Satoshi', sans-serif;
+}
+.bestRail span {
+  color: var(--c-amber);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.bestRail a {
+  color: rgba(240,240,232,0.52);
+  border: 1px solid var(--c-rule);
+  padding: 9px 12px;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.bestRail a:hover {
+  color: var(--c-teal);
+  border-color: var(--c-teal);
+}
 .stepHead {
   display: flex; align-items: flex-start; justify-content: space-between;
   margin-bottom: 12px; gap: 24px;

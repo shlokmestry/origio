@@ -227,6 +227,14 @@ export default function ComparePageClient() {
     URL.revokeObjectURL(a.href);
   }, [rankedCountries, currency]);
 
+  const exportPDF = useCallback(() => {
+    if (!isPro) {
+      window.location.href = "/pro";
+      return;
+    }
+    window.print();
+  }, [isPro]);
+
   return (
     <div className={styles.page}>
       <Nav countries={globeCountries} onCountrySelect={toggleCountry} />
@@ -358,6 +366,9 @@ export default function ComparePageClient() {
               {copied ? "✓ Copied" : "⬇ Copy data"}
             </button>
             <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={downloadCSV}>↓ CSV</button>
+            <button type="button" className={`${styles.legendAction} ${styles.legendActionGhost}`} onClick={exportPDF}>
+              {isPro ? "↓ PDF" : "PDF · Pro"}
+            </button>
           </div>
         </section>
 

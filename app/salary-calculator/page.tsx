@@ -222,6 +222,17 @@ const LEVEL_MULTIPLIERS: Record<string, number> = { Junior: 0.65, Mid: 1.0, Seni
 const LEVELS = ["Junior", "Mid", "Senior"] as const;
 type Level = typeof LEVELS[number];
 
+const CITY_AFFORDABILITY = [
+  { name: "Seville", slug: "seville", monthlyEur: 1748 },
+  { name: "Malaga", slug: "malaga", monthlyEur: 1810 },
+  { name: "Valencia", slug: "valencia", monthlyEur: 1990 },
+  { name: "Lisbon", slug: "lisbon", monthlyEur: 2005 },
+  { name: "Berlin", slug: "berlin", monthlyEur: 2342 },
+  { name: "Manchester", slug: "manchester", monthlyEur: 2565 },
+  { name: "Dublin", slug: "dublin", monthlyEur: 3480 },
+  { name: "London", slug: "london", monthlyEur: 4177 },
+];
+
 function getSalaryForRole(role: string, country: string): number {
   return ROLE_SALARIES[role]?.[country] ?? 50000;
 }
@@ -842,6 +853,52 @@ function StatTile({ label, value, sub, blurred, format }: {
         </div>
       )}
     </div>
+  );
+}
+
+function CityAffordabilityStrip({ takeHomeMonthlyUSD, isPro }: { takeHomeMonthlyUSD: number; isPro: boolean }) {
+  const rows = CITY_AFFORDABILITY
+    .map(c => ({ ...c, monthlyUSD: Math.round(c.monthlyEur * 1.09) }))
+    .sort((a, b) => a.monthlyUSD - b.monthlyUSD);
+  const visible = isPro ? rows : rows.slice(0, 3);
+
+  return (
+    <section style={{
+      padding: "18px 20px", background: "#111111",
+      border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+        <div>
+          <div style={{ fontFamily: "Satoshi, sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
+            Salary reality check
+          </div>
+          <p style={{ margin: "6px 0 0", fontFamily: "Satoshi, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+            Can this take-home cover city burn? Free shows 3. Pro shows all.
+          </p>
+        </div>
+        {!isPro && (
+          <Link href="/pro" style={{ alignSelf: "center", color: "#4de6cc", textDecoration: "none", fontFamily: "Satoshi, sans-serif", fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Unlock all cities →
+          </Link>
+        )}
+      </div>
+      <div style={{ display: "grid", gap: 1, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        {visible.map(c => {
+          const left = takeHomeMonthlyUSD - c.monthlyUSD;
+          return (
+            <Link key={c.slug} href={`/city/${c.slug}`} style={{ display: "grid", gridTemplateColumns: "minmax(90px, 140px) 1fr auto", gap: 12, alignItems: "center", padding: "11px 12px", background: "#111111", textDecoration: "none" }}>
+              <span style={{ color: "#fff", fontFamily: "Satoshi, sans-serif", fontSize: 13, fontWeight: 700 }}>{c.name}</span>
+              <span style={{ height: 8, background: "rgba(255,255,255,0.06)", position: "relative" }}>
+                <span style={{ position: "absolute", inset: 0, width: `${Math.min(100, (c.monthlyUSD / Math.max(takeHomeMonthlyUSD, 1)) * 100)}%`, background: left >= 0 ? "#4de6cc" : "#ff6b6b" }} />
+              </span>
+              <span style={{ color: left >= 0 ? "#4de6cc" : "#ff6b6b", fontFamily: "Satoshi, sans-serif", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" }}>
+                {left >= 0 ? "+" : "-"}${Math.abs(left).toLocaleString()}/mo
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -1711,6 +1768,8 @@ export default function SalaryCalculator() {
                 format={fmtPct}
               />
             </div>
+
+            <CityAffordabilityStrip takeHomeMonthlyUSD={takeHomeMonthlyUSD} isPro={isPro} />
 
             {/* Country comparison section */}
             {pinnedCountries.length > 0 && (

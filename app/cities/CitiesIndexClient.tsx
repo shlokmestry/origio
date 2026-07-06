@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import { FlagIcon } from '@/components/FlagIcon'
 import { slugToIso } from '@/lib/flagCodes'
 import { CityMonument } from './monuments'
+import CityShortlistTray from '@/components/CityShortlistTray'
 
 export type CityItem = City
 
@@ -155,6 +156,15 @@ const QUICK_FILTERS: { label: string; vibe: string }[] = [
   { label: 'Culture & arts',        vibe: 'culture' },
 ]
 
+const BEST_LINKS = [
+  { href: '/cities/best/remote-work', label: 'Remote work' },
+  { href: '/cities/best/budget', label: 'Budget' },
+  { href: '/cities/best/beach', label: 'Beach' },
+  { href: '/cities/best/nightlife', label: 'Nightlife' },
+  { href: '/cities/best/family', label: 'Family' },
+  { href: '/cities/best/culture', label: 'Culture' },
+]
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 function splitName(name: string): [string, string] {
@@ -257,6 +267,13 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
 
         {/* CITIES */}
         <section className={`${styles.step} ${styles.fu} ${styles.d2}`}>
+          <div className={styles.bestRail}>
+            <span>Best cities</span>
+            {BEST_LINKS.map(link => (
+              <Link key={link.href} href={link.href}>{link.label}</Link>
+            ))}
+          </div>
+
           {/* ── SEARCH + FILTER BAR ── */}
           <div className={styles.filterBar}>
             <div className={styles.filterTop}>
@@ -419,6 +436,7 @@ export default function CitiesIndexClient({ cities }: CitiesIndexClientProps) {
       </div>
 
       <Footer />
+      <CityShortlistTray />
     </div>
   )
 }

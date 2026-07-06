@@ -19,6 +19,8 @@ const BLOG_SLUGS = [
   "cost-of-living-dublin-vs-berlin",
 ];
 
+const BEST_CITY_SLUGS = ["remote-work", "budget", "beach", "nightlife", "family", "culture"];
+
 // Fallback list used if the DB query fails
 const CITY_SLUGS_FALLBACK = [
   "amsterdam","athens","auckland","bali","bangalore","bangkok","barcelona",
@@ -54,6 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/wizard`, lastModified: NOW, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/cities`, lastModified: NOW, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/cities/compare`, lastModified: NOW, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/data`, lastModified: NOW, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/blog`, lastModified: NOW, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/compare`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/compare/countries`, lastModified: NOW, changeFrequency: "monthly", priority: 0.7 },
@@ -67,6 +70,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: NOW,
       changeFrequency: "weekly" as const,
       priority: 0.9,
+    })),
+    ...BEST_CITY_SLUGS.map(slug => ({
+      url: `${BASE}/cities/best/${slug}`,
+      lastModified: NOW,
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
     })),
     ...COUNTRY_SLUGS.map(slug => ({
       url: `${BASE}/country/${slug}`,

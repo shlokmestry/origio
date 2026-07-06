@@ -10,6 +10,7 @@ export default function Footer() {
         { href: "/compare/countries", label: "Compare Countries" },
         { href: "/cities",  label: "Find My City" },
         { href: "/cities/compare", label: "Compare Cities" },
+        { href: "/cities/best/remote-work", label: "Best Cities" },
         { href: "/pro",     label: "Origio Pro" },
         { href: "/blog",    label: "Blog" },
       ],
@@ -18,6 +19,7 @@ export default function Footer() {
       heading: "Data",
       links: [
         { href: "/faq",     label: "FAQ" },
+        { href: "/data",    label: "Data Sources" },
         { href: "/about",   label: "About" },
         { href: "/contact", label: "Contact" },
       ],

@@ -5,6 +5,9 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import type { CityFull, CityDataRow } from "./page";
+import CityShortlistButton from "@/components/CityShortlistButton";
+import CityShortlistTray from "@/components/CityShortlistTray";
+import { useAuth } from "@/lib/AuthProvider";
 
 interface Props {
   city: CityFull;
@@ -519,6 +522,7 @@ function isExpensive(d: import("./page").CityDataRow | null): boolean {
 }
 
 export default function CityPageClient({ city }: Props) {
+  const { isPro } = useAuth();
   const [currentMode, setCurrentMode] = useState("night");
   const [copied, setCopied] = useState<'idle' | 'ok' | 'err'>('idle');
   const [profOpen, setProfOpen] = useState(false);
@@ -982,20 +986,23 @@ export default function CityPageClient({ city }: Props) {
                 </div>
               )}
               <div className="marg" style={{ borderBottom: 'none', paddingBottom: 0 }}>
-                <Link
-                  href={`/cities/compare?cities=${city.slug}`}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    padding: "10px 20px",
-                    border: "1px solid var(--rule)",
-                    color: "var(--ink)",
-                    fontSize: 11, fontWeight: 700,
-                    textTransform: "uppercase", letterSpacing: "0.1em",
-                    textDecoration: "none", transition: "border-color 0.2s",
-                  }}
-                >
-                  Compare {city.name} →
-                </Link>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+                  <CityShortlistButton slug={city.slug} name={city.name} isPro={isPro} />
+                  <Link
+                    href={`/cities/compare?cities=${city.slug}`}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      padding: "10px 20px",
+                      border: "1px solid var(--rule)",
+                      color: "var(--ink)",
+                      fontSize: 11, fontWeight: 700,
+                      textTransform: "uppercase", letterSpacing: "0.1em",
+                      textDecoration: "none", transition: "border-color 0.2s",
+                    }}
+                  >
+                    Compare {city.name} →
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -1459,6 +1466,7 @@ export default function CityPageClient({ city }: Props) {
 
       </div>
       <Footer />
+      <CityShortlistTray />
     </div>
   );
 }
