@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface SearchIllustrationProps {
   isTyping?: boolean;
   isVisible?: boolean;
@@ -50,9 +52,11 @@ export default function SearchIllustration({
       />
 
       {/* Illustration */}
-      <img
+      <Image
         src="/illustration.png"
         alt="Search illustration"
+        width={320}
+        height={320}
         draggable={false}
         style={{
           width: "100%",

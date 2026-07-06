@@ -219,7 +219,7 @@ export default function Globe({
     if (!isLoaded || countries.length === 0) return;
     animFrameRef.current = requestAnimationFrame(updatePins);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [isLoaded, updatePins]);
+  }, [countries.length, isLoaded, updatePins]);
 
   useEffect(() => {
     if (!globeRef.current || !isLoaded || countries.length === 0) return;

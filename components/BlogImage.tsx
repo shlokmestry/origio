@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 interface BlogImageProps {
@@ -11,6 +12,12 @@ interface BlogImageProps {
 
 export default function BlogImage({ src, alt, style, className }: BlogImageProps) {
   const [failed, setFailed] = useState(false);
+  const {
+    objectFit = "cover",
+    objectPosition,
+    transition,
+    ...wrapperStyle
+  } = style ?? {};
 
   if (failed || !src) {
     return (
@@ -19,12 +26,24 @@ export default function BlogImage({ src, alt, style, className }: BlogImageProps
   }
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      style={style}
-      className={className}
-      onError={() => setFailed(true)}
-    />
+    <span
+      style={{
+        ...wrapperStyle,
+        width: wrapperStyle.width ?? "100%",
+        height: wrapperStyle.height ?? "100%",
+        display: wrapperStyle.display ?? "block",
+        position: "relative",
+      }}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 100vw, 50vw"
+        style={{ objectFit, objectPosition, transition }}
+        className={className}
+        onError={() => setFailed(true)}
+      />
+    </span>
   );
 }
