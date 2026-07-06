@@ -1318,6 +1318,7 @@ export default function SalaryCalculator() {
   const roleRef = useRef<HTMLDivElement>(null);
   const [isPro, setIsPro] = useState(false);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [hasUser, setHasUser] = useState(false);
 
   // Editable salary state
   const [customSalary, setCustomSalary] = useState<number | null>(null);
@@ -1345,12 +1346,18 @@ export default function SalaryCalculator() {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setHasUser(Boolean(session?.user));
       if (session?.user) await fetchPro(session.user.id);
       setAuthLoaded(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      if (session?.user) await fetchPro(session.user.id);
-      else setIsPro(false);
+      if (session?.user) {
+        setHasUser(true);
+        await fetchPro(session.user.id);
+      } else {
+        setHasUser(false);
+        setIsPro(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, [fetchPro]);
@@ -1866,6 +1873,7 @@ export default function SalaryCalculator() {
       `}</style>
 
       {/* ── EMAIL CAPTURE ── */}
+      {authLoaded && !hasUser && (
       <div style={{ maxWidth: 1440, margin: '18px auto 0', paddingLeft: 'clamp(12px,3vw,24px)', paddingRight: 'clamp(12px,3vw,24px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', padding: '18px 22px' }}>
           <div style={{ flex: '1 1 260px' }}>
@@ -1948,6 +1956,7 @@ export default function SalaryCalculator() {
           {salaryEmailState === 'error' && <div style={{ width: '100%', fontSize: 12, color: '#f87171', fontFamily: 'Satoshi, sans-serif' }}>Something went wrong. Try again.</div>}
         </div>
       </div>
+      )}
 
       <Footer />
     </div>

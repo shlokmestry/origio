@@ -87,7 +87,7 @@ interface Props { allCities: CityData[] }
 
 export default function CompareCitiesClient({ allCities }: Props) {
   const searchParams = useSearchParams()
-  const { isPro, loading, isProLoading } = useAuth()
+  const { user, isPro, loading, isProLoading } = useAuth()
   const authPending = loading || isProLoading
   const ledgerMax = isPro ? PRO_LEDGER_MAX : FREE_LEDGER_MAX
 
@@ -446,7 +446,7 @@ export default function CompareCitiesClient({ allCities }: Props) {
 
 
         {/* Email capture */}
-        {picks.length >= 2 && (
+        {!authPending && !user && picks.length >= 2 && (
           <section style={{
             margin: '32px 0 0',
             padding: '28px 32px',
