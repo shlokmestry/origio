@@ -168,3 +168,11 @@
 [2026-06-01T09:24:43.258Z]   ERROR processing argentina: Error: Country not found for slug "argentina": Cannot coerce the result to a single JSON object
 [2026-06-01T09:24:43.258Z]   ERROR processing chile: Error: Country not found for slug "chile": Cannot coerce the result to a single JSON object
 [2026-06-01T09:24:43.258Z]   ERROR processing indonesia: Error: Country not found for slug "indonesia": Cannot coerce the result to a single JSON object
+
+[2026-08-23T02:05:23.000Z] === scheduled weekly run — data-updater v3.0 ===
+[2026-08-23T02:05:23.000Z] Config check: 48 countries in COUNTRIES array, matches 48 countries.slug rows in DB (kenya, taiwan, turkey were missing from config — added this run; previously silently never refreshed).
+[2026-08-23T02:05:23.000Z] Live fetch: NOT PERFORMED — outbound network egress to api.worldbank.org, hdrapi.undp.org, en.wikipedia.org, and www.numbeo.com is blocked by this session's egress policy (CONNECT tunnel 403 at both the raw HTTPS proxy and WebFetch). No data was fetched or written; existing DB values were left untouched.
+[2026-08-23T02:05:23.000Z] Rows updated: 0 (blocked before any fetch). Errors: 4 hosts blocked by egress policy (api.worldbank.org, hdrapi.undp.org, en.wikipedia.org, www.numbeo.com).
+[2026-08-23T02:05:23.000Z] DB state at run time (via Supabase MCP, read-only check): 48/48 country_data rows present; last_verified range 2025-03-01..2026-07-01; most recent updated_at 2026-07-02T15:52:09Z.
+[2026-08-23T02:05:23.000Z] Action taken: fixed src/lib/data-updater.ts COUNTRIES config (added kenya/KEN/Nairobi, taiwan/TWN/Taipei, turkey/TUR/Istanbul). No DB writes this run. Needs a run from an environment with egress access to api.worldbank.org, hdrapi.undp.org, en.wikipedia.org, www.numbeo.com to actually refresh data.
+[2026-08-23T02:05:23.000Z] === run complete — updated=0, skipped=48, errors=4 (egress-blocked) ===
