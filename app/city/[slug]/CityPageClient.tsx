@@ -8,9 +8,12 @@ import type { CityFull, CityDataRow } from "./page";
 import CityShortlistButton from "@/components/CityShortlistButton";
 import CityShortlistTray from "@/components/CityShortlistTray";
 import { useAuth } from "@/lib/AuthProvider";
+import RelatedReading from "@/components/RelatedReading";
+import type { RelatedPost } from "@/lib/relatedPosts";
 
 interface Props {
   city: CityFull;
+  relatedPosts?: RelatedPost[];
 }
 
 const MODES = [
@@ -521,7 +524,7 @@ function isExpensive(d: import("./page").CityDataRow | null): boolean {
   return (d?.cost_rent_city_centre ?? 0) >= 2500;
 }
 
-export default function CityPageClient({ city }: Props) {
+export default function CityPageClient({ city, relatedPosts = [] }: Props) {
   const { isPro } = useAuth();
   const [currentMode, setCurrentMode] = useState("night");
   const [copied, setCopied] = useState<'idle' | 'ok' | 'err'>('idle');
@@ -1465,6 +1468,7 @@ export default function CityPageClient({ city }: Props) {
         </section>
 
       </div>
+      <RelatedReading posts={relatedPosts} />
       <Footer />
       <CityShortlistTray />
     </div>

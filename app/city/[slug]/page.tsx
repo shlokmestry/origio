@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CityPageClient from "./CityPageClient";
+import { getRelatedPostsForPlace } from "@/lib/relatedPosts";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -156,7 +157,8 @@ export default async function CityPage(props: Props) {
   const { slug } = await props.params;
   try {
     const city = await getCityData(slug);
-    return <CityPageClient city={city} />;
+    const relatedPosts = await getRelatedPostsForPlace(city.name);
+    return <CityPageClient city={city} relatedPosts={relatedPosts} />;
   } catch {
     notFound();
   }

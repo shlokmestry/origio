@@ -57,15 +57,48 @@ async function getCitiesForCompare(): Promise<CityData[]> {
     .filter((c): c is CityData => c !== null)
 }
 
-export const metadata: Metadata = {
-  title: 'City vs City — Compare Cost of Living · Origio',
-  description:
-    'Compare cities side by side. Rent, groceries, dining, gym, coworking, transport — estimated monthly cost of moving.',
-  openGraph: {
-    title: 'Compare Cities · Origio',
-    description: 'Estimated monthly cost of living, side by side.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-  },
+const BASE_TITLE = 'City vs City — Compare Cost of Living · Origio'
+const BASE_DESCRIPTION =
+  'Compare cities side by side. Rent, groceries, dining, gym, coworking, transport — estimated monthly cost of moving.'
+
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<{ cities?: string }> }
+): Promise<Metadata> {
+  const { cities } = await searchParams
+  const slugs = (cities ?? '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2)
+
+  if (slugs.length < 2) {
+    return {
+      title: BASE_TITLE,
+      description: BASE_DESCRIPTION,
+      openGraph: {
+        title: 'Compare Cities · Origio',
+        description: BASE_DESCRIPTION,
+        images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+      },
+    }
+  }
+
+  const ogUrl = `/api/og/compare?cities=${encodeURIComponent(slugs.join(','))}`
+  const { data: names } = await supabase.from('cities').select('slug, name').in('slug', slugs)
+  const nameA = names?.find((c) => c.slug === slugs[0])?.name ?? slugs[0]
+  const nameB = names?.find((c) => c.slug === slugs[1])?.name ?? slugs[1]
+  const title = `${nameA} vs ${nameB} — Cost of Living Compared · Origio`
+  return {
+    title,
+    description: BASE_DESCRIPTION,
+    openGraph: {
+      title,
+      description: BASE_DESCRIPTION,
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: BASE_DESCRIPTION,
+      images: [ogUrl],
+    },
+  }
 }
 
 export const revalidate = 3600

@@ -18,6 +18,8 @@ import SaveCountryButton from "@/components/SaveCountryButton";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import RelatedReading from "@/components/RelatedReading";
+import type { RelatedPost } from "@/lib/relatedPosts";
 import {
   WizardAnswers, getPassportStrength,
   resolveEffectivePassports,
@@ -674,11 +676,12 @@ function CountryCityBridge({ country }: { country: CountryWithData }) {
 interface Props {
   country: CountryWithData;
   otherCountries: CountryWithData[];
+  relatedPosts?: RelatedPost[];
 }
 
 const EU_PASSPORT_SLUGS = new Set(["ireland","germany","france","netherlands","spain","portugal","sweden","norway","switzerland","austria","belgium","denmark","finland","italy","poland","romania"]);
 
-export default function CountryPageClient({ country, otherCountries }: Props) {
+export default function CountryPageClient({ country, otherCountries, relatedPosts = [] }: Props) {
   const { data } = country;
   const scoreBreakdown = getScoreBreakdown(data);
   const moveScoreColor = getScoreColor(data.moveScore);
@@ -1082,6 +1085,7 @@ export default function CountryPageClient({ country, otherCountries }: Props) {
         </div>
       </main>
 
+      <RelatedReading posts={relatedPosts} />
       <Footer />
     </div>
   );

@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Footer from "@/components/Footer";
 import BlogImage from "@/components/BlogImage";
+import { getRelatedPlacesForPost } from "@/lib/relatedPosts";
 
 export const revalidate = 600;
 
@@ -102,6 +103,7 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post) notFound();
 
   const related = await getRelatedPosts(slug, post.category);
+  const relatedPlaces = await getRelatedPlacesForPost(post.title);
   const readingTime = getReadingTime(post.content_md);
   const color = categoryColor(post.category);
 
@@ -246,6 +248,35 @@ export default async function BlogPostPage({ params }: Props) {
           >{post.content_md}</ReactMarkdown>
         </div>
 
+        {/* Related city/country pages mentioned in this post */}
+        {relatedPlaces.length > 0 && (
+          <div style={{ marginTop: 56 }}>
+            <p style={{
+              fontSize: 9, fontWeight: 800, letterSpacing: "0.22em",
+              textTransform: "uppercase", color: "rgba(240,240,232,0.35)", marginBottom: 16,
+            }}>Explore These Places</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {relatedPlaces.map((place) => (
+                <Link
+                  key={`${place.type}-${place.slug}`}
+                  href={`/${place.type}/${place.slug}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    fontFamily: SANS, fontSize: 13, fontWeight: 600,
+                    color: "#f0f0e8", textDecoration: "none",
+                    border: "1px solid #2a2a2a", background: "#111",
+                    padding: "10px 16px",
+                  }}
+                  className="related-place-chip"
+                >
+                  {place.name}
+                  <span style={{ color: "#00ffd5", fontSize: 11 }}>→</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Related posts */}
         {related.length > 0 && (
           <div style={{ marginTop: 72 }}>
@@ -335,6 +366,7 @@ export default async function BlogPostPage({ params }: Props) {
       <style>{`
         .back-link:hover { color: #f0f0e8 !important; }
         .related-card:hover { border-color: #00ffd5 !important; }
+        .related-place-chip:hover { border-color: #00ffd5 !important; }
         .related-card:hover .related-title { color: #00ffd5 !important; }
         @media (max-width: 600px) { .related-grid { grid-template-columns: 1fr !important; } }
         .blog-prose { font-family: ${SANS}; }

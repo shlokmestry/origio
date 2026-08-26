@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { mapRowToCountry } from "@/lib/mappers";
 import { CountryWithData } from "@/types";
 import CountryPageClient from "./CountryPageClient";
+import { getRelatedPostsForPlace } from "@/lib/relatedPosts";
 
 export const revalidate = 86400
 
@@ -55,5 +56,6 @@ export default async function CountryPage({ params }: { params: Promise<{ slug: 
   const [country, allCountries] = await Promise.all([getCountry(slug), getAllCountries()]);
   if (!country) notFound();
   const otherCountries = allCountries.filter((c) => c.slug !== slug);
-  return <CountryPageClient country={country} otherCountries={otherCountries} />;
+  const relatedPosts = await getRelatedPostsForPlace(country.name);
+  return <CountryPageClient country={country} otherCountries={otherCountries} relatedPosts={relatedPosts} />;
 }
