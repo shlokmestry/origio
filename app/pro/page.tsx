@@ -43,7 +43,7 @@ const FEATURES = [
       </svg>
     ),
     title: 'Custom ranking weights',
-    desc: 'Re-rank all 48 countries by your own formula. Salary 50%, rent 30%, visa 20% — your call.',
+    desc: 'Re-rank all 58 countries by your own formula. Salary 50%, rent 30%, visa 20% — your call.',
   },
   {
     icon: (
@@ -67,7 +67,7 @@ const FAQS = [
   },
   {
     q: 'What countries are included?',
-    a: 'All 48 countries in the Origio database — Europe, Southeast Asia, Middle East, North America, and Oceania.',
+    a: 'All 58 countries in the Origio database — Europe, Southeast Asia, Middle East, North America, and Oceania.',
   },
   {
     q: 'Can I get a refund?',
@@ -214,7 +214,7 @@ function ProPageInner() {
             fontFamily: "'Satoshi', sans-serif",
             color: 'rgba(240,240,232,0.55)',
           }}>
-            <span style={{ color: '#00ffd5', fontWeight: 800 }}>FREE</span> ~ all 48 countries ranked. Pro unlocks the tools.
+            <span style={{ color: '#00ffd5', fontWeight: 800 }}>FREE</span> ~ all 58 countries ranked. Pro unlocks the tools.
           </span>
         </div>
 
@@ -305,7 +305,7 @@ function ProPageInner() {
               <div style={{ padding: '10px 0', textAlign: 'center' as const, fontFamily: "'Satoshi', sans-serif", fontSize: 11, color: '#00ffd5', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>Pro</div>
             </div>
             {[
-              { label: 'All 48 countries ranked',           free: true,  pro: true  },
+              { label: 'All 58 countries ranked',           free: true,  pro: true  },
               { label: 'Top 3 personalised reports',        free: true,  pro: true  },
               { label: 'Salary by job role (gross)',        free: true,  pro: true  },
               { label: 'Visa difficulty rating',           free: true,  pro: true  },

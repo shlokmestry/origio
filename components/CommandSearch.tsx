@@ -510,7 +510,7 @@ export default function CommandSearch({
                 <div style={{ padding: "36px", textAlign: "center", color: S.dim }}>
                   {cities.length > 0
                     ? `Countries & cities. Start typing.`
-                    : `48 countries. Start typing.`}
+                    : `58 countries. Start typing.`}
                 </div>
               )}
             </div>

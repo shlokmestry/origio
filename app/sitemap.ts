@@ -5,7 +5,8 @@ import { ALL_PASSPORTS } from "./passport-power/data";
 const BASE = "https://findorigio.com";
 const NOW = new Date().toISOString();
 
-const COUNTRY_SLUGS = [
+// Fallback list used if the DB query fails
+const COUNTRY_SLUGS_FALLBACK = [
   "australia","austria","belgium","brazil","canada",
   "denmark","finland","france","germany","india",
   "ireland","italy","japan","malaysia","netherlands",
@@ -48,8 +49,22 @@ async function getCitySlugs(): Promise<string[]> {
   }
 }
 
+async function getCountrySlugs(): Promise<string[]> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data, error } = await supabase.from("countries").select("slug").limit(500);
+    if (error || !data?.length) return COUNTRY_SLUGS_FALLBACK;
+    return data.map((c: { slug: string }) => c.slug);
+  } catch {
+    return COUNTRY_SLUGS_FALLBACK;
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const citySlugs = await getCitySlugs();
+  const [citySlugs, COUNTRY_SLUGS] = await Promise.all([getCitySlugs(), getCountrySlugs()]);
 
   return [
     { url: BASE, lastModified: NOW, changeFrequency: "weekly", priority: 1 },

@@ -441,7 +441,7 @@ export default function SalaryCalculatorSection() {
         <br />
 
         <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#444', letterSpacing: '0.08em' }}>
-          20 roles · 48 countries · salary after every deduction.
+          20 roles · 45 countries · salary after every deduction.
         </span>
 
       </div>

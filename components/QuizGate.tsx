@@ -133,7 +133,7 @@ export default function QuizGate({ type, runsUsed, maxRuns }: QuizGateProps) {
           <ul className="space-y-2.5">
             {[
               "Unlimited quiz runs",
-              "All 48 countries ranked",
+              "All 58 countries ranked",
               "Full salary and tax breakdown",
               "3-country comparison",
               "Complete visa checklist",

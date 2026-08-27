@@ -73,7 +73,7 @@ const NO_DUAL_CITIZENSHIP: Record<string, string> = {
   'south korea': 'South Korea generally does not permit dual citizenship for adults.',
 };
 
-// All currencies for the 48 countries we score
+// All currencies for the 58 countries we score
 const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey?: string; big?: boolean }> = {
   EUR: { symbol: "€",    label: "Euro — Europe (EUR)" },
   USD: { symbol: "$",    label: "US Dollar (USD)",          passportKey: "usa" },
@@ -716,7 +716,7 @@ function WizardPageInner() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 0, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 48 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 58 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>

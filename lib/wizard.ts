@@ -104,6 +104,7 @@ function passportVisaModifier(strength: 1 | 2 | 3 | 4, visaDifficulty: number): 
 
 const ENGLISH_SPEAKING_COUNTRIES = [
   "ireland", "united-kingdom", "australia", "new-zealand", "canada", "usa", "singapore", "south-africa",
+  "malta", "philippines",
 ];
 
 const EUROPEAN_COUNTRIES = [
@@ -111,6 +112,7 @@ const EUROPEAN_COUNTRIES = [
   "italy", "united-kingdom", "sweden", "switzerland", "norway", "austria",
   "finland", "belgium", "denmark", "poland", "greece", "croatia", "czech-republic",
   "romania", "hungary", "estonia", "cyprus", "serbia",
+  "iceland", "malta", "slovenia", "luxembourg", "bulgaria",
 ];
 
 const WARM_COUNTRIES = [
@@ -118,6 +120,7 @@ const WARM_COUNTRIES = [
   "brazil", "malaysia", "thailand", "vietnam", "philippines",
   "mexico", "colombia", "costa-rica", "panama", "greece",
   "cyprus", "indonesia", "south-africa", "argentina",
+  "saudi-arabia", "qatar", "israel",
 ];
 
 // City vibe preferences
@@ -125,34 +128,40 @@ const BIG_CITY_COUNTRIES = [
   "usa", "united-kingdom", "singapore", "japan", "germany", "france",
   "australia", "canada", "uae", "netherlands",
   "indonesia", "argentina", "south-africa",
+  "saudi-arabia", "qatar",
 ];
 const COASTAL_COUNTRIES = [
   "portugal", "spain", "australia", "new-zealand", "brazil", "malaysia",
   "thailand", "philippines", "vietnam", "uae", "italy",
   "indonesia", "cyprus", "south-africa", "argentina",
+  "malta", "israel", "qatar",
 ];
 const MID_CITY_COUNTRIES = [
   "portugal", "germany", "netherlands", "austria", "sweden", "norway",
   "denmark", "finland", "belgium", "poland", "ireland", "new-zealand",
   "hungary", "romania", "estonia", "serbia",
+  "slovenia", "luxembourg", "bulgaria",
 ];
 
 const HIGH_COST_COUNTRIES = [
   "singapore", "switzerland", "norway", "australia", "new-zealand",
   "ireland", "united-kingdom", "usa", "canada", "denmark", "south-korea",
+  "iceland", "luxembourg", "qatar", "israel",
 ];
 
 const HIGH_TAX_COUNTRIES = [
   "sweden", "finland", "germany", "denmark", "austria", "ireland",
   "united-kingdom", "italy", "netherlands", "belgium", "norway",
   "australia", "new-zealand", "france", "canada", "poland",
+  "iceland", "luxembourg", "israel",
 ];
 
-const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica", "indonesia"];
+const TERRITORIAL_TAX_COUNTRIES = ["uae", "singapore", "malaysia", "portugal", "panama", "georgia", "costa-rica", "indonesia", "saudi-arabia", "qatar"];
 const NATURE_COUNTRIES = [
   "new-zealand", "norway", "switzerland", "canada", "australia", "austria",
   "sweden", "finland", "new zealand", "costa-rica", "colombia",
   "south-africa", "indonesia",
+  "iceland", "chile", "slovenia",
 ];
 const CULTURE_COUNTRIES = [
   "france", "italy", "japan", "spain", "germany", "portugal", "greece",
@@ -163,12 +172,13 @@ const STARTUP_COUNTRIES = [
   "usa", "united-kingdom", "singapore", "germany", "netherlands", "ireland",
   "sweden", "canada", "australia", "estonia", "israel", "romania",
 ];
-const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama", "south-africa", "indonesia", "argentina"];
+const RETIREMENT_VISA_COUNTRIES  = ["portugal", "spain", "malaysia", "uae", "italy", "new-zealand", "costa-rica", "panama", "south-africa", "indonesia", "argentina", "malta", "philippines"];
 const NOMAD_VISA_COUNTRIES       = [
   "portugal", "spain", "germany", "netherlands", "uae", "malaysia", "new-zealand",
   "mexico", "colombia", "panama", "thailand", "greece", "croatia", "costa-rica", "south-korea",
   "georgia", "vietnam", "czech-republic",
   "indonesia", "south-africa", "argentina", "estonia", "hungary", "serbia", "romania",
+  "malta", "chile",
 ];
 
 const STRONG_HEALTHCARE_COUNTRIES = [
@@ -176,6 +186,7 @@ const STRONG_HEALTHCARE_COUNTRIES = [
   "sweden", "norway", "denmark", "finland", "belgium",
   "australia", "canada", "new-zealand", "singapore", "japan",
   "united-kingdom", "ireland", "portugal", "spain", "italy", "south-korea",
+  "iceland", "israel", "luxembourg", "slovenia",
 ];
 
 export const TO_USD: Record<string, number> = {
@@ -188,6 +199,8 @@ export const TO_USD: Record<string, number> = {
   CZK: 0.044, GEL: 0.37,  VND: 0.000039, CRC: 0.0019, PLN: 0.25,
   ZAR: 0.055, NGN: 0.00065, KES: 0.0077, PHP: 0.018, CNY: 0.14, RON: 0.22,
   IDR: 0.000067, RSD: 0.0093, HUF: 0.0028,
+  // 2026-08 additions (new countries)
+  ISK: 0.0081, SAR: 0.2667, QAR: 0.2747, ILS: 0.3297, CLP: 0.00107, BGN: 0.5848,
 };
 
 function toUSD(amount: number, currency: string): number {
