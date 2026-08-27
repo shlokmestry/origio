@@ -111,6 +111,11 @@ const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey
   HUF: { symbol: "Ft",   label: "Hungarian Forint (HUF)",                                big: true },
   TWD: { symbol: "NT$",  label: "New Taiwan Dollar (TWD)",  passportKey: "taiwan",       big: true },
   TRY: { symbol: "₺",    label: "Turkish Lira (TRY)",       passportKey: "turkey",       big: true },
+  ISK: { symbol: "kr",   label: "Icelandic Krona (ISK)",    passportKey: "iceland",      big: true },
+  SAR: { symbol: "SAR ", label: "Saudi Riyal (SAR)",        passportKey: "saudi arabia" },
+  QAR: { symbol: "QAR ", label: "Qatari Riyal (QAR)",       passportKey: "qatar" },
+  ILS: { symbol: "₪",    label: "Israeli Shekel (ILS)",     passportKey: "israel" },
+  CLP: { symbol: "CLP$", label: "Chilean Peso (CLP)",       passportKey: "chile",        big: true },
 };
 
 // TO_USD rates (for converting $800/$1500/$2500 thresholds to local currency display)
@@ -123,6 +128,7 @@ const DISPLAY_TO_USD: Record<string, number> = {
   NGN: 0.00065, KES: 0.0077, PHP: 0.018, RON: 0.22, NZD2: 0.61,
   IDR: 0.000067, RSD: 0.0093, HUF: 0.0028,
   TWD: 0.031, TRY: 0.028,
+  ISK: 0.0081, SAR: 0.2667, QAR: 0.2747, ILS: 0.3297, CLP: 0.00107,
 };
 
 function fmtAmount(usd: number, cur: string): string {
