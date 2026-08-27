@@ -240,7 +240,7 @@ export default function OnboardingPage() {
               Which passport<br />do you hold?
             </h1>
             <p style={{ fontSize: 14, color: C.muted, marginBottom: 36, lineHeight: 1.6 }}>
-              We use this to calculate your visa options across all 48 countries.
+              We use this to calculate your visa options across all 58 countries.
             </p>
 
             {/* Selected passport display */}

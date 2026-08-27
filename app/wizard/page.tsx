@@ -52,10 +52,10 @@ const COUNTRIES_LIST = [
   "Azerbaijan","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria",
   "Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Czech Republic",
   "Denmark","Ecuador","Egypt","Estonia","Ethiopia","Finland","France","Georgia",
-  "Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland",
+  "Germany","Ghana","Greece","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland",
   "Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Kuwait","Latvia","Lebanon",
-  "Lithuania","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway",
-  "Pakistan","Peru","Philippines","Poland","Portugal","Romania","Russia","Saudi Arabia",
+  "Lithuania","Luxembourg","Malaysia","Malta","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway",
+  "Pakistan","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia",
   "Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea",
   "Spain","Sri Lanka","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey",
   "UAE","Uganda","Ukraine","United Kingdom","Uruguay","USA","Uzbekistan","Venezuela",
@@ -73,7 +73,7 @@ const NO_DUAL_CITIZENSHIP: Record<string, string> = {
   'south korea': 'South Korea generally does not permit dual citizenship for adults.',
 };
 
-// All currencies for the 48 countries we score
+// All currencies for the 58 countries we score
 const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey?: string; big?: boolean }> = {
   EUR: { symbol: "€",    label: "Euro — Europe (EUR)" },
   USD: { symbol: "$",    label: "US Dollar (USD)",          passportKey: "usa" },
@@ -111,6 +111,11 @@ const CURRENCY_META: Record<string, { symbol: string; label: string; passportKey
   HUF: { symbol: "Ft",   label: "Hungarian Forint (HUF)",                                big: true },
   TWD: { symbol: "NT$",  label: "New Taiwan Dollar (TWD)",  passportKey: "taiwan",       big: true },
   TRY: { symbol: "₺",    label: "Turkish Lira (TRY)",       passportKey: "turkey",       big: true },
+  ISK: { symbol: "kr",   label: "Icelandic Krona (ISK)",    passportKey: "iceland",      big: true },
+  SAR: { symbol: "SAR ", label: "Saudi Riyal (SAR)",        passportKey: "saudi arabia" },
+  QAR: { symbol: "QAR ", label: "Qatari Riyal (QAR)",       passportKey: "qatar" },
+  ILS: { symbol: "₪",    label: "Israeli Shekel (ILS)",     passportKey: "israel" },
+  CLP: { symbol: "CLP$", label: "Chilean Peso (CLP)",       passportKey: "chile",        big: true },
 };
 
 // TO_USD rates (for converting $800/$1500/$2500 thresholds to local currency display)
@@ -123,6 +128,7 @@ const DISPLAY_TO_USD: Record<string, number> = {
   NGN: 0.00065, KES: 0.0077, PHP: 0.018, RON: 0.22, NZD2: 0.61,
   IDR: 0.000067, RSD: 0.0093, HUF: 0.0028,
   TWD: 0.031, TRY: 0.028,
+  ISK: 0.0081, SAR: 0.2667, QAR: 0.2747, ILS: 0.3297, CLP: 0.00107,
 };
 
 function fmtAmount(usd: number, cur: string): string {
@@ -716,7 +722,7 @@ function WizardPageInner() {
           <div style={{ marginTop: 32, padding: "16px 18px", border: `1px solid ${LINE}`, borderRadius: 0, background: PANEL }}>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MINT, marginBottom: 8 }}>✦ How it works</div>
             <p style={{ fontSize: 13, color: DIM, lineHeight: 1.6, margin: 0, fontFamily: SANS }}>
-              We score 48 countries against your role, passport and priorities. Takes ~90 seconds.
+              We score 58 countries against your role, passport and priorities. Takes ~90 seconds.
             </p>
           </div>
         </aside>
