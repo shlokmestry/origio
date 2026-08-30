@@ -168,3 +168,300 @@
 [2026-06-01T09:24:43.258Z]   ERROR processing argentina: Error: Country not found for slug "argentina": Cannot coerce the result to a single JSON object
 [2026-06-01T09:24:43.258Z]   ERROR processing chile: Error: Country not found for slug "chile": Cannot coerce the result to a single JSON object
 [2026-06-01T09:24:43.258Z]   ERROR processing indonesia: Error: Country not found for slug "indonesia": Cannot coerce the result to a single JSON object
+[2026-08-30T02:06:09.791Z] WARNING: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY
+[2026-08-30T02:06:09.792Z]   Running in SQL export mode — updates will be written to /home/user/origio/logs/pending-updates.sql instead of applied directly.
+[2026-08-30T02:06:09.792Z] === data-updater v3.0 started — 55 countries ===
+[2026-08-30T02:06:09.792Z] Sources: World Bank (salary), UNDP HDR (HDI), Wikipedia (fallback), Numbeo (costs/scores), static (visa)
+[2026-08-30T02:06:09.792Z] 
+Fetching UNDP HDI bulk data...
+[2026-08-30T02:06:09.808Z]   UNDP HDI: 0 countries loaded
+[2026-08-30T02:06:09.809Z] 
+Processing argentina (ARG, ARS)...
+[2026-08-30T02:06:09.988Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:09.992Z]   HDI: no valid data from any source
+[2026-08-30T02:06:09.992Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:09.992Z] 
+Processing australia (AUS, AUD)...
+[2026-08-30T02:06:10.014Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.017Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.017Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=cost_rent_city_centre | visa_difficulty=6[static]
+[2026-08-30T02:06:10.017Z] 
+Processing austria (AUT, EUR)...
+[2026-08-30T02:06:10.037Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.040Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.041Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.041Z] 
+Processing belgium (BEL, EUR)...
+[2026-08-30T02:06:10.058Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.060Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.061Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.061Z] 
+Processing bulgaria (BGR, EUR)...
+[2026-08-30T02:06:10.080Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.083Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.084Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.084Z] 
+Processing brazil (BRA, BRL)...
+[2026-08-30T02:06:10.101Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.104Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.104Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.105Z] 
+Processing canada (CAN, CAD)...
+[2026-08-30T02:06:10.129Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.133Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.133Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=salary_software_engineer | visa_difficulty=5[static]
+[2026-08-30T02:06:10.133Z] 
+Processing chile (CHL, CLP)...
+[2026-08-30T02:06:10.151Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.154Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.154Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.154Z] 
+Processing colombia (COL, COP)...
+[2026-08-30T02:06:10.172Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.176Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.176Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.176Z] 
+Processing costa-rica (CRI, CRC)...
+[2026-08-30T02:06:10.195Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.198Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.198Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.198Z] 
+Processing croatia (HRV, EUR)...
+[2026-08-30T02:06:10.220Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.224Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.224Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.224Z] 
+Processing cyprus (CYP, EUR)...
+[2026-08-30T02:06:10.242Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.247Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.247Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.247Z] 
+Processing czech-republic (CZE, CZK)...
+[2026-08-30T02:06:10.269Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.272Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.272Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.272Z] 
+Processing denmark (DNK, DKK)...
+[2026-08-30T02:06:10.290Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.293Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.294Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=6[static]
+[2026-08-30T02:06:10.294Z] 
+Processing estonia (EST, EUR)...
+[2026-08-30T02:06:10.314Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.317Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.317Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.317Z] 
+Processing finland (FIN, EUR)...
+[2026-08-30T02:06:10.338Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.341Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.341Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.341Z] 
+Processing france (FRA, EUR)...
+[2026-08-30T02:06:10.358Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.361Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.361Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.361Z] 
+Processing georgia (GEO, GEL)...
+[2026-08-30T02:06:10.378Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.382Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.382Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=2[static]
+[2026-08-30T02:06:10.382Z] 
+Processing germany (DEU, EUR)...
+[2026-08-30T02:06:10.399Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.402Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.402Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.402Z] 
+Processing greece (GRC, EUR)...
+[2026-08-30T02:06:10.425Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.429Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.429Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.429Z] 
+Processing hungary (HUN, HUF)...
+[2026-08-30T02:06:10.462Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.466Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.466Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.466Z] 
+Processing iceland (ISL, ISK)...
+[2026-08-30T02:06:10.486Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.489Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.489Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.489Z] 
+Processing india (IND, INR)...
+[2026-08-30T02:06:10.507Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.510Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.510Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=7[static]
+[2026-08-30T02:06:10.510Z] 
+Processing indonesia (IDN, IDR)...
+[2026-08-30T02:06:10.528Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.531Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.531Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.531Z] 
+Processing ireland (IRL, EUR)...
+[2026-08-30T02:06:10.549Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.552Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.552Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=cost_rent_city_centre | visa_difficulty=5[static]
+[2026-08-30T02:06:10.552Z] 
+Processing israel (ISR, ILS)...
+[2026-08-30T02:06:10.574Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.578Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.578Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=6[static]
+[2026-08-30T02:06:10.578Z] 
+Processing italy (ITA, EUR)...
+[2026-08-30T02:06:10.595Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.598Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.598Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.598Z] 
+Processing japan (JPN, JPY)...
+[2026-08-30T02:06:10.618Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.622Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.622Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=7[static]
+[2026-08-30T02:06:10.622Z] 
+Processing luxembourg (LUX, EUR)...
+[2026-08-30T02:06:10.643Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.646Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.646Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.646Z] 
+Processing malaysia (MYS, MYR)...
+[2026-08-30T02:06:10.667Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.671Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.671Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.671Z] 
+Processing malta (MLT, EUR)...
+[2026-08-30T02:06:10.690Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.693Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.693Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.693Z] 
+Processing mexico (MEX, MXN)...
+[2026-08-30T02:06:10.714Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.717Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.717Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.717Z] 
+Processing netherlands (NLD, EUR)...
+[2026-08-30T02:06:10.734Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.738Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.738Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.738Z] 
+Processing new-zealand (NZL, NZD)...
+[2026-08-30T02:06:10.756Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.759Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.760Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=6[static]
+[2026-08-30T02:06:10.760Z] 
+Processing norway (NOR, NOK)...
+[2026-08-30T02:06:10.779Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.782Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.782Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=6[static]
+[2026-08-30T02:06:10.782Z] 
+Processing panama (PAN, USD)...
+[2026-08-30T02:06:10.800Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.804Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.804Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.804Z] 
+Processing philippines (PHL, PHP)...
+[2026-08-30T02:06:10.822Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.826Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.826Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.826Z] 
+Processing poland (POL, PLN)...
+[2026-08-30T02:06:10.844Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.848Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.848Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:10.848Z] 
+Processing portugal (PRT, EUR)...
+[2026-08-30T02:06:10.868Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.871Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.872Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.872Z] 
+Processing qatar (QAT, QAR)...
+[2026-08-30T02:06:10.891Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.895Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.895Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=8[static]
+[2026-08-30T02:06:10.895Z] 
+Processing romania (ROU, RON)...
+[2026-08-30T02:06:10.915Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.918Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.918Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:10.919Z] 
+Processing saudi-arabia (SAU, SAR)...
+[2026-08-30T02:06:10.942Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.946Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.946Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=8[static]
+[2026-08-30T02:06:10.946Z] 
+Processing serbia (SRB, RSD)...
+[2026-08-30T02:06:10.974Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:10.977Z]   HDI: no valid data from any source
+[2026-08-30T02:06:10.977Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=3[static]
+[2026-08-30T02:06:10.977Z] 
+Processing singapore (SGP, SGD)...
+[2026-08-30T02:06:11.001Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.005Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.005Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=cost_rent_city_centre | visa_difficulty=7[static]
+[2026-08-30T02:06:11.005Z] 
+Processing slovenia (SVN, EUR)...
+[2026-08-30T02:06:11.026Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.029Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.030Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:11.030Z] 
+Processing south-africa (ZAF, ZAR)...
+[2026-08-30T02:06:11.047Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.051Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.051Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:11.051Z] 
+Processing south-korea (KOR, KRW)...
+[2026-08-30T02:06:11.068Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.071Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.071Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=6[static]
+[2026-08-30T02:06:11.071Z] 
+Processing spain (ESP, EUR)...
+[2026-08-30T02:06:11.090Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.093Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.093Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:11.093Z] 
+Processing sweden (SWE, SEK)...
+[2026-08-30T02:06:11.110Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.113Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.114Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:11.114Z] 
+Processing switzerland (CHE, CHF)...
+[2026-08-30T02:06:11.132Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.135Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.135Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=7[static]
+[2026-08-30T02:06:11.135Z] 
+Processing thailand (THA, THB)...
+[2026-08-30T02:06:11.154Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.156Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.157Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:11.157Z] 
+Processing uae (ARE, AED)...
+[2026-08-30T02:06:11.174Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.177Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.178Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=5[static]
+[2026-08-30T02:06:11.178Z] 
+Processing united-kingdom (GBR, GBP)...
+[2026-08-30T02:06:11.196Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.199Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.200Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=cost_rent_city_centre | visa_difficulty=6[static]
+[2026-08-30T02:06:11.200Z] 
+Processing usa (USA, USD)...
+[2026-08-30T02:06:11.221Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.225Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.225Z]   ✓ queued (SQL export, not yet applied) 2 fields — market_override=cost_rent_city_centre | visa_difficulty=7[static]
+[2026-08-30T02:06:11.225Z] 
+Processing vietnam (VNM, VND)...
+[2026-08-30T02:06:11.246Z]   salary: no GNI/GDP data from any source — keeping existing
+[2026-08-30T02:06:11.249Z]   HDI: no valid data from any source
+[2026-08-30T02:06:11.249Z]   ✓ queued (SQL export, not yet applied) 1 fields — visa_difficulty=4[static]
+[2026-08-30T02:06:11.249Z] 
+======================================================================
+[2026-08-30T02:06:11.249Z] Run complete at 2026-08-30T02:06:11.249Z
+[2026-08-30T02:06:11.249Z] Elapsed:       1.5s
+[2026-08-30T02:06:11.249Z] Countries:     55 total
+[2026-08-30T02:06:11.249Z] Queued:        55 rows
+[2026-08-30T02:06:11.249Z] Skipped:       55 (no data)
+[2026-08-30T02:06:11.249Z] Errors:        0
+[2026-08-30T02:06:11.249Z] World Bank:    0 salary datasets
+[2026-08-30T02:06:11.249Z] UNDP HDR:      0 HDI values preloaded + 0 per-country
+[2026-08-30T02:06:11.249Z] Numbeo:        0 cost/score datasets
+[2026-08-30T02:06:11.249Z] Wikipedia:     0 fallback uses
+[2026-08-30T02:06:11.249Z] Visa table:    static (55 entries)
+[2026-08-30T02:06:11.249Z] SQL export:    55 statements written to /home/user/origio/logs/pending-updates.sql (not yet applied to DB)
+[2026-08-30T02:06:11.249Z] ======================================================================

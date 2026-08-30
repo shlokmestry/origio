@@ -25,6 +25,9 @@
  *
  * Log file: logs/updates.log
  * Env vars: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   If unset, falls back to SQL export mode: computed updates are written as
+ *   UPDATE statements to logs/pending-updates.sql for later application by
+ *   a runner that does hold DB credentials, instead of failing outright.
  */
 
 import * as fs from 'node:fs';
@@ -666,11 +669,51 @@ async function getCountryId(supabase: AnySupabaseClient, slug: string): Promise<
   return (data as { id: string }).id;
 }
 
+// ── SQL export fallback ────────────────────────────────────────────────────────
+// When SUPABASE_SERVICE_ROLE_KEY isn't available in the running environment
+// (e.g. an ephemeral CI/agent sandbox with no persisted secrets), the computed
+// updates are written as plain SQL instead of being applied over supabase-js,
+// so a session/pipeline holding real DB credentials can apply them afterward.
+
+let SQL_EXPORT_MODE = false;
+const SQL_EXPORT_FILE = path.resolve(process.cwd(), 'logs', 'pending-updates.sql');
+
+function sqlValue(v: unknown): string {
+  if (v === null || v === undefined) return 'NULL';
+  if (typeof v === 'number') return Number.isFinite(v) ? String(v) : 'NULL';
+  return `'${String(v).replace(/'/g, "''")}'`;
+}
+
+function initSqlExport(): void {
+  fs.mkdirSync(path.dirname(SQL_EXPORT_FILE), { recursive: true });
+  fs.writeFileSync(
+    SQL_EXPORT_FILE,
+    `-- Origio country_data updates — generated ${new Date().toISOString()}\n` +
+    `-- Apply against the Supabase project (e.g. via the Supabase SQL editor,\n` +
+    `-- psql, or the Supabase MCP execute_sql tool) once real credentials are available.\n\n`,
+    'utf8',
+  );
+}
+
+function appendSqlExport(slug: string, payload: UpdatePayload): void {
+  const setClause = Object.entries(payload)
+    .map(([col, val]) => `${col} = ${sqlValue(val)}`)
+    .join(', ');
+  const stmt =
+    `UPDATE country_data SET ${setClause} ` +
+    `WHERE country_id = (SELECT id FROM countries WHERE slug = ${sqlValue(slug)});\n`;
+  fs.appendFileSync(SQL_EXPORT_FILE, stmt, 'utf8');
+}
+
 async function updateCountryData(
   supabase: AnySupabaseClient,
   slug: string,
   payload: UpdatePayload,
 ): Promise<void> {
+  if (SQL_EXPORT_MODE) {
+    appendSqlExport(slug, payload);
+    return;
+  }
   const countryId = await getCountryId(supabase, slug);
   if (!countryId) throw new Error(`Country not found in DB for slug "${slug}"`);
   const { error } = await supabase
@@ -699,14 +742,17 @@ async function main(): Promise<void> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  let supabase: AnySupabaseClient = null;
   if (!supabaseUrl || !serviceKey) {
-    appendLog('ERROR: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    process.exit(1);
+    SQL_EXPORT_MODE = true;
+    initSqlExport();
+    appendLog('WARNING: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    appendLog(`  Running in SQL export mode — updates will be written to ${SQL_EXPORT_FILE} instead of applied directly.`);
+  } else {
+    supabase = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false },
+    });
   }
-
-  const supabase = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false },
-  });
 
   const stats: RunStats = {
     updated: 0, skipped: 0, errors: [],
@@ -881,7 +927,8 @@ async function main(): Promise<void> {
       );
       if (substantiveKeys.length > 0) {
         await updateCountryData(supabase, country.slug, payload);
-        appendLog(`  ✓ updated ${substantiveKeys.length} fields — ${sourceNotes.join(' | ')}`);
+        const verb = SQL_EXPORT_MODE ? 'queued (SQL export, not yet applied)' : 'updated';
+        appendLog(`  ✓ ${verb} ${substantiveKeys.length} fields — ${sourceNotes.join(' | ')}`);
         stats.updated++;
       } else {
         appendLog(`  – no new data — skipping DB write`);
@@ -901,7 +948,7 @@ async function main(): Promise<void> {
   appendLog(`Run complete at ${new Date().toISOString()}`);
   appendLog(`Elapsed:       ${elapsed}s`);
   appendLog(`Countries:     ${COUNTRIES.length} total`);
-  appendLog(`Updated:       ${stats.updated} rows`);
+  appendLog(`${SQL_EXPORT_MODE ? 'Queued:       ' : 'Updated:      '} ${stats.updated} rows`);
   appendLog(`Skipped:       ${stats.skipped} (no data)`);
   appendLog(`Errors:        ${stats.errors.length}`);
   appendLog(`World Bank:    ${stats.worldBankHits} salary datasets`);
@@ -909,6 +956,9 @@ async function main(): Promise<void> {
   appendLog(`Numbeo:        ${stats.numbeoHits} cost/score datasets`);
   appendLog(`Wikipedia:     ${stats.wikipediaHits} fallback uses`);
   appendLog(`Visa table:    static (${COUNTRIES.length} entries)`);
+  if (SQL_EXPORT_MODE) {
+    appendLog(`SQL export:    ${stats.updated} statements written to ${SQL_EXPORT_FILE} (not yet applied to DB)`);
+  }
   if (stats.errors.length > 0) {
     appendLog('Error detail:');
     stats.errors.forEach(e => appendLog(`  • ${e}`));
